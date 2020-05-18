@@ -23,6 +23,9 @@ func New() terraform.ResourceProvider {
 				Description: "The base url of the Watchtower API.  For example 'http://127.0.0.1/'",
 			},
 		},
+		ResourcesMap: map[string]*schema.Resource{
+			"watchtower_project": resourceProject(),
+		},
 	}
 
 	p.ConfigureFunc = providerConfigure(p)
