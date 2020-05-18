@@ -11,10 +11,6 @@ var testProviders = map[string]terraform.ResourceProvider{
 	"watchtower": New(),
 }
 
-func testProvider() terraform.ResourceProvider {
-	return testProviders["watchtower"]
-}
-
 func TestProvider(t *testing.T) {
 	if err := New().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)

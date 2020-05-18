@@ -11,6 +11,7 @@ func resourceProject() *schema.Resource {
 		Read:   resourceProjectRead,
 		Delete: resourceProjectDelete,
 
+		// TODO: Add the ability to define a parent org instead of using one defined in the provider.
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -26,17 +27,15 @@ func resourceProject() *schema.Resource {
 	}
 }
 
-func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+// projectToResourceData populates the provided ResourceData with the appropriate values from the provided Project
+func projectToResourceData(p *scopes.Project, d *schema.ResourceData) {
+	d.Set("name", p.Name)
+	d.Set("description", p.Description)
+	d.SetId(p.Id)
+}
 
-	o := &scopes.Organization{
-		Client: client,
-	}
-	if parentValue, ok := d.GetOk("parent"); ok && parentValue.(string) != "" {
-		o.Id = parentValue.(string)
-	}
+// resourceDataToProject returns a localy built Project using the values provided in the ResourceData.
+func resourceDataToProject(d *schema.ResourceData) *scopes.Project {
 	p := &scopes.Project{}
 	if descVal, ok := d.GetOk("description"); ok {
 		desc := descVal.(string)
@@ -46,13 +45,25 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 		name := nameVal.(string)
 		p.Name = &name
 	}
+	return p
+}
+
+func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
+	md := meta.(*metaData)
+	client := md.client
+	ctx := md.ctx
+
+	// The org id is declared in the client, so no need to specify that here.
+	o := &scopes.Organization{
+		Client: client,
+	}
+	p := resourceDataToProject(d)
 	p, _, err := o.CreateProject(ctx, p)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(p.Id)
-	return nil
+	return resourceProjectRead(d, meta)
 }
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
@@ -63,17 +74,12 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	o := &scopes.Organization{
 		Client: client,
 	}
-	if parentValue, ok := d.GetOk("parent"); ok && parentValue.(string) != "" {
-		o.Id = parentValue.(string)
-	}
 	p := &scopes.Project{Id: d.Id()}
 	p, _, err := o.ReadProject(ctx, p)
 	if err != nil {
 		return err
 	}
-
-	d.Set("name", p.Name)
-	d.Set("description", p.Description)
+	projectToResourceData(p, d)
 	return nil
 }
 
