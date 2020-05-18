@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding
+module github.com/hashicorp/terraform-provider-watchtower
 
 go 1.12
 
