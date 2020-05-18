@@ -27,11 +27,21 @@ func resourceProject() *schema.Resource {
 	}
 }
 
-// projectToResourceData populates the provided ResourceData with the appropriate values from the provided Project
-func projectToResourceData(p *scopes.Project, d *schema.ResourceData) {
-	d.Set("name", p.Name)
-	d.Set("description", p.Description)
+// projectToResourceData populates the provided ResourceData with the appropriate values from the provided Project.
+// The project passed into thie function should be one read from the watchtower API with all fields populated.
+func projectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
+	if p.Name != nil {
+		if err := d.Set("name", p.Name); err != nil {
+			return err
+		}
+	}
+	if p.Description != nil {
+		if err := d.Set("description", p.Description); err != nil {
+			return err
+		}
+	}
 	d.SetId(p.Id)
+	return nil
 }
 
 // resourceDataToProject returns a localy built Project using the values provided in the ResourceData.
@@ -79,8 +89,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	projectToResourceData(p, d)
-	return nil
+	return projectToResourceData(p, d)
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
