@@ -14,7 +14,7 @@ func New() terraform.ResourceProvider {
 			"default_organization": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WATCHTOWER_ORGANIZATION", ""),
+				DefaultFunc: schema.EnvDefaultFunc("WATCHTOWER_DEFAULT_ORG", ""),
 				Description: "The Watchtower organization scope to operate all actions in if not provided in the individual resources.",
 			},
 			"base_url": {

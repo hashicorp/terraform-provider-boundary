@@ -7,8 +7,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-var testProviders = map[string]terraform.ResourceProvider{
-	"watchtower": New(),
+var testProvider *schema.Provider
+var testProviders map[string]terraform.ResourceProvider
+
+func init() {
+	testProvider = New().(*schema.Provider)
+	testProviders = map[string]terraform.ResourceProvider{
+		"watchtower": testProvider,
+	}
 }
 
 func TestProvider(t *testing.T) {

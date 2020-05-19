@@ -1,12 +1,85 @@
 package provider
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/hashicorp/watchtower/api"
 	"github.com/hashicorp/watchtower/api/scopes"
+	"github.com/hashicorp/watchtower/testing/controller"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestAccProjectCreation(t *testing.T) {
+	// Always run this acceptance test since our backend is in memory.
+	os.Setenv("TF_ACC", "true")
+
+	url, cancel := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	defer cancel()
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckProjectResourceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testTwoProjectConfig(url),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectResourceExists("watchtower_project.project1"),
+					testAccCheckProjectResourceExists("watchtower_project.project2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckProjectResourceExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if !strings.HasPrefix(id, "p_") {
+			return fmt.Errorf("ID not formatted as expected")
+		}
+		md := testProvider.Meta().(*metaData)
+		o := scopes.Organization{
+			Client: md.client,
+		}
+		if _, _, err := o.ReadProject(md.ctx, &scopes.Project{Id: id}); err != nil {
+			return fmt.Errorf("Didn't receive a 404 when checking for cleaned up project %q: %v", id, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckProjectResourceDestroy(s *terraform.State) error {
+	// retrieve the connection established in Provider configuration
+	md := testProvider.Meta().(*metaData)
+	o := scopes.Organization{
+		Client: md.client,
+	}
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "watchtower_project" {
+			continue
+		}
+		id := rs.Primary.ID
+		if _, _, err := o.ReadProject(md.ctx, &scopes.Project{Id: id}); err == nil || !strings.Contains(err.Error(), "404") {
+			return fmt.Errorf("Error when reading created project %q: %v", id, err)
+		}
+	}
+	return nil
+}
 
 func TestResourceDataToProject(t *testing.T) {
 	nameKey, descKey := "name", "description"
@@ -128,4 +201,34 @@ func TestProjectToResourceData(t *testing.T) {
 			assert.Equal(t, expectedRd, actual)
 		})
 	}
+}
+
+func testTwoProjectConfig(url string) string {
+	return fmt.Sprintf(`
+provider "watchtower" {
+  base_url = "%s"
+  default_organization = "o_0000000000"
+}
+
+resource "watchtower_project" "project1" {
+  description = "my description1"
+}
+
+resource "watchtower_project" "project2" {
+  description = "my description2"
+}
+`, url)
+}
+
+func testSingleProjectConfig(url string) string {
+	return fmt.Sprintf(`
+provider "watchtower" {
+  base_url = "%s"
+  default_organization = "o_0000000000"
+}
+
+resource "watchtower_project" "project1" {
+  description = "my description1"
+}
+`, url)
 }
