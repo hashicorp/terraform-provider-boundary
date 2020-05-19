@@ -55,6 +55,9 @@ func resourceDataToProject(d *schema.ResourceData) *scopes.Project {
 		name := nameVal.(string)
 		p.Name = &name
 	}
+	if d.Id() != "" {
+		p.Id = d.Id()
+	}
 	return p
 }
 
@@ -72,8 +75,9 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
+	d.SetId(p.Id)
 
-	return resourceProjectRead(d, meta)
+	return nil
 }
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {

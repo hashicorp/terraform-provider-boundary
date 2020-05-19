@@ -11,11 +11,11 @@ import (
 func New() terraform.ResourceProvider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"organization": {
+			"default_organization": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WATCHTOWER_ORGANIZATION", nil),
-				Description: "The Watchtower organization scope to operate all actions in.",
+				DefaultFunc: schema.EnvDefaultFunc("WATCHTOWER_ORGANIZATION", ""),
+				Description: "The Watchtower organization scope to operate all actions in if not provided in the individual resources.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
@@ -47,7 +47,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		if err := client.SetAddr(d.Get("base_url").(string)); err != nil {
 			return nil, err
 		}
-		client.SetOrg(d.Get("organization").(string))
+		client.SetOrg(d.Get("default_organization").(string))
 
 		// TODO: Pass these in through the config, add token, etc...
 		client.SetLimiter(5, 5)
