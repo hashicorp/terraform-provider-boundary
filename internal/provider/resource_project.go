@@ -7,6 +7,11 @@ import (
 	"github.com/hashicorp/watchtower/api/scopes"
 )
 
+const (
+	PROJECT_DESCRIPTION_KEY = "description"
+	PROJECT_NAME_KEY        = "name"
+)
+
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceProjectCreate,
@@ -16,11 +21,11 @@ func resourceProject() *schema.Resource {
 
 		// TODO: Add the ability to define a parent org instead of using one defined in the provider.
 		Schema: map[string]*schema.Schema{
-			"name": {
+			PROJECT_NAME_KEY: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			PROJECT_DESCRIPTION_KEY: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -32,12 +37,12 @@ func resourceProject() *schema.Resource {
 // The project passed into thie function should be one read from the watchtower API with all fields populated.
 func projectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
 	if p.Name != nil {
-		if err := d.Set("name", p.Name); err != nil {
+		if err := d.Set(PROJECT_NAME_KEY, p.Name); err != nil {
 			return err
 		}
 	}
 	if p.Description != nil {
-		if err := d.Set("description", p.Description); err != nil {
+		if err := d.Set(PROJECT_DESCRIPTION_KEY, p.Description); err != nil {
 			return err
 		}
 	}
@@ -48,11 +53,11 @@ func projectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
 // resourceDataToProject returns a localy built Project using the values provided in the ResourceData.
 func resourceDataToProject(d *schema.ResourceData) *scopes.Project {
 	p := &scopes.Project{}
-	if descVal, ok := d.GetOk("description"); ok {
+	if descVal, ok := d.GetOk(PROJECT_DESCRIPTION_KEY); ok {
 		desc := descVal.(string)
 		p.Description = &desc
 	}
-	if nameVal, ok := d.GetOk("name"); ok {
+	if nameVal, ok := d.GetOk(PROJECT_NAME_KEY); ok {
 		name := nameVal.(string)
 		p.Name = &name
 	}
@@ -105,14 +110,28 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	o := &scopes.Organization{
 		Client: client,
 	}
+	p := &scopes.Project{
+		Id: d.Id(),
+	}
 
-	p := resourceDataToProject(d)
-	if p.Description == nil {
-		p.SetDefault("description")
+	if d.HasChange(PROJECT_DESCRIPTION_KEY) {
+		desc := d.Get(PROJECT_DESCRIPTION_KEY).(string)
+		if desc == "" {
+			p.SetDefault(PROJECT_DESCRIPTION_KEY)
+		} else {
+			p.Description = &desc
+		}
 	}
-	if p.Name == nil {
-		p.SetDefault("name")
+
+	if d.HasChange(PROJECT_NAME_KEY) {
+		name := d.Get(PROJECT_NAME_KEY).(string)
+		if name == "" {
+			p.SetDefault(PROJECT_NAME_KEY)
+		} else {
+			p.Name = &name
+		}
 	}
+
 	p, _, err := o.UpdateProject(ctx, p)
 	if err != nil {
 		return err
