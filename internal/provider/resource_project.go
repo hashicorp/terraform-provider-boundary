@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/watchtower/api/scopes"
 )
@@ -9,6 +11,7 @@ func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceProjectCreate,
 		Read:   resourceProjectRead,
+		Update: resourceProjectUpdate,
 		Delete: resourceProjectDelete,
 
 		// TODO: Add the ability to define a parent org instead of using one defined in the provider.
@@ -16,12 +19,10 @@ func resourceProject() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -96,7 +97,42 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	return projectToResourceData(p, d)
 }
 
+func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
+	md := meta.(*metaData)
+	client := md.client
+	ctx := md.ctx
+
+	o := &scopes.Organization{
+		Client: client,
+	}
+
+	p := resourceDataToProject(d)
+	if p.Description == nil {
+		p.SetDefault("description")
+	}
+	if p.Name == nil {
+		p.SetDefault("name")
+	}
+	p, _, err := o.UpdateProject(ctx, p)
+	if err != nil {
+		return err
+	}
+
+	return projectToResourceData(p, d)
+}
+
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	// TODO: Implement
+	md := meta.(*metaData)
+	client := md.client
+	ctx := md.ctx
+
+	o := &scopes.Organization{
+		Client: client,
+	}
+	p := resourceDataToProject(d)
+	_, _, err := o.DeleteProject(ctx, p)
+	if err != nil {
+		return fmt.Errorf("failed deleting project: %w", err)
+	}
 	return nil
 }

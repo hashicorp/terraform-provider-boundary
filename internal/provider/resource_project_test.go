@@ -2,7 +2,6 @@ package provider
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -15,9 +14,6 @@ import (
 )
 
 func TestAccProjectCreation(t *testing.T) {
-	// Always run this acceptance test since our backend is in memory.
-	os.Setenv("TF_ACC", "true")
-
 	url, cancel := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
 	defer cancel()
 
@@ -26,10 +22,17 @@ func TestAccProjectCreation(t *testing.T) {
 		CheckDestroy: testAccCheckProjectResourceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testTwoProjectConfig(url),
+				Config: testSingleProjectConfig(url, firstProjectBar),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					testAccCheckProjectResourceExists("watchtower_project.project2"),
+					resource.TestCheckResourceAttr("watchtower_project.project1", "description", "bar"),
+				),
+			},
+			{
+				Config: testSingleProjectConfig(url, firstProjectFoo),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectResourceExists("watchtower_project.project1"),
+					resource.TestCheckResourceAttr("watchtower_project.project1", "description", "foo"),
 				),
 			},
 		},
@@ -220,15 +223,30 @@ resource "watchtower_project" "project2" {
 `, url)
 }
 
-func testSingleProjectConfig(url string) string {
+const (
+	firstProjectFoo = `
+resource "watchtower_project" "project1" {
+  description = "foo"
+}`
+
+	firstProjectBar = `
+resource "watchtower_project" "project1" {
+  description = "bar"
+}`
+
+	secondProject = `
+resource "watchtower_project" "project1" {
+  description = "project2"
+}`
+)
+
+func testSingleProjectConfig(url, res string) string {
 	return fmt.Sprintf(`
 provider "watchtower" {
   base_url = "%s"
   default_organization = "o_0000000000"
 }
 
-resource "watchtower_project" "project1" {
-  description = "my description1"
-}
-`, url)
+%s
+`, url, res)
 }
