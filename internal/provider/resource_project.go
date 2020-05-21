@@ -33,9 +33,9 @@ func resourceProject() *schema.Resource {
 	}
 }
 
-// projectToResourceData populates the provided ResourceData with the appropriate values from the provided Project.
+// convertProjectToResourceData populates the provided ResourceData with the appropriate values from the provided Project.
 // The project passed into thie function should be one read from the watchtower API with all fields populated.
-func projectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
+func convertProjectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
 	if p.Name != nil {
 		if err := d.Set(PROJECT_NAME_KEY, p.Name); err != nil {
 			return err
@@ -50,8 +50,8 @@ func projectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
 	return nil
 }
 
-// resourceDataToProject returns a localy built Project using the values provided in the ResourceData.
-func resourceDataToProject(d *schema.ResourceData) *scopes.Project {
+// convertResourceDataToProject returns a localy built Project using the values provided in the ResourceData.
+func convertResourceDataToProject(d *schema.ResourceData) *scopes.Project {
 	p := &scopes.Project{}
 	if descVal, ok := d.GetOk(PROJECT_DESCRIPTION_KEY); ok {
 		desc := descVal.(string)
@@ -76,7 +76,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	o := &scopes.Organization{
 		Client: client,
 	}
-	p := resourceDataToProject(d)
+	p := convertResourceDataToProject(d)
 	p, _, err := o.CreateProject(ctx, p)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	return projectToResourceData(p, d)
+	return convertProjectToResourceData(p, d)
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -137,7 +137,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	return projectToResourceData(p, d)
+	return convertProjectToResourceData(p, d)
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
@@ -148,7 +148,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	o := &scopes.Organization{
 		Client: client,
 	}
-	p := resourceDataToProject(d)
+	p := convertResourceDataToProject(d)
 	_, _, err := o.DeleteProject(ctx, p)
 	if err != nil {
 		return fmt.Errorf("failed deleting project: %w", err)
