@@ -15,8 +15,9 @@ import (
 )
 
 func TestAccProjectCreation(t *testing.T) {
-	url, cancel := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
-	defer cancel()
+	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testProviders,
