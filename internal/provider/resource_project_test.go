@@ -26,8 +26,8 @@ func TestAccProjectCreation(t *testing.T) {
 				Config: testConfig(url, firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					resource.TestCheckResourceAttr("watchtower_project.project1", PROJECT_DESCRIPTION_KEY, "bar"),
-					resource.TestCheckResourceAttr("watchtower_project.project2", PROJECT_DESCRIPTION_KEY, "project2"),
+					resource.TestCheckResourceAttr("watchtower_project.project1", projectDescriptionKey, "bar"),
+					resource.TestCheckResourceAttr("watchtower_project.project2", projectDescriptionKey, "project2"),
 				),
 			},
 			// Updates the first project to have description foo
@@ -35,8 +35,8 @@ func TestAccProjectCreation(t *testing.T) {
 				Config: testConfig(url, firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					resource.TestCheckResourceAttr("watchtower_project.project1", PROJECT_DESCRIPTION_KEY, "foo"),
-					resource.TestCheckResourceAttr("watchtower_project.project2", PROJECT_DESCRIPTION_KEY, "project2"),
+					resource.TestCheckResourceAttr("watchtower_project.project1", projectDescriptionKey, "foo"),
+					resource.TestCheckResourceAttr("watchtower_project.project2", projectDescriptionKey, "project2"),
 				),
 			},
 			// Remove second project
@@ -44,7 +44,7 @@ func TestAccProjectCreation(t *testing.T) {
 				Config: testConfig(url, firstProjectFoo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					resource.TestCheckResourceAttr("watchtower_project.project1", PROJECT_DESCRIPTION_KEY, "foo"),
+					resource.TestCheckResourceAttr("watchtower_project.project1", projectDescriptionKey, "foo"),
 				),
 			},
 		},
@@ -110,8 +110,8 @@ func TestResourceDataToProject(t *testing.T) {
 		{
 			name: "Fully populated",
 			rData: map[string]interface{}{
-				PROJECT_NAME_KEY:        "name",
-				PROJECT_DESCRIPTION_KEY: "desc",
+				projectNameKey:        "name",
+				projectDescriptionKey: "desc",
 			},
 			expected: &scopes.Project{
 				Name:        api.String("name"),
@@ -121,7 +121,7 @@ func TestResourceDataToProject(t *testing.T) {
 		{
 			name: "Name populated",
 			rData: map[string]interface{}{
-				PROJECT_NAME_KEY: "name",
+				projectNameKey: "name",
 			},
 			expected: &scopes.Project{
 				Name: api.String("name"),
@@ -130,7 +130,7 @@ func TestResourceDataToProject(t *testing.T) {
 		{
 			name: "Description populated",
 			rData: map[string]interface{}{
-				PROJECT_DESCRIPTION_KEY: "desc",
+				projectDescriptionKey: "desc",
 			},
 			expected: &scopes.Project{
 				Description: api.String("desc"),
@@ -169,8 +169,8 @@ func TestProjectToResourceData(t *testing.T) {
 				Description: api.String("desc"),
 			},
 			expected: map[string]interface{}{
-				PROJECT_NAME_KEY:        "name",
-				PROJECT_DESCRIPTION_KEY: "desc",
+				projectNameKey:        "name",
+				projectDescriptionKey: "desc",
 			},
 		},
 		{
@@ -180,7 +180,7 @@ func TestProjectToResourceData(t *testing.T) {
 				Name: api.String("name"),
 			},
 			expected: map[string]interface{}{
-				PROJECT_NAME_KEY: "name",
+				projectNameKey: "name",
 			},
 		},
 		{
@@ -190,7 +190,7 @@ func TestProjectToResourceData(t *testing.T) {
 				Description: api.String("desc"),
 			},
 			expected: map[string]interface{}{
-				PROJECT_DESCRIPTION_KEY: "desc",
+				projectDescriptionKey: "desc",
 			},
 		},
 		{
