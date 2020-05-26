@@ -651,8 +651,6 @@ github.com/hashicorp/vault/sdk v0.1.14-0.20200519221530-14615acda45f/go.mod h1:W
 github.com/hashicorp/vault/sdk v0.1.14-0.20200519221838-e0cfd64bc267/go.mod h1:WX57W2PwkrOPQ6rVQk+dy5/htHIaB4aBM70EwKThu10=
 github.com/hashicorp/vault/sdk v0.1.14-0.20200519221912-a8c2591d3641 h1:9xAZq2ZUPFaDfNwMq4TFJ5LP6+Mtx8Sp0ZPhGOdF5Lk=
 github.com/hashicorp/vault/sdk v0.1.14-0.20200519221912-a8c2591d3641/go.mod h1:WX57W2PwkrOPQ6rVQk+dy5/htHIaB4aBM70EwKThu10=
-github.com/hashicorp/watchtower v0.0.0-20200520150423-ba00b511e716 h1:cRv3udLkWiOlEeCbV7xosZRHAg4rqYMCsI8PmLRORPY=
-github.com/hashicorp/watchtower v0.0.0-20200520150423-ba00b511e716/go.mod h1:C7SdCixAYS6HEDs1vdvy/DFjGTScNQQ/lUbgqt6rPCg=
 github.com/hashicorp/watchtower v0.0.0-20200521055752-236ff297b244 h1:UPz7iN1vdZHW9tPlIK4KXiPojQSeWdhREJ8OjLS5lcs=
 github.com/hashicorp/watchtower v0.0.0-20200521055752-236ff297b244/go.mod h1:C7SdCixAYS6HEDs1vdvy/DFjGTScNQQ/lUbgqt6rPCg=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=

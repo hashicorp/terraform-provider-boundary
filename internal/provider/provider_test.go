@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -12,9 +11,6 @@ var testProvider *schema.Provider
 var testProviders map[string]terraform.ResourceProvider
 
 func init() {
-	// Always run acceptance tests since our backend is in memory.
-	os.Setenv("TF_ACC", "true")
-
 	testProvider = New().(*schema.Provider)
 	testProviders = map[string]terraform.ResourceProvider{
 		"watchtower": testProvider,
