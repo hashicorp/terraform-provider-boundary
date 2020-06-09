@@ -1,4 +1,4 @@
-default: testacc update-deps
+default: update-deps testacc 
 
 # Run acceptance tests
 .PHONY: testacc
