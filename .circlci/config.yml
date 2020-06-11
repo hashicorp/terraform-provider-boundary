@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    docker:
+    - image: circleci/golang:1.14
+    working_directory: /go/src/github.com/hashicorp/terraform-provider-watchtower
+    steps:
+    - checkout
+    - run:
+        name: "Run Acceptance Tests"
+        command: |
+          make testacc 
