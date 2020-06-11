@@ -37,7 +37,8 @@ resource "watchtower_host_catalog" "foo" {
 )
 
 func TestAccHostCatalogCreate(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	testCtlrOpts := getControllerOptions()
+	tc := controller.NewTestController(t, testCtlrOpts...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 

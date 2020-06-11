@@ -2,11 +2,13 @@ package provider
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/watchtower/testing/controller"
 )
 
 var testProvider *schema.Provider
@@ -38,4 +40,15 @@ func TestProvider(t *testing.T) {
 	if err := New().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
+}
+
+func getControllerOptions() []controller.Option {
+	var databaseURL = os.Getenv("WATCHTOWER_DATABASE_URL")
+	options := []controller.Option{controller.WithDefaultOrgId("o_0000000000")}
+
+	if databaseURL != "" {
+		options = append(options, controller.DisableDatabaseCreation(), controller.WithDatabaseURL(databaseURL))
+	}
+
+	return options
 }
