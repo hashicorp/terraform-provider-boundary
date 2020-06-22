@@ -24,8 +24,9 @@ func New() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"watchtower_project":      resourceProject(),
 			"watchtower_host_catalog": resourceHostCatalog(),
+			"watchtower_project":      resourceProject(),
+			"watchtower_user":         resourceUser(),
 		},
 	}
 
