@@ -85,23 +85,12 @@ func TestAccUser(t *testing.T) {
 	})
 }
 
-// testAccCheckUserDestroyed checks the terraform state for the host
-// catalog and returns an error if found.
-//
-// TODO(malnick) This method falls short of checking the Watchtower API for
-// the resource if the resource is not found in state. This is due to us not
-// having the host catalog ID, but it doesn't guarantee that the resource was
-// successfully removed.
-//
-// It does check Watchtower if the resource is found in state to point out any
-// misalignment between what is in state and the actual configuration.
+// testAccCheckUserDestroyed checks the terraform state for the user
+// and returns an error if found
 func testAccCheckUserDestroyed(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			// If it's not in state, it's destroyed in TF but not guaranteed to be destroyed
-			// in Watchtower. Need to find a way to get the host catalog ID here so we can
-			// form a lookup to the WT API to check this.
 			return nil
 		}
 		errs := []string{}
