@@ -11,6 +11,10 @@ import (
 const (
 	userNameKey        = "name"
 	userDescriptionKey = "description"
+	userCreatedTimeKey = "created_time"
+	userIDKey          = "id"
+	userUpdatedTimeKey = "updated_time"
+	userDisabledKey    = "disabled"
 )
 
 func resourceUser() *schema.Resource {
@@ -26,6 +30,22 @@ func resourceUser() *schema.Resource {
 			},
 			userDescriptionKey: {
 				Type:     schema.TypeString,
+				Optional: true,
+			},
+			userIDKey: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			userCreatedTimeKey: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			userUpdatedTimeKey: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			userDisabledKey: {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 		},
@@ -45,6 +65,18 @@ func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
 		if err := d.Set(userDescriptionKey, u.Description); err != nil {
 			return err
 		}
+	}
+
+	if err := d.Set(userCreatedTimeKey, u.CreatedTime); err != nil {
+		return err
+	}
+
+	if err := d.Set(userUpdatedTimeKey, u.UpdatedTime); err != nil {
+		return err
+	}
+
+	if err := d.Set(userDisabledKey, u.Disabled); err != nil {
+		return err
 	}
 
 	d.SetId(u.Id)
