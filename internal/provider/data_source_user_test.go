@@ -8,7 +8,7 @@ import (
 )
 
 var fooUserDataSource = `
-data_source "watchtower_user" "foo" {
+data "watchtower_user" "foo" {
   name = "test"
 }`
 

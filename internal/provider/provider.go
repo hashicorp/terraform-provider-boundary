@@ -30,6 +30,9 @@ func New() terraform.ResourceProvider {
 			"watchtower_role":         resourceRole(),
 			"watchtower_user":         resourceUser(),
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"watchtower_user": dataSourceUser(),
+		},
 	}
 
 	p.ConfigureFunc = providerConfigure(p)

@@ -5,14 +5,77 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/watchtower/api/scopes"
+	"github.com/hashicorp/watchtower/api/users"
 )
 
-func dataSourceWatchtowerUser() *schema.Resource {
+const (
+	userCreatedTimeKey = "created_time"
+	userIDKey          = "id"
+	userUpdatedTimeKey = "updated_time"
+	userDisabledKey    = "disabled"
+)
+
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceWatchtowerUserRead,
-		Schema: resourceUser().Schema,
+		Read: dataSourceWatchtowerUserRead,
+		Schema: map[string]*schema.Schema{
+			// when filtering by username, do not pass user ID
+			userNameKey: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			userIDKey: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			userDescriptionKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			userCreatedTimeKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			userUpdatedTimeKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			userDisabledKey: {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+		},
+	}
+}
+
+// convertUserToDataSource creates a ResourceData type from a User
+func convertUserToDataSource(u *users.User, d *schema.ResourceData) error {
+	if err := d.Set(userNameKey, u.Name); err != nil {
+		return err
 	}
 
+	if err := d.Set(userDescriptionKey, u.Description); err != nil {
+		return err
+	}
+
+	if err := d.Set(userCreatedTimeKey, u.CreatedTime); err != nil {
+		return err
+	}
+
+	if err := d.Set(userUpdatedTimeKey, u.UpdatedTime); err != nil {
+		return err
+	}
+
+	if err := d.Set(userDisabledKey, u.Disabled); err != nil {
+		return err
+	}
+
+	if err := d.Set(userIDKey, u.Id); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) error {
@@ -24,15 +87,45 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 		Client: client,
 	}
 
-	u := convertResourceDataToUser(d)
+	var (
+		id   = d.Get(userIDKey)
+		name = d.Get(userNameKey)
+	)
 
-	u, apiErr, err := o.ReadUser(ctx, u)
-	if err != nil {
-		return fmt.Errorf("error reading user: %s", err.Error())
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error reading user: %s", *apiErr.Message)
+	if id != "" && name != "" {
+		return fmt.Errorf("'name' and 'id' are mutually exclusive, please pass one attribute only for user data source")
 	}
 
-	return convertUserToResourceData(u, d)
+	u := &users.User{}
+	if id != "" {
+		u := convertResourceDataToUser(d)
+
+		u, apiErr, err := o.ReadUser(ctx, u)
+		if err != nil {
+			return fmt.Errorf("basic error reading user: %s", err.Error())
+		}
+		if apiErr != nil {
+			return fmt.Errorf("API error reading user: %s", *apiErr.Message)
+		}
+	}
+
+	if name != "" {
+		users, apiErr, err := o.ListUsers(ctx)
+		if err != nil {
+			return err
+		}
+		if apiErr != nil {
+			return fmt.Errorf("API err listing users: %s", *apiErr.Message)
+		}
+
+		for _, user := range users {
+			if user.Name == name {
+				u = user
+			}
+		}
+
+	}
+
+	return convertUserToDataSource(u, d)
+
 }
