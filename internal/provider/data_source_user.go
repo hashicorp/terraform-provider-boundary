@@ -19,7 +19,6 @@ func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceWatchtowerUserRead,
 		Schema: map[string]*schema.Schema{
-			// when filtering by username, do not pass user ID
 			userNameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -32,7 +31,6 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			userCreatedTimeKey: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -51,6 +49,7 @@ func dataSourceUser() *schema.Resource {
 
 // convertUserToDataSource creates a ResourceData type from a User
 func convertUserToDataSource(u *users.User, d *schema.ResourceData) error {
+	fmt.Printf("user '%+v'\n", u)
 	if err := d.Set(userNameKey, u.Name); err != nil {
 		return err
 	}
@@ -59,11 +58,11 @@ func convertUserToDataSource(u *users.User, d *schema.ResourceData) error {
 		return err
 	}
 
-	if err := d.Set(userCreatedTimeKey, u.CreatedTime); err != nil {
+	if err := d.Set(userCreatedTimeKey, u.CreatedTime.String()); err != nil {
 		return err
 	}
 
-	if err := d.Set(userUpdatedTimeKey, u.UpdatedTime); err != nil {
+	if err := d.Set(userUpdatedTimeKey, u.UpdatedTime.String()); err != nil {
 		return err
 	}
 
@@ -97,8 +96,10 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	u := &users.User{}
+
 	if id != "" {
-		u := convertResourceDataToUser(d)
+		//	u := convertResourceDataToUser(d)
+		u := &users.User{Id: id.(string)}
 
 		u, apiErr, err := o.ReadUser(ctx, u)
 		if err != nil {
