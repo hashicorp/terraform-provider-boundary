@@ -50,12 +50,17 @@ func dataSourceUser() *schema.Resource {
 // convertUserToDataSource creates a ResourceData type from a User
 func convertUserToDataSource(u *users.User, d *schema.ResourceData) error {
 	fmt.Printf("user '%+v'\n", u)
-	if err := d.Set(userNameKey, u.Name); err != nil {
-		return err
+
+	if u.Name != nil {
+		if err := d.Set(userNameKey, u.Name); err != nil {
+			return err
+		}
 	}
 
-	if err := d.Set(userDescriptionKey, u.Description); err != nil {
-		return err
+	if u.Description != nil {
+		if err := d.Set(userDescriptionKey, u.Description); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set(userCreatedTimeKey, u.CreatedTime.String()); err != nil {
@@ -98,16 +103,19 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 	u := &users.User{}
 
 	if id != "" {
-		//	u := convertResourceDataToUser(d)
-		u := &users.User{Id: id.(string)}
+		//user := convertResourceDataToUser(d)
+		user := &users.User{Id: id.(string)}
 
-		u, apiErr, err := o.ReadUser(ctx, u)
+		user, apiErr, err := o.ReadUser(ctx, user)
 		if err != nil {
 			return fmt.Errorf("basic error reading user: %s", err.Error())
 		}
 		if apiErr != nil {
 			return fmt.Errorf("API error reading user: %s", *apiErr.Message)
 		}
+
+		fmt.Printf("got user from read: %+v\n", user)
+		u = user
 	}
 
 	if name != "" {
@@ -121,6 +129,7 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 
 		for _, user := range users {
 			if user.Name == name {
+				fmt.Printf("got user from list %+v\n", user)
 				u = user
 			}
 		}
