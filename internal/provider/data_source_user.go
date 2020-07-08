@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -49,18 +50,23 @@ func dataSourceUser() *schema.Resource {
 
 // convertUserToDataSource creates a ResourceData type from a User
 func convertUserToDataSource(u *users.User, d *schema.ResourceData) error {
-	fmt.Printf("user '%+v'\n", u)
+	fmt.Printf("[DEBUG] converting user to data source:\n'%+v'\n", u)
 
 	if u.Name != nil {
-		if err := d.Set(userNameKey, u.Name); err != nil {
+		fmt.Printf("[DEBUG] setting user data source name attribute to '%s'\n", *u.Name)
+		if err := d.Set(userNameKey, *u.Name); err != nil {
 			return err
 		}
 	}
 
 	if u.Description != nil {
-		if err := d.Set(userDescriptionKey, u.Description); err != nil {
+		fmt.Printf("[DEBUG] setting user data source description attribute to '%s'\n", *u.Description)
+		if err := d.Set(userDescriptionKey, *u.Description); err != nil {
 			return err
 		}
+
+		fmt.Printf("[DEBUG] resource after description set:\n%+v\n", d)
+		fmt.Printf("[DEBUG] description after set: %s\n", d.Get(userDescriptionKey))
 	}
 
 	if err := d.Set(userCreatedTimeKey, u.CreatedTime.String()); err != nil {
@@ -100,10 +106,8 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("'name' and 'id' are mutually exclusive, please pass one attribute only for user data source")
 	}
 
-	u := &users.User{}
-
 	if id != "" {
-		//user := convertResourceDataToUser(d)
+		fmt.Printf("[DEBUG] searching for user by id: '%s'\n", id)
 		user := &users.User{Id: id.(string)}
 
 		user, apiErr, err := o.ReadUser(ctx, user)
@@ -114,11 +118,12 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("API error reading user: %s", *apiErr.Message)
 		}
 
-		fmt.Printf("got user from read: %+v\n", user)
-		u = user
+		fmt.Printf("[DEBUG] found user by id:\n%+v\n", user)
+		return convertUserToDataSource(user, d)
 	}
 
 	if name != "" {
+		fmt.Printf("[DEBUG] searching for user by name: '%s'\n", name)
 		users, apiErr, err := o.ListUsers(ctx)
 		if err != nil {
 			return err
@@ -127,15 +132,18 @@ func dataSourceWatchtowerUserRead(d *schema.ResourceData, meta interface{}) erro
 			return fmt.Errorf("API err listing users: %s", *apiErr.Message)
 		}
 
-		for _, user := range users {
-			if user.Name == name {
-				fmt.Printf("got user from list %+v\n", user)
-				u = user
-			}
+		if len(users) == 0 {
+			return errors.New("list users returned no users")
 		}
 
+		for _, user := range users {
+			if user.Name == name {
+				fmt.Printf("[DEBUG] found user by name:\n%+v\n", user)
+				return convertUserToDataSource(user, d)
+			}
+		}
+		return fmt.Errorf("user '%s' not found in watchtower", name)
 	}
 
-	return convertUserToDataSource(u, d)
-
+	return errors.New("id or name parameter must be passed when using the users data source")
 }
