@@ -31,7 +31,129 @@ resource "watchtower_role" "foo" {
   name = "test"
 	description = "%s"
 }`, fooRoleDescriptionUpdate)
+
+	fooRoleWithUser = `
+resource "watchtower_user" "foo" {
+  name = "foo"
+}
+
+resource "watchtower_role" "foo" {
+  name = "test"
+	description = "test description"
+	users = [watchtower_user.foo.id]
+}`
+
+	fooRoleWithUserUpdate = `
+resource "watchtower_user" "foo" {
+  name = "foo"
+}
+
+resource "watchtower_user" "bar" {
+  name = "bar"
+}
+
+resource "watchtower_role" "foo" {
+  name = "test"
+	description = "test description"
+	users = [watchtower_user.foo.id, watchtower_user.bar.id]
+}`
+
+	fooRoleWithGroups = `
+resource "watchtower_group" "foo" {
+  name = "foo"
+}
+
+resource "watchtower_role" "foo" {
+  name = "test"
+	description = "test description"
+	groups = [watchtower_group.foo.id]
+}`
+
+	fooRoleWithGroupsUpdate = `
+resource "watchtower_group" "foo" {
+  name = "foo"
+}
+
+resource "watchtower_group" "bar" {
+  name = "bar"
+}
+
+resource "watchtower_role" "foo" {
+  name = "test"
+	description = "test description"
+	groups = [watchtower_group.foo.id, watchtower_group.bar.id]
+}`
 )
+
+func TestAccRoleWithUsers(t *testing.T) {
+	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooRoleWithUser),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("watchtower_role.foo"),
+					testAccCheckRoleResourceUsersSet("watchtower_role.foo", []string{"watchtower_user.foo"}),
+					testAccCheckUserResourceExists("watchtower_user.foo"),
+					resource.TestCheckResourceAttr("watchtower_role.foo", roleDescriptionKey, "test description"),
+					resource.TestCheckResourceAttr("watchtower_role.foo", roleNameKey, "test"),
+					resource.TestCheckResourceAttr("watchtower_user.foo", "name", "foo"),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, fooRoleWithUserUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("watchtower_role.foo"),
+					testAccCheckUserResourceExists("watchtower_user.foo"),
+					testAccCheckUserResourceExists("watchtower_user.bar"),
+					testAccCheckRoleResourceUsersSet("watchtower_role.foo", []string{"watchtower_user.foo", "watchtower_user.bar"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoleWithGroups(t *testing.T) {
+	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooRoleWithGroups),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("watchtower_role.foo"),
+					testAccCheckRoleResourceGroupsSet("watchtower_role.foo", []string{"watchtower_group.foo"}),
+					testAccCheckUserResourceExists("watchtower_group.foo"),
+					resource.TestCheckResourceAttr("watchtower_role.foo", roleDescriptionKey, "test description"),
+					resource.TestCheckResourceAttr("watchtower_role.foo", roleNameKey, "test"),
+					resource.TestCheckResourceAttr("watchtower_group.foo", "name", "foo"),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, fooRoleWithGroupsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("watchtower_role.foo"),
+					testAccCheckUserResourceExists("watchtower_group.foo"),
+					testAccCheckUserResourceExists("watchtower_group.bar"),
+					testAccCheckRoleResourceGroupsSet("watchtower_role.foo", []string{"watchtower_group.foo", "watchtower_group.bar"}),
+				),
+			},
+		},
+	})
+}
 
 func TestAccRole(t *testing.T) {
 	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
@@ -139,6 +261,131 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckRoleResourceUsersSet(name string, users []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("role resource not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("role resource ID is not set")
+		}
+
+		userIDs := []string{}
+		for _, userResourceName := range users {
+			ur, ok := s.RootModule().Resources[userResourceName]
+			if !ok {
+				return fmt.Errorf("user resource not found: %s", userResourceName)
+			}
+
+			userID := ur.Primary.ID
+			if id == "" {
+				return fmt.Errorf("user resource ID not set")
+			}
+
+			userIDs = append(userIDs, userID)
+		}
+
+		md := testProvider.Meta().(*metaData)
+
+		u := roles.Role{Id: id}
+
+		o := &scopes.Organization{
+			Client: md.client,
+		}
+
+		r, _, err := o.ReadRole(md.ctx, &u)
+		if err != nil {
+			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
+		}
+
+		// for every user set as a principle on the role in the state, ensure
+		// each role in watchtower has the same setings
+		if len(r.UserIds) == 0 {
+			return fmt.Errorf("no users found in watchtower")
+		}
+
+		for _, stateUser := range r.UserIds {
+			ok := false
+			for _, gotUser := range userIDs {
+				if gotUser == stateUser {
+					fmt.Printf("[Debug] user found in WT: %s, %s", gotUser, stateUser)
+					ok = true
+				}
+			}
+			if !ok {
+				return fmt.Errorf("user in state not set in watchtower: %s", stateUser)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("role resource not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("role resource ID is not set")
+		}
+
+		groupIDs := []string{}
+		for _, groupResourceName := range groups {
+			gr, ok := s.RootModule().Resources[groupResourceName]
+			if !ok {
+				return fmt.Errorf("group resource not found: %s", groupResourceName)
+			}
+
+			groupID := gr.Primary.ID
+			if id == "" {
+				return fmt.Errorf("group resource ID not set")
+			}
+
+			groupIDs = append(groupIDs, groupID)
+		}
+
+		md := testProvider.Meta().(*metaData)
+
+		u := roles.Role{Id: id}
+
+		o := &scopes.Organization{
+			Client: md.client,
+		}
+
+		r, _, err := o.ReadRole(md.ctx, &u)
+		if err != nil {
+			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
+		}
+
+		// for every user set as a principle on the role in the state, ensure
+		// each role in watchtower has the same setings
+		if len(r.GroupIds) == 0 {
+			return fmt.Errorf("no groups found in watchtower")
+		}
+
+		for _, stateGroup := range r.GroupIds {
+			ok := false
+			for _, gotGroup := range groupIDs {
+				if gotGroup == stateGroup {
+					fmt.Printf("[Debug] group found in WT: %s, %s", gotGroup, stateGroup)
+					ok = true
+				}
+			}
+			if !ok {
+				return fmt.Errorf("group in state not set in watchtower: %s", stateGroup)
+			}
+		}
+
+		return nil
+	}
+}
 func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		md := testProvider.Meta().(*metaData)
@@ -146,6 +393,10 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
+			case "watchtower_user":
+				continue
+			case "watchtower_group":
+				continue
 			case "watchtower_role":
 
 				id := rs.Primary.ID

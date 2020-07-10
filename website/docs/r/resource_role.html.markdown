@@ -10,6 +10,7 @@ description: |-
 The role resource allows you to configure a Watchtower role. 
 
 ## Example Usage
+Basic usage:
 
 ```hcl
 resource "watchtower_role" "example" {
@@ -18,9 +19,28 @@ resource "watchtower_role" "example" {
 }
 ```
 
+Usage with a user resource:
+
+```hcl
+resource "watchtower_user" "foo" {
+  name = "User 1"
+}
+
+resource "watchtower_user" "bar" {
+  name = "User 2"
+}
+
+resource "watchtower_role" "example" {
+  name        = "My role"
+  description = "My first role!"
+  users       [watchtower_user.foo.id, watchtower_user.bar.id]
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
 * `name` - The role name. Defaults to the resource name.
 * `description` - The role description.
-
+* `users` - A list of user resource ID's to add as principles on the role.
+* `groups` - A list of group resource ID's to add as principles on the role.
