@@ -130,7 +130,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -141,7 +141,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	newRole, apiErr, err := o.CreateRole(ctx, r)
 	if apiErr != nil {
-		return fmt.Errorf("error creating role: %s\n", *apiErr.Message)
+		return fmt.Errorf("error creating role: %s\n", apiErr.Message)
 	}
 	if err != nil {
 		return fmt.Errorf("error creating role: %s\n", err)
@@ -153,7 +153,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(grants) > 0 {
 		r, apiErr, err = newRole.AddGrants(ctx, grants)
 		if apiErr != nil {
-			return fmt.Errorf("error setting grants on role:: %s\n", *apiErr.Message)
+			return fmt.Errorf("error setting grants on role:: %s\n", apiErr.Message)
 		}
 		if err != nil {
 			return fmt.Errorf("error setting grants on role: %s\n", err)
@@ -163,7 +163,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(users) > 0 || len(groups) > 0 {
 		r, apiErr, err = r.SetPrincipals(ctx, groups, users)
 		if apiErr != nil {
-			return fmt.Errorf("error setting principle on role: %s\n", *apiErr.Message)
+			return fmt.Errorf("error setting principle on role: %s\n", apiErr.Message)
 		}
 		if err != nil {
 			return fmt.Errorf("error setting principle on role: %s\n", err)
@@ -180,7 +180,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -191,7 +191,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading role: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading role: %s", *apiErr.Message)
+		return fmt.Errorf("error reading role: %s", apiErr.Message)
 	}
 
 	return convertRoleToResourceData(r, d)
@@ -202,7 +202,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -273,7 +273,7 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 

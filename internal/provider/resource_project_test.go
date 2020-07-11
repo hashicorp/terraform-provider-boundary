@@ -67,7 +67,7 @@ func testAccCheckProjectResourceExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("ID not formatted as expected")
 		}
 		md := testProvider.Meta().(*metaData)
-		o := scopes.Organization{
+		o := scopes.Org{
 			Client: md.client,
 		}
 		if _, _, err := o.ReadProject(md.ctx, &scopes.Project{Id: id}); err != nil {
@@ -82,7 +82,7 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the connection established in Provider configuration
 		md := testProvider.Meta().(*metaData)
-		o := scopes.Organization{
+		o := scopes.Org{
 			Client: md.client,
 		}
 
@@ -90,7 +90,7 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			id := rs.Primary.ID
 			switch rs.Type {
 			case "watchtower_project":
-				if _, apiErr, _ := o.ReadProject(md.ctx, &scopes.Project{Id: id}); apiErr == nil || *apiErr.Status != http.StatusNotFound {
+				if _, apiErr, _ := o.ReadProject(md.ctx, &scopes.Project{Id: id}); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed project %q: %v", id, apiErr)
 				}
 			default:
@@ -236,14 +236,3 @@ resource "watchtower_project" "project2" {
 }
 `
 )
-
-func testConfig(url string, res ...string) string {
-	provider := fmt.Sprintf(`
-provider "watchtower" {
-  base_url = "%s"
-  default_organization = "o_0000000000"
-}`, url)
-	c := []string{provider}
-	c = append(c, res...)
-	return strings.Join(c, "\n")
-}

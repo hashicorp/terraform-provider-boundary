@@ -73,7 +73,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	// The org id is declared in the client, so no need to specify that here.
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 	p := convertResourceDataToProject(d)
@@ -91,7 +91,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 	p := &scopes.Project{Id: d.Id()}
@@ -107,7 +107,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 	p := &scopes.Project{
@@ -145,7 +145,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 	p := convertResourceDataToProject(d)

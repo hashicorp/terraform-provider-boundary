@@ -135,7 +135,7 @@ func resourceHostCatalogCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating host catalog: %s", *apiErr.Message)
+		return fmt.Errorf("error creating host catalog: %s", apiErr.Message)
 	}
 
 	d.SetId(h.Id)
@@ -159,7 +159,7 @@ func resourceHostCatalogRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading host catalog: %s", *apiErr.Message)
+		return fmt.Errorf("error reading host catalog: %s", apiErr.Message)
 	}
 
 	return convertHostCatalogToResourceData(projID, h, d)
@@ -203,7 +203,7 @@ func resourceHostCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating host catalog: %s\n   Invalid request fields: %v\n", *apiErr.Message, apiErr.Details.RequestFields)
+		return fmt.Errorf("error updating host catalog: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
 	}
 
 	return convertHostCatalogToResourceData(projID, h, d)
@@ -225,7 +225,7 @@ func resourceHostCatalogDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading host catalog: %s", *apiErr.Message)
+		return fmt.Errorf("error reading host catalog: %s", apiErr.Message)
 	}
 
 	return nil

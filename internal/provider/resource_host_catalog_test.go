@@ -110,7 +110,7 @@ func testAccCheckHostCatalogDestroyed(name string) resource.TestCheckFunc {
 			Id:     rs.Primary.Attributes["project_id"],
 		}
 
-		if _, apiErr, _ := p.ReadHostCatalog(md.ctx, &h); apiErr == nil || *apiErr.Status != http.StatusNotFound {
+		if _, apiErr, _ := p.ReadHostCatalog(md.ctx, &h); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Host catalog not destroyed %q: %v", id, apiErr))
 		}
 
@@ -167,7 +167,7 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 				}
 
 				_, apiErr, _ := p.ReadHostCatalog(md.ctx, &h)
-				if apiErr == nil || *apiErr.Status != http.StatusNotFound {
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, apiErr)
 				}
 
