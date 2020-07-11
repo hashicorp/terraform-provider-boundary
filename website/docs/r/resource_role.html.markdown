@@ -33,7 +33,24 @@ resource "watchtower_user" "bar" {
 resource "watchtower_role" "example" {
   name        = "My role"
   description = "My first role!"
-  users       [watchtower_user.foo.id, watchtower_user.bar.id]
+  users       = [watchtower_user.foo.id, watchtower_user.bar.id]
+}
+
+```
+
+Usage with user and grants resource:
+
+```hcl
+resource "watchtower_user" "readonly" {
+  name = "readonly"
+  description = "A readonly user"
+}
+
+resource "watchtower_role" "readonly" {
+  name        = "readonly"
+  description = "A readonly role"
+  users       = [watchtower_user.readonly.id]
+  grants      = ["id=*;action=read"]
 }
 ```
 
