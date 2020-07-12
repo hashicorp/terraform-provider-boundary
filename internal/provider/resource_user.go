@@ -76,7 +76,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -87,7 +87,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error calling new user: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating user: %s", *apiErr.Message)
+		return fmt.Errorf("error creating user: %s", apiErr.Message)
 	}
 
 	d.SetId(u.Id)
@@ -100,7 +100,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -111,7 +111,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading user: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading user: %s", *apiErr.Message)
+		return fmt.Errorf("error reading user: %s", apiErr.Message)
 	}
 
 	return convertUserToResourceData(u, d)
@@ -122,7 +122,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -143,7 +143,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating user: %s\n   Invalid request fields: %v\n", *apiErr.Message, apiErr.Details.RequestFields)
+		return fmt.Errorf("error updating user: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
 	}
 
 	return convertUserToResourceData(u, d)
@@ -154,7 +154,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -165,7 +165,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting user: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting user: %s", *apiErr.Message)
+		return fmt.Errorf("error deleting user: %s", apiErr.Message)
 	}
 
 	return nil

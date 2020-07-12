@@ -76,7 +76,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -87,7 +87,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error calling new group: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating group: %s", *apiErr.Message)
+		return fmt.Errorf("error creating group: %s", apiErr.Message)
 	}
 
 	d.SetId(u.Id)
@@ -100,7 +100,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -111,7 +111,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading group: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading group: %s", *apiErr.Message)
+		return fmt.Errorf("error reading group: %s", apiErr.Message)
 	}
 
 	return convertGroupToResourceData(u, d)
@@ -122,7 +122,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -143,7 +143,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating group: %s\n   Invalid request fields: %v\n", *apiErr.Message, apiErr.Details.RequestFields)
+		return fmt.Errorf("error updating group: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
 	}
 
 	return convertGroupToResourceData(u, d)
@@ -154,7 +154,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Organization{
+	o := &scopes.Org{
 		Client: client,
 	}
 
@@ -165,7 +165,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting group: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting group: %s", *apiErr.Message)
+		return fmt.Errorf("error deleting group: %s", apiErr.Message)
 	}
 
 	return nil

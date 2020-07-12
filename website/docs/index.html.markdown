@@ -1,25 +1,25 @@
 ---
-layout: "scaffolding"
-page_title: "Provider: Scaffolding"
-sidebar_current: "docs-scaffolding-index"
+layout: "watchtower"
+page_title: "Provider: Watchtower"
+sidebar_current: "docs-watchtower-index"
 description: |-
-  Terraform provider scaffolding.
+  Terraform provider Watchtower.
 ---
 
-# Scaffolding Provider
+# Watchtower Provider
 
-Use this paragraph to give a high-level overview of your provider, and any configuration it requires.
-
-Use the navigation to the left to read about the available resources.
+This provider configures Watchtower. 
 
 ## Example Usage
 
-```hcl
-provider "scaffolding" {
-}
+Do not keep your authentication password in HCL for production environments, use Terraform environment variables.
 
-# Example resource configuration
-resource "scaffolding_resource" "example" {
-  # ...
+```hcl
+provider "watchtower" {
+  base_url             = "https://127.0.0.1:9200"
+  default_organization = "o_0000000000"
+	auth_method_id       = "am_1234567890"
+	auth_method_username = "foo"
+	auth_method_password = "bar"
 }
 ```

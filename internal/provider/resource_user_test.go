@@ -116,10 +116,10 @@ func testAccCheckUserDestroyed(name string) resource.TestCheckFunc {
 
 		u := users.User{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
-		if _, apiErr, _ := o.ReadUser(md.ctx, &u); apiErr == nil || *apiErr.Status != http.StatusNotFound {
+		if _, apiErr, _ := o.ReadUser(md.ctx, &u); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("User not destroyed %q: %v", id, apiErr))
 		}
 
@@ -143,7 +143,7 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 
 		u := users.User{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
 		if _, _, err := o.ReadUser(md.ctx, &u); err != nil {
@@ -167,12 +167,12 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				u := users.User{Id: id}
 
-				o := &scopes.Organization{
+				o := &scopes.Org{
 					Client: client,
 				}
 
 				_, apiErr, _ := o.ReadUser(md.ctx, &u)
-				if apiErr == nil || *apiErr.Status != http.StatusNotFound {
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, apiErr)
 				}
 

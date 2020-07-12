@@ -271,10 +271,10 @@ func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
 
 		u := roles.Role{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
-		if _, apiErr, _ := o.ReadRole(md.ctx, &u); apiErr == nil || *apiErr.Status != http.StatusNotFound {
+		if _, apiErr, _ := o.ReadRole(md.ctx, &u); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Role not destroyed %q: %v", id, apiErr))
 		}
 
@@ -298,7 +298,7 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 
 		u := roles.Role{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
 		if _, _, err := o.ReadRole(md.ctx, &u); err != nil {
@@ -340,7 +340,7 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 
 		u := roles.Role{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
 
@@ -402,7 +402,7 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 
 		u := roles.Role{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
 
@@ -449,7 +449,7 @@ func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) res
 
 		u := roles.Role{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
 
@@ -496,12 +496,12 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				u := roles.Role{Id: id}
 
-				o := &scopes.Organization{
+				o := &scopes.Org{
 					Client: client,
 				}
 
 				_, apiErr, _ := o.ReadRole(md.ctx, &u)
-				if apiErr == nil || *apiErr.Status != http.StatusNotFound {
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed role %q: %v", id, apiErr)
 				}
 

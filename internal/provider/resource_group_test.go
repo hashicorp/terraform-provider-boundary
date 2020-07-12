@@ -101,10 +101,10 @@ func testAccCheckGroupDestroyed(name string) resource.TestCheckFunc {
 
 		u := groups.Group{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
-		if _, apiErr, _ := o.ReadGroup(md.ctx, &u); apiErr == nil || *apiErr.Status != http.StatusNotFound {
+		if _, apiErr, _ := o.ReadGroup(md.ctx, &u); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Group not destroyed %q: %v", id, apiErr))
 		}
 
@@ -128,7 +128,7 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 
 		u := groups.Group{Id: id}
 
-		o := &scopes.Organization{
+		o := &scopes.Org{
 			Client: md.client,
 		}
 		if _, _, err := o.ReadGroup(md.ctx, &u); err != nil {
@@ -152,12 +152,12 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				u := groups.Group{Id: id}
 
-				o := &scopes.Organization{
+				o := &scopes.Org{
 					Client: client,
 				}
 
 				_, apiErr, _ := o.ReadGroup(md.ctx, &u)
-				if apiErr == nil || *apiErr.Status != http.StatusNotFound {
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed group %q: %v", id, apiErr)
 				}
 
