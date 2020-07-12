@@ -41,6 +41,11 @@ func resourceRole() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			roleGrantsKey: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 
@@ -68,6 +73,12 @@ func convertRoleToResourceData(u *roles.Role, d *schema.ResourceData) error {
 
 	if u.GroupIds != nil {
 		if err := d.Set(roleGroupsKey, u.GroupIds); err != nil {
+			return err
+		}
+	}
+
+	if u.Grants != nil {
+		if err := d.Set(roleGrantsKey, u.Grants); err != nil {
 			return err
 		}
 	}
@@ -100,6 +111,12 @@ func convertResourceDataToRole(d *schema.ResourceData) *roles.Role {
 			u.UserIds = append(u.UserIds, i.(string))
 		}
 	}
+	if val, ok := d.GetOk(roleGrantsKey); ok {
+		grants := val.(*schema.Set).List()
+		for _, i := range grants {
+			u.Grants = append(u.Grants, i.(string))
+		}
+	}
 
 	if d.Id() != "" {
 		u.Id = d.Id()
@@ -120,16 +137,36 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	r := convertResourceDataToRole(d)
 	users := r.UserIds
 	groups := r.GroupIds
+	grants := r.Grants
 
-	r, apiErr, err := o.CreateRole(ctx, r)
-	if apiErr != nil || err != nil {
-		return fmt.Errorf("error creating role:\n  API Err: %v\n  Err: %v\n", *apiErr.Message, err)
+	newRole, apiErr, err := o.CreateRole(ctx, r)
+	if apiErr != nil {
+		return fmt.Errorf("error creating role: %s\n", *apiErr.Message)
+	}
+	if err != nil {
+		return fmt.Errorf("error creating role: %s\n", err)
+	}
+
+	// on first create CreateRole() returns without err but upon
+	// running AddGrants it claims the role is not found. This
+	// doesn't occur in the test case but only on a live cluster.
+	if len(grants) > 0 {
+		r, apiErr, err = newRole.AddGrants(ctx, grants)
+		if apiErr != nil {
+			return fmt.Errorf("error setting grants on role:: %s\n", *apiErr.Message)
+		}
+		if err != nil {
+			return fmt.Errorf("error setting grants on role: %s\n", err)
+		}
 	}
 
 	if len(users) > 0 || len(groups) > 0 {
 		r, apiErr, err = r.SetPrincipals(ctx, groups, users)
-		if apiErr != nil || err != nil {
-			return fmt.Errorf("error setting principle on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr.Message, err)
+		if apiErr != nil {
+			return fmt.Errorf("error setting principle on role: %s\n", *apiErr.Message)
+		}
+		if err != nil {
+			return fmt.Errorf("error setting principle on role: %s\n", err)
 		}
 	}
 
@@ -183,10 +220,26 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	r.GroupIds = nil
 	r.UserIds = nil
+	r.Grants = nil
 
 	r, apiErr, err := o.UpdateRole(ctx, r)
 	if apiErr != nil || err != nil {
-		return fmt.Errorf("error updating role:\n  API Err: %v\n  Err: %v\n", *apiErr.Message, err)
+		return fmt.Errorf("error updating role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+	}
+
+	grants := []string{}
+	if d.HasChange(roleGrantsKey) {
+		grantSet := d.Get(roleGrantsKey).(*schema.Set).List()
+		for _, grant := range grantSet {
+			grants = append(grants, grant.(string))
+		}
+	}
+
+	if d.HasChange(roleGrantsKey) {
+		_, apiErr, err := r.SetGrants(ctx, grants)
+		if apiErr != nil || err != nil {
+			return fmt.Errorf("error setting grants on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+		}
 	}
 
 	userIDs := []string{}
@@ -208,7 +261,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange(roleGroupsKey) || d.HasChange(roleUsersKey) {
 		r, apiErr, err = r.SetPrincipals(ctx, groupIDs, userIDs)
 		if apiErr != nil || err != nil {
-			return fmt.Errorf("error updating principle on role:\n  API Err: %v\n  Err: %v\n", *apiErr.Message, err)
+			return fmt.Errorf("error updating principle on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
 		}
 	}
 
@@ -228,7 +281,7 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, apiErr, err := o.DeleteRole(ctx, r)
 	if apiErr != nil || err != nil {
-		return fmt.Errorf("error deleting role:\n  API Err: %v\n  Err: %v\n", *apiErr.Message, err)
+		return fmt.Errorf("error deleting role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
 	}
 
 	return nil

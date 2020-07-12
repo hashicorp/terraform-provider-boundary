@@ -83,7 +83,55 @@ resource "watchtower_role" "foo" {
 	description = "test description"
 	groups = [watchtower_group.foo.id, watchtower_group.bar.id]
 }`
+
+	readonlyGrant       = "id=*;actions=read"
+	readonlyGrantUpdate = "id=*;actions=read,create"
+	fooRoleWithGrants   = fmt.Sprintf(`
+resource "watchtower_role" "foo" {
+  name = "readonly"
+	description = "test description"
+	grants = ["%s"]
+}`, readonlyGrant)
+	fooRoleWithGrantsUpdate = fmt.Sprintf(`
+resource "watchtower_role" "foo" {
+  name = "readonly"
+	description = "test description"
+	grants = ["%s", "%s"]
+}`, readonlyGrant, readonlyGrantUpdate)
 )
+
+func TestAccRoleWithGrants(t *testing.T) {
+	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooRoleWithGrants),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("watchtower_role.foo"),
+					testAccCheckRoleResourceGrantsSet("watchtower_role.foo", []string{readonlyGrant}),
+					resource.TestCheckResourceAttr("watchtower_role.foo", "name", "readonly"),
+					resource.TestCheckResourceAttr("watchtower_role.foo", "description", "test description"),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, fooRoleWithGrantsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("watchtower_role.foo"),
+					testAccCheckRoleResourceGrantsSet("watchtower_role.foo", []string{readonlyGrant, readonlyGrantUpdate}),
+					resource.TestCheckResourceAttr("watchtower_role.foo", "name", "readonly"),
+					resource.TestCheckResourceAttr("watchtower_role.foo", "description", "test description"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccRoleWithUsers(t *testing.T) {
 	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
@@ -311,7 +359,6 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 			ok := false
 			for _, gotUser := range userIDs {
 				if gotUser == stateUser {
-					fmt.Printf("[Debug] user found in WT: %s, %s", gotUser, stateUser)
 					ok = true
 				}
 			}
@@ -374,7 +421,6 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 			ok := false
 			for _, gotGroup := range groupIDs {
 				if gotGroup == stateGroup {
-					fmt.Printf("[Debug] group found in WT: %s, %s", gotGroup, stateGroup)
 					ok = true
 				}
 			}
@@ -386,6 +432,53 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 		return nil
 	}
 }
+
+func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("role resource not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("role resource ID is not set")
+		}
+
+		md := testProvider.Meta().(*metaData)
+
+		u := roles.Role{Id: id}
+
+		o := &scopes.Organization{
+			Client: md.client,
+		}
+
+		r, _, err := o.ReadRole(md.ctx, &u)
+		if err != nil {
+			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
+		}
+
+		// for each expected grant, ensure they're set on the role
+		if len(r.Grants) == 0 {
+			return fmt.Errorf("no grants found on role, %+v\n", r)
+		}
+
+		for _, grant := range expectedGrants {
+			ok = false
+			for _, gotGrant := range r.Grants {
+				if gotGrant == grant {
+					ok = true
+				}
+			}
+			if !ok {
+				return fmt.Errorf("expected grant not found on role, %s: %s\n  Have: %v\n", *r.Name, grant, r)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		md := testProvider.Meta().(*metaData)
