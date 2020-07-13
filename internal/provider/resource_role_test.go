@@ -349,13 +349,13 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
 
-		// for every user set as a principle on the role in the state, ensure
+		// for every user set as a principal on the role in the state, ensure
 		// each role in watchtower has the same setings
-		if len(r.UserIds) == 0 {
+		if len(r.PrincipalIds) == 0 {
 			return fmt.Errorf("no users found in watchtower")
 		}
 
-		for _, stateUser := range r.UserIds {
+		for _, stateUser := range r.PrincipalIds {
 			ok := false
 			for _, gotUser := range userIDs {
 				if gotUser == stateUser {
@@ -411,13 +411,13 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
 
-		// for every user set as a principle on the role in the state, ensure
+		// for every user set as a principal on the role in the state, ensure
 		// each role in watchtower has the same setings
-		if len(r.GroupIds) == 0 {
+		if len(r.PrincipalIds) == 0 {
 			return fmt.Errorf("no groups found in watchtower")
 		}
 
-		for _, stateGroup := range r.GroupIds {
+		for _, stateGroup := range r.PrincipalIds {
 			ok := false
 			for _, gotGroup := range groupIDs {
 				if gotGroup == stateGroup {

@@ -33,7 +33,7 @@ resource "watchtower_user" "bar" {
 resource "watchtower_role" "example" {
   name        = "My role"
   description = "My first role!"
-  users       = [watchtower_user.foo.id, watchtower_user.bar.id]
+  principals  = [watchtower_user.foo.id, watchtower_user.bar.id]
 }
 
 ```
@@ -49,7 +49,7 @@ resource "watchtower_user" "readonly" {
 resource "watchtower_role" "readonly" {
   name        = "readonly"
   description = "A readonly role"
-  users       = [watchtower_user.readonly.id]
+  principals  = [watchtower_user.readonly.id]
   grants      = ["id=*;action=read"]
 }
 ```
@@ -59,5 +59,4 @@ resource "watchtower_role" "readonly" {
 The following arguments are optional:
 * `name` - The role name. Defaults to the resource name.
 * `description` - The role description.
-* `users` - A list of user resource ID's to add as principles on the role.
-* `groups` - A list of group resource ID's to add as principles on the role.
+* `principals` - A list of principal (user or group) IDs to add as principals on the role.
