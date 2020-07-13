@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
 	github.com/hashicorp/terraform-svchost v0.0.0-20191119180714-d2e4933b9136 // indirect
 	github.com/hashicorp/vault-plugin-secrets-ad v0.6.5 // indirect
-	github.com/hashicorp/watchtower v0.0.0-20200713052922-d27e78c4e934
+	github.com/hashicorp/watchtower v0.0.0-20200713141623-7bd1abf3a947
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect

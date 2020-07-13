@@ -778,6 +778,10 @@ github.com/hashicorp/watchtower v0.0.0-20200712212453-26d36ec7460c h1:ZlGmrFEcPW
 github.com/hashicorp/watchtower v0.0.0-20200712212453-26d36ec7460c/go.mod h1:QqWMjDaiUBRW9AafTTqb1HFXZEK4wCqOkeYMvlx1CaM=
 github.com/hashicorp/watchtower v0.0.0-20200713025149-b46cdad3c52e h1:3SXFlSQm7d2EuL0tBCbnRoelKZN7cT3+BZJdwIJzIC8=
 github.com/hashicorp/watchtower v0.0.0-20200713025149-b46cdad3c52e/go.mod h1:i9wJ1Q4eQ0ES4NWpc57eDfZBpKLlji2m1x4pJJtNb44=
+github.com/hashicorp/watchtower v0.0.0-20200713052922-d27e78c4e934 h1:2zYVtKbXdqFg23MhlYGijkV4xmJ7dp+b2TaYKG+8zGs=
+github.com/hashicorp/watchtower v0.0.0-20200713052922-d27e78c4e934/go.mod h1:i9wJ1Q4eQ0ES4NWpc57eDfZBpKLlji2m1x4pJJtNb44=
+github.com/hashicorp/watchtower v0.0.0-20200713141623-7bd1abf3a947 h1:d2FCMmEUB6ntTsI498BcL5nEOQ4JDOiQjC/mGKub7Hk=
+github.com/hashicorp/watchtower v0.0.0-20200713141623-7bd1abf3a947/go.mod h1:i9wJ1Q4eQ0ES4NWpc57eDfZBpKLlji2m1x4pJJtNb44=
 github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d h1:kJCB4vdITiW1eC1vq2e6IsrXKrZit1bv/TDYFGMp4BQ=
 github.com/hashicorp/yamux v0.0.0-20181012175058-2f1d1f20f75d/go.mod h1:+NfK9FKeTrX5uv1uIXGdwYDTeHna2qgaIlx54MXqjAM=
