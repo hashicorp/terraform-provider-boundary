@@ -1,19 +1,19 @@
 ---
-layout: "watchtower"
-page_title: "Watchtower: role_resource"
-sidebar_current: "docs-watchtower-role-resource"
+layout: "boundary"
+page_title: "Boundary: role_resource"
+sidebar_current: "docs-boundary-role-resource"
 description: |-
-  Role resource for the Watchtower Terraform provider.
+  Role resource for the Boundary Terraform provider.
 ---
 
 # role_resource 
-The role resource allows you to configure a Watchtower role. 
+The role resource allows you to configure a Boundary role. 
 
 ## Example Usage
 Basic usage:
 
 ```hcl
-resource "watchtower_role" "example" {
+resource "boundary_role" "example" {
   name        = "My role"
   description = "My first role!"
 }
@@ -22,18 +22,18 @@ resource "watchtower_role" "example" {
 Usage with a user resource:
 
 ```hcl
-resource "watchtower_user" "foo" {
+resource "boundary_user" "foo" {
   name = "User 1"
 }
 
-resource "watchtower_user" "bar" {
+resource "boundary_user" "bar" {
   name = "User 2"
 }
 
-resource "watchtower_role" "example" {
+resource "boundary_role" "example" {
   name        = "My role"
   description = "My first role!"
-  principals  = [watchtower_user.foo.id, watchtower_user.bar.id]
+  principals  = [boundary_user.foo.id, boundary_user.bar.id]
 }
 
 ```
@@ -41,15 +41,15 @@ resource "watchtower_role" "example" {
 Usage with user and grants resource:
 
 ```hcl
-resource "watchtower_user" "readonly" {
+resource "boundary_user" "readonly" {
   name = "readonly"
   description = "A readonly user"
 }
 
-resource "watchtower_role" "readonly" {
+resource "boundary_role" "readonly" {
   name        = "readonly"
   description = "A readonly role"
-  principals  = [watchtower_user.readonly.id]
+  principals  = [boundary_user.readonly.id]
   grants      = ["id=*;action=read"]
 }
 ```

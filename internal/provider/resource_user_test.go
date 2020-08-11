@@ -9,9 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/watchtower/api/scopes"
-	"github.com/hashicorp/watchtower/api/users"
-	"github.com/hashicorp/watchtower/testing/controller"
+	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/boundary/api/users"
+	"github.com/hashicorp/boundary/testing/controller"
 )
 
 const (
@@ -22,18 +22,18 @@ const (
 
 var (
 	fooUser = fmt.Sprintf(`
-resource "watchtower_user" "foo" {
+resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
 }`, fooUserDescription)
 
 	fooUserUpdate = fmt.Sprintf(`
-resource "watchtower_user" "foo" {
+resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
 }`, fooUserDescriptionUpdate)
 	fooUserUnset = fmt.Sprintf(`
-resource "watchtower_user" "foo" {
+resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
 }`, fooUserDescriptionUnset)
@@ -52,25 +52,25 @@ func TestAccUser(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooUser),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("watchtower_user.foo"),
-					resource.TestCheckResourceAttr("watchtower_user.foo", userDescriptionKey, fooUserDescription),
-					resource.TestCheckResourceAttr("watchtower_user.foo", userNameKey, "test"),
+					testAccCheckUserResourceExists("boundary_user.foo"),
+					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescription),
+					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooUserUnset),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("watchtower_user.foo"),
-					resource.TestCheckResourceAttr("watchtower_user.foo", userDescriptionKey, fooUserDescriptionUnset),
+					testAccCheckUserResourceExists("boundary_user.foo"),
+					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUnset),
 				),
 			},
 			{
 				// test unset
 				Config: testConfig(url, fooUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("watchtower_user.foo"),
-					resource.TestCheckResourceAttr("watchtower_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
+					testAccCheckUserResourceExists("boundary_user.foo"),
+					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
 				),
 			},
 
@@ -78,7 +78,7 @@ func TestAccUser(t *testing.T) {
 				// test destroy
 				Config: testConfig(url),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserDestroyed("watchtower_user.foo"),
+					testAccCheckUserDestroyed("boundary_user.foo"),
 				),
 			},
 		},
@@ -88,19 +88,19 @@ func TestAccUser(t *testing.T) {
 // testAccCheckUserDestroyed checks the terraform state for the host
 // catalog and returns an error if found.
 //
-// TODO(malnick) This method falls short of checking the Watchtower API for
+// TODO(malnick) This method falls short of checking the Boundary API for
 // the resource if the resource is not found in state. This is due to us not
 // having the host catalog ID, but it doesn't guarantee that the resource was
 // successfully removed.
 //
-// It does check Watchtower if the resource is found in state to point out any
+// It does check Boundary if the resource is found in state to point out any
 // misalignment between what is in state and the actual configuration.
 func testAccCheckUserDestroyed(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			// If it's not in state, it's destroyed in TF but not guaranteed to be destroyed
-			// in Watchtower. Need to find a way to get the host catalog ID here so we can
+			// in Boundary. Need to find a way to get the host catalog ID here so we can
 			// form a lookup to the WT API to check this.
 			return nil
 		}
@@ -161,7 +161,7 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "watchtower_user":
+			case "boundary_user":
 
 				id := rs.Primary.ID
 

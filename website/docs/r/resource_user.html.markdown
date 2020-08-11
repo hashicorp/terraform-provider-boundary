@@ -1,18 +1,18 @@
 ---
-layout: "watchtower"
-page_title: "Watchtower: user_resource"
-sidebar_current: "docs-watchtower-user-resource"
+layout: "boundary"
+page_title: "Boundary: user_resource"
+sidebar_current: "docs-boundary-user-resource"
 description: |-
-  User resource for the Watchtower Terraform provider.
+  User resource for the Boundary Terraform provider.
 ---
 
 # user_resource 
-The user resource allows you to configure a Watchtower user. 
+The user resource allows you to configure a Boundary user. 
 
 ## Example Usage
 
 ```hcl
-resource "watchtower_user" "example" {
+resource "boundary_user" "example" {
   name        = "My user"
   description = "My first user!"
 }

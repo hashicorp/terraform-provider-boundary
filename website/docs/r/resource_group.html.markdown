@@ -1,18 +1,18 @@
 ---
-layout: "watchtower"
-page_title: "Watchtower: group_resource"
-sidebar_current: "docs-watchtower-group-resource"
+layout: "boundary"
+page_title: "Boundary: group_resource"
+sidebar_current: "docs-boundary-group-resource"
 description: |-
-  Group resource for the Watchtower Terraform provider.
+  Group resource for the Boundary Terraform provider.
 ---
 
-# watchtower_group_resource 
-The group resource allows you to configure a Watchtower group. 
+# boundary_group_resource 
+The group resource allows you to configure a Boundary group. 
 
 ## Example Usage
 
 ```hcl
-resource "watchtower_group" "example" {
+resource "boundary_group" "example" {
   name        = "My group"
   description = "My first group!"
 }

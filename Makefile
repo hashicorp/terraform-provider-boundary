@@ -16,4 +16,4 @@ update-deps:
 	GOPROXY=direct GOSUMDB=off go get -u
 
 dev:
-	go build -o ~/.terraform.d/plugins/terraform-provider-watchtower main.go
+	go build -o ~/.terraform.d/plugins/terraform-provider-boundary main.go
