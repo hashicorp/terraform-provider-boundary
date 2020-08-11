@@ -3,9 +3,8 @@ package provider
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/boundary/api/groups"
-	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -34,41 +33,39 @@ func resourceGroup() *schema.Resource {
 }
 
 // convertGroupToResourceData creates a ResourceData type from a Group
-func convertGroupToResourceData(u *groups.Group, d *schema.ResourceData) error {
-	if u.Name != nil {
-		if err := d.Set(groupNameKey, u.Name); err != nil {
+func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
+	if g.Name != "" {
+		if err := d.Set(groupNameKey, g.Name); err != nil {
 			return err
 		}
 	}
 
-	if u.Description != nil {
-		if err := d.Set(groupDescriptionKey, u.Description); err != nil {
+	if g.Description != "" {
+		if err := d.Set(groupDescriptionKey, g.Description); err != nil {
 			return err
 		}
 	}
 
-	d.SetId(u.Id)
+	d.SetId(g.Id)
 
 	return nil
 }
 
 // convertResourceDataToGroup returns a localy built Group using the values provided in the ResourceData.
 func convertResourceDataToGroup(d *schema.ResourceData) *groups.Group {
-	u := &groups.Group{}
+	g := &groups.Group{}
 	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
-		desc := descVal.(string)
-		u.Description = &desc
+		g.Description = descVal.(string)
 	}
 	if nameVal, ok := d.GetOk(groupNameKey); ok {
-		name := nameVal.(string)
-		u.Name = &name
+		g.Name = nameVal.(string)
 	}
 
 	if d.Id() != "" {
-		u.Id = d.Id()
+		g.Id = d.Id()
 	}
 
-	return u
+	return g
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
@@ -76,13 +73,11 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
+	grps := groups.NewGroupsClient(client)
 
-	u := convertResourceDataToGroup(d)
+	g := convertResourceDataToGroup(d)
 
-	u, apiErr, err := o.CreateGroup(ctx, u)
+	g, apiErr, err := grps.Create(ctx, groups.WithName(g.Name), groups.WithDescription(g.Description))
 	if err != nil {
 		return fmt.Errorf("error calling new group: %s", err.Error())
 	}
@@ -90,7 +85,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating group: %s", apiErr.Message)
 	}
 
-	d.SetId(u.Id)
+	d.SetId(g.Id)
 
 	return nil
 }
@@ -100,13 +95,11 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
+	grps := groups.NewGroupsClient(client)
 
-	u := convertResourceDataToGroup(d)
+	g := convertResourceDataToGroup(d)
 
-	u, apiErr, err := o.ReadGroup(ctx, u)
+	g, apiErr, err := grps.Read(ctx, g.Id)
 	if err != nil {
 		return fmt.Errorf("error reading group: %s", err.Error())
 	}
@@ -114,7 +107,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading group: %s", apiErr.Message)
 	}
 
-	return convertGroupToResourceData(u, d)
+	return convertGroupToResourceData(g, d)
 }
 
 func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -122,23 +115,25 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
+	grps := groups.NewGroupsClient(client)
 
-	u := convertResourceDataToGroup(d)
+	g := convertResourceDataToGroup(d)
 
 	if d.HasChange(groupNameKey) {
-		n := d.Get(groupNameKey).(string)
-		u.Name = &n
+		g.Name = d.Get(groupNameKey).(string)
 	}
 
 	if d.HasChange(groupDescriptionKey) {
-		d := d.Get(groupDescriptionKey).(string)
-		u.Description = &d
+		g.Description = d.Get(groupDescriptionKey).(string)
 	}
 
-	u, apiErr, err := o.UpdateGroup(ctx, u)
+	g, apiErr, err := grps.Update(
+		ctx,
+		g.Id,
+		0,
+		groups.WithAutomaticVersioning(),
+		groups.WithName(g.Name),
+		groups.WithDescription(g.Description))
 	if err != nil {
 		return err
 	}
@@ -146,7 +141,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error updating group: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
 	}
 
-	return convertGroupToResourceData(u, d)
+	return convertGroupToResourceData(g, d)
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
@@ -154,13 +149,11 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
+	grps := groups.NewGroupsClient(client)
 
-	u := convertResourceDataToGroup(d)
+	g := convertResourceDataToGroup(d)
 
-	_, apiErr, err := o.DeleteGroup(ctx, u)
+	_, apiErr, err := grps.Delete(ctx, g.Id)
 	if err != nil {
 		return fmt.Errorf("error deleting group: %s", err.Error())
 	}
