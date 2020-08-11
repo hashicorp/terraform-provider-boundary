@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/watchtower/api/scopes"
+	"github.com/hashicorp/boundary/api/scopes"
 )
 
 const (
@@ -34,7 +34,7 @@ func resourceProject() *schema.Resource {
 }
 
 // convertProjectToResourceData populates the provided ResourceData with the appropriate values from the provided Project.
-// The project passed into thie function should be one read from the watchtower API with all fields populated.
+// The project passed into thie function should be one read from the boundary API with all fields populated.
 func convertProjectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
 	if p.Name != nil {
 		if err := d.Set(projectNameKey, p.Name); err != nil {

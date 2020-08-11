@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/watchtower/api/hosts"
-	"github.com/hashicorp/watchtower/api/scopes"
+	"github.com/hashicorp/boundary/api/hosts"
+	"github.com/hashicorp/boundary/api/scopes"
 )
 
 const (

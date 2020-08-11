@@ -9,9 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/watchtower/api/groups"
-	"github.com/hashicorp/watchtower/api/scopes"
-	"github.com/hashicorp/watchtower/testing/controller"
+	"github.com/hashicorp/boundary/api/groups"
+	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/boundary/testing/controller"
 )
 
 const (
@@ -21,13 +21,13 @@ const (
 
 var (
 	fooGroup = fmt.Sprintf(`
-resource "watchtower_group" "foo" {
+resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
 }`, fooGroupDescription)
 
 	fooGroupUpdate = fmt.Sprintf(`
-resource "watchtower_group" "foo" {
+resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
 }`, fooGroupDescriptionUpdate)
@@ -46,24 +46,24 @@ func TestAccGroup(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("watchtower_group.foo"),
-					resource.TestCheckResourceAttr("watchtower_group.foo", groupDescriptionKey, fooGroupDescription),
-					resource.TestCheckResourceAttr("watchtower_group.foo", groupNameKey, "test"),
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("watchtower_group.foo"),
-					resource.TestCheckResourceAttr("watchtower_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
 				),
 			},
 			{
 				// test destroy
 				Config: testConfig(url),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupDestroyed("watchtower_group.foo"),
+					testAccCheckGroupDestroyed("boundary_group.foo"),
 				),
 			},
 		},
@@ -73,19 +73,19 @@ func TestAccGroup(t *testing.T) {
 // testAccCheckGroupDestroyed checks the terraform state for the host
 // catalog and returns an error if found.
 //
-// TODO(malnick) This method falls short of checking the Watchtower API for
+// TODO(malnick) This method falls short of checking the Boundary API for
 // the resource if the resource is not found in state. This is due to us not
 // having the host catalog ID, but it doesn't guarantee that the resource was
 // successfully removed.
 //
-// It does check Watchtower if the resource is found in state to point out any
+// It does check Boundary if the resource is found in state to point out any
 // misalignment between what is in state and the actual configuration.
 func testAccCheckGroupDestroyed(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			// If it's not in state, it's destroyed in TF but not guaranteed to be destroyed
-			// in Watchtower. Need to find a way to get the host catalog ID here so we can
+			// in Boundary. Need to find a way to get the host catalog ID here so we can
 			// form a lookup to the WT API to check this.
 			return nil
 		}
@@ -146,7 +146,7 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "watchtower_group":
+			case "boundary_group":
 
 				id := rs.Primary.ID
 

@@ -1,28 +1,28 @@
 ---
-layout: "watchtower"
-page_title: "Watchtower: host_catalog_resource"
-sidebar_current: "docs-watchtower-host-catalog-resource"
+layout: "boundary"
+page_title: "Boundary: host_catalog_resource"
+sidebar_current: "docs-boundary-host-catalog-resource"
 description: |-
-  Host catalog resource for the Watchtower Terraform provider.
+  Host catalog resource for the Boundary Terraform provider.
 ---
 
 # host_catalog_resource 
-The host catalog resource allows you to configure a Watchtower host catalog. Host catalogs
+The host catalog resource allows you to configure a Boundary host catalog. Host catalogs
 are always part of a project, so a project resource should be used inline or you should have
 the project ID in hand to successfully configure a host catalog. 
 
 ## Example Usage
 
 ```hcl
-resource "watchtower_project" "example" {
+resource "boundary_project" "example" {
   description = "My first project!"
 }
 
-resource "watchtower_host_catalog" "example" {
+resource "boundary_host_catalog" "example" {
   name        = "My catalog"
   description = "My first host catalog!"
   type        = "Static"
-  project_id  = watchtower_project.example.id
+  project_id  = boundary_project.example.id
 }
 ```
 

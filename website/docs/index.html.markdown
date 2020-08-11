@@ -1,21 +1,21 @@
 ---
-layout: "watchtower"
-page_title: "Provider: Watchtower"
-sidebar_current: "docs-watchtower-index"
+layout: "boundary"
+page_title: "Provider: Boundary"
+sidebar_current: "docs-boundary-index"
 description: |-
-  Terraform provider Watchtower.
+  Terraform provider Boundary.
 ---
 
-# Watchtower Provider
+# Boundary Provider
 
-This provider configures Watchtower. 
+This provider configures Boundary. 
 
 ## Example Usage
 
 Do not keep your authentication password in HCL for production environments, use Terraform environment variables.
 
 ```hcl
-provider "watchtower" {
+provider "boundary" {
   base_url             = "https://127.0.0.1:9200"
   default_organization = "o_0000000000"
 	auth_method_id       = "am_1234567890"

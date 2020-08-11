@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/watchtower/api"
-	"github.com/hashicorp/watchtower/api/scopes"
-	"github.com/hashicorp/watchtower/testing/controller"
+	"github.com/hashicorp/boundary/api"
+	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,26 +26,26 @@ func TestAccProjectCreation(t *testing.T) {
 			{
 				Config: testConfig(url, firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					resource.TestCheckResourceAttr("watchtower_project.project1", projectDescriptionKey, "bar"),
-					resource.TestCheckResourceAttr("watchtower_project.project2", projectDescriptionKey, "project2"),
+					testAccCheckProjectResourceExists("boundary_project.project1"),
+					resource.TestCheckResourceAttr("boundary_project.project1", projectDescriptionKey, "bar"),
+					resource.TestCheckResourceAttr("boundary_project.project2", projectDescriptionKey, "project2"),
 				),
 			},
 			// Updates the first project to have description foo
 			{
 				Config: testConfig(url, firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					resource.TestCheckResourceAttr("watchtower_project.project1", projectDescriptionKey, "foo"),
-					resource.TestCheckResourceAttr("watchtower_project.project2", projectDescriptionKey, "project2"),
+					testAccCheckProjectResourceExists("boundary_project.project1"),
+					resource.TestCheckResourceAttr("boundary_project.project1", projectDescriptionKey, "foo"),
+					resource.TestCheckResourceAttr("boundary_project.project2", projectDescriptionKey, "project2"),
 				),
 			},
 			// Remove second project
 			{
 				Config: testConfig(url, firstProjectFoo),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectResourceExists("watchtower_project.project1"),
-					resource.TestCheckResourceAttr("watchtower_project.project1", projectDescriptionKey, "foo"),
+					testAccCheckProjectResourceExists("boundary_project.project1"),
+					resource.TestCheckResourceAttr("boundary_project.project1", projectDescriptionKey, "foo"),
 				),
 			},
 		},
@@ -89,7 +89,7 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 		for _, rs := range s.RootModule().Resources {
 			id := rs.Primary.ID
 			switch rs.Type {
-			case "watchtower_project":
+			case "boundary_project":
 				if _, apiErr, _ := o.ReadProject(md.ctx, &scopes.Project{Id: id}); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed project %q: %v", id, apiErr)
 				}
@@ -221,17 +221,17 @@ func TestProjectToResourceData(t *testing.T) {
 
 const (
 	firstProjectFoo = `
-resource "watchtower_project" "project1" {
+resource "boundary_project" "project1" {
   description = "foo"
 }`
 
 	firstProjectBar = `
-resource "watchtower_project" "project1" {
+resource "boundary_project" "project1" {
   description = "bar"
 }`
 
 	secondProject = `
-resource "watchtower_project" "project2" {
+resource "boundary_project" "project2" {
   description = "project2"
 }
 `

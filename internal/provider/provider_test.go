@@ -15,13 +15,13 @@ var testProviders map[string]terraform.ResourceProvider
 func init() {
 	testProvider = New().(*schema.Provider)
 	testProviders = map[string]terraform.ResourceProvider{
-		"watchtower": testProvider,
+		"boundary": testProvider,
 	}
 }
 
 func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
-provider "watchtower" {
+provider "boundary" {
   base_url             = "%s"
   default_organization = "o_0000000000"
 	auth_method_id       = "am_1234567890"

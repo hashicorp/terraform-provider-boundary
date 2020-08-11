@@ -6,8 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/watchtower/api"
-	"github.com/hashicorp/watchtower/api/scopes"
+	"github.com/hashicorp/boundary/api"
+	"github.com/hashicorp/boundary/api/scopes"
 )
 
 func New() terraform.ResourceProvider {
@@ -16,13 +16,13 @@ func New() terraform.ResourceProvider {
 			"default_organization": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("WATCHTOWER_DEFAULT_ORG", ""),
-				Description: "The Watchtower organization scope to operate all actions in if not provided in the individual resources.",
+				DefaultFunc: schema.EnvDefaultFunc("BOUNDARY_DEFAULT_ORG", ""),
+				Description: "The Boundary organization scope to operate all actions in if not provided in the individual resources.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The base url of the Watchtower API.  For example 'http://127.0.0.1/'",
+				Description: "The base url of the Boundary API.  For example 'http://127.0.0.1/'",
 			},
 			"auth_method_id": {
 				Type:        schema.TypeString,
@@ -41,11 +41,11 @@ func New() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"watchtower_group":        resourceGroup(),
-			"watchtower_host_catalog": resourceHostCatalog(),
-			"watchtower_project":      resourceProject(),
-			"watchtower_role":         resourceRole(),
-			"watchtower_user":         resourceUser(),
+			"boundary_group":        resourceGroup(),
+			"boundary_host_catalog": resourceHostCatalog(),
+			"boundary_project":      resourceProject(),
+			"boundary_role":         resourceRole(),
+			"boundary_user":         resourceUser(),
 		},
 	}
 

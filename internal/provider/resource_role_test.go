@@ -9,9 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/watchtower/api/roles"
-	"github.com/hashicorp/watchtower/api/scopes"
-	"github.com/hashicorp/watchtower/testing/controller"
+	"github.com/hashicorp/boundary/api/roles"
+	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/boundary/testing/controller"
 )
 
 const (
@@ -21,79 +21,79 @@ const (
 
 var (
 	fooRole = fmt.Sprintf(`
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "test"
 	description = "%s"
 }`, fooRoleDescription)
 
 	fooRoleUpdate = fmt.Sprintf(`
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "test"
 	description = "%s"
 }`, fooRoleDescriptionUpdate)
 
 	fooRoleWithUser = `
-resource "watchtower_user" "foo" {
+resource "boundary_user" "foo" {
   name = "foo"
 }
 
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "test"
 	description = "test description"
-	users = [watchtower_user.foo.id]
+	users = [boundary_user.foo.id]
 }`
 
 	fooRoleWithUserUpdate = `
-resource "watchtower_user" "foo" {
+resource "boundary_user" "foo" {
   name = "foo"
 }
 
-resource "watchtower_user" "bar" {
+resource "boundary_user" "bar" {
   name = "bar"
 }
 
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "test"
 	description = "test description"
-	users = [watchtower_user.foo.id, watchtower_user.bar.id]
+	users = [boundary_user.foo.id, boundary_user.bar.id]
 }`
 
 	fooRoleWithGroups = `
-resource "watchtower_group" "foo" {
+resource "boundary_group" "foo" {
   name = "foo"
 }
 
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "test"
 	description = "test description"
-	groups = [watchtower_group.foo.id]
+	groups = [boundary_group.foo.id]
 }`
 
 	fooRoleWithGroupsUpdate = `
-resource "watchtower_group" "foo" {
+resource "boundary_group" "foo" {
   name = "foo"
 }
 
-resource "watchtower_group" "bar" {
+resource "boundary_group" "bar" {
   name = "bar"
 }
 
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "test"
 	description = "test description"
-	groups = [watchtower_group.foo.id, watchtower_group.bar.id]
+	groups = [boundary_group.foo.id, boundary_group.bar.id]
 }`
 
 	readonlyGrant       = "id=*;actions=read"
 	readonlyGrantUpdate = "id=*;actions=read,create"
 	fooRoleWithGrants   = fmt.Sprintf(`
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "readonly"
 	description = "test description"
 	grants = ["%s"]
 }`, readonlyGrant)
 	fooRoleWithGrantsUpdate = fmt.Sprintf(`
-resource "watchtower_role" "foo" {
+resource "boundary_role" "foo" {
   name = "readonly"
 	description = "test description"
 	grants = ["%s", "%s"]
@@ -113,20 +113,20 @@ func TestAccRoleWithGrants(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooRoleWithGrants),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					testAccCheckRoleResourceGrantsSet("watchtower_role.foo", []string{readonlyGrant}),
-					resource.TestCheckResourceAttr("watchtower_role.foo", "name", "readonly"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", "description", "test description"),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceGrantsSet("boundary_role.foo", []string{readonlyGrant}),
+					resource.TestCheckResourceAttr("boundary_role.foo", "name", "readonly"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "description", "test description"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooRoleWithGrantsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					testAccCheckRoleResourceGrantsSet("watchtower_role.foo", []string{readonlyGrant, readonlyGrantUpdate}),
-					resource.TestCheckResourceAttr("watchtower_role.foo", "name", "readonly"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", "description", "test description"),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceGrantsSet("boundary_role.foo", []string{readonlyGrant, readonlyGrantUpdate}),
+					resource.TestCheckResourceAttr("boundary_role.foo", "name", "readonly"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "description", "test description"),
 				),
 			},
 		},
@@ -146,22 +146,22 @@ func TestAccRoleWithUsers(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooRoleWithUser),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					testAccCheckRoleResourceUsersSet("watchtower_role.foo", []string{"watchtower_user.foo"}),
-					testAccCheckUserResourceExists("watchtower_user.foo"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleDescriptionKey, "test description"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleNameKey, "test"),
-					resource.TestCheckResourceAttr("watchtower_user.foo", "name", "foo"),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceUsersSet("boundary_role.foo", []string{"boundary_user.foo"}),
+					testAccCheckUserResourceExists("boundary_user.foo"),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, "test description"),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_user.foo", "name", "foo"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooRoleWithUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					testAccCheckUserResourceExists("watchtower_user.foo"),
-					testAccCheckUserResourceExists("watchtower_user.bar"),
-					testAccCheckRoleResourceUsersSet("watchtower_role.foo", []string{"watchtower_user.foo", "watchtower_user.bar"}),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckUserResourceExists("boundary_user.foo"),
+					testAccCheckUserResourceExists("boundary_user.bar"),
+					testAccCheckRoleResourceUsersSet("boundary_role.foo", []string{"boundary_user.foo", "boundary_user.bar"}),
 				),
 			},
 		},
@@ -181,22 +181,22 @@ func TestAccRoleWithGroups(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooRoleWithGroups),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					testAccCheckRoleResourceGroupsSet("watchtower_role.foo", []string{"watchtower_group.foo"}),
-					testAccCheckUserResourceExists("watchtower_group.foo"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleDescriptionKey, "test description"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleNameKey, "test"),
-					resource.TestCheckResourceAttr("watchtower_group.foo", "name", "foo"),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceGroupsSet("boundary_role.foo", []string{"boundary_group.foo"}),
+					testAccCheckUserResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, "test description"),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_group.foo", "name", "foo"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooRoleWithGroupsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					testAccCheckUserResourceExists("watchtower_group.foo"),
-					testAccCheckUserResourceExists("watchtower_group.bar"),
-					testAccCheckRoleResourceGroupsSet("watchtower_role.foo", []string{"watchtower_group.foo", "watchtower_group.bar"}),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckUserResourceExists("boundary_group.foo"),
+					testAccCheckUserResourceExists("boundary_group.bar"),
+					testAccCheckRoleResourceGroupsSet("boundary_role.foo", []string{"boundary_group.foo", "boundary_group.bar"}),
 				),
 			},
 		},
@@ -216,24 +216,24 @@ func TestAccRole(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooRole),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleDescriptionKey, fooRoleDescription),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleNameKey, "test"),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, fooRoleDescription),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleNameKey, "test"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("watchtower_role.foo"),
-					resource.TestCheckResourceAttr("watchtower_role.foo", roleDescriptionKey, fooRoleDescriptionUpdate),
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, fooRoleDescriptionUpdate),
 				),
 			},
 			{
 				// test destroy
 				Config: testConfig(url),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleDestroyed("watchtower_role.foo"),
+					testAccCheckRoleDestroyed("boundary_role.foo"),
 				),
 			},
 		},
@@ -243,19 +243,19 @@ func TestAccRole(t *testing.T) {
 // testAccCheckRoleDestroyed checks the terraform state for the host
 // catalog and returns an error if found.
 //
-// TODO(malnick) This method falls short of checking the Watchtower API for
+// TODO(malnick) This method falls short of checking the Boundary API for
 // the resource if the resource is not found in state. This is due to us not
 // having the host catalog ID, but it doesn't guarantee that the resource was
 // successfully removed.
 //
-// It does check Watchtower if the resource is found in state to point out any
+// It does check Boundary if the resource is found in state to point out any
 // misalignment between what is in state and the actual configuration.
 func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			// If it's not in state, it's destroyed in TF but not guaranteed to be destroyed
-			// in Watchtower. Need to find a way to get the host catalog ID here so we can
+			// in Boundary. Need to find a way to get the host catalog ID here so we can
 			// form a lookup to the WT API to check this.
 			return nil
 		}
@@ -350,9 +350,9 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 		}
 
 		// for every user set as a principal on the role in the state, ensure
-		// each role in watchtower has the same setings
+		// each role in boundary has the same setings
 		if len(r.PrincipalIds) == 0 {
-			return fmt.Errorf("no users found in watchtower")
+			return fmt.Errorf("no users found in boundary")
 		}
 
 		for _, stateUser := range r.PrincipalIds {
@@ -363,7 +363,7 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 				}
 			}
 			if !ok {
-				return fmt.Errorf("user in state not set in watchtower: %s", stateUser)
+				return fmt.Errorf("user in state not set in boundary: %s", stateUser)
 			}
 		}
 
@@ -412,9 +412,9 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 		}
 
 		// for every user set as a principal on the role in the state, ensure
-		// each role in watchtower has the same setings
+		// each role in boundary has the same setings
 		if len(r.PrincipalIds) == 0 {
-			return fmt.Errorf("no groups found in watchtower")
+			return fmt.Errorf("no groups found in boundary")
 		}
 
 		for _, stateGroup := range r.PrincipalIds {
@@ -425,7 +425,7 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 				}
 			}
 			if !ok {
-				return fmt.Errorf("group in state not set in watchtower: %s", stateGroup)
+				return fmt.Errorf("group in state not set in boundary: %s", stateGroup)
 			}
 		}
 
@@ -486,11 +486,11 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "watchtower_user":
+			case "boundary_user":
 				continue
-			case "watchtower_group":
+			case "boundary_group":
 				continue
-			case "watchtower_role":
+			case "boundary_role":
 
 				id := rs.Primary.ID
 
