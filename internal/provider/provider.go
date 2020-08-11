@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/hashicorp/boundary/api"
+	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/scopes"
 )
 
 func New() terraform.ResourceProvider {
@@ -75,15 +75,13 @@ func providerAuthenticate(d *schema.ResourceData, client *api.Client) error {
 		return errors.New("auth method password not set, please set the auth_method_password on the provider")
 	}
 
-	org := &scopes.Org{
-		Client: client,
-	}
+	am := authmethods.NewAuthMethodsClient(client)
 	ctx := context.Background()
 
 	// note: Authenticate() calls SetToken() under the hood to set the
 	// auth bearer on the client so we do not need to do anything with the
 	// returned token after this call, so we ignore it
-	_, apiErr, err := org.Authenticate(ctx, authMethodID.(string), authMethodUser.(string), authMethodPass.(string))
+	_, apiErr, err := am.Authenticate(ctx, authMethodID.(string), authMethodUser.(string), authMethodPass.(string))
 	if apiErr != nil {
 		return errors.New(apiErr.Message)
 	}
@@ -103,7 +101,7 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		if err := client.SetAddr(d.Get("base_url").(string)); err != nil {
 			return nil, err
 		}
-		client.SetOrg(d.Get("default_organization").(string))
+		client.SetScopeId(d.Get("default_organization").(string))
 
 		// TODO: Pass these in through the config, add token, etc...
 		client.SetLimiter(5, 5)
