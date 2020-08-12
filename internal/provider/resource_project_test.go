@@ -6,11 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -67,10 +66,9 @@ func testAccCheckProjectResourceExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("ID not formatted as expected")
 		}
 		md := testProvider.Meta().(*metaData)
-		o := scopes.Org{
-			Client: md.client,
-		}
-		if _, _, err := o.ReadProject(md.ctx, &scopes.Project{Id: id}); err != nil {
+		scp := scopes.NewScopesClient(md.client)
+
+		if _, _, err := scp.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading project %q: %v", id, err)
 		}
 
@@ -82,15 +80,13 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the connection established in Provider configuration
 		md := testProvider.Meta().(*metaData)
-		o := scopes.Org{
-			Client: md.client,
-		}
+		scp := scopes.NewScopesClient(md.client)
 
 		for _, rs := range s.RootModule().Resources {
 			id := rs.Primary.ID
 			switch rs.Type {
 			case "boundary_project":
-				if _, apiErr, _ := o.ReadProject(md.ctx, &scopes.Project{Id: id}); apiErr == nil || apiErr.Status != http.StatusNotFound {
+				if _, apiErr, _ := scp.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed project %q: %v", id, apiErr)
 				}
 			default:
@@ -106,7 +102,7 @@ func TestResourceDataToProject(t *testing.T) {
 	testCases := []struct {
 		name     string
 		rData    map[string]interface{}
-		expected *scopes.Project
+		expected *scopes.Scope
 	}{
 		{
 			name: "Fully populated",
@@ -114,9 +110,9 @@ func TestResourceDataToProject(t *testing.T) {
 				projectNameKey:        "name",
 				projectDescriptionKey: "desc",
 			},
-			expected: &scopes.Project{
-				Name:        api.String("name"),
-				Description: api.String("desc"),
+			expected: &scopes.Scope{
+				Name:        "name",
+				Description: "desc",
 			},
 		},
 		{
@@ -124,8 +120,8 @@ func TestResourceDataToProject(t *testing.T) {
 			rData: map[string]interface{}{
 				projectNameKey: "name",
 			},
-			expected: &scopes.Project{
-				Name: api.String("name"),
+			expected: &scopes.Scope{
+				Name: "name",
 			},
 		},
 		{
@@ -133,14 +129,14 @@ func TestResourceDataToProject(t *testing.T) {
 			rData: map[string]interface{}{
 				projectDescriptionKey: "desc",
 			},
-			expected: &scopes.Project{
-				Description: api.String("desc"),
+			expected: &scopes.Scope{
+				Description: "desc",
 			},
 		},
 		{
 			name:     "Not populated",
 			rData:    map[string]interface{}{},
-			expected: &scopes.Project{},
+			expected: &scopes.Scope{},
 		},
 	}
 	for _, tc := range testCases {
@@ -160,14 +156,14 @@ func TestProjectToResourceData(t *testing.T) {
 	testCases := []struct {
 		name     string
 		expected map[string]interface{}
-		proj     *scopes.Project
+		proj     *scopes.Scope
 	}{
 		{
 			name: "Fully populated",
-			proj: &scopes.Project{
+			proj: &scopes.Scope{
 				Id:          "someid",
-				Name:        api.String("name"),
-				Description: api.String("desc"),
+				Name:        "name",
+				Description: "desc",
 			},
 			expected: map[string]interface{}{
 				projectNameKey:        "name",
@@ -176,9 +172,9 @@ func TestProjectToResourceData(t *testing.T) {
 		},
 		{
 			name: "Name populated",
-			proj: &scopes.Project{
+			proj: &scopes.Scope{
 				Id:   "someid",
-				Name: api.String("name"),
+				Name: "name",
 			},
 			expected: map[string]interface{}{
 				projectNameKey: "name",
@@ -186,9 +182,9 @@ func TestProjectToResourceData(t *testing.T) {
 		},
 		{
 			name: "Description populated",
-			proj: &scopes.Project{
+			proj: &scopes.Scope{
 				Id:          "someid",
-				Description: api.String("desc"),
+				Description: "desc",
 			},
 			expected: map[string]interface{}{
 				projectDescriptionKey: "desc",
@@ -196,7 +192,7 @@ func TestProjectToResourceData(t *testing.T) {
 		},
 		{
 			name: "Not populated",
-			proj: &scopes.Project{
+			proj: &scopes.Scope{
 				Id: "someid",
 			},
 			expected: map[string]interface{}{},
