@@ -19,14 +19,26 @@ const (
 )
 
 var (
-	fooGroup = fmt.Sprintf(`
+	orgGroup = fmt.Sprintf(`
+resource "boundary_group" "foo" {
+  name = "test"
+	description = "%s"
+}`, fooGroupDescription)
+
+	orgGroupUpdate = fmt.Sprintf(`
+resource "boundary_group" "foo" {
+  name = "test"
+	description = "%s"
+}`, fooGroupDescriptionUpdate)
+
+	projGroup = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
 	project_id = boundary_project.foo.id
 }`, fooGroupDescription)
 
-	fooGroupUpdate = fmt.Sprintf(`
+	projGroupUpdate = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
@@ -46,7 +58,7 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooProject, fooGroup),
+				Config: testConfig(url, fooProject, projGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
@@ -55,7 +67,24 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooProject, fooGroupUpdate),
+				Config: testConfig(url, fooProject, projGroupUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+				),
+			},
+			{
+				// test create
+				Config: testConfig(url, orgGroup),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -100,13 +129,11 @@ func testAccCheckGroupDestroyed(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
 		projID, ok := rs.Primary.Attributes["project_id"]
-		if !ok {
-			return fmt.Errorf("project_id is not set")
-		}
 		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
+		if ok {
+			projClient.SetScopeId(projID)
+		}
 		grps := groups.NewGroupsClient(projClient)
 
 		if _, apiErr, _ := grps.Read(md.ctx, expectedGroupID); apiErr == nil || apiErr.Status != http.StatusNotFound {
@@ -130,12 +157,11 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
-		if !ok {
-			return fmt.Errorf("project_id is not set")
-		}
 		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
+		projID, ok := rs.Primary.Attributes["project_id"]
+		if ok {
+			projClient.SetScopeId(projID)
+		}
 		grps := groups.NewGroupsClient(projClient)
 
 		if _, _, err := grps.Read(md.ctx, id); err != nil {
@@ -159,12 +185,11 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			case "boundary_project":
 				continue
 			case "boundary_group":
-				projID, ok := rs.Primary.Attributes["project_id"]
-				if !ok {
-					return fmt.Errorf("project_id is not set")
-				}
 				projClient := md.client.Clone()
-				projClient.SetScopeId(projID)
+				projID, ok := rs.Primary.Attributes["project_id"]
+				if ok {
+					projClient.SetScopeId(projID)
+				}
 				grps := groups.NewGroupsClient(projClient)
 
 				id := rs.Primary.ID
