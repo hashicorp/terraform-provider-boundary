@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.2 // indirect
 	github.com/corbym/gocrest v1.0.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200811212500-4cfab0430733
+	github.com/hashicorp/boundary v0.0.0-20200812152719-012967e91b99
 	github.com/hashicorp/go-getter v1.4.1 // indirect
 	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect

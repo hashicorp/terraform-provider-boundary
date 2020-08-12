@@ -27,10 +27,6 @@ resource "boundary_group" "foo" {
 }`, fooGroupDescription)
 
 	fooGroupUpdate = fmt.Sprintf(`
-resource "boundary_project" "foo" {
-  name = "test"
-}
-
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
@@ -39,7 +35,8 @@ resource "boundary_group" "foo" {
 )
 
 func TestAccGroup(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	tc := controller.NewTestController(t, tcConfig...)
+
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -159,6 +156,8 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
+			case "boundary_project":
+				continue
 			case "boundary_group":
 				projID, ok := rs.Primary.Attributes["project_id"]
 				if !ok {

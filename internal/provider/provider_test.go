@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -17,6 +18,19 @@ resource "boundary_project" "foo" {
   name = "test"
 }`
 
+var (
+	tcUsername = "user"
+	tcPassword = "passpass"
+	tcPAUM     = "paum_0000000000"
+	tcOrg      = "o_0000000000"
+	tcConfig   = []controller.Option{
+		controller.WithDefaultOrgId(tcOrg),
+		controller.WithDefaultAuthMethodId(tcPAUM),
+		controller.WithDefaultLoginName(tcUsername),
+		controller.WithDefaultPassword(tcPassword),
+	}
+)
+
 func init() {
 	testProvider = New().(*schema.Provider)
 	testProviders = map[string]terraform.ResourceProvider{
@@ -28,11 +42,11 @@ func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
   base_url             = "%s"
-  default_organization = "o_0000000000"
-	auth_method_id       = "am_1234567890"
-	auth_method_username = "foo"
-	auth_method_password = "bar"
-}`, url)
+  default_organization = "%s"
+	auth_method_id       = "%s"
+	auth_method_username = "%s"
+	auth_method_password = "%s"
+}`, url, tcOrg, tcPAUM, tcUsername, tcPassword)
 
 	c := []string{provider}
 	c = append(c, res...)

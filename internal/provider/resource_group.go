@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/boundary/api/groups"
+	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -64,7 +65,7 @@ func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
 
 // convertResourceDataToGroup returns a localy built Group using the values provided in the ResourceData.
 func convertResourceDataToGroup(d *schema.ResourceData) *groups.Group {
-	g := &groups.Group{}
+	g := &groups.Group{Scope: &scopes.ScopeInfo{}}
 	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
 		g.Description = descVal.(string)
 	}
