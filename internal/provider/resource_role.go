@@ -41,7 +41,8 @@ func resourceRole() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			roleProjectIDKey: {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -237,7 +238,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			grants = append(grants, grant.(string))
 		}
 
-		r, apiErr, err := rolesClient.SetGrants(
+		_, apiErr, err := rolesClient.SetGrants(
 			ctx,
 			r.Id,
 			r.Version,

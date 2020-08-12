@@ -149,7 +149,6 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		md := testProvider.Meta().(*metaData)
-		client := md.client
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {

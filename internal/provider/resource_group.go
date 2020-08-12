@@ -29,7 +29,8 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 			},
 			groupProjectIDKey: {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -70,7 +71,7 @@ func convertResourceDataToGroup(d *schema.ResourceData) *groups.Group {
 	if nameVal, ok := d.GetOk(groupNameKey); ok {
 		g.Name = nameVal.(string)
 	}
-	if projIDVal, ok := d.GetOk(roleProjectIDKey); ok {
+	if projIDVal, ok := d.GetOk(groupProjectIDKey); ok {
 		g.Scope.Id = projIDVal.(string)
 	}
 

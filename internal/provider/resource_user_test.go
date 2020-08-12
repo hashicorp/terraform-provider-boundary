@@ -24,17 +24,20 @@ var (
 resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
+  project_id = boundary_project.foo.id
 }`, fooUserDescription)
 
 	fooUserUpdate = fmt.Sprintf(`
 resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
+	project_id = boundary_project.foo.id
 }`, fooUserDescriptionUpdate)
 	fooUserUnset = fmt.Sprintf(`
 resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
+	project_id = boundary_project.foo.id
 }`, fooUserDescriptionUnset)
 )
 
@@ -49,7 +52,7 @@ func TestAccUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooUser),
+				Config: testConfig(url, fooProject, fooUser),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescription),
@@ -58,7 +61,7 @@ func TestAccUser(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooUserUnset),
+				Config: testConfig(url, fooProject, fooUserUnset),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUnset),
@@ -66,7 +69,7 @@ func TestAccUser(t *testing.T) {
 			},
 			{
 				// test unset
-				Config: testConfig(url, fooUserUpdate),
+				Config: testConfig(url, fooProject, fooUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
@@ -159,6 +162,9 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 
 func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		if testProvider.Meta() == nil {
+			t.Fatal("got nil provider metadata")
+		}
 		md := testProvider.Meta().(*metaData)
 
 		for _, rs := range s.RootModule().Resources {

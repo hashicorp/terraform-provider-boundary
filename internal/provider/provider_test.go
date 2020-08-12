@@ -12,6 +12,11 @@ import (
 var testProvider *schema.Provider
 var testProviders map[string]terraform.ResourceProvider
 
+var fooProject = `
+resource "boundary_project" "foo" {
+  name = "test"
+}`
+
 func init() {
 	testProvider = New().(*schema.Provider)
 	testProviders = map[string]terraform.ResourceProvider{

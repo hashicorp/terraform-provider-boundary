@@ -29,7 +29,8 @@ func resourceUser() *schema.Resource {
 				Optional: true,
 			},
 			userProjectIDKey: {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}

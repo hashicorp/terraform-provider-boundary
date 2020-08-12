@@ -23,12 +23,18 @@ var (
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
+	project_id = boundary_project.foo.id
 }`, fooGroupDescription)
 
 	fooGroupUpdate = fmt.Sprintf(`
+resource "boundary_project" "foo" {
+  name = "test"
+}
+
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
+	project_id = boundary_project.foo.id
 }`, fooGroupDescriptionUpdate)
 )
 
@@ -43,7 +49,7 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooGroup),
+				Config: testConfig(url, fooProject, fooGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
@@ -52,7 +58,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooGroupUpdate),
+				Config: testConfig(url, fooProject, fooGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -145,6 +151,10 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 
 func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		if testProvider.Meta() == nil {
+			t.Fatal("got nil provider metadata")
+		}
+
 		md := testProvider.Meta().(*metaData)
 
 		for _, rs := range s.RootModule().Resources {
