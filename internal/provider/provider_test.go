@@ -1,10 +1,13 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
+	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -51,6 +54,17 @@ provider "boundary" {
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
+}
+
+func setGrantScopeIDonProject(projID string, principalID string, client *api.Client) error {
+	roleClient := roles.NewRolesClient(client)
+	_, err, _ := roleClient.Create(
+		context.Background(),
+		roles.WithName(fmt.Sprintf("TestRole_%s", projID)),
+		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", projID)),
+		roles.WithGrantScopeId(projID))
+
+	return err
 }
 
 func TestProvider(t *testing.T) {
