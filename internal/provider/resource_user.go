@@ -30,7 +30,7 @@ func resourceUser() *schema.Resource {
 			},
 			userProjectIDKey: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -88,7 +88,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	u := convertResourceDataToUser(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(u.Scope.Id)
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
 	usrs := users.NewUsersClient(projClient)
 
 	u, apiErr, err := usrs.Create(
@@ -114,7 +117,10 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	u := convertResourceDataToUser(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(u.Scope.Id)
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
 	usrs := users.NewUsersClient(projClient)
 
 	u, apiErr, err := usrs.Read(ctx, u.Id)
@@ -135,7 +141,10 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	u := convertResourceDataToUser(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(u.Scope.Id)
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
 	usrs := users.NewUsersClient(projClient)
 
 	if d.HasChange(userNameKey) {
@@ -170,7 +179,10 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	u := convertResourceDataToUser(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(u.Scope.Id)
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
 	usrs := users.NewUsersClient(projClient)
 
 	_, apiErr, err := usrs.Delete(ctx, u.Id)

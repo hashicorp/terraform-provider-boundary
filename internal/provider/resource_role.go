@@ -42,7 +42,7 @@ func resourceRole() *schema.Resource {
 			},
 			roleProjectIDKey: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -125,7 +125,10 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	r := convertResourceDataToRole(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(r.Scope.Id)
+	if r.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
+		projClient.SetScopeId(r.Scope.Id)
+	}
 	rolesClient := roles.NewRolesClient(projClient)
 
 	principals := r.PrincipalIds
@@ -188,7 +191,10 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	r := convertResourceDataToRole(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(r.Scope.Id)
+	if r.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
+		projClient.SetScopeId(r.Scope.Id)
+	}
 	rolesClient := roles.NewRolesClient(projClient)
 
 	r, apiErr, err := rolesClient.Read(ctx, r.Id)
@@ -209,7 +215,10 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	r := convertResourceDataToRole(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(r.Scope.Id)
+	if r.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
+		projClient.SetScopeId(r.Scope.Id)
+	}
 	rolesClient := roles.NewRolesClient(projClient)
 
 	if d.HasChange(roleNameKey) {
@@ -275,7 +284,10 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 
 	r := convertResourceDataToRole(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(r.Scope.Id)
+	if r.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
+		projClient.SetScopeId(r.Scope.Id)
+	}
 	rolesClient := roles.NewRolesClient(projClient)
 
 	_, apiErr, err := rolesClient.Delete(ctx, r.Id)

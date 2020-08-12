@@ -31,7 +31,7 @@ func resourceGroup() *schema.Resource {
 			},
 			groupProjectIDKey: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 		},
 	}
@@ -90,12 +90,15 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	g := convertResourceDataToGroup(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(g.Scope.Id)
+	if g.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
+		projClient.SetScopeId(g.Scope.Id)
+	}
 	grps := groups.NewGroupsClient(projClient)
 
 	g, apiErr, err := grps.Create(ctx, groups.WithName(g.Name), groups.WithDescription(g.Description))
 	if err != nil {
-		return fmt.Errorf("error calling new group: %s", err.Error())
+		return fmt.Errorf("error creating group: %s", err.Error())
 	}
 	if apiErr != nil {
 		return fmt.Errorf("error creating group: %s", apiErr.Message)
@@ -113,7 +116,10 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	g := convertResourceDataToGroup(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(g.Scope.Id)
+	if g.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
+		projClient.SetScopeId(g.Scope.Id)
+	}
 	grps := groups.NewGroupsClient(projClient)
 
 	g, apiErr, err := grps.Read(ctx, g.Id)
@@ -134,7 +140,10 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	g := convertResourceDataToGroup(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(g.Scope.Id)
+	if g.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
+		projClient.SetScopeId(g.Scope.Id)
+	}
 	grps := groups.NewGroupsClient(projClient)
 
 	if d.HasChange(groupNameKey) {
@@ -169,7 +178,10 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 	g := convertResourceDataToGroup(d)
 	projClient := client.Clone()
-	projClient.SetScopeId(g.Scope.Id)
+	if g.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
+		projClient.SetScopeId(g.Scope.Id)
+	}
 	grps := groups.NewGroupsClient(projClient)
 
 	_, apiErr, err := grps.Delete(ctx, g.Id)
