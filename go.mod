@@ -1,6 +1,6 @@
-module github.com/hashicorp/terraform-provider-watchtower
+module github.com/hashicorp/terraform-provider-boundary
 
-go 1.12
+go 1.13
 
 require (
 	cloud.google.com/go v0.63.0 // indirect
@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.2 // indirect
 	github.com/corbym/gocrest v1.0.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.14.6 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200811212500-4cfab0430733
+	github.com/hashicorp/boundary v0.0.0-20200812044039-203e2b5dc28f
 	github.com/hashicorp/go-getter v1.4.1 // indirect
 	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
@@ -18,7 +18,6 @@ require (
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
-	github.com/hashicorp/watchtower v0.0.0-20200724221034-4fa8c5415bb5
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
