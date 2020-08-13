@@ -7,11 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const (
@@ -25,17 +24,20 @@ var (
 resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
+  project_id = boundary_project.foo.id
 }`, fooUserDescription)
 
 	fooUserUpdate = fmt.Sprintf(`
 resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
+	project_id = boundary_project.foo.id
 }`, fooUserDescriptionUpdate)
 	fooUserUnset = fmt.Sprintf(`
 resource "boundary_user" "foo" {
   name = "test"
 	description = "%s"
+	project_id = boundary_project.foo.id
 }`, fooUserDescriptionUnset)
 )
 
@@ -50,7 +52,7 @@ func TestAccUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooUser),
+				Config: testConfig(url, fooProject, fooUser),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescription),
@@ -59,7 +61,7 @@ func TestAccUser(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooUserUnset),
+				Config: testConfig(url, fooProject, fooUserUnset),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUnset),
@@ -67,7 +69,7 @@ func TestAccUser(t *testing.T) {
 			},
 			{
 				// test unset
-				Config: testConfig(url, fooUserUpdate),
+				Config: testConfig(url, fooProject, fooUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
@@ -113,13 +115,15 @@ func testAccCheckUserDestroyed(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
-		u := users.User{Id: id}
-
-		o := &scopes.Org{
-			Client: md.client,
+		projID, ok := rs.Primary.Attributes["project_id"]
+		if !ok {
+			return fmt.Errorf("project_id is not set")
 		}
-		if _, apiErr, _ := o.ReadUser(md.ctx, &u); apiErr == nil || apiErr.Status != http.StatusNotFound {
+		projClient := md.client.Clone()
+		projClient.SetScopeId(projID)
+		usrs := users.NewUsersClient(projClient)
+
+		if _, apiErr, _ := usrs.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("User not destroyed %q: %v", id, apiErr))
 		}
 
@@ -140,13 +144,15 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
-		u := users.User{Id: id}
-
-		o := &scopes.Org{
-			Client: md.client,
+		projID, ok := rs.Primary.Attributes["project_id"]
+		if !ok {
+			return fmt.Errorf("project_id is not set")
 		}
-		if _, _, err := o.ReadUser(md.ctx, &u); err != nil {
+		projClient := md.client.Clone()
+		projClient.SetScopeId(projID)
+		usrs := users.NewUsersClient(projClient)
+
+		if _, _, err := usrs.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading user %q: %v", id, err)
 		}
 
@@ -156,22 +162,25 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 
 func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		if testProvider.Meta() == nil {
+			t.Fatal("got nil provider metadata")
+		}
 		md := testProvider.Meta().(*metaData)
-		client := md.client
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
 			case "boundary_user":
 
 				id := rs.Primary.ID
-
-				u := users.User{Id: id}
-
-				o := &scopes.Org{
-					Client: client,
+				projID, ok := rs.Primary.Attributes["project_id"]
+				if !ok {
+					return fmt.Errorf("project_id is not set")
 				}
+				projClient := md.client.Clone()
+				projClient.SetScopeId(projID)
+				usrs := users.NewUsersClient(projClient)
 
-				_, apiErr, _ := o.ReadUser(md.ctx, &u)
+				_, apiErr, _ := usrs.Read(md.ctx, id)
 				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, apiErr)
 				}

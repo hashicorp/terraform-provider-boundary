@@ -7,11 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/api/groups"
+	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/boundary/api/groups"
-	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/boundary/testing/controller"
 )
 
 const (
@@ -20,21 +19,36 @@ const (
 )
 
 var (
-	fooGroup = fmt.Sprintf(`
+	orgGroup = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
 }`, fooGroupDescription)
 
-	fooGroupUpdate = fmt.Sprintf(`
+	orgGroupUpdate = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
 }`, fooGroupDescriptionUpdate)
+
+	projGroup = fmt.Sprintf(`
+resource "boundary_group" "foo" {
+  name = "test"
+	description = "%s"
+	project_id = boundary_project.foo.id
+}`, fooGroupDescription)
+
+	projGroupUpdate = fmt.Sprintf(`
+resource "boundary_group" "foo" {
+  name = "test"
+	description = "%s"
+	project_id = boundary_project.foo.id
+}`, fooGroupDescriptionUpdate)
 )
 
 func TestAccGroup(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	tc := controller.NewTestController(t, tcConfig...)
+
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -44,7 +58,7 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooGroup),
+				Config: testConfig(url, fooProject, projGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
@@ -53,7 +67,24 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooGroupUpdate),
+				Config: testConfig(url, fooProject, projGroupUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+				),
+			},
+			{
+				// test create
+				Config: testConfig(url, orgGroup),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -92,20 +123,21 @@ func testAccCheckGroupDestroyed(name string) resource.TestCheckFunc {
 		errs := []string{}
 		errs = append(errs, fmt.Sprintf("Found group resource in state: %s", name))
 
-		id := rs.Primary.ID
-		if id == "" {
+		expectedGroupID := rs.Primary.ID
+		if expectedGroupID == "" {
 			return fmt.Errorf("No ID is set")
 		}
 
 		md := testProvider.Meta().(*metaData)
-
-		u := groups.Group{Id: id}
-
-		o := &scopes.Org{
-			Client: md.client,
+		projID, ok := rs.Primary.Attributes["project_id"]
+		projClient := md.client.Clone()
+		if ok {
+			projClient.SetScopeId(projID)
 		}
-		if _, apiErr, _ := o.ReadGroup(md.ctx, &u); apiErr == nil || apiErr.Status != http.StatusNotFound {
-			errs = append(errs, fmt.Sprintf("Group not destroyed %q: %v", id, apiErr))
+		grps := groups.NewGroupsClient(projClient)
+
+		if _, apiErr, _ := grps.Read(md.ctx, expectedGroupID); apiErr == nil || apiErr.Status != http.StatusNotFound {
+			errs = append(errs, fmt.Sprintf("Group not destroyed %q: %v", expectedGroupID, apiErr))
 		}
 
 		return errors.New(strings.Join(errs, ","))
@@ -125,13 +157,14 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
-		u := groups.Group{Id: id}
-
-		o := &scopes.Org{
-			Client: md.client,
+		projClient := md.client.Clone()
+		projID, ok := rs.Primary.Attributes["project_id"]
+		if ok {
+			projClient.SetScopeId(projID)
 		}
-		if _, _, err := o.ReadGroup(md.ctx, &u); err != nil {
+		grps := groups.NewGroupsClient(projClient)
+
+		if _, _, err := grps.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
 		}
 
@@ -141,22 +174,27 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 
 func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		if testProvider.Meta() == nil {
+			t.Fatal("got nil provider metadata")
+		}
+
 		md := testProvider.Meta().(*metaData)
-		client := md.client
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
+			case "boundary_project":
+				continue
 			case "boundary_group":
+				projClient := md.client.Clone()
+				projID, ok := rs.Primary.Attributes["project_id"]
+				if ok {
+					projClient.SetScopeId(projID)
+				}
+				grps := groups.NewGroupsClient(projClient)
 
 				id := rs.Primary.ID
 
-				u := groups.Group{Id: id}
-
-				o := &scopes.Org{
-					Client: client,
-				}
-
-				_, apiErr, _ := o.ReadGroup(md.ctx, &u)
+				_, apiErr, _ := grps.Read(md.ctx, id)
 				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed group %q: %v", id, apiErr)
 				}

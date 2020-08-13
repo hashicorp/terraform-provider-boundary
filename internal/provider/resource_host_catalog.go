@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/boundary/api/hosts"
-	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -63,19 +62,19 @@ func validateHostCatalogType(val interface{}, key string) (warns []string, errs 
 
 // convertHostCatalogToResourceData creates a ResourceData type from a HostCatalog
 func convertHostCatalogToResourceData(projectID string, h *hosts.HostCatalog, d *schema.ResourceData) error {
-	if h.Name != nil {
+	if h.Name != "" {
 		if err := d.Set(hostCatalogNameKey, h.Name); err != nil {
 			return err
 		}
 	}
 
-	if h.Description != nil {
+	if h.Description != "" {
 		if err := d.Set(hostCatalogDescriptionKey, h.Description); err != nil {
 			return err
 		}
 	}
 
-	if h.Type != nil {
+	if h.Type != "" {
 		if err := d.Set(hostCatalogTypeKey, h.Type); err != nil {
 			return err
 		}
@@ -96,16 +95,13 @@ func convertHostCatalogToResourceData(projectID string, h *hosts.HostCatalog, d 
 func convertResourceDataToHostCatalog(d *schema.ResourceData) (string, *hosts.HostCatalog) {
 	h := &hosts.HostCatalog{}
 	if descVal, ok := d.GetOk(hostCatalogDescriptionKey); ok {
-		desc := descVal.(string)
-		h.Description = &desc
+		h.Description = descVal.(string)
 	}
 	if nameVal, ok := d.GetOk(hostCatalogNameKey); ok {
-		name := nameVal.(string)
-		h.Name = &name
+		h.Name = nameVal.(string)
 	}
 	if typeVal, ok := d.GetOk(hostCatalogTypeKey); ok {
-		t := typeVal.(string)
-		h.Type = &t
+		h.Type = typeVal.(string)
 	}
 	if d.Id() != "" {
 		h.Id = d.Id()
@@ -125,12 +121,11 @@ func resourceHostCatalogCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	projID, h := convertResourceDataToHostCatalog(d)
-	p := &scopes.Project{
-		Client: client,
-		Id:     projID,
-	}
+	projClient := client.Clone()
+	projClient.SetScopeId(projID)
+	hcClient := hosts.NewHostCatalogsClient(projClient)
 
-	h, apiErr, err := p.CreateHostCatalog(ctx, h)
+	h, apiErr, err := hcClient.Create(ctx, hosts.WithName(h.Name), hosts.WithType(h.Type), hosts.WithDescription(h.Description))
 	if err != nil {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
@@ -149,12 +144,11 @@ func resourceHostCatalogRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	projID, h := convertResourceDataToHostCatalog(d)
-	p := &scopes.Project{
-		Client: client,
-		Id:     projID,
-	}
+	projClient := client.Clone()
+	projClient.SetScopeId(projID)
+	hcClient := hosts.NewHostCatalogsClient(projClient)
 
-	h, apiErr, err := p.ReadHostCatalog(ctx, h)
+	h, apiErr, err := hcClient.Read(ctx, h.Id)
 	if err != nil {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
@@ -171,24 +165,20 @@ func resourceHostCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	projID, h := convertResourceDataToHostCatalog(d)
-	p := &scopes.Project{
-		Client: client,
-		Id:     projID,
-	}
+	projClient := client.Clone()
+	projClient.SetScopeId(projID)
+	hcClient := hosts.NewHostCatalogsClient(projClient)
 
 	if d.HasChange(hostCatalogNameKey) {
-		n := d.Get(hostCatalogNameKey).(string)
-		h.Name = &n
+		h.Name = d.Get(hostCatalogNameKey).(string)
 	}
 
 	if d.HasChange(hostCatalogDescriptionKey) {
-		d := d.Get(hostCatalogDescriptionKey).(string)
-		h.Description = &d
+		h.Description = d.Get(hostCatalogDescriptionKey).(string)
 	}
 
 	if d.HasChange(hostCatalogProjectIDKey) {
-		id := d.Get(hostCatalogProjectIDKey).(string)
-		p.Id = id
+		projClient.SetScopeId(d.Get(hostCatalogProjectIDKey).(string))
 	}
 
 	if d.HasChange(hostCatalogTypeKey) {
@@ -197,8 +187,14 @@ func resourceHostCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// Type is a read-only value that can not be updated. It is added in the method to convert from a
 	// resource to a HostCatalog type, so it needs to be unset when calling update.
-	h.Type = nil
-	h, apiErr, err := p.UpdateHostCatalog(ctx, h)
+	h.Type = ""
+	h, apiErr, err := hcClient.Update(
+		ctx,
+		h.Id,
+		0,
+		hosts.WithAutomaticVersioning(),
+		hosts.WithName(h.Name),
+		hosts.WithDescription(h.Description))
 	if err != nil {
 		return err
 	}
@@ -215,12 +211,11 @@ func resourceHostCatalogDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	projID, h := convertResourceDataToHostCatalog(d)
-	p := &scopes.Project{
-		Client: client,
-		Id:     projID,
-	}
+	projClient := client.Clone()
+	projClient.SetScopeId(projID)
+	hcClient := hosts.NewHostCatalogsClient(projClient)
 
-	_, apiErr, err := p.DeleteHostCatalog(ctx, h)
+	_, apiErr, err := hcClient.Delete(ctx, h.Id)
 	if err != nil {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}

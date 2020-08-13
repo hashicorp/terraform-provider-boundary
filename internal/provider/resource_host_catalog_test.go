@@ -7,11 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/api/hosts"
+	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/boundary/api/hosts"
-	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,15 +101,15 @@ func testAccCheckHostCatalogDestroyed(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
-		h := hosts.HostCatalog{Id: id}
-
-		p := &scopes.Project{
-			Client: md.client,
-			Id:     rs.Primary.Attributes["project_id"],
+		projID, ok := rs.Primary.Attributes["project_id"]
+		if !ok {
+			return fmt.Errorf("project_id is not set")
 		}
+		projClient := md.client.Clone()
+		projClient.SetScopeId(projID)
+		hcClient := hosts.NewHostCatalogsClient(projClient)
 
-		if _, apiErr, _ := p.ReadHostCatalog(md.ctx, &h); apiErr == nil || apiErr.Status != http.StatusNotFound {
+		if _, apiErr, _ := hcClient.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Host catalog not destroyed %q: %v", id, apiErr))
 		}
 
@@ -131,15 +130,15 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
-		h := hosts.HostCatalog{Id: id}
-
-		p := &scopes.Project{
-			Client: md.client,
-			Id:     rs.Primary.Attributes["project_id"],
+		projID, ok := rs.Primary.Attributes["project_id"]
+		if !ok {
+			return fmt.Errorf("project_id is not set")
 		}
+		projClient := md.client.Clone()
+		projClient.SetScopeId(projID)
+		hcClient := hosts.NewHostCatalogsClient(projClient)
 
-		if _, _, err := p.ReadHostCatalog(md.ctx, &h); err != nil {
+		if _, _, err := hcClient.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading host catalog %q: %v", id, err)
 		}
 
@@ -150,7 +149,6 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		md := testProvider.Meta().(*metaData)
-		client := md.client
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
@@ -159,14 +157,15 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 			case "boundary_host_catalog":
 
 				id := rs.Primary.ID
-				h := hosts.HostCatalog{Id: id}
-
-				p := &scopes.Project{
-					Client: client,
-					Id:     rs.Primary.Attributes["project_id"],
+				projID, ok := rs.Primary.Attributes["project_id"]
+				if !ok {
+					return fmt.Errorf("project_id is not set")
 				}
+				projClient := md.client.Clone()
+				projClient.SetScopeId(projID)
+				hcClient := hosts.NewHostCatalogsClient(projClient)
 
-				_, apiErr, _ := p.ReadHostCatalog(md.ctx, &h)
+				_, apiErr, _ := hcClient.Read(md.ctx, id)
 				if apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, apiErr)
 				}

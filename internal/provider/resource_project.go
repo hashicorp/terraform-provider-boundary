@@ -3,8 +3,8 @@ package provider
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -35,13 +35,13 @@ func resourceProject() *schema.Resource {
 
 // convertProjectToResourceData populates the provided ResourceData with the appropriate values from the provided Project.
 // The project passed into thie function should be one read from the boundary API with all fields populated.
-func convertProjectToResourceData(p *scopes.Project, d *schema.ResourceData) error {
-	if p.Name != nil {
+func convertProjectToResourceData(p *scopes.Scope, d *schema.ResourceData) error {
+	if p.Name != "" {
 		if err := d.Set(projectNameKey, p.Name); err != nil {
 			return err
 		}
 	}
-	if p.Description != nil {
+	if p.Description != "" {
 		if err := d.Set(projectDescriptionKey, p.Description); err != nil {
 			return err
 		}
@@ -51,15 +51,13 @@ func convertProjectToResourceData(p *scopes.Project, d *schema.ResourceData) err
 }
 
 // convertResourceDataToProject returns a localy built Project using the values provided in the ResourceData.
-func convertResourceDataToProject(d *schema.ResourceData) *scopes.Project {
-	p := &scopes.Project{}
+func convertResourceDataToProject(d *schema.ResourceData) *scopes.Scope {
+	p := &scopes.Scope{}
 	if descVal, ok := d.GetOk(projectDescriptionKey); ok {
-		desc := descVal.(string)
-		p.Description = &desc
+		p.Description = descVal.(string)
 	}
 	if nameVal, ok := d.GetOk(projectNameKey); ok {
-		name := nameVal.(string)
-		p.Name = &name
+		p.Name = nameVal.(string)
 	}
 	if d.Id() != "" {
 		p.Id = d.Id()
@@ -72,12 +70,13 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	// The org id is declared in the client, so no need to specify that here.
-	o := &scopes.Org{
-		Client: client,
-	}
+	scp := scopes.NewScopesClient(client)
 	p := convertResourceDataToProject(d)
-	p, _, err := o.CreateProject(ctx, p)
+	p, _, err := scp.Create(
+		ctx,
+		client.ScopeId(),
+		scopes.WithName(p.Name),
+		scopes.WithDescription(p.Description))
 	if err != nil {
 		return err
 	}
@@ -91,11 +90,9 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
-	p := &scopes.Project{Id: d.Id()}
-	p, _, err := o.ReadProject(ctx, p)
+	scp := scopes.NewScopesClient(client)
+
+	p, _, err := scp.Read(ctx, d.Id())
 	if err != nil {
 		return err
 	}
@@ -107,32 +104,29 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
-	p := &scopes.Project{
-		Id: d.Id(),
-	}
+	projClient := client.Clone()
+	projClient.SetScopeId(d.Id())
+	scp := scopes.NewScopesClient(projClient)
+	p := convertResourceDataToProject(d)
 
 	if d.HasChange(projectDescriptionKey) {
 		desc := d.Get(projectDescriptionKey).(string)
-		if desc == "" {
-			p.SetDefault(projectDescriptionKey)
-		} else {
-			p.Description = &desc
-		}
+		p.Description = desc
 	}
 
 	if d.HasChange(projectNameKey) {
 		name := d.Get(projectNameKey).(string)
-		if name == "" {
-			p.SetDefault(projectNameKey)
-		} else {
-			p.Name = &name
-		}
+		p.Name = name
 	}
 
-	p, _, err := o.UpdateProject(ctx, p)
+	p, _, err := scp.Update(
+		ctx,
+		d.Id(),
+		0,
+		scopes.WithAutomaticVersioning(),
+		scopes.WithDescription(p.Description),
+		scopes.WithName(p.Name),
+	)
 	if err != nil {
 		return err
 	}
@@ -145,11 +139,12 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
+	projClient := client.Clone()
+	projClient.SetScopeId(d.Id())
+	scp := scopes.NewScopesClient(projClient)
 	p := convertResourceDataToProject(d)
-	_, _, err := o.DeleteProject(ctx, p)
+
+	_, _, err := scp.Delete(ctx, p.Id)
 	if err != nil {
 		return fmt.Errorf("failed deleting project: %w", err)
 	}

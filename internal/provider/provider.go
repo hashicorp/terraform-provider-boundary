@@ -4,20 +4,20 @@ import (
 	"context"
 	"errors"
 
+	"github.com/hashicorp/boundary/api"
+	"github.com/hashicorp/boundary/api/authmethods"
+	"github.com/hashicorp/boundary/api/authtokens"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/scopes"
 )
 
 func New() terraform.ResourceProvider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"default_organization": {
+			"default_scope": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("BOUNDARY_DEFAULT_ORG", ""),
-				Description: "The Boundary organization scope to operate all actions in if not provided in the individual resources.",
+				Description: "The Boundary scope to operate all actions in if not provided in the individual resources. This is the scope at which the provider authenticates itself.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
@@ -55,43 +55,42 @@ func New() terraform.ResourceProvider {
 }
 
 type metaData struct {
-	client *api.Client
-	ctx    context.Context
+	client    *api.Client
+	authToken *authtokens.AuthToken
+	ctx       context.Context
 }
 
-func providerAuthenticate(d *schema.ResourceData, client *api.Client) error {
+func providerAuthenticate(d *schema.ResourceData, client *api.Client) (*authtokens.AuthToken, error) {
 	authMethodID, ok := d.GetOk("auth_method_id")
 	if !ok {
-		return errors.New("auth method ID not set, please set auth_method_id on the provider")
+		return nil, errors.New("auth method ID not set, please set auth_method_id on the provider")
 	}
 
 	authMethodUser, ok := d.GetOk("auth_method_username")
 	if !ok {
-		return errors.New("auth method username not set, please set auth_method_username on the provider")
+		return nil, errors.New("auth method username not set, please set auth_method_username on the provider")
 	}
 
 	authMethodPass, ok := d.GetOk("auth_method_password")
 	if !ok {
-		return errors.New("auth method password not set, please set the auth_method_password on the provider")
+		return nil, errors.New("auth method password not set, please set the auth_method_password on the provider")
 	}
 
-	org := &scopes.Org{
-		Client: client,
-	}
+	am := authmethods.NewAuthMethodsClient(client)
 	ctx := context.Background()
 
 	// note: Authenticate() calls SetToken() under the hood to set the
 	// auth bearer on the client so we do not need to do anything with the
 	// returned token after this call, so we ignore it
-	_, apiErr, err := org.Authenticate(ctx, authMethodID.(string), authMethodUser.(string), authMethodPass.(string))
+	at, apiErr, err := am.Authenticate(ctx, authMethodID.(string), authMethodUser.(string), authMethodPass.(string))
 	if apiErr != nil {
-		return errors.New(apiErr.Message)
+		return at, errors.New(apiErr.Message)
 	}
 	if err != nil {
-		return err
+		return at, err
 	}
 
-	return nil
+	return at, nil
 }
 
 func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
@@ -103,15 +102,20 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		if err := client.SetAddr(d.Get("base_url").(string)); err != nil {
 			return nil, err
 		}
-		client.SetOrg(d.Get("default_organization").(string))
+		client.SetScopeId(d.Get("default_organization").(string))
 
 		// TODO: Pass these in through the config, add token, etc...
 		client.SetLimiter(5, 5)
 
-		if err := providerAuthenticate(d, client); err != nil {
+		at, err := providerAuthenticate(d, client)
+		if err != nil {
 			return nil, err
 		}
-
-		return &metaData{client: client, ctx: p.StopContext()}, nil
+		// need to use 'at' in the provider config to get the principal ID for use
+		// in overriding grant scope for project level configuration
+		return &metaData{
+			client:    client,
+			authToken: at,
+			ctx:       p.StopContext()}, nil
 	}
 }

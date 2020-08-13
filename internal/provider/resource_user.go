@@ -3,14 +3,14 @@ package provider
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/users"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
 	userNameKey        = "name"
 	userDescriptionKey = "description"
+	userProjectIDKey   = "project_id"
 )
 
 func resourceUser() *schema.Resource {
@@ -28,21 +28,30 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			userProjectIDKey: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
-
 }
 
 // convertUserToResourceData creates a ResourceData type from a User
 func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
-	if u.Name != nil {
+	if u.Name != "" {
 		if err := d.Set(userNameKey, u.Name); err != nil {
 			return err
 		}
 	}
 
-	if u.Description != nil {
+	if u.Description != "" {
 		if err := d.Set(userDescriptionKey, u.Description); err != nil {
+			return err
+		}
+	}
+
+	if u.Scope.Id != "" {
+		if err := d.Set(userProjectIDKey, u.Scope.Id); err != nil {
 			return err
 		}
 	}
@@ -56,12 +65,13 @@ func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
 func convertResourceDataToUser(d *schema.ResourceData) *users.User {
 	u := &users.User{}
 	if descVal, ok := d.GetOk(userDescriptionKey); ok {
-		desc := descVal.(string)
-		u.Description = &desc
+		u.Description = descVal.(string)
 	}
 	if nameVal, ok := d.GetOk(userNameKey); ok {
-		name := nameVal.(string)
-		u.Name = &name
+		u.Name = nameVal.(string)
+	}
+	if projIDVal, ok := d.GetOk(userProjectIDKey); ok {
+		u.Scope.Id = projIDVal.(string)
 	}
 
 	if d.Id() != "" {
@@ -76,13 +86,18 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
-
 	u := convertResourceDataToUser(d)
+	projClient := client.Clone()
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
+	usrs := users.NewUsersClient(projClient)
 
-	u, apiErr, err := o.CreateUser(ctx, u)
+	u, apiErr, err := usrs.Create(
+		ctx,
+		users.WithName(u.Name),
+		users.WithDescription(u.Description))
 	if err != nil {
 		return fmt.Errorf("error calling new user: %s", err.Error())
 	}
@@ -100,13 +115,15 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
-
 	u := convertResourceDataToUser(d)
+	projClient := client.Clone()
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
+	usrs := users.NewUsersClient(projClient)
 
-	u, apiErr, err := o.ReadUser(ctx, u)
+	u, apiErr, err := usrs.Read(ctx, u.Id)
 	if err != nil {
 		return fmt.Errorf("error reading user: %s", err.Error())
 	}
@@ -122,23 +139,29 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
-
 	u := convertResourceDataToUser(d)
+	projClient := client.Clone()
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
+	usrs := users.NewUsersClient(projClient)
 
 	if d.HasChange(userNameKey) {
-		n := d.Get(userNameKey).(string)
-		u.Name = &n
+		u.Name = d.Get(userNameKey).(string)
 	}
 
 	if d.HasChange(userDescriptionKey) {
-		d := d.Get(userDescriptionKey).(string)
-		u.Description = &d
+		u.Description = d.Get(userDescriptionKey).(string)
 	}
 
-	u, apiErr, err := o.UpdateUser(ctx, u)
+	u, apiErr, err := usrs.Update(
+		ctx,
+		u.Id,
+		0,
+		users.WithAutomaticVersioning(),
+		users.WithName(u.Name),
+		users.WithDescription(u.Description))
 	if err != nil {
 		return err
 	}
@@ -154,13 +177,15 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	o := &scopes.Org{
-		Client: client,
-	}
-
 	u := convertResourceDataToUser(d)
+	projClient := client.Clone()
+	if u.Scope.Id != "" {
+		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", u.Name, u.Scope.Id)
+		projClient.SetScopeId(u.Scope.Id)
+	}
+	usrs := users.NewUsersClient(projClient)
 
-	_, apiErr, err := o.DeleteUser(ctx, u)
+	_, apiErr, err := usrs.Delete(ctx, u.Id)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %s", err.Error())
 	}
