@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/plugin"
-	"github.com/hashicorp/terraform-provider-watchtower/internal/provider"
+	"github.com/hashicorp/terraform-provider-boundary/internal/provider"
 )
 
 func main() {

@@ -1,10 +1,9 @@
-module github.com/hashicorp/terraform-provider-watchtower
+module github.com/hashicorp/terraform-provider-boundary
 
-go 1.12
+go 1.13
 
 require (
 	cloud.google.com/go v0.63.0 // indirect
-	cloud.google.com/go/storage v1.10.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.34.3 // indirect
@@ -18,18 +17,13 @@ require (
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.15.0
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
-	github.com/hashicorp/watchtower v0.0.0-20200724221034-4fa8c5415bb5
+	github.com/hashicorp/vault/api v1.0.5-0.20200717191844-f687267c8086 // indirect
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
-	github.com/jackc/pgx v3.6.2+incompatible // indirect
-	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/sergi/go-diff v1.1.0 // indirect
-	github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4 // indirect
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/stretchr/testify v1.6.1
 	github.com/ulikunitz/xz v0.5.7 // indirect
-	github.com/vektah/gqlparser v1.1.2 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/zclconf/go-cty v1.5.1 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.2 // indirect
