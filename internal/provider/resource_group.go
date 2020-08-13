@@ -11,7 +11,7 @@ import (
 const (
 	groupNameKey        = "name"
 	groupDescriptionKey = "description"
-	groupProjectIDKey   = "project_id"
+	groupScopeIDKey     = "scope_id"
 )
 
 func resourceGroup() *schema.Resource {
@@ -29,13 +29,14 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			groupProjectIDKey: {
+			groupScopeIDKey: {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 		},
 	}
-
 }
 
 // convertGroupToResourceData creates a ResourceData type from a Group
@@ -53,7 +54,7 @@ func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
 	}
 
 	if g.Scope.Id != "" {
-		if err := d.Set(groupProjectIDKey, g.Scope.Id); err != nil {
+		if err := d.Set(groupScopeIDKey, g.Scope.Id); err != nil {
 			return err
 		}
 	}
@@ -64,16 +65,19 @@ func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
 }
 
 // convertResourceDataToGroup returns a localy built Group using the values provided in the ResourceData.
-func convertResourceDataToGroup(d *schema.ResourceData) *groups.Group {
+func convertResourceDataToGroup(d *schema.ResourceData, meta *metaData) *groups.Group {
 	g := &groups.Group{Scope: &scopes.ScopeInfo{}}
+
 	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
 		g.Description = descVal.(string)
 	}
+
 	if nameVal, ok := d.GetOk(groupNameKey); ok {
 		g.Name = nameVal.(string)
 	}
-	if projIDVal, ok := d.GetOk(groupProjectIDKey); ok {
-		g.Scope.Id = projIDVal.(string)
+
+	if scopeIDVal, ok := d.GetOk(groupScopeIDKey); ok {
+		g.Scope.Id = scopeIDVal.(string)
 	}
 
 	if d.Id() != "" {
@@ -88,15 +92,14 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	g := convertResourceDataToGroup(d)
-	projClient := client.Clone()
-	if g.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
-		projClient.SetScopeId(g.Scope.Id)
-	}
-	grps := groups.NewGroupsClient(projClient)
+	g := convertResourceDataToGroup(d, md)
+	grps := groups.NewGroupsClient(client)
 
-	g, apiErr, err := grps.Create(ctx, groups.WithName(g.Name), groups.WithDescription(g.Description))
+	g, apiErr, err := grps.Create(
+		ctx,
+		groups.WithScopeId(g.Scope.Id),
+		groups.WithName(g.Name),
+		groups.WithDescription(g.Description))
 	if err != nil {
 		return fmt.Errorf("error creating group: %s", err.Error())
 	}
@@ -104,9 +107,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating group: %s", apiErr.Message)
 	}
 
-	d.SetId(g.Id)
-
-	return nil
+	return convertGroupToResourceData(g, d)
 }
 
 func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
@@ -114,15 +115,10 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	g := convertResourceDataToGroup(d)
-	projClient := client.Clone()
-	if g.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
-		projClient.SetScopeId(g.Scope.Id)
-	}
-	grps := groups.NewGroupsClient(projClient)
+	g := convertResourceDataToGroup(d, md)
+	grps := groups.NewGroupsClient(client)
 
-	g, apiErr, err := grps.Read(ctx, g.Id)
+	g, apiErr, err := grps.Read(ctx, g.Id, groups.WithScopeId(g.Scope.Id))
 	if err != nil {
 		return fmt.Errorf("error reading group: %s", err.Error())
 	}
@@ -138,13 +134,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	g := convertResourceDataToGroup(d)
-	projClient := client.Clone()
-	if g.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
-		projClient.SetScopeId(g.Scope.Id)
-	}
-	grps := groups.NewGroupsClient(projClient)
+	g := convertResourceDataToGroup(d, md)
+	grps := groups.NewGroupsClient(client)
 
 	if d.HasChange(groupNameKey) {
 		g.Name = d.Get(groupNameKey).(string)
@@ -154,10 +145,13 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		g.Description = d.Get(groupDescriptionKey).(string)
 	}
 
+	g.Scope.Id = d.Get(groupScopeIDKey).(string)
+
 	g, apiErr, err := grps.Update(
 		ctx,
 		g.Id,
 		0,
+		groups.WithScopeId(g.Scope.Id),
 		groups.WithAutomaticVersioning(),
 		groups.WithName(g.Name),
 		groups.WithDescription(g.Description))
@@ -165,7 +159,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating group: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
+		return fmt.Errorf("%+v\n", apiErr.Message)
 	}
 
 	return convertGroupToResourceData(g, d)
@@ -176,15 +170,10 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	g := convertResourceDataToGroup(d)
-	projClient := client.Clone()
-	if g.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", g.Name, g.Scope.Id)
-		projClient.SetScopeId(g.Scope.Id)
-	}
-	grps := groups.NewGroupsClient(projClient)
+	g := convertResourceDataToGroup(d, md)
+	grps := groups.NewGroupsClient(client)
 
-	_, apiErr, err := grps.Delete(ctx, g.Id)
+	_, apiErr, err := grps.Delete(ctx, g.Id, groups.WithScopeId(g.Scope.Id))
 	if err != nil {
 		return fmt.Errorf("error deleting group: %s", err.Error())
 	}

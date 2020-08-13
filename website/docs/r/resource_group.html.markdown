@@ -18,9 +18,23 @@ resource "boundary_group" "example" {
 }
 ```
 
+Usage for project-specific group:
+
+```hcl
+resource "boundary_project" "foo" {
+  name = "foo_project"
+}
+
+resource "boundary_group" "example" {
+  name        = "My group"
+  description = "My first group!"
+  scope_id    = boundary_project.foo.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
-* `name` - The group name. Defaults to the resource name.
 * `description` - The group description.
-
+* `name` - The group name. Defaults to the resource name.
+* `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.

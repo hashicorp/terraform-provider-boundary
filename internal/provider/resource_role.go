@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/boundary/api/roles"
+	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -12,7 +13,7 @@ const (
 	roleDescriptionKey = "description"
 	rolePrincipalsKey  = "principals"
 	roleGrantsKey      = "grants"
-	roleProjectIDKey   = "project_id"
+	roleScopeIDKey     = "scope_id"
 )
 
 func resourceRole() *schema.Resource {
@@ -40,9 +41,11 @@ func resourceRole() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			roleProjectIDKey: {
+			roleScopeIDKey: {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -69,13 +72,17 @@ func convertRoleToResourceData(r *roles.Role, d *schema.ResourceData) error {
 	}
 
 	if r.Grants != nil {
-		if err := d.Set(roleGrantsKey, r.Grants); err != nil {
+		grants := []string{}
+		for _, grant := range r.Grants {
+			grants = append(grants, grant.Raw)
+		}
+		if err := d.Set(roleGrantsKey, grants); err != nil {
 			return err
 		}
 	}
 
 	if r.Scope.Id != "" {
-		if err := d.Set(roleProjectIDKey, r.Scope.Id); err != nil {
+		if err := d.Set(roleScopeIDKey, r.Scope.Id); err != nil {
 			return err
 		}
 	}
@@ -87,22 +94,27 @@ func convertRoleToResourceData(r *roles.Role, d *schema.ResourceData) error {
 
 // convertResourceDataToRole returns a localy built Role using the values provided in the ResourceData.
 func convertResourceDataToRole(d *schema.ResourceData) *roles.Role {
-	r := &roles.Role{}
-	if projIDVal, ok := d.GetOk(roleProjectIDKey); ok {
+	r := &roles.Role{Scope: &scopes.ScopeInfo{}}
+
+	if projIDVal, ok := d.GetOk(roleScopeIDKey); ok {
 		r.Scope.Id = projIDVal.(string)
 	}
+
 	if descVal, ok := d.GetOk(roleDescriptionKey); ok {
 		r.Description = descVal.(string)
 	}
+
 	if nameVal, ok := d.GetOk(roleNameKey); ok {
 		r.Name = nameVal.(string)
 	}
+
 	if val, ok := d.GetOk(rolePrincipalsKey); ok {
 		principalIds := val.(*schema.Set).List()
 		for _, i := range principalIds {
 			r.PrincipalIds = append(r.PrincipalIds, i.(string))
 		}
 	}
+
 	if val, ok := d.GetOk(roleGrantsKey); ok {
 		grants := val.(*schema.Set).List()
 		for _, i := range grants {
@@ -124,12 +136,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	projClient := client.Clone()
-	if r.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
-		projClient.SetScopeId(r.Scope.Id)
-	}
-	rolesClient := roles.NewRolesClient(projClient)
+	rolesClient := roles.NewRolesClient(client)
 
 	principals := r.PrincipalIds
 	grants := []string{}
@@ -140,7 +147,8 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	r, apiErr, err := rolesClient.Create(
 		ctx,
 		roles.WithName(r.Name),
-		roles.WithDescription(r.Description))
+		roles.WithDescription(r.Description),
+		roles.WithScopeId(r.Scope.Id))
 	if apiErr != nil {
 		return fmt.Errorf("error creating role: %s\n", apiErr.Message)
 	}
@@ -156,7 +164,8 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 			ctx,
 			r.Id,
 			r.Version,
-			grants)
+			grants,
+			roles.WithScopeId(r.Scope.Id))
 		if apiErr != nil {
 			return fmt.Errorf("error setting grants on role:: %s\n", apiErr.Message)
 		}
@@ -170,7 +179,8 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 			ctx,
 			r.Id,
 			r.Version,
-			principals)
+			principals,
+			roles.WithScopeId(r.Scope.Id))
 		if apiErr != nil {
 			return fmt.Errorf("error setting principals on role: %s\n", apiErr.Message)
 		}
@@ -181,7 +191,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(r.Id)
 
-	return nil
+	return convertRoleToResourceData(r, d)
 }
 
 func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
@@ -190,14 +200,9 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	projClient := client.Clone()
-	if r.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
-		projClient.SetScopeId(r.Scope.Id)
-	}
-	rolesClient := roles.NewRolesClient(projClient)
+	rolesClient := roles.NewRolesClient(client)
 
-	r, apiErr, err := rolesClient.Read(ctx, r.Id)
+	r, apiErr, err := rolesClient.Read(ctx, r.Id, roles.WithScopeId(r.Scope.Id))
 	if err != nil {
 		return fmt.Errorf("error reading role: %s", err.Error())
 	}
@@ -214,12 +219,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	projClient := client.Clone()
-	if r.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
-		projClient.SetScopeId(r.Scope.Id)
-	}
-	rolesClient := roles.NewRolesClient(projClient)
+	rolesClient := roles.NewRolesClient(client)
 
 	if d.HasChange(roleNameKey) {
 		r.Name = d.Get(roleNameKey).(string)
@@ -235,7 +235,8 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		0,
 		roles.WithAutomaticVersioning(),
 		roles.WithName(r.Name),
-		roles.WithDescription(r.Description))
+		roles.WithDescription(r.Description),
+		roles.WithScopeId(r.Scope.Id))
 	if apiErr != nil || err != nil {
 		return fmt.Errorf("error updating role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
 	}
@@ -243,15 +244,17 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange(roleGrantsKey) {
 		grants := []string{}
 		grantSet := d.Get(roleGrantsKey).(*schema.Set).List()
+
 		for _, grant := range grantSet {
 			grants = append(grants, grant.(string))
 		}
 
-		_, apiErr, err := rolesClient.SetGrants(
+		r, apiErr, err = rolesClient.SetGrants(
 			ctx,
 			r.Id,
 			r.Version,
-			grants)
+			grants,
+			roles.WithScopeId(r.Scope.Id))
 		if apiErr != nil || err != nil {
 			return fmt.Errorf("error setting grants on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
 		}
@@ -268,7 +271,8 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 			ctx,
 			r.Id,
 			r.Version,
-			principalIds)
+			principalIds,
+			roles.WithScopeId(r.Scope.Id))
 		if apiErr != nil || err != nil {
 			return fmt.Errorf("error updating principal on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
 		}
@@ -283,14 +287,9 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	projClient := client.Clone()
-	if r.Scope.Id != "" {
-		fmt.Printf("[DEBUG] project_id detected, resetting client scope for %s to %s\n", r.Name, r.Scope.Id)
-		projClient.SetScopeId(r.Scope.Id)
-	}
-	rolesClient := roles.NewRolesClient(projClient)
+	rolesClient := roles.NewRolesClient(client)
 
-	_, apiErr, err := rolesClient.Delete(ctx, r.Id)
+	_, apiErr, err := rolesClient.Delete(ctx, r.Id, roles.WithScopeId(r.Scope.Id))
 	if apiErr != nil || err != nil {
 		return fmt.Errorf("error deleting role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
 	}

@@ -22,7 +22,7 @@ resource "boundary_host_catalog" "example" {
   name        = "My catalog"
   description = "My first host catalog!"
   type        = "Static"
-  project_id  = boundary_project.example.id
+  scope_id    = boundary_project.example.id
 }
 ```
 
@@ -30,9 +30,8 @@ resource "boundary_host_catalog" "example" {
 
 The following arguments are required:
 * `type` - The host catalog type. Only `Static` (yes, title case) is supported.
-* `project_id` - The project in which to create this host catalog.
+* `scope_id` - The scope ID in which the resource is created.
 
 The following arguments are optional:
 * `name` - The host catalog name. Defaults to the resource name.
 * `description` - The host catalog description.
-

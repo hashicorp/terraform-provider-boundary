@@ -54,9 +54,32 @@ resource "boundary_role" "readonly" {
 }
 ```
 
+Usage for a project-specific role:
+
+```hcl
+resource "boundary_project" "foo" {
+  name = "foo_project"
+}
+
+resource "boundary_user" "readonly" {
+  name        = "readonly"
+  description = "A readonly user"
+}
+
+resource "boundary_role" "readonly" {
+  name        = "readonly"
+  description = "A readonly role"
+  principals  = [boundary_user.readonly.id]
+  grants      = ["id=*;action=read"]
+  scope_id    = boundary_project.foo.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
-* `name` - The role name. Defaults to the resource name.
 * `description` - The role description.
+* `grants` - A list of stringified grants for the role.
+* `name` - The role name. Defaults to the resource name.
 * `principals` - A list of principal (user or group) IDs to add as principals on the role.
+* `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.

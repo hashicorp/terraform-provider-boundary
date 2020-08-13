@@ -99,12 +99,12 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 		if err != nil {
 			return nil, err
 		}
+
 		if err := client.SetAddr(d.Get("base_url").(string)); err != nil {
 			return nil, err
 		}
-		client.SetScopeId(d.Get("default_organization").(string))
+		client.SetScopeId(d.Get("default_scope").(string))
 
-		// TODO: Pass these in through the config, add token, etc...
 		client.SetLimiter(5, 5)
 
 		at, err := providerAuthenticate(d, client)
