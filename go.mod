@@ -7,7 +7,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.34.2 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200812213456-2c4c991cca15
+	github.com/hashicorp/boundary v0.0.0-20200813015744-f1d69ea1eeb9
 	github.com/hashicorp/go-getter v1.4.1 // indirect
 	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
