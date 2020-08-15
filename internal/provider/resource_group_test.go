@@ -1,10 +1,8 @@
 package provider
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/boundary/api/groups"
@@ -31,19 +29,36 @@ resource "boundary_group" "foo" {
 	description = "%s"
 }`, fooGroupDescriptionUpdate)
 
+	orgToProjectGroupUpdate = fmt.Sprintf(`
+resource "boundary_group" "foo" {
+  name = "test"
+	description = "%s"
+	scope_id = boundary_project.foo.id
+}`, fooGroupDescriptionUpdate)
+
 	projGroup = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
-	project_id = boundary_project.foo.id
+	scope_id = boundary_project.foo.id
 }`, fooGroupDescription)
 
 	projGroupUpdate = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
 	description = "%s"
-	project_id = boundary_project.foo.id
+	scope_id = boundary_project.foo.id
 }`, fooGroupDescriptionUpdate)
+
+	// TODO When removing the scope_id the provider does not revert back to the provider
+	// default scope. As a workaround, you can move the resource into the org scope by
+	// manually setting the org scope ID as the scope_id field.
+	projToOrgGroupUpdate = fmt.Sprintf(`
+resource "boundary_group" "foo" {
+  name = "test"
+	description = "%s"
+	scope_id = "%s"
+}`, fooGroupDescriptionUpdate, tcOrg)
 )
 
 func TestAccGroup(t *testing.T) {
@@ -58,28 +73,12 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooProject, projGroup),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
-				),
-			},
-			{
-				// test update
-				Config: testConfig(url, fooProject, projGroupUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
-				),
-			},
-			{
-				// test create
 				Config: testConfig(url, orgGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupScopeIDKey, tcOrg),
 				),
 			},
 			{
@@ -88,59 +87,81 @@ func TestAccGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupScopeIDKey, tcOrg),
 				),
 			},
 			{
-				// test destroy
-				Config: testConfig(url),
+				// test update to project scope
+				Config: testConfig(url, fooProject, orgToProjectGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupDestroyed("boundary_group.foo"),
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+					testAccCheckGroupProjectScope("boundary_group.foo"),
+				),
+			},
+			{
+				// test create
+				Config: testConfig(url, fooProject, projGroup),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
+					testAccCheckGroupProjectScope("boundary_group.foo"),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, fooProject, projGroupUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+					testAccCheckGroupProjectScope("boundary_group.foo"),
+				),
+			},
+			{
+				// test update to org scope
+				Config: testConfig(url, fooProject, projToOrgGroupUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.foo"),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_group.foo", groupScopeIDKey, tcOrg),
 				),
 			},
 		},
 	})
 }
 
-// testAccCheckGroupDestroyed checks the terraform state for the host
-// catalog and returns an error if found.
-//
-// TODO(malnick) This method falls short of checking the Boundary API for
-// the resource if the resource is not found in state. This is due to us not
-// having the host catalog ID, but it doesn't guarantee that the resource was
-// successfully removed.
-//
-// It does check Boundary if the resource is found in state to point out any
-// misalignment between what is in state and the actual configuration.
-func testAccCheckGroupDestroyed(name string) resource.TestCheckFunc {
+func testAccCheckGroupProjectScope(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			// If it's not in state, it's destroyed in TF but not guaranteed to be destroyed
-			// in Boundary. Need to find a way to get the host catalog ID here so we can
-			// form a lookup to the WT API to check this.
-			return nil
+			return fmt.Errorf("Not found: %s", name)
 		}
-		errs := []string{}
-		errs = append(errs, fmt.Sprintf("Found group resource in state: %s", name))
 
-		expectedGroupID := rs.Primary.ID
-		if expectedGroupID == "" {
+		id := rs.Primary.ID
+		if id == "" {
 			return fmt.Errorf("No ID is set")
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
 		projClient := md.client.Clone()
+
+		stateProjID, ok := rs.Primary.Attributes["scope_id"]
 		if ok {
-			projClient.SetScopeId(projID)
+			projClient.SetScopeId(stateProjID)
 		}
 		grps := groups.NewGroupsClient(projClient)
 
-		if _, apiErr, _ := grps.Read(md.ctx, expectedGroupID); apiErr == nil || apiErr.Status != http.StatusNotFound {
-			errs = append(errs, fmt.Sprintf("Group not destroyed %q: %v", expectedGroupID, apiErr))
+		g, _, err := grps.Read(md.ctx, id)
+		if err != nil {
+			return fmt.Errorf("could not read resource state %q: %v", id, err)
 		}
 
-		return errors.New(strings.Join(errs, ","))
+		if g.Scope.Id != stateProjID {
+			return fmt.Errorf("project ID in state does not match boundary state: %s != %s", g.Scope.Id, stateProjID)
+		}
+
+		return nil
 	}
 }
 
@@ -158,8 +179,8 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 
 		md := testProvider.Meta().(*metaData)
 		projClient := md.client.Clone()
-		projID, ok := rs.Primary.Attributes["project_id"]
-		if ok {
+		projID, ok := rs.Primary.Attributes["scope_id"]
+		if ok && projID != "" {
 			projClient.SetScopeId(projID)
 		}
 		grps := groups.NewGroupsClient(projClient)
@@ -174,6 +195,7 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 
 func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		fmt.Printf("test check group resource destroyed\n")
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
 		}
@@ -186,7 +208,7 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				continue
 			case "boundary_group":
 				projClient := md.client.Clone()
-				projID, ok := rs.Primary.Attributes["project_id"]
+				projID, ok := rs.Primary.Attributes["scope_id"]
 				if ok {
 					projClient.SetScopeId(projID)
 				}
@@ -195,8 +217,8 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				id := rs.Primary.ID
 
 				_, apiErr, _ := grps.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed group %q: %v", id, apiErr)
+				if apiErr == nil || apiErr.Status != http.StatusForbidden && apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 403 or 404 when reading destroyed resource %q: %v", id, apiErr)
 				}
 
 			default:

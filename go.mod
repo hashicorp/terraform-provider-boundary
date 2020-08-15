@@ -6,10 +6,8 @@ require (
 	cloud.google.com/go v0.63.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
-	github.com/aws/aws-sdk-go v1.34.3 // indirect
-	github.com/corbym/gocrest v1.0.3 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.14.6 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200813180015-7ac4be51c026
+	github.com/aws/aws-sdk-go v1.34.4 // indirect
+	github.com/hashicorp/boundary v0.0.0-20200813213948-bb6b18951378
 	github.com/hashicorp/go-getter v1.4.1 // indirect
 	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.6.7 // indirect
@@ -27,11 +25,8 @@ require (
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/zclconf/go-cty v1.5.1 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.2 // indirect
-	go.opencensus.io v0.22.4 // indirect
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc // indirect
 	golang.org/x/sys v0.0.0-20200812155832-6a926be9bd1d // indirect
-	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	golang.org/x/tools v0.0.0-20200813181007-d926bd178cf0 // indirect
+	golang.org/x/tools v0.0.0-20200813203630-136574234359 // indirect
 	google.golang.org/genproto v0.0.0-20200813001606-1ccf2a5ae4fd // indirect
 )

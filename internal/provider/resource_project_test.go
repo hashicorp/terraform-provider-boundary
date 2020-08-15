@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccProjectCreation(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -86,8 +86,8 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			id := rs.Primary.ID
 			switch rs.Type {
 			case "boundary_project":
-				if _, apiErr, _ := scp.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed project %q: %v", id, apiErr)
+				if _, apiErr, _ := scp.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
+					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed project %q: %v", id, apiErr)
 				}
 			default:
 				t.Logf("Got unknown resource type %q", rs.Type)

@@ -45,7 +45,7 @@ func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
   base_url             = "%s"
-  default_organization = "%s"
+  default_scope        = "%s"
 	auth_method_id       = "%s"
 	auth_method_username = "%s"
 	auth_method_password = "%s"
@@ -64,7 +64,7 @@ func setGrantScopeIDonProject(projID string, principalID string, client *api.Cli
 		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", projID)),
 		roles.WithGrantScopeId(projID))
 
-	return err
+	return fmt.Errorf("%s", err.Message)
 }
 
 func TestProvider(t *testing.T) {

@@ -19,104 +19,120 @@ const (
 )
 
 var (
-	fooRole = fmt.Sprintf(`
+	orgRole = fmt.Sprintf(`
 resource "boundary_role" "foo" {
-  name = "test"
+  name        = "test"
 	description = "%s"
-	project_id = boundary_project.foo.id
 }`, fooRoleDescription)
 
-	fooRoleUpdate = fmt.Sprintf(`
+	orgRoleUpdate = fmt.Sprintf(`
 resource "boundary_role" "foo" {
-  name = "test"
+  name        = "test"
 	description = "%s"
-	project_id = boundary_project.foo.id
 }`, fooRoleDescriptionUpdate)
 
-	fooRoleWithUser = `
+	ProjToOrgRole = fmt.Sprintf(`
+resource "boundary_role" "foo" {
+  name        = "test"
+	description = "%s"
+	scope_id    = "%s"
+}`, fooRoleDescription, tcOrg)
+
+	projRole = fmt.Sprintf(`
+resource "boundary_role" "foo" {
+  name        = "test"
+	description = "%s"
+	scope_id    = boundary_project.foo.id
+}`, fooRoleDescription)
+
+	projRoleUpdate = fmt.Sprintf(`
+resource "boundary_role" "foo" {
+  name        = "test"
+	description = "%s"
+	scope_id    = boundary_project.foo.id
+}`, fooRoleDescriptionUpdate)
+
+	projRoleWithPrincipal = `
 resource "boundary_user" "foo" {
-  name = "foo"
-	project_id = boundary_project.foo.id
+  name     = "foo"
 }
 
-resource "boundary_role" "foo" {
-  name = "test"
-	description = "test description"
-	users = [boundary_user.foo.id]
-	project_id = boundary_project.foo.id
+resource "boundary_role" "with_principal" {
+  name        = "with_principal"
+	description = "with principal"
+	principals  = [boundary_user.foo.id]
+	scope_id    = boundary_project.foo.id
 }`
 
-	fooRoleWithUserUpdate = `
+	projRoleWithPrincipalUpdate = `
 resource "boundary_user" "foo" {
-  name = "foo"
-  project_id = boundary_project.foo.id
+  name     = "foo"
 }
 
 resource "boundary_user" "bar" {
-  name = "bar"
-	project_id = boundary_project.foo.id
+  name     = "bar"
 }
 
-resource "boundary_role" "foo" {
-  name = "test"
-	description = "test description"
-	users = [boundary_user.foo.id, boundary_user.bar.id]
-	project_id = boundary_project.foo.id
+resource "boundary_role" "with_principal" {
+  name        = "with_principal"
+	description = "with principal"
+	principals  = [boundary_user.foo.id, boundary_user.bar.id]
+	scope_id    = boundary_project.foo.id
 }`
 
-	fooRoleWithGroups = `
+	projRoleWithGroups = `
 resource "boundary_group" "foo" {
-  name = "foo"
-	project_id = boundary_project.foo.id
+  name     = "foo"
+	scope_id = boundary_project.foo.id
 }
 
-resource "boundary_role" "foo" {
-  name = "test"
-	description = "test description"
-	groups = [boundary_group.foo.id]
-	project_id = boundary_project.foo.id
+resource "boundary_role" "with_groups" {
+  name        = "with_groups"
+	description = "with groups"
+	principals  = [boundary_group.foo.id]
+	scope_id    = boundary_project.foo.id
 }`
 
-	fooRoleWithGroupsUpdate = `
+	projRoleWithGroupsUpdate = `
 resource "boundary_group" "foo" {
-  name = "foo"
-	project_id = boundary_project.foo.id
+  name     = "foo"
+	scope_id = boundary_project.foo.id
 }
 
 resource "boundary_group" "bar" {
-  name = "bar"
-	project_id = boundary_project.foo.id
+  name     = "bar"
+	scope_id = boundary_project.foo.id
 }
 
-resource "boundary_role" "foo" {
-  name = "test"
-	description = "test description"
-	groups = [boundary_group.foo.id, boundary_group.bar.id]
-	project_id = boundary_project.foo.id
+resource "boundary_role" "with_groups" {
+  name        = "with_groups"
+	description = "with groups"
+	principals  = [boundary_group.foo.id, boundary_group.bar.id]
+	scope_id    = boundary_project.foo.id
 }`
 
 	readonlyGrant       = "id=*;actions=read"
 	readonlyGrantUpdate = "id=*;actions=read,create"
 
-	fooRoleWithGrants = fmt.Sprintf(`
-resource "boundary_role" "foo" {
-  name = "readonly"
-	description = "test description"
-	grants = ["%s"]
-	project_id = boundary_project.foo.id
+	projRoleWithGrants = fmt.Sprintf(`
+resource "boundary_role" "with_grants" {
+  name        = "with_grants"
+	description = "with grants"
+	grants      = ["%s"]
+	scope_id    = boundary_project.foo.id
 }`, readonlyGrant)
 
-	fooRoleWithGrantsUpdate = fmt.Sprintf(`
-resource "boundary_role" "foo" {
-  name = "readonly"
-	description = "test description"
-	grants = ["%s", "%s"]
-	project_id = boundary_project.foo.id
+	projRoleWithGrantsUpdate = fmt.Sprintf(`
+resource "boundary_role" "with_grants" {
+  name        = "with_grants"
+	description = "with grants"
+	grants      = ["%s", "%s"]
+	scope_id    = boundary_project.foo.id
 }`, readonlyGrant, readonlyGrantUpdate)
 )
 
-func TestAccRoleWithGrants(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+func TestAccRoleToOrgToProject(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -125,31 +141,81 @@ func TestAccRoleWithGrants(t *testing.T) {
 		CheckDestroy: testAccCheckRoleResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
-				// test create
-				Config: testConfig(url, fooProject, fooRoleWithGrants),
+				// test org role create
+				Config: testConfig(url, orgRole),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.foo"),
-					testAccCheckRoleResourceGrantsSet("boundary_role.foo", []string{readonlyGrant}),
-					resource.TestCheckResourceAttr("boundary_role.foo", "name", "readonly"),
-					resource.TestCheckResourceAttr("boundary_role.foo", "description", "test description"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescription),
 				),
 			},
 			{
-				// test update
-				Config: testConfig(url, fooProject, fooRoleWithGrantsUpdate),
+				// test org role update
+				Config: testConfig(url, orgRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.foo"),
-					testAccCheckRoleResourceGrantsSet("boundary_role.foo", []string{readonlyGrant, readonlyGrantUpdate}),
-					resource.TestCheckResourceAttr("boundary_role.foo", "name", "readonly"),
-					resource.TestCheckResourceAttr("boundary_role.foo", "description", "test description"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescriptionUpdate),
+				),
+			},
+			{
+				// test org to project role create
+				Config: testConfig(url, fooProject, projRole),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescription),
+				),
+			},
+			{
+				// test project role update
+				Config: testConfig(url, fooProject, projRoleUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("boundary_role.foo"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescriptionUpdate),
 				),
 			},
 		},
 	})
 }
 
-func TestAccRoleWithUsers(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+func TestAccRoleWithGrants(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				// test project role create with grants
+				Config: testConfig(url, fooProject, projRoleWithGrants),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("boundary_role.with_grants"),
+					testAccCheckRoleResourceGrantsSet("boundary_role.with_grants", []string{readonlyGrant}),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
+				),
+			},
+			{
+				// test project role update with grants
+				Config: testConfig(url, fooProject, projRoleWithGrantsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists("boundary_role.with_grants"),
+
+					testAccCheckRoleResourceGrantsSet("boundary_role.with_grants", []string{readonlyGrant, readonlyGrantUpdate}),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoleWithPrincipals(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -159,24 +225,24 @@ func TestAccRoleWithUsers(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooProject, fooRoleWithUser),
+				Config: testConfig(url, fooProject, projRoleWithPrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
-					testAccCheckRoleResourceUsersSet("boundary_role.foo", []string{"boundary_user.foo"}),
+					testAccCheckRoleResourceExists("boundary_role.with_principal"),
+					testAccCheckRoleResourcePrincipalsSet("boundary_role.with_principal", []string{"boundary_user.foo"}),
 					testAccCheckUserResourceExists("boundary_user.foo"),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, "test description"),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", roleDescriptionKey, "with principal"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", roleNameKey, "with_principal"),
 					resource.TestCheckResourceAttr("boundary_user.foo", "name", "foo"),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, fooProject, fooRoleWithUserUpdate),
+				Config: testConfig(url, fooProject, projRoleWithPrincipalUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceExists("boundary_role.with_principal"),
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					testAccCheckUserResourceExists("boundary_user.bar"),
-					testAccCheckRoleResourceUsersSet("boundary_role.foo", []string{"boundary_user.foo", "boundary_user.bar"}),
+					testAccCheckRoleResourcePrincipalsSet("boundary_role.with_principal", []string{"boundary_user.foo", "boundary_user.bar"}),
 				),
 			},
 		},
@@ -184,7 +250,7 @@ func TestAccRoleWithUsers(t *testing.T) {
 }
 
 func TestAccRoleWithGroups(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -194,61 +260,24 @@ func TestAccRoleWithGroups(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooProject, fooRoleWithGroups),
+				Config: testConfig(url, fooProject, projRoleWithGroups),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
-					testAccCheckRoleResourceGroupsSet("boundary_role.foo", []string{"boundary_group.foo"}),
+					testAccCheckRoleResourceExists("boundary_role.with_groups"),
+					testAccCheckRoleResourceGroupsSet("boundary_role.with_groups", []string{"boundary_group.foo"}),
 					testAccCheckUserResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, "test description"),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_role.with_groups", roleDescriptionKey, "with groups"),
+					resource.TestCheckResourceAttr("boundary_role.with_groups", roleNameKey, "with_groups"),
 					resource.TestCheckResourceAttr("boundary_group.foo", "name", "foo"),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, fooProject, fooRoleWithGroupsUpdate),
+				Config: testConfig(url, fooProject, projRoleWithGroupsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceExists("boundary_role.with_groups"),
 					testAccCheckUserResourceExists("boundary_group.foo"),
 					testAccCheckUserResourceExists("boundary_group.bar"),
-					testAccCheckRoleResourceGroupsSet("boundary_role.foo", []string{"boundary_group.foo", "boundary_group.bar"}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRole(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-
-	resource.Test(t, resource.TestCase{
-		Providers:    testProviders,
-		CheckDestroy: testAccCheckRoleResourceDestroy(t),
-		Steps: []resource.TestStep{
-			{
-				// test create
-				Config: testConfig(url, fooProject, fooRole),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, fooRoleDescription),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleNameKey, "test"),
-				),
-			},
-			{
-				// test update
-				Config: testConfig(url, fooProject, fooRoleUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
-					resource.TestCheckResourceAttr("boundary_role.foo", roleDescriptionKey, fooRoleDescriptionUpdate),
-				),
-			},
-			{
-				// test destroy
-				Config: testConfig(url),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleDestroyed("boundary_role.foo"),
+					testAccCheckRoleResourceGroupsSet("boundary_role.with_groups", []string{"boundary_group.foo", "boundary_group.bar"}),
 				),
 			},
 		},
@@ -283,9 +312,9 @@ func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -312,9 +341,9 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -328,7 +357,7 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRoleResourceUsersSet(name string, users []string) resource.TestCheckFunc {
+func testAccCheckRoleResourcePrincipalsSet(name string, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -341,7 +370,7 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 		}
 
 		userIDs := []string{}
-		for _, userResourceName := range users {
+		for _, userResourceName := range principals {
 			ur, ok := s.RootModule().Resources[userResourceName]
 			if !ok {
 				return fmt.Errorf("user resource not found: %s", userResourceName)
@@ -349,16 +378,16 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 
 			userID := ur.Primary.ID
 			if id == "" {
-				return fmt.Errorf("user resource ID not set")
+				return fmt.Errorf("principal resource ID not set")
 			}
 
 			userIDs = append(userIDs, userID)
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -369,21 +398,21 @@ func testAccCheckRoleResourceUsersSet(name string, users []string) resource.Test
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
 
-		// for every user set as a principal on the role in the state, ensure
+		// for every principal set as a principal on the role in the state, ensure
 		// each role in boundary has the same setings
 		if len(r.PrincipalIds) == 0 {
-			return fmt.Errorf("no users found in boundary")
+			return fmt.Errorf("no principals found in boundary")
 		}
 
-		for _, stateUser := range r.PrincipalIds {
+		for _, statePrincipal := range r.PrincipalIds {
 			ok := false
-			for _, gotUser := range userIDs {
-				if gotUser == stateUser {
+			for _, gotPrincipal := range userIDs {
+				if gotPrincipal == statePrincipal {
 					ok = true
 				}
 			}
 			if !ok {
-				return fmt.Errorf("user in state not set in boundary: %s", stateUser)
+				return fmt.Errorf("principal in state not set in boundary: %s", statePrincipal)
 			}
 		}
 
@@ -419,9 +448,9 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -432,7 +461,7 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
 
-		// for every user set as a principal on the role in the state, ensure
+		// for every principal set as a principal on the role in the state, ensure
 		// each role in boundary has the same setings
 		if len(r.PrincipalIds) == 0 {
 			return fmt.Errorf("no groups found in boundary")
@@ -467,9 +496,9 @@ func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) res
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -493,7 +522,7 @@ func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) res
 				}
 			}
 			if !ok {
-				return fmt.Errorf("expected grant not found on role, %s: %s\n  Have: %v\n", r.Name, grant, r)
+				return fmt.Errorf("expected grant not found on role, %s: %s\n  Have: %#v\n", r.Name, grant, r)
 			}
 		}
 
@@ -510,6 +539,8 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
+			case "boundary_project":
+				continue
 			case "boundary_user":
 				continue
 			case "boundary_group":
@@ -517,21 +548,21 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			case "boundary_role":
 
 				id := rs.Primary.ID
-				projID, ok := rs.Primary.Attributes["project_id"]
+				projID, ok := rs.Primary.Attributes["scope_id"]
 				if !ok {
-					return fmt.Errorf("project_id is not set")
+					return fmt.Errorf("scope_id is not set")
 				}
 				projClient := md.client.Clone()
 				projClient.SetScopeId(projID)
 				rolesClient := roles.NewRolesClient(projClient)
 
 				_, apiErr, _ := rolesClient.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed role %q: %v", id, apiErr)
+				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
+					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed role %q: %v", id, apiErr)
 				}
 
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil

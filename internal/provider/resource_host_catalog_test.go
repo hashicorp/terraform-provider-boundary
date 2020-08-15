@@ -20,23 +20,23 @@ const (
 )
 
 var (
-	fooHostCatalog = fmt.Sprintf(`
+	orgHostCatalog = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
 	description = "%s"
-	project_id = boundary_project.project1.id 
+	scope_id = boundary_project.project1.id 
 	type = "Static"
 }`, fooHostCatalogDescription)
 
-	fooHostCatalogUpdate = fmt.Sprintf(`
+	orgHostCatalogUpdate = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
 	description = "%s"
-	project_id = boundary_project.project1.id 
+	scope_id = boundary_project.project1.id 
 	type = "Static"
 }`, fooHostCatalogDescriptionUpdate)
 )
 
 func TestAccHostCatalogCreate(t *testing.T) {
-	tc := controller.NewTestController(t, controller.WithDefaultOrgId("o_0000000000"))
+	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
@@ -46,7 +46,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, firstProjectBar, fooHostCatalog),
+				Config: testConfig(url, firstProjectBar, orgHostCatalog),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("boundary_project.project1"),
 					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
@@ -55,7 +55,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, firstProjectBar, fooHostCatalogUpdate),
+				Config: testConfig(url, firstProjectBar, orgHostCatalogUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", hostCatalogDescriptionKey, fooHostCatalogDescriptionUpdate),
@@ -101,9 +101,9 @@ func testAccCheckHostCatalogDestroyed(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -130,9 +130,9 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["project_id"]
+		projID, ok := rs.Primary.Attributes["scope_id"]
 		if !ok {
-			return fmt.Errorf("project_id is not set")
+			return fmt.Errorf("scope_id is not set")
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
@@ -157,9 +157,9 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 			case "boundary_host_catalog":
 
 				id := rs.Primary.ID
-				projID, ok := rs.Primary.Attributes["project_id"]
+				projID, ok := rs.Primary.Attributes["scope_id"]
 				if !ok {
-					return fmt.Errorf("project_id is not set")
+					return fmt.Errorf("scope_id is not set")
 				}
 				projClient := md.client.Clone()
 				projClient.SetScopeId(projID)
