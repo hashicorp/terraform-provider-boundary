@@ -29,6 +29,30 @@ resource "boundary_group" "foo" {
 	description = "%s"
 }`, fooGroupDescriptionUpdate)
 
+	orgGroupWithMembers = `
+resource "boundary_user" "foo" {
+  description = "foo"
+}
+
+resource "boundary_group" "with_members" {
+	description = "with members"
+	member_ids  = [boundary_user.foo.id]
+}`
+
+	orgGroupWithMembersUpdate = `
+resource "boundary_user" "foo" {
+  description = "foo"
+}
+
+resource "boundary_user" "bar" {
+  description = "bar"
+}
+
+resource "boundary_group" "with_members" {
+	description = "with members"
+	member_ids  = [boundary_user.foo.id, boundary_user.bar.id]
+}`
+
 	orgToProjectGroupUpdate = fmt.Sprintf(`
 resource "boundary_group" "foo" {
   name = "test"
@@ -131,6 +155,105 @@ func TestAccGroup(t *testing.T) {
 	})
 }
 
+func TestAccGroupWithMembers(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	resource.Test(t, resource.TestCase{
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckGroupResourceDestroy(t),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, orgGroupWithMembers),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.with_members"),
+					testAccCheckGroupResourceExists("boundary_user.foo"),
+					resource.TestCheckResourceAttr("boundary_group.with_members", groupDescriptionKey, "with members"),
+					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.foo"}),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, orgGroupWithMembersUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.with_members"),
+					testAccCheckGroupResourceExists("boundary_user.foo"),
+					resource.TestCheckResourceAttr("boundary_group.with_members", groupDescriptionKey, "with members"),
+					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.foo", "boundary_user.bar"}),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckGroupResourceMembersSet(name string, members []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("role resource not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("role resource ID is not set")
+		}
+
+		// ensure users are declared in state
+		memberIDs := []string{}
+		for _, userResourceName := range members {
+			ur, ok := s.RootModule().Resources[userResourceName]
+			if !ok {
+				return fmt.Errorf("user resource not found: %s", userResourceName)
+			}
+
+			memberID := ur.Primary.ID
+			if id == "" {
+				return fmt.Errorf("principal resource ID not set")
+			}
+
+			memberIDs = append(memberIDs, memberID)
+		}
+
+		// check boundary to ensure it matches
+		md := testProvider.Meta().(*metaData)
+		client := md.client.Clone()
+
+		projID, ok := rs.Primary.Attributes["scope_id"]
+		if ok {
+			client.SetScopeId(projID)
+		}
+		grpsClient := groups.NewGroupsClient(client)
+
+		g, _, err := grpsClient.Read(md.ctx, id)
+		if err != nil {
+			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
+		}
+
+		// for every member set as a member on the group in the state, ensure
+		// each group in boundary has the same setings
+		if len(g.MemberIds) == 0 {
+			return fmt.Errorf("no members found on group")
+		}
+
+		for _, stateMember := range g.MemberIds {
+			ok := false
+			for _, gotMember := range memberIDs {
+				if gotMember == stateMember {
+					ok = true
+				}
+			}
+			if !ok {
+				return fmt.Errorf("member in state not set in boundary: %s", stateMember)
+			}
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckGroupProjectScope(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -205,6 +328,8 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
 			case "boundary_project":
+				continue
+			case "boundary_user":
 				continue
 			case "boundary_group":
 				projClient := md.client.Clone()
