@@ -189,8 +189,6 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	d.SetId(r.Id)
-
 	return convertRoleToResourceData(r, d)
 }
 
