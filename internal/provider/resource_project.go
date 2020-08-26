@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -10,6 +11,7 @@ import (
 const (
 	projectDescriptionKey = "description"
 	projectNameKey        = "name"
+	projectScopeIDKey     = "scope_id"
 )
 
 func resourceProject() *schema.Resource {
@@ -19,7 +21,6 @@ func resourceProject() *schema.Resource {
 		Update: resourceProjectUpdate,
 		Delete: resourceProjectDelete,
 
-		// TODO: Add the ability to define a parent org instead of using one defined in the provider.
 		Schema: map[string]*schema.Schema{
 			projectNameKey: {
 				Type:     schema.TypeString,
@@ -28,6 +29,11 @@ func resourceProject() *schema.Resource {
 			projectDescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			projectScopeIDKey: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -41,28 +47,49 @@ func convertProjectToResourceData(p *scopes.Scope, d *schema.ResourceData) error
 			return err
 		}
 	}
+
 	if p.Description != "" {
 		if err := d.Set(projectDescriptionKey, p.Description); err != nil {
 			return err
 		}
 	}
+
+	if p.Scope != nil && p.Scope.Id != "" {
+		if err := d.Set(groupScopeIDKey, p.Scope.Id); err != nil {
+			return err
+		}
+	}
+
 	d.SetId(p.Id)
 	return nil
 }
 
 // convertResourceDataToProject returns a localy built Project using the values provided in the ResourceData.
-func convertResourceDataToProject(d *schema.ResourceData) *scopes.Scope {
-	p := &scopes.Scope{}
+func convertResourceDataToProject(d *schema.ResourceData) (*scopes.Scope, error) {
+	p := &scopes.Scope{Scope: &scopes.ScopeInfo{}}
+
 	if descVal, ok := d.GetOk(projectDescriptionKey); ok {
 		p.Description = descVal.(string)
 	}
+
 	if nameVal, ok := d.GetOk(projectNameKey); ok {
 		p.Name = nameVal.(string)
 	}
+
+	if scopeIDVal, ok := d.GetOk(projectScopeIDKey); ok {
+		// boundary only knows about scope_id, and here we want to ensure
+		// we manage a project within an organization
+		if !strings.HasPrefix(scopeIDVal.(string), "o_") {
+			return p, fmt.Errorf("can not use scope_id '%s' for project management", scopeIDVal.(string))
+		}
+		p.Scope.Id = scopeIDVal.(string)
+	}
+
 	if d.Id() != "" {
 		p.Id = d.Id()
 	}
-	return p
+
+	return p, nil
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
@@ -71,8 +98,12 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	scp := scopes.NewScopesClient(client)
-	p := convertResourceDataToProject(d)
-	p, _, err := scp.Create(
+	p, err := convertResourceDataToProject(d)
+	if err != nil {
+		return err
+	}
+
+	p, _, err = scp.Create(
 		ctx,
 		client.ScopeId(),
 		scopes.WithName(p.Name),
@@ -107,7 +138,10 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	projClient := client.Clone()
 	projClient.SetScopeId(d.Id())
 	scp := scopes.NewScopesClient(projClient)
-	p := convertResourceDataToProject(d)
+	p, err := convertResourceDataToProject(d)
+	if err != nil {
+		return err
+	}
 
 	if d.HasChange(projectDescriptionKey) {
 		desc := d.Get(projectDescriptionKey).(string)
@@ -119,7 +153,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		p.Name = name
 	}
 
-	p, _, err := scp.Update(
+	p, _, err = scp.Update(
 		ctx,
 		d.Id(),
 		0,
@@ -142,9 +176,12 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	projClient := client.Clone()
 	projClient.SetScopeId(d.Id())
 	scp := scopes.NewScopesClient(projClient)
-	p := convertResourceDataToProject(d)
+	p, err := convertResourceDataToProject(d)
+	if err != nil {
+		return err
+	}
 
-	_, _, err := scp.Delete(ctx, p.Id)
+	_, _, err = scp.Delete(ctx, p.Id)
 	if err != nil {
 		return fmt.Errorf("failed deleting project: %w", err)
 	}

@@ -146,7 +146,11 @@ func TestResourceDataToProject(t *testing.T) {
 				err := rd.Set(k, v)
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, tc.expected, convertResourceDataToProject(rd))
+			r, err := convertResourceDataToProject(rd)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			assert.Equal(t, tc.expected, r)
 		})
 	}
 }
