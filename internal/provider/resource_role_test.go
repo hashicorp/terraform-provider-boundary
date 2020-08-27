@@ -23,12 +23,14 @@ var (
 resource "boundary_role" "foo" {
   name        = "test"
 	description = "%s"
+	scope_id    = boundary_organization.foo.id
 }`, fooRoleDescription)
 
 	orgRoleUpdate = fmt.Sprintf(`
 resource "boundary_role" "foo" {
   name        = "test"
 	description = "%s"
+  scope_id    = boundary_organization.foo.id
 }`, fooRoleDescriptionUpdate)
 
 	ProjToOrgRole = fmt.Sprintf(`
@@ -142,7 +144,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test org role create
-				Config: testConfig(url, orgRole),
+				Config: testConfig(url, fooOrg, orgRole),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -151,7 +153,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 			},
 			{
 				// test org role update
-				Config: testConfig(url, orgRoleUpdate),
+				Config: testConfig(url, fooOrg, orgRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -160,7 +162,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 			},
 			{
 				// test org to project role create
-				Config: testConfig(url, fooProject, projRole),
+				Config: testConfig(url, fooOrg, fooProject, projRole),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -169,7 +171,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 			},
 			{
 				// test project role update
-				Config: testConfig(url, fooProject, projRoleUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -191,7 +193,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test project role create with grants
-				Config: testConfig(url, fooProject, projRoleWithGrants),
+				Config: testConfig(url, fooOrg, fooProject, projRoleWithGrants),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.with_grants"),
 					testAccCheckRoleResourceGrantsSet("boundary_role.with_grants", []string{readonlyGrant}),
@@ -201,7 +203,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 			},
 			{
 				// test project role update with grants
-				Config: testConfig(url, fooProject, projRoleWithGrantsUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projRoleWithGrantsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.with_grants"),
 
@@ -225,7 +227,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooProject, projRoleWithPrincipal),
+				Config: testConfig(url, fooOrg, fooProject, projRoleWithPrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.with_principal"),
 					testAccCheckRoleResourcePrincipalsSet("boundary_role.with_principal", []string{"boundary_user.foo"}),
@@ -237,7 +239,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooProject, projRoleWithPrincipalUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projRoleWithPrincipalUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.with_principal"),
 					testAccCheckUserResourceExists("boundary_user.foo"),
@@ -260,7 +262,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooProject, projRoleWithGroups),
+				Config: testConfig(url, fooOrg, fooProject, projRoleWithGroups),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.with_groups"),
 					testAccCheckRoleResourceGroupsSet("boundary_role.with_groups", []string{"boundary_group.foo"}),
@@ -272,7 +274,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooProject, projRoleWithGroupsUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projRoleWithGroupsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists("boundary_role.with_groups"),
 					testAccCheckUserResourceExists("boundary_group.foo"),

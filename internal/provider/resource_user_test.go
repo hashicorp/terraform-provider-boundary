@@ -20,14 +20,16 @@ const (
 var (
 	orgUser = fmt.Sprintf(`
 resource "boundary_user" "foo" {
-  name = "test"
+  name        = "test"
 	description = "%s"
+  scope_id    = boundary_organization.foo.id
 }`, fooUserDescription)
 
 	orgUserUpdate = fmt.Sprintf(`
 resource "boundary_user" "foo" {
-  name = "test"
+  name        = "test"
 	description = "%s"
+  scope_id    = boundary_organization.foo.id
 }`, fooUserDescriptionUpdate)
 )
 
@@ -42,22 +44,20 @@ func TestAccUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, orgUser),
+				Config: testConfig(url, fooOrg, orgUser),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescription),
 					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
-					resource.TestCheckResourceAttr("boundary_user.foo", userScopeIDKey, tcOrg),
 				),
 			},
 			{
 				// test update description
-				Config: testConfig(url, orgUserUpdate),
+				Config: testConfig(url, fooOrg, orgUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
 					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
-					resource.TestCheckResourceAttr("boundary_user.foo", userScopeIDKey, tcOrg),
 				),
 			},
 		},
@@ -114,8 +114,8 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				usrs := users.NewUsersClient(projClient)
 
 				_, apiErr, _ := usrs.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, apiErr)
+				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
+					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed user %q: %v", id, apiErr)
 				}
 
 			default:
