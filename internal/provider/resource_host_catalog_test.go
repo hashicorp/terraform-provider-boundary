@@ -1,10 +1,8 @@
 package provider
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/boundary/api/hosts"
@@ -20,18 +18,20 @@ const (
 )
 
 var (
-	orgHostCatalog = fmt.Sprintf(`
+	projHostCatalog = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
+  name        = "foo"
 	description = "%s"
-	scope_id = boundary_project.project1.id 
-	type = "Static"
+	scope_id    = boundary_project.foo.id 
+	type        = "static"
 }`, fooHostCatalogDescription)
 
-	orgHostCatalogUpdate = fmt.Sprintf(`
+	projHostCatalogUpdate = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
+  name        = "foo"
 	description = "%s"
-	scope_id = boundary_project.project1.id 
-	type = "Static"
+	scope_id    = boundary_project.foo.id 
+	type        = "static"
 }`, fooHostCatalogDescriptionUpdate)
 )
 
@@ -46,75 +46,24 @@ func TestAccHostCatalogCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, firstProjectBar, orgHostCatalog),
+				Config: testConfig(url, fooOrg, fooProject, projHostCatalog),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectResourceExists("boundary_project.project1"),
+					testAccCheckOrganizationResourceExists("boundary_organization.foo"),
+					testAccCheckProjectResourceExists("boundary_project.foo"),
 					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", hostCatalogDescriptionKey, fooHostCatalogDescription),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, firstProjectBar, orgHostCatalogUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projHostCatalogUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", hostCatalogDescriptionKey, fooHostCatalogDescriptionUpdate),
 				),
 			},
-			{
-				// test destroy
-				Config: testConfig(url, firstProjectBar),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProjectResourceExists("boundary_project.project1"),
-					testAccCheckHostCatalogDestroyed("boundary_host_catalog.foo"),
-				),
-			},
 		},
 	})
-}
-
-// testAccCheckHostCatalogDestroyed checks the terraform state for the host
-// catalog and returns an error if found.
-//
-// TODO(malnick) This method falls short of checking the Boundary API for
-// the resource if the resource is not found in state. This is due to us not
-// having the host catalog ID, but it doesn't guarantee that the resource was
-// successfully removed.
-//
-// It does check Boundary if the resource is found in state to point out any
-// misalignment between what is in state and the actual configuration.
-func testAccCheckHostCatalogDestroyed(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			// If it's not in state, it's destroyed in TF but not guaranteed to be destroyed
-			// in Boundary. Need to find a way to get the host catalog ID here so we can
-			// form a lookup to the WT API to check this.
-			return nil
-		}
-		errs := []string{}
-		errs = append(errs, fmt.Sprintf("Found host catalog resource in state: %s", name))
-
-		id := rs.Primary.ID
-		if id == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if !ok {
-			return fmt.Errorf("scope_id is not set")
-		}
-		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
-		hcClient := hosts.NewHostCatalogsClient(projClient)
-
-		if _, apiErr, _ := hcClient.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound {
-			errs = append(errs, fmt.Sprintf("Host catalog not destroyed %q: %v", id, apiErr))
-		}
-
-		return errors.New(strings.Join(errs, ","))
-	}
 }
 
 func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
@@ -166,8 +115,8 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 				hcClient := hosts.NewHostCatalogsClient(projClient)
 
 				_, apiErr, _ := hcClient.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, apiErr)
+				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
+					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed host catalog %q: %v", id, apiErr)
 				}
 
 			default:

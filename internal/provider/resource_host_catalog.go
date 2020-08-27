@@ -14,7 +14,7 @@ const (
 	hostCatalogDescriptionKey = "description"
 	hostCatalogScopeIDKey     = "scope_id"
 	hostCatalogTypeKey        = "type"
-	hostCatalogTypeStatic     = "Static"
+	hostCatalogTypeStatic     = "static"
 )
 
 func resourceHostCatalog() *schema.Resource {
@@ -39,8 +39,7 @@ func resourceHostCatalog() *schema.Resource {
 			},
 			hostCatalogTypeKey: {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ForceNew: true,
 			},
 		},
@@ -117,7 +116,6 @@ func convertResourceDataToHostCatalog(d *schema.ResourceData) *hosts.HostCatalog
 		// if scope_id is not set, don't override with an empty scope
 		if scopeIDVal.(string) != "" {
 			h.Scope.Id = scopeIDVal.(string)
-			fmt.Printf("[DEBUG] scope_id detected, reset client scope for %s to %s\n", h.Name, h.Scope.Id)
 		}
 	}
 
@@ -134,8 +132,8 @@ func resourceHostCatalogCreate(d *schema.ResourceData, meta interface{}) error {
 
 	h, apiErr, err := hcClient.Create(
 		ctx,
+		h.Type,
 		hosts.WithName(h.Name),
-		hosts.WithType(h.Type),
 		hosts.WithDescription(h.Description),
 		hosts.WithScopeId(h.Scope.Id))
 	if err != nil {
