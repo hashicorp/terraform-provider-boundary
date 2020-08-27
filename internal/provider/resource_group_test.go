@@ -19,38 +19,45 @@ const (
 var (
 	orgGroup = fmt.Sprintf(`
 resource "boundary_group" "foo" {
-  name = "test"
+  name        = "test"
 	description = "%s"
+	scope_id    = boundary_organization.foo.id
 }`, fooGroupDescription)
 
 	orgGroupUpdate = fmt.Sprintf(`
 resource "boundary_group" "foo" {
-  name = "test"
+  name        = "test"
 	description = "%s"
+  scope_id    = boundary_organization.foo.id
 }`, fooGroupDescriptionUpdate)
 
 	orgGroupWithMembers = `
 resource "boundary_user" "foo" {
   description = "foo"
+  scope_id    = boundary_organization.foo.id
 }
 
 resource "boundary_group" "with_members" {
 	description = "with members"
 	member_ids  = [boundary_user.foo.id]
+  scope_id    = boundary_organization.foo.id
 }`
 
 	orgGroupWithMembersUpdate = `
 resource "boundary_user" "foo" {
   description = "foo"
+  scope_id    = boundary_organization.foo.id
 }
 
 resource "boundary_user" "bar" {
   description = "bar"
+  scope_id    = boundary_organization.foo.id
 }
 
 resource "boundary_group" "with_members" {
 	description = "with members"
 	member_ids  = [boundary_user.foo.id, boundary_user.bar.id]
+  scope_id    = boundary_organization.foo.id
 }`
 
 	orgToProjectGroupUpdate = fmt.Sprintf(`
@@ -97,26 +104,24 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, orgGroup),
+				Config: testConfig(url, fooOrg, orgGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupScopeIDKey, tcOrg),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, orgGroupUpdate),
+				Config: testConfig(url, fooOrg, orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupScopeIDKey, tcOrg),
 				),
 			},
 			{
 				// test update to project scope
-				Config: testConfig(url, fooProject, orgToProjectGroupUpdate),
+				Config: testConfig(url, fooOrg, fooProject, orgToProjectGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -125,7 +130,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test create
-				Config: testConfig(url, fooProject, projGroup),
+				Config: testConfig(url, fooOrg, fooProject, projGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
@@ -135,7 +140,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooProject, projGroupUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -144,7 +149,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update to org scope
-				Config: testConfig(url, fooProject, projToOrgGroupUpdate),
+				Config: testConfig(url, fooOrg, fooProject, projToOrgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -167,7 +172,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, orgGroupWithMembers),
+				Config: testConfig(url, fooOrg, orgGroupWithMembers),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.with_members"),
 					testAccCheckGroupResourceExists("boundary_user.foo"),
@@ -177,7 +182,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, orgGroupWithMembersUpdate),
+				Config: testConfig(url, fooOrg, orgGroupWithMembersUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.with_members"),
 					testAccCheckGroupResourceExists("boundary_user.foo"),
@@ -318,7 +323,6 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 
 func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		fmt.Printf("test check group resource destroyed\n")
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
 		}
@@ -327,6 +331,8 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
+			case "boundary_organization":
+				continue
 			case "boundary_project":
 				continue
 			case "boundary_user":
