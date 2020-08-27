@@ -16,18 +16,12 @@ import (
 var testProvider *schema.Provider
 var testProviders map[string]terraform.ResourceProvider
 
-var fooProject = `
-resource "boundary_project" "foo" {
-  name = "test"
-}`
-
 var (
 	tcUsername = "user"
 	tcPassword = "passpass"
 	tcPAUM     = "paum_0000000000"
-	tcOrg      = "o_0000000000"
+	tcOrg      = "global"
 	tcConfig   = []controller.Option{
-		controller.WithDefaultOrgId(tcOrg),
 		controller.WithDefaultAuthMethodId(tcPAUM),
 		controller.WithDefaultLoginName(tcUsername),
 		controller.WithDefaultPassword(tcPassword),
