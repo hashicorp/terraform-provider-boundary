@@ -13,6 +13,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	fooProject = `
+resource "boundary_project" "foo" {
+  name     = "test"
+	scope_id = boundary_organization.foo.id
+}`
+
+	firstProjectFoo = `
+resource "boundary_project" "project1" {
+  scope_id    = boundary_organization.foo.id
+  description = "foo"
+}`
+
+	firstProjectBar = `
+resource "boundary_project" "project1" {
+  scope_id    = boundary_organization.foo.id
+  description = "bar"
+}`
+
+	secondProject = `
+resource "boundary_project" "project2" {
+  scope_id    = boundary_organization.foo.id
+  description = "project2"
+}
+`
+)
+
 func TestAccProjectCreation(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
@@ -23,8 +50,9 @@ func TestAccProjectCreation(t *testing.T) {
 		CheckDestroy: testAccCheckProjectResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, firstProjectBar, secondProject),
+				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationResourceExists("boundary_organization.foo"),
 					testAccCheckProjectResourceExists("boundary_project.project1"),
 					resource.TestCheckResourceAttr("boundary_project.project1", projectDescriptionKey, "bar"),
 					resource.TestCheckResourceAttr("boundary_project.project2", projectDescriptionKey, "project2"),
@@ -32,7 +60,7 @@ func TestAccProjectCreation(t *testing.T) {
 			},
 			// Updates the first project to have description foo
 			{
-				Config: testConfig(url, firstProjectFoo, secondProject),
+				Config: testConfig(url, fooOrg, firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("boundary_project.project1"),
 					resource.TestCheckResourceAttr("boundary_project.project1", projectDescriptionKey, "foo"),
@@ -41,7 +69,7 @@ func TestAccProjectCreation(t *testing.T) {
 			},
 			// Remove second project
 			{
-				Config: testConfig(url, firstProjectFoo),
+				Config: testConfig(url, fooOrg, firstProjectFoo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectResourceExists("boundary_project.project1"),
 					resource.TestCheckResourceAttr("boundary_project.project1", projectDescriptionKey, "foo"),
@@ -63,7 +91,7 @@ func testAccCheckProjectResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		if !strings.HasPrefix(id, "p_") {
-			return fmt.Errorf("ID not formatted as expected")
+			return fmt.Errorf("ID not formatted as expected, expected prefix 'p_', got %s", id)
 		}
 		md := testProvider.Meta().(*metaData)
 		scp := scopes.NewScopesClient(md.client)
@@ -85,6 +113,8 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 		for _, rs := range s.RootModule().Resources {
 			id := rs.Primary.ID
 			switch rs.Type {
+			case "boundary_organization":
+				continue
 			case "boundary_project":
 				if _, apiErr, _ := scp.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
 					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed project %q: %v", id, apiErr)
@@ -111,6 +141,7 @@ func TestResourceDataToProject(t *testing.T) {
 				projectDescriptionKey: "desc",
 			},
 			expected: &scopes.Scope{
+				Scope:       &scopes.ScopeInfo{},
 				Name:        "name",
 				Description: "desc",
 			},
@@ -121,7 +152,8 @@ func TestResourceDataToProject(t *testing.T) {
 				projectNameKey: "name",
 			},
 			expected: &scopes.Scope{
-				Name: "name",
+				Scope: &scopes.ScopeInfo{},
+				Name:  "name",
 			},
 		},
 		{
@@ -130,13 +162,14 @@ func TestResourceDataToProject(t *testing.T) {
 				projectDescriptionKey: "desc",
 			},
 			expected: &scopes.Scope{
+				Scope:       &scopes.ScopeInfo{},
 				Description: "desc",
 			},
 		},
 		{
 			name:     "Not populated",
 			rData:    map[string]interface{}{},
-			expected: &scopes.Scope{},
+			expected: &scopes.Scope{Scope: &scopes.ScopeInfo{}},
 		},
 	}
 	for _, tc := range testCases {
@@ -146,7 +179,11 @@ func TestResourceDataToProject(t *testing.T) {
 				err := rd.Set(k, v)
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, tc.expected, convertResourceDataToProject(rd))
+			r, err := convertResourceDataToProject(rd)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			assert.Equal(t, tc.expected, r)
 		})
 	}
 }
@@ -214,21 +251,3 @@ func TestProjectToResourceData(t *testing.T) {
 		})
 	}
 }
-
-const (
-	firstProjectFoo = `
-resource "boundary_project" "project1" {
-  description = "foo"
-}`
-
-	firstProjectBar = `
-resource "boundary_project" "project1" {
-  description = "bar"
-}`
-
-	secondProject = `
-resource "boundary_project" "project2" {
-  description = "project2"
-}
-`
-)
