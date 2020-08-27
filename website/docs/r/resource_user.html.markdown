@@ -12,19 +12,12 @@ The user resource allows you to configure a Boundary user.
 ## Example Usage
 
 ```hcl
+resource "boundary_organization" "foo" {}
+
 resource "boundary_user" "example" {
   name        = "My user"
   description = "My first user!"
-}
-```
-
-Usage for non-default organization (users are organization level only resources):
-
-```hcl
-resource "boundary_user" "example" {
-  name        = "My user"
-  description = "My first user!"
-  scope_id    = "o_1234567890"
+  scope_id    = boundary_organization.foo.id 
 }
 ```
 

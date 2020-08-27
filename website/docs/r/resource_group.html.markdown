@@ -12,26 +12,34 @@ The group resource allows you to configure a Boundary group.
 ## Example Usage
 
 ```hcl
+resource "boundary_organization" "foo" {}
+
 resource "boundary_user" "foo" {
   description = "foo user"
+  scope_id    = boundary_organization.foo.id
 }
 
 resource "boundary_group" "example" {
   name        = "My group"
   description = "My first group!"
   member_ids  = [boundary_user.foo.id]
+  scope_id    = boundary_organization.foo.id
 }
 ```
 
 Usage for project-specific group:
 
 ```hcl
+resource "boundary_organization" "foo" {}
+
 resource "boundary_project" "foo" {
-  name = "foo_project"
+  name     = "foo_project"
+  scope_id = boundary_organization.foo.id
 }
 
 resource "boundary_user" "foo" {
   description = "foo user"
+  scope_id    = boundary_organization.foo.id
 }
 
 resource "boundary_group" "example" {
