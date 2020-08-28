@@ -230,7 +230,7 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 		if ok {
 			client.SetScopeId(projID)
 		}
-		grpsClient := groups.NewGroupsClient(client)
+		grpsClient := groups.NewClient(client)
 
 		g, _, err := grpsClient.Read(md.ctx, id)
 		if err != nil {
@@ -278,7 +278,7 @@ func testAccCheckGroupProjectScope(name string) resource.TestCheckFunc {
 		if ok {
 			projClient.SetScopeId(stateProjID)
 		}
-		grps := groups.NewGroupsClient(projClient)
+		grps := groups.NewClient(projClient)
 
 		g, _, err := grps.Read(md.ctx, id)
 		if err != nil {
@@ -311,7 +311,7 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 		if ok && projID != "" {
 			projClient.SetScopeId(projID)
 		}
-		grps := groups.NewGroupsClient(projClient)
+		grps := groups.NewClient(projClient)
 
 		if _, _, err := grps.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
@@ -343,7 +343,7 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				if ok {
 					projClient.SetScopeId(projID)
 				}
-				grps := groups.NewGroupsClient(projClient)
+				grps := groups.NewClient(projClient)
 
 				id := rs.Primary.ID
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/boundary/api/hosts"
+	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -62,7 +62,7 @@ func validateHostCatalogType(val interface{}, key string) (warns []string, errs 
 }
 
 // convertHostCatalogToResourceData creates a ResourceData type from a HostCatalog
-func convertHostCatalogToResourceData(h *hosts.HostCatalog, d *schema.ResourceData) error {
+func convertHostCatalogToResourceData(h *hostcatalogs.HostCatalog, d *schema.ResourceData) error {
 	if h.Name != "" {
 		if err := d.Set(hostCatalogNameKey, h.Name); err != nil {
 			return err
@@ -93,8 +93,8 @@ func convertHostCatalogToResourceData(h *hosts.HostCatalog, d *schema.ResourceDa
 }
 
 // convertResourceDataToHostCatalog returns a localy built HostCatalog using the values provided in the ResourceData.
-func convertResourceDataToHostCatalog(d *schema.ResourceData) *hosts.HostCatalog {
-	h := &hosts.HostCatalog{Scope: &scopes.ScopeInfo{}}
+func convertResourceDataToHostCatalog(d *schema.ResourceData) *hostcatalogs.HostCatalog {
+	h := &hostcatalogs.HostCatalog{Scope: &scopes.ScopeInfo{}}
 
 	if descVal, ok := d.GetOk(hostCatalogDescriptionKey); ok {
 		h.Description = descVal.(string)
@@ -128,14 +128,14 @@ func resourceHostCatalogCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHostCatalog(d)
-	hcClient := hosts.NewHostCatalogsClient(client)
+	hcClient := hostcatalogs.NewClient(client)
 
 	h, apiErr, err := hcClient.Create(
 		ctx,
 		h.Type,
-		hosts.WithName(h.Name),
-		hosts.WithDescription(h.Description),
-		hosts.WithScopeId(h.Scope.Id))
+		hostcatalogs.WithName(h.Name),
+		hostcatalogs.WithDescription(h.Description),
+		hostcatalogs.WithScopeId(h.Scope.Id))
 	if err != nil {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
@@ -154,9 +154,9 @@ func resourceHostCatalogRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHostCatalog(d)
-	hcClient := hosts.NewHostCatalogsClient(client)
+	hcClient := hostcatalogs.NewClient(client)
 
-	h, apiErr, err := hcClient.Read(ctx, h.Id, hosts.WithScopeId(h.Scope.Id))
+	h, apiErr, err := hcClient.Read(ctx, h.Id, hostcatalogs.WithScopeId(h.Scope.Id))
 	if err != nil {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}
@@ -173,7 +173,7 @@ func resourceHostCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHostCatalog(d)
-	hcClient := hosts.NewHostCatalogsClient(client)
+	hcClient := hostcatalogs.NewClient(client)
 
 	if d.HasChange(hostCatalogNameKey) {
 		h.Name = d.Get(hostCatalogNameKey).(string)
@@ -198,10 +198,10 @@ func resourceHostCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
 		ctx,
 		h.Id,
 		0,
-		hosts.WithScopeId(h.Scope.Id),
-		hosts.WithAutomaticVersioning(),
-		hosts.WithName(h.Name),
-		hosts.WithDescription(h.Description))
+		hostcatalogs.WithScopeId(h.Scope.Id),
+		hostcatalogs.WithAutomaticVersioning(),
+		hostcatalogs.WithName(h.Name),
+		hostcatalogs.WithDescription(h.Description))
 	if err != nil {
 		return err
 	}
@@ -218,9 +218,9 @@ func resourceHostCatalogDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHostCatalog(d)
-	hcClient := hosts.NewHostCatalogsClient(client)
+	hcClient := hostcatalogs.NewClient(client)
 
-	_, apiErr, err := hcClient.Delete(ctx, h.Id, hosts.WithScopeId(h.Scope.Id))
+	_, apiErr, err := hcClient.Delete(ctx, h.Id, hostcatalogs.WithScopeId(h.Scope.Id))
 	if err != nil {
 		return fmt.Errorf("error calling new host catalog: %s", err.Error())
 	}

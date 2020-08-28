@@ -51,7 +51,7 @@ provider "boundary" {
 }
 
 func setGrantScopeIDonProject(projID string, principalID string, client *api.Client) error {
-	roleClient := roles.NewRolesClient(client)
+	roleClient := roles.NewClient(client)
 	_, err, _ := roleClient.Create(
 		context.Background(),
 		roles.WithName(fmt.Sprintf("TestRole_%s", projID)),

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api/hosts"
+	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -83,11 +83,9 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("scope_id is not set")
 		}
-		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
-		hcClient := hosts.NewHostCatalogsClient(projClient)
+		hcClient := hostcatalogs.NewClient(md.client)
 
-		if _, _, err := hcClient.Read(md.ctx, id); err != nil {
+		if _, _, err := hcClient.Read(md.ctx, id, hostcatalogs.WithScopeId(projID)); err != nil {
 			return fmt.Errorf("Got an error when reading host catalog %q: %v", id, err)
 		}
 
@@ -110,11 +108,10 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 				if !ok {
 					return fmt.Errorf("scope_id is not set")
 				}
-				projClient := md.client.Clone()
-				projClient.SetScopeId(projID)
-				hcClient := hosts.NewHostCatalogsClient(projClient)
 
-				_, apiErr, _ := hcClient.Read(md.ctx, id)
+				hcClient := hostcatalogs.NewClient(md.client)
+
+				_, apiErr, _ := hcClient.Read(md.ctx, id, hostcatalogs.WithScopeId(projID))
 				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
 					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed host catalog %q: %v", id, apiErr)
 				}

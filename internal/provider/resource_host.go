@@ -133,7 +133,7 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHost(d)
-	usrs := hosts.NewHostsClient(client)
+	usrs := hosts.NewClient(client)
 
 	h, apiErr, err := usrs.Create(
 		ctx,
@@ -162,7 +162,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHost(d)
-	usrs := hosts.NewHostsClient(client)
+	usrs := hosts.NewClient(client)
 
 	h, apiErr, err := usrs.Read(ctx, h.HostCatalogId, h.Id, hosts.WithScopeId(h.Scope.Id))
 	if err != nil {
@@ -181,7 +181,7 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHost(d)
-	usrs := hosts.NewHostsClient(client)
+	usrs := hosts.NewClient(client)
 
 	if d.HasChange(hostNameKey) {
 		h.Name = d.Get(hostNameKey).(string)
@@ -223,7 +223,7 @@ func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	h := convertResourceDataToHost(d)
-	usrs := hosts.NewHostsClient(client)
+	usrs := hosts.NewClient(client)
 
 	_, apiErr, err := usrs.Delete(ctx, h.HostCatalogId, h.Id, hosts.WithScopeId(h.Scope.Id))
 	if err != nil {

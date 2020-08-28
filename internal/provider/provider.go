@@ -78,7 +78,7 @@ func providerAuthenticate(d *schema.ResourceData, client *api.Client) (*authtoke
 		return nil, errors.New("auth method password not set, please set the auth_method_password on the provider")
 	}
 
-	am := authmethods.NewAuthMethodsClient(client)
+	am := authmethods.NewClient(client)
 	ctx := context.Background()
 
 	// note: Authenticate() calls SetToken() under the hood to set the

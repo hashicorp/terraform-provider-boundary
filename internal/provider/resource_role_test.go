@@ -320,7 +320,7 @@ func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		rolesClient := roles.NewRolesClient(projClient)
+		rolesClient := roles.NewClient(projClient)
 
 		if _, apiErr, _ := rolesClient.Read(md.ctx, id); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Role not destroyed %q: %v", id, apiErr))
@@ -349,7 +349,7 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		rolesClient := roles.NewRolesClient(projClient)
+		rolesClient := roles.NewClient(projClient)
 
 		if _, _, err := rolesClient.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
@@ -393,7 +393,7 @@ func testAccCheckRoleResourcePrincipalsSet(name string, principals []string) res
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		rolesClient := roles.NewRolesClient(projClient)
+		rolesClient := roles.NewClient(projClient)
 
 		r, _, err := rolesClient.Read(md.ctx, id)
 		if err != nil {
@@ -456,7 +456,7 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		rolesClient := roles.NewRolesClient(projClient)
+		rolesClient := roles.NewClient(projClient)
 
 		r, _, err := rolesClient.Read(md.ctx, id)
 		if err != nil {
@@ -504,7 +504,7 @@ func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) res
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		rolesClient := roles.NewRolesClient(projClient)
+		rolesClient := roles.NewClient(projClient)
 
 		r, _, err := rolesClient.Read(md.ctx, id)
 		if err != nil {
@@ -556,7 +556,7 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				}
 				projClient := md.client.Clone()
 				projClient.SetScopeId(projID)
-				rolesClient := roles.NewRolesClient(projClient)
+				rolesClient := roles.NewClient(projClient)
 
 				_, apiErr, _ := rolesClient.Read(md.ctx, id)
 				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {

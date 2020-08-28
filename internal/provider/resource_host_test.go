@@ -113,7 +113,7 @@ func testAccCheckHostResourceExists(name string) resource.TestCheckFunc {
 
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		hostsClient := hosts.NewHostsClient(projClient)
+		hostsClient := hosts.NewClient(projClient)
 
 		if _, _, err := hostsClient.Read(md.ctx, hostCatalogID, id); err != nil {
 			return fmt.Errorf("Got an error when reading host %q: %v", id, err)
@@ -147,7 +147,7 @@ func testAccCheckHostAttributeSet(name, attrKey, wantAttrVal string) resource.Te
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		hostsClient := hosts.NewHostsClient(projClient)
+		hostsClient := hosts.NewClient(projClient)
 
 		h, _, err := hostsClient.Read(md.ctx, hostCatalogID, id)
 		if err != nil {
@@ -199,7 +199,7 @@ func testAccCheckHostResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				projClient := md.client.Clone()
 				projClient.SetScopeId(projID)
-				hostsClient := hosts.NewHostsClient(projClient)
+				hostsClient := hosts.NewClient(projClient)
 
 				_, apiErr, _ := hostsClient.Read(md.ctx, hostCatalogID, id)
 				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {

@@ -83,7 +83,7 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 		}
 		projClient := md.client.Clone()
 		projClient.SetScopeId(projID)
-		usrs := users.NewUsersClient(projClient)
+		usrs := users.NewClient(projClient)
 
 		if _, _, err := usrs.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading user %q: %v", id, err)
@@ -111,7 +111,7 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				}
 				projClient := md.client.Clone()
 				projClient.SetScopeId(projID)
-				usrs := users.NewUsersClient(projClient)
+				usrs := users.NewClient(projClient)
 
 				_, apiErr, _ := usrs.Read(md.ctx, id)
 				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {

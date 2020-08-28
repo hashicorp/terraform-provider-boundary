@@ -75,7 +75,7 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 	client := md.client
 	ctx := md.ctx
 
-	scp := scopes.NewScopesClient(client)
+	scp := scopes.NewClient(client)
 	o, err := convertResourceDataToOrganization(d)
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	scp := scopes.NewScopesClient(client)
+	scp := scopes.NewClient(client)
 
 	o, _, err := scp.Read(ctx, d.Id())
 	if err != nil {
@@ -115,7 +115,7 @@ func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	projClient := client.Clone()
 	projClient.SetScopeId(d.Id())
-	scp := scopes.NewScopesClient(projClient)
+	scp := scopes.NewClient(projClient)
 	o, err := convertResourceDataToOrganization(d)
 	if err != nil {
 		return err
@@ -153,7 +153,7 @@ func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error 
 
 	projClient := client.Clone()
 	projClient.SetScopeId(d.Id())
-	scp := scopes.NewScopesClient(projClient)
+	scp := scopes.NewClient(projClient)
 	o, err := convertResourceDataToOrganization(d)
 	if err != nil {
 		return err
