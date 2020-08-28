@@ -136,7 +136,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	rolesClient := roles.NewRolesClient(client)
+	rolesClient := roles.NewClient(client)
 
 	principals := r.PrincipalIds
 	grants := []string{}
@@ -198,7 +198,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	rolesClient := roles.NewRolesClient(client)
+	rolesClient := roles.NewClient(client)
 
 	r, apiErr, err := rolesClient.Read(ctx, r.Id, roles.WithScopeId(r.Scope.Id))
 	if err != nil {
@@ -217,7 +217,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	rolesClient := roles.NewRolesClient(client)
+	rolesClient := roles.NewClient(client)
 
 	if d.HasChange(roleNameKey) {
 		r.Name = d.Get(roleNameKey).(string)
@@ -285,7 +285,7 @@ func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	r := convertResourceDataToRole(d)
-	rolesClient := roles.NewRolesClient(client)
+	rolesClient := roles.NewClient(client)
 
 	_, apiErr, err := rolesClient.Delete(ctx, r.Id, roles.WithScopeId(r.Scope.Id))
 	if apiErr != nil || err != nil {

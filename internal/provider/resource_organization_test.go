@@ -82,7 +82,7 @@ func testAccCheckOrganizationResourceExists(name string) resource.TestCheckFunc 
 		}
 
 		md := testProvider.Meta().(*metaData)
-		scp := scopes.NewScopesClient(md.client)
+		scp := scopes.NewClient(md.client)
 
 		if _, _, err := scp.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading organization %q: %v", id, err)
@@ -96,7 +96,7 @@ func testAccCheckOrganizationResourceDestroy(t *testing.T) resource.TestCheckFun
 	return func(s *terraform.State) error {
 		// retrieve the connection established in Provider configuration
 		md := testProvider.Meta().(*metaData)
-		scp := scopes.NewScopesClient(md.client)
+		scp := scopes.NewClient(md.client)
 
 		for _, rs := range s.RootModule().Resources {
 			id := rs.Primary.ID

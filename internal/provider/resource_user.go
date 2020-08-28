@@ -93,7 +93,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
-	usrs := users.NewUsersClient(client)
+	usrs := users.NewClient(client)
 
 	u, apiErr, err := usrs.Create(
 		ctx,
@@ -118,7 +118,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
-	usrs := users.NewUsersClient(client)
+	usrs := users.NewClient(client)
 
 	u, apiErr, err := usrs.Read(ctx, u.Id, users.WithScopeId(u.Scope.Id))
 	if err != nil {
@@ -137,7 +137,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
-	usrs := users.NewUsersClient(client)
+	usrs := users.NewClient(client)
 
 	if d.HasChange(userNameKey) {
 		u.Name = d.Get(userNameKey).(string)
@@ -173,7 +173,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
-	usrs := users.NewUsersClient(client)
+	usrs := users.NewClient(client)
 
 	_, apiErr, err := usrs.Delete(ctx, u.Id, users.WithScopeId(u.Scope.Id))
 	if err != nil {

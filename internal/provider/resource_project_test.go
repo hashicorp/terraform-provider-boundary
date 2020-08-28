@@ -94,7 +94,7 @@ func testAccCheckProjectResourceExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("ID not formatted as expected, expected prefix 'p_', got %s", id)
 		}
 		md := testProvider.Meta().(*metaData)
-		scp := scopes.NewScopesClient(md.client)
+		scp := scopes.NewClient(md.client)
 
 		if _, _, err := scp.Read(md.ctx, id); err != nil {
 			return fmt.Errorf("Got an error when reading project %q: %v", id, err)
@@ -108,7 +108,7 @@ func testAccCheckProjectResourceDestroy(t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the connection established in Provider configuration
 		md := testProvider.Meta().(*metaData)
-		scp := scopes.NewScopesClient(md.client)
+		scp := scopes.NewClient(md.client)
 
 		for _, rs := range s.RootModule().Resources {
 			id := rs.Primary.ID

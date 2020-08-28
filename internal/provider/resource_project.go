@@ -97,7 +97,7 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	scp := scopes.NewScopesClient(client)
+	scp := scopes.NewClient(client)
 	p, err := convertResourceDataToProject(d)
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	client := md.client
 	ctx := md.ctx
 
-	scp := scopes.NewScopesClient(client)
+	scp := scopes.NewClient(client)
 
 	p, _, err := scp.Read(ctx, d.Id())
 	if err != nil {
@@ -137,7 +137,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	//projClient := client.Clone()
 	//projClient.SetScopeId(d.Id())
-	scp := scopes.NewScopesClient(client) //projClient)
+	scp := scopes.NewClient(client) //projClient)
 	p, err := convertResourceDataToProject(d)
 	if err != nil {
 		return err
@@ -175,7 +175,7 @@ func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
 
 	//projClient := client.Clone()
 	//projClient.SetScopeId(d.Id())
-	scp := scopes.NewScopesClient(client) //projClient)
+	scp := scopes.NewClient(client) //projClient)
 	p, err := convertResourceDataToProject(d)
 	if err != nil {
 		return err

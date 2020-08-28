@@ -117,7 +117,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
-	grps := groups.NewGroupsClient(client)
+	grps := groups.NewClient(client)
 
 	memIDs := g.MemberIds
 
@@ -157,7 +157,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
-	grps := groups.NewGroupsClient(client)
+	grps := groups.NewClient(client)
 
 	g, apiErr, err := grps.Read(ctx, g.Id, groups.WithScopeId(g.Scope.Id))
 	if err != nil {
@@ -176,7 +176,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
-	grps := groups.NewGroupsClient(client)
+	grps := groups.NewClient(client)
 
 	if d.HasChange(groupNameKey) {
 		g.Name = d.Get(groupNameKey).(string)
@@ -230,7 +230,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
-	grps := groups.NewGroupsClient(client)
+	grps := groups.NewClient(client)
 
 	_, apiErr, err := grps.Delete(ctx, g.Id, groups.WithScopeId(g.Scope.Id))
 	if err != nil {
