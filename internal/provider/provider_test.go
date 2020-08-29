@@ -19,7 +19,7 @@ var testProviders map[string]terraform.ResourceProvider
 var (
 	tcUsername = "user"
 	tcPassword = "passpass"
-	tcPAUM     = "paum_0000000000"
+	tcPAUM     = "ampw_0000000000"
 	tcOrg      = "global"
 	tcConfig   = []controller.Option{
 		controller.WithDefaultAuthMethodId(tcPAUM),
