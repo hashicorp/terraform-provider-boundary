@@ -83,7 +83,7 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 
 	o, _, err = scp.Create(
 		ctx,
-		client.ScopeId(),
+		"global", //client.ScopeId(),
 		scopes.WithName(o.Name),
 		scopes.WithDescription(o.Description))
 	if err != nil {
