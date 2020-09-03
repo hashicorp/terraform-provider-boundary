@@ -48,6 +48,7 @@ func New() terraform.ResourceProvider {
 			"boundary_organization": resourceOrganization(),
 			"boundary_project":      resourceProject(),
 			"boundary_role":         resourceRole(),
+			"boundary_target":       resourceTarget(),
 			"boundary_user":         resourceUser(),
 		},
 	}
