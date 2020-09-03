@@ -200,6 +200,74 @@ resource "boundary_host_catalog" "backend_servers" {
   scope_id    = boundary_project.core_infra.id
 }
 
+resource "boundary_host_set" "backend_servers_service" {
+  name            = "backend_servers_service"
+  description     = "Host set for services servers"
+  host_catalog_id = boundary_host_catalog.backend_servers.id
+  host_ids        = [for host in boundary_host.backend_servers_service : host.id]]
+}
+
+resource "boundary_host_set" "backend_servers_ssh" {
+  name            = "backend_servers_ssh"
+  description     = "Host set for backend servers SSH access"
+  host_catalog_id = boundary_host_catalog.backend_servers.id
+  host_ids        = [for host in boundary_host.backend_servers_ssh : host.id]]
+}
+
+resource "boundary_host_set" "frontend_servers_console" {
+  name            = "frontend_servers_console"
+  description     = "Host set for frontend servers console access"
+  host_catalog_id = boundary_host_catalog.frontend_servers.id
+  host_ids        = [for host in boundary_host.frontend_servers_console : host.id]]
+}
+
+resource "boundary_host_set" "frontend_servers_ssh" {
+  name            = "frontend_servers_ssh"
+  description     = "Host set for frontend servers SSH access"
+  host_catalog_id = boundary_host_catalog.frontend_servers.id
+  host_ids        = [for host in boundary_host.frontend_servers_ssh : host.id]]
+}
+
+resource "boundary_target" "frontend_servers_console" {
+  name        = "frontend_servers_console"
+  description = "Frontend console target"
+  scope_id    = boundary_project.core_infra.id
+
+  host_set_ids = [
+    boundary_host_set.frontend_servers_console.id
+  ]
+}
+
+resource "boundary_target" "frontend_servers_ssh" {
+  name        = "frontend_servers_ssh"
+  description = "Frontend SSH target"
+  scope_id    = boundary_project.core_infra.id
+
+  host_set_ids = [
+    boundary_host_set.frontend_servers_ssh.id
+  ]
+}
+
+resource "boundary_target" "backend_servers_service" {
+  name        = "backend_servers_service"
+  description = "Backend service target"
+  scope_id    = boundary_project.core_infra.id
+
+  host_set_ids = [
+    boundary_host_set.backend_servers_service.id
+  ]
+}
+
+resource "boundary_target" "backend_servers_ssh" {
+  name        = "backend_servers_ssh"
+  description = "Backend SSH target"
+  scope_id    = boundary_project.core_infra.id
+
+  host_set_ids = [
+    boundary_host_set.backend_servers_ssh.id
+  ]
+}
+
 // only allow the backend team access to the backend web servers host catalog
 resource "boundary_role" "admin_backend_core_infra" {
   description = "Administrator role for backend core infrastructure"
