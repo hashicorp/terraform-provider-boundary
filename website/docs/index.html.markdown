@@ -8,7 +8,7 @@ description: |-
 
 # Boundary Provider
 
-This provider configures Boundary. 
+This provider configures Boundary.
 
 ## Example Usage
 
@@ -156,7 +156,7 @@ resource "boundary_host" "backend_servers_service" {
   description     = "Backend server host for service port"
   address         = "${each.key}:9200"
   scope_id        = boundary_project.core_infra.id
-  host_catalog_id = boundary_host_catalog.backend_servers.id 
+  host_catalog_id = boundary_host_catalog.backend_servers.id
 }
 
 resource "boundary_host" "backend_servers_ssh" {
@@ -174,7 +174,7 @@ resource "boundary_host" "frontend_servers_console" {
   description     = "Frontend server host for console port"
   address         = "${each.key}:443"
   scope_id        = boundary_project.core_infra.id
-  host_catalog_id = boundary_host_catalog.frontend_servers.id 
+  host_catalog_id = boundary_host_catalog.frontend_servers.id
 }
 
 resource "boundary_host" "frontend_servers_ssh" {
@@ -183,7 +183,7 @@ resource "boundary_host" "frontend_servers_ssh" {
   description     = "Frontend server host for SSH port"
   address         = "${each.key}:22"
   scope_id        = boundary_project.core_infra.id
-  host_catalog_id = boundary_host_catalog.frontend_servers.id 
+  host_catalog_id = boundary_host_catalog.frontend_servers.id
 }
 
 resource "boundary_host_catalog" "web_servers" {
@@ -204,28 +204,28 @@ resource "boundary_host_set" "backend_servers_service" {
   name            = "backend_servers_service"
   description     = "Host set for services servers"
   host_catalog_id = boundary_host_catalog.backend_servers.id
-  host_ids        = [for host in boundary_host.backend_servers_service : host.id]]
+  host_ids        = [for host in boundary_host.backend_servers_service : host.id]
 }
 
 resource "boundary_host_set" "backend_servers_ssh" {
   name            = "backend_servers_ssh"
   description     = "Host set for backend servers SSH access"
   host_catalog_id = boundary_host_catalog.backend_servers.id
-  host_ids        = [for host in boundary_host.backend_servers_ssh : host.id]]
+  host_ids        = [for host in boundary_host.backend_servers_ssh : host.id]
 }
 
 resource "boundary_host_set" "frontend_servers_console" {
   name            = "frontend_servers_console"
   description     = "Host set for frontend servers console access"
   host_catalog_id = boundary_host_catalog.frontend_servers.id
-  host_ids        = [for host in boundary_host.frontend_servers_console : host.id]]
+  host_ids        = [for host in boundary_host.frontend_servers_console : host.id]
 }
 
 resource "boundary_host_set" "frontend_servers_ssh" {
   name            = "frontend_servers_ssh"
   description     = "Host set for frontend servers SSH access"
   host_catalog_id = boundary_host_catalog.frontend_servers.id
-  host_ids        = [for host in boundary_host.frontend_servers_ssh : host.id]]
+  host_ids        = [for host in boundary_host.frontend_servers_ssh : host.id]
 }
 
 resource "boundary_target" "frontend_servers_console" {
