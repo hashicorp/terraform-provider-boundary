@@ -210,7 +210,7 @@ resource "boundary_host_catalog" "backend_servers" {
 }
 
 resource "boundary_host_catalog" "frontend_servers" {
-  name        = "backend_servers"
+  name        = "frontend_servers"
   description = "Web servers for backend team"
   type        = "Static"
   scope_id    = boundary_project.core_infra.id
