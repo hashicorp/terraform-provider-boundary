@@ -16,11 +16,11 @@ Do not keep your authentication password in HCL for production environments, use
 
 ```hcl
 provider "boundary" {
-  base_url             = "https://127.0.0.1:9200"
-  default_scope        = "o_0000000000"
-  auth_method_id       = "paum_1234567890"
-  auth_method_username = "myuser"
-  auth_method_password = "$uper$ecure9ass^^ord"
+  base_url             = "http://127.0.0.1:9200"
+  default_scope        = "global"
+  auth_method_id       = "paum_1234567890"      # changeme
+  auth_method_username = "myuser"               # changeme
+  auth_method_password = "$uper$ecure9ass^^ord" # changeme
 }
 ```
 
@@ -28,12 +28,13 @@ provider "boundary" {
 
 ```hcl
 provider "boundary" {
-  base_url             = "https://127.0.0.1:9200"
-  default_scope        = "o_0000000000"
-  auth_method_id       = "paum_1234567890"
-  auth_method_username = "myuser"
-  auth_method_password = "$uper$ecure9ass^^ord"
+  base_url             = "http://127.0.0.1:9200"
+  default_scope        = "global"
+  auth_method_id       = "paum_1234567890"      # changeme
+  auth_method_username = "myuser"               # changeme
+  auth_method_password = "$uper$ecure9ass^^ord" # changeme
 }
+
 
 variable "backend_team" {
   type    = set(string)
@@ -47,7 +48,7 @@ variable "backend_team" {
 variable "frontend_team" {
   type    = set(string)
   default = [
-    "Randy Morey",
+    "Randall Morey",
     "Susmitha Girumala",
   ]
 }
@@ -75,6 +76,14 @@ variable "backend_server_ips" {
   default = [
     "10.1.0.1",
     "10.1.0.2",
+  ]
+}
+
+variable "frontend_server_ips" {
+  type = set(string)
+  default = [
+    "10.2.0.1",
+    "10.2.0.2",
   ]
 }
 
@@ -195,6 +204,13 @@ resource "boundary_host_catalog" "web_servers" {
 
 resource "boundary_host_catalog" "backend_servers" {
   name        = "backend_servers"
+  description = "Web servers for backend team"
+  type        = "Static"
+  scope_id    = boundary_project.core_infra.id
+}
+
+resource "boundary_host_catalog" "frontend_servers" {
+  name        = "frontend_servers"
   description = "Web servers for backend team"
   type        = "Static"
   scope_id    = boundary_project.core_infra.id
