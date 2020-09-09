@@ -20,7 +20,6 @@ var (
 	tcLoginName = "user"
 	tcPassword  = "passpass"
 	tcPAUM      = "ampw_0000000000"
-	tcScope     = "global"
 	tcConfig    = []controller.Option{
 		controller.WithDefaultAuthMethodId(tcPAUM),
 		controller.WithDefaultLoginName(tcLoginName),
@@ -49,14 +48,14 @@ provider "boundary" {
 	return strings.Join(c, "\n")
 }
 
-func setGrantScopeIdOnProject(projId string, principalId string, client *api.Client) error {
+func setGrantScopeIdOnProject(scopeId, grantScopeId, principalId string, client *api.Client) error {
 	roleClient := roles.NewClient(client)
 	_, err, _ := roleClient.Create(
 		context.Background(),
-		tcScope,
-		roles.WithName(fmt.Sprintf("TestRole_%s", projId)),
-		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", projId)),
-		roles.WithGrantScopeId(projId))
+		scopeId,
+		roles.WithName(fmt.Sprintf("TestRole_%s", grantScopeId)),
+		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", grantScopeId)),
+		roles.WithGrantScopeId(grantScopeId))
 
 	return fmt.Errorf("%s", err.Message)
 }

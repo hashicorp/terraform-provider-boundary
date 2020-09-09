@@ -3,7 +3,6 @@ package provider
 import (
 	"fmt"
 
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -11,7 +10,7 @@ import (
 const (
 	userNameKey        = "name"
 	userDescriptionKey = "description"
-	userScopeIDKey     = "scope_id"
+	userScopeIdKey     = "scope_id"
 )
 
 func resourceUser() *schema.Resource {
@@ -29,11 +28,10 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			userScopeIDKey: {
+			userScopeIdKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Computed: true,
 			},
 		},
 	}
@@ -53,8 +51,8 @@ func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
 		}
 	}
 
-	if u.Scope.Id != "" {
-		if err := d.Set(userScopeIDKey, u.Scope.Id); err != nil {
+	if u.ScopeId != "" {
+		if err := d.Set(userScopeIdKey, u.ScopeId); err != nil {
 			return err
 		}
 	}
@@ -66,7 +64,7 @@ func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
 
 // convertResourceDataToUser returns a localy built User using the values provided in the ResourceData.
 func convertResourceDataToUser(d *schema.ResourceData) *users.User {
-	u := &users.User{Scope: &scopes.ScopeInfo{}}
+	u := new(users.User)
 
 	if descVal, ok := d.GetOk(userDescriptionKey); ok {
 		u.Description = descVal.(string)
@@ -76,8 +74,8 @@ func convertResourceDataToUser(d *schema.ResourceData) *users.User {
 		u.Name = nameVal.(string)
 	}
 
-	if scopeIDVal, ok := d.GetOk(userScopeIDKey); ok {
-		u.Scope.Id = scopeIDVal.(string)
+	if scopeIdVal, ok := d.GetOk(userScopeIdKey); ok {
+		u.ScopeId = scopeIdVal.(string)
 	}
 
 	if d.Id() != "" {
@@ -97,11 +95,11 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	u, apiErr, err := usrs.Create(
 		ctx,
+		u.ScopeId,
 		users.WithName(u.Name),
-		users.WithDescription(u.Description),
-		users.WithScopeId(u.Scope.Id))
+		users.WithDescription(u.Description))
 	if err != nil {
-		return fmt.Errorf("error calling new user: %s", err.Error())
+		return fmt.Errorf("error calling new user: %w", err)
 	}
 	if apiErr != nil {
 		return fmt.Errorf("error creating user: %s", apiErr.Message)
@@ -120,9 +118,9 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
 
-	u, apiErr, err := usrs.Read(ctx, u.Id, users.WithScopeId(u.Scope.Id))
+	u, apiErr, err := usrs.Read(ctx, u.Id)
 	if err != nil {
-		return fmt.Errorf("error reading user: %s", err.Error())
+		return fmt.Errorf("error reading user: %w", err)
 	}
 	if apiErr != nil {
 		return fmt.Errorf("error reading user: %s", apiErr.Message)
@@ -139,24 +137,13 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
 
-	if d.HasChange(userNameKey) {
-		u.Name = d.Get(userNameKey).(string)
-	}
-
-	if d.HasChange(userDescriptionKey) {
-		u.Description = d.Get(userDescriptionKey).(string)
-	}
-
-	u.Scope.Id = d.Get(userScopeIDKey).(string)
-
 	u, apiErr, err := usrs.Update(
 		ctx,
 		u.Id,
 		0,
-		users.WithAutomaticVersioning(),
+		users.WithAutomaticVersioning(true),
 		users.WithName(u.Name),
-		users.WithDescription(u.Description),
-		users.WithScopeId(u.Scope.Id))
+		users.WithDescription(u.Description))
 	if err != nil {
 		return err
 	}
@@ -175,9 +162,9 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
 
-	_, apiErr, err := usrs.Delete(ctx, u.Id, users.WithScopeId(u.Scope.Id))
+	_, apiErr, err := usrs.Delete(ctx, u.Id)
 	if err != nil {
-		return fmt.Errorf("error deleting user: %s", err.Error())
+		return fmt.Errorf("error deleting user: %w", err)
 	}
 	if apiErr != nil {
 		return fmt.Errorf("error deleting user: %s", apiErr.Message)

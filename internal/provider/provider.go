@@ -45,16 +45,15 @@ func New() terraform.ResourceProvider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"boundary_scope": resourceScope(),
+			"boundary_user":  resourceUser(),
 			/*
 				"boundary_group": resourceGroup(),
 					"boundary_host":         resourceHost(),
 					"boundary_host_catalog": resourceHostCatalog(),
 					"boundary_host_set":     resourceHostset(),
-					"boundary_organization": resourceOrganization(),
-					"boundary_project":      resourceProject(),
 					"boundary_role":         resourceRole(),
 					"boundary_target":       resourceTarget(),
-					"boundary_user":         resourceUser(),
 			*/
 		},
 	}
@@ -121,9 +120,6 @@ func providerAuthenticate(d *schema.ResourceData, md *metaData) error {
 
 	am := authmethods.NewClient(md.client)
 
-	// note: Authenticate() calls SetToken() under the hood to set the
-	// auth bearer on the client so we do not need to do anything with the
-	// returned token after this call, so we ignore it
 	at, apiErr, err := am.Authenticate(md.ctx, authMethodId.(string), credentials)
 	if apiErr != nil {
 		return errors.New(apiErr.Message)
@@ -131,6 +127,7 @@ func providerAuthenticate(d *schema.ResourceData, md *metaData) error {
 	if err != nil {
 		return err
 	}
+	md.client.SetToken(at.Token)
 
 	md.authToken = at
 	return nil

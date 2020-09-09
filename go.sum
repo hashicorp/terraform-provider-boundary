@@ -568,14 +568,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0-beta.4.0.20200813083929-9bdca3d79b97 h1:BFGJgt5fEZhMtNE8VrTWmAMnLptKdn98qLgrSFNmDxY=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.0.0-beta.4.0.20200813083929-9bdca3d79b97/go.mod h1:wK7PFLUnfulN3kJW75Btnhb3iasamaju+L19L0bFXZk=
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=
-github.com/hashicorp/boundary v0.0.0-20200909035726-f94f21fd97bf h1:bCOgWnhhb0TuE+MpNZf14KJAxyDtoDeYIAPOMkYRt3k=
-github.com/hashicorp/boundary v0.0.0-20200909035726-f94f21fd97bf/go.mod h1:hBaBC+9RfOiK0UAyqSHDdzJOaKCX3gxM88RtU5ukZV0=
-github.com/hashicorp/boundary v0.0.0-20200909051529-36f975a9522a h1:Y8AnkBuyoC46ejoXzFhgpEqwNoeNgMCRgG0P/ieGGoQ=
-github.com/hashicorp/boundary v0.0.0-20200909051529-36f975a9522a/go.mod h1:hBaBC+9RfOiK0UAyqSHDdzJOaKCX3gxM88RtU5ukZV0=
-github.com/hashicorp/boundary v0.0.0-20200909052425-f8237fb94584 h1:FxvSrtPt9RZoIitDscsaHNMiTG96oHE58js0qpNFsFY=
-github.com/hashicorp/boundary v0.0.0-20200909052425-f8237fb94584/go.mod h1:hBaBC+9RfOiK0UAyqSHDdzJOaKCX3gxM88RtU5ukZV0=
-github.com/hashicorp/boundary v0.0.0-20200909052935-ff0d49b6e4d3 h1:VfVv8zlIAj8KZXK5YwZqzPYPmSGTosmbQ+wT/NKBym0=
-github.com/hashicorp/boundary v0.0.0-20200909052935-ff0d49b6e4d3/go.mod h1:hBaBC+9RfOiK0UAyqSHDdzJOaKCX3gxM88RtU5ukZV0=
+github.com/hashicorp/boundary v0.0.0-20200909143323-535bca5a7a03 h1:zTzmXtaypZsjHgTxjBzJ7jvVg8b//mza5za3cfjKw1c=
+github.com/hashicorp/boundary v0.0.0-20200909143323-535bca5a7a03/go.mod h1:hBaBC+9RfOiK0UAyqSHDdzJOaKCX3gxM88RtU5ukZV0=
 github.com/hashicorp/consul/api v1.1.0/go.mod h1:VmuI/Lkw1nC05EYQWNKwWGbkg+FbDBtguAZLlVdkD9Q=
 github.com/hashicorp/consul/api v1.3.0/go.mod h1:MmDNSzIMUjNpY/mQ398R4bk2FnqQLoPndWW5VkKPlCE=
 github.com/hashicorp/consul/sdk v0.1.1/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyNV1vwHyQBF0x8=

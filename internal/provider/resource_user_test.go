@@ -20,16 +20,16 @@ const (
 var (
 	orgUser = fmt.Sprintf(`
 resource "boundary_user" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "%s"
-  scope_id    = boundary_organization.foo.id
+	scope_id    = boundary_scope.foo.id
 }`, fooUserDescription)
 
 	orgUserUpdate = fmt.Sprintf(`
 resource "boundary_user" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "%s"
-  scope_id    = boundary_organization.foo.id
+	scope_id    = boundary_scope.foo.id
 }`, fooUserDescriptionUpdate)
 )
 
@@ -77,16 +77,14 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if !ok {
-			return fmt.Errorf("scope_id is not set")
-		}
-		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
-		usrs := users.NewClient(projClient)
+		usrs := users.NewClient(md.client)
 
-		if _, _, err := usrs.Read(md.ctx, id); err != nil {
+		_, apiErr, err := usrs.Read(md.ctx, id)
+		if err != nil {
 			return fmt.Errorf("Got an error when reading user %q: %v", id, err)
+		}
+		if apiErr != nil {
+			return fmt.Errorf("Got an api error when reading user %q: %v", id, apiErr.Message)
 		}
 
 		return nil
@@ -105,17 +103,14 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			case "boundary_user":
 
 				id := rs.Primary.ID
-				projID, ok := rs.Primary.Attributes["scope_id"]
-				if !ok {
-					return fmt.Errorf("scope_id is not set")
-				}
-				projClient := md.client.Clone()
-				projClient.SetScopeId(projID)
-				usrs := users.NewClient(projClient)
+				usrs := users.NewClient(md.client)
 
-				_, apiErr, _ := usrs.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
-					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed user %q: %v", id, apiErr)
+				_, apiErr, err := usrs.Read(md.ctx, id)
+				if err != nil {
+					return fmt.Errorf("Error when reading destroyed user %q: %w", id, err)
+				}
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, apiErr)
 				}
 
 			default:
