@@ -3,17 +3,16 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.13
 
 require (
-	cloud.google.com/go v0.65.0 // indirect
 	cloud.google.com/go/storage v1.11.0 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.34.16 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
-	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/google/uuid v1.1.2 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200903172434-23156afa116f
+	github.com/hashicorp/boundary v0.0.0-20200909052935-ff0d49b6e4d3
 	github.com/hashicorp/go-getter v1.4.1 // indirect
+	github.com/hashicorp/go-kms-wrapping v0.5.14
 	github.com/hashicorp/go-plugin v1.3.0 // indirect
 	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
@@ -34,5 +33,4 @@ require (
 	golang.org/x/tools v0.0.0-20200903153655-76a6aac657c7 // indirect
 	google.golang.org/api v0.31.0 // indirect
 	google.golang.org/genproto v0.0.0-20200903010400-9bfcb5116336 // indirect
-	google.golang.org/grpc v1.31.1 // indirect
 )

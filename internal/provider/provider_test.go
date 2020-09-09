@@ -17,13 +17,13 @@ var testProvider *schema.Provider
 var testProviders map[string]terraform.ResourceProvider
 
 var (
-	tcUsername = "user"
-	tcPassword = "passpass"
-	tcPAUM     = "ampw_0000000000"
-	tcOrg      = "global"
-	tcConfig   = []controller.Option{
+	tcLoginName = "user"
+	tcPassword  = "passpass"
+	tcPAUM      = "ampw_0000000000"
+	tcScope     = "global"
+	tcConfig    = []controller.Option{
 		controller.WithDefaultAuthMethodId(tcPAUM),
-		controller.WithDefaultLoginName(tcUsername),
+		controller.WithDefaultLoginName(tcLoginName),
 		controller.WithDefaultPassword(tcPassword),
 	}
 )
@@ -38,25 +38,25 @@ func init() {
 func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
-  base_url             = "%s"
-  default_scope        = "%s"
+ 	base_url             = "%s"
 	auth_method_id       = "%s"
-	auth_method_username = "%s"
-	auth_method_password = "%s"
-}`, url, tcOrg, tcPAUM, tcUsername, tcPassword)
+	password_auth_method_login_name = "%s"
+	password_auth_method_password = "%s"
+}`, url, tcPAUM, tcLoginName, tcPassword)
 
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
 }
 
-func setGrantScopeIDonProject(projID string, principalID string, client *api.Client) error {
+func setGrantScopeIdOnProject(projId string, principalId string, client *api.Client) error {
 	roleClient := roles.NewClient(client)
 	_, err, _ := roleClient.Create(
 		context.Background(),
-		roles.WithName(fmt.Sprintf("TestRole_%s", projID)),
-		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", projID)),
-		roles.WithGrantScopeId(projID))
+		tcScope,
+		roles.WithName(fmt.Sprintf("TestRole_%s", projId)),
+		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", projId)),
+		roles.WithGrantScopeId(projId))
 
 	return fmt.Errorf("%s", err.Message)
 }
