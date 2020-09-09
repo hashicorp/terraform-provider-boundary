@@ -10,7 +10,7 @@ require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/google/uuid v1.1.2 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200909143323-535bca5a7a03
+	github.com/hashicorp/boundary v0.0.0-20200909153723-60396e438405
 	github.com/hashicorp/go-getter v1.4.1 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.5.14
 	github.com/hashicorp/go-plugin v1.3.0 // indirect

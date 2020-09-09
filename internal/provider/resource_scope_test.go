@@ -14,26 +14,26 @@ import (
 
 const (
 	fooOrg = `
-resource "boundary_scope" "foo" {
+resource "boundary_scope" "org1" {
 	name     = "test"
 	scope_id = "global"
 }`
 
 	firstProjectFoo = `
-resource "boundary_scope" "project1" {
-	scope_id    = boundary_scope.foo.id
+resource "boundary_scope" "proj1" {
+	scope_id    = boundary_scope.org1.id
 	description = "foo"
 }`
 
 	firstProjectBar = `
-resource "boundary_scope" "project1" {
-	scope_id    = boundary_scope.foo.id
+resource "boundary_scope" "proj1" {
+	scope_id    = boundary_scope.org1.id
 	description = "bar"
 }`
 
 	secondProject = `
-resource "boundary_scope" "project2" {
-	scope_id    = boundary_scope.foo.id
+resource "boundary_scope" "proj2" {
+	scope_id    = boundary_scope.org1.id
 	description = "project2"
 }
 `
@@ -51,27 +51,27 @@ func TestAccScopeCreation(t *testing.T) {
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.foo"),
-					testAccCheckScopeResourceExists("boundary_scope.project1"),
-					resource.TestCheckResourceAttr("boundary_scope.project1", scopeDescriptionKey, "foo"),
-					resource.TestCheckResourceAttr("boundary_scope.project2", scopeDescriptionKey, "project2"),
+					testAccCheckScopeResourceExists("boundary_scope.org1"),
+					testAccCheckScopeResourceExists("boundary_scope.proj1"),
+					resource.TestCheckResourceAttr("boundary_scope.proj1", scopeDescriptionKey, "foo"),
+					resource.TestCheckResourceAttr("boundary_scope.proj2", scopeDescriptionKey, "project2"),
 				),
 			},
 			// Updates the first project to have description bar
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.project1"),
-					resource.TestCheckResourceAttr("boundary_scope.project1", scopeDescriptionKey, "bar"),
-					resource.TestCheckResourceAttr("boundary_scope.project2", scopeDescriptionKey, "project2"),
+					testAccCheckScopeResourceExists("boundary_scope.proj1"),
+					resource.TestCheckResourceAttr("boundary_scope.proj1", scopeDescriptionKey, "bar"),
+					resource.TestCheckResourceAttr("boundary_scope.proj2", scopeDescriptionKey, "project2"),
 				),
 			},
 			// Remove second project
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.project1"),
-					resource.TestCheckResourceAttr("boundary_scope.project1", scopeDescriptionKey, "bar"),
+					testAccCheckScopeResourceExists("boundary_scope.proj1"),
+					resource.TestCheckResourceAttr("boundary_scope.proj1", scopeDescriptionKey, "bar"),
 				),
 			},
 		},

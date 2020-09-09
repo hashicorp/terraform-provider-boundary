@@ -3,6 +3,7 @@ package provider
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/boundary/api/groups"
@@ -18,78 +19,75 @@ const (
 
 var (
 	orgGroup = fmt.Sprintf(`
-resource "boundary_group" "foo" {
-  name        = "test"
+resource "boundary_group" "org1" {
+	name        = "test"
 	description = "%s"
-	scope_id    = boundary_organization.foo.id
+	scope_id    = boundary_scope.org1.id
 }`, fooGroupDescription)
 
 	orgGroupUpdate = fmt.Sprintf(`
-resource "boundary_group" "foo" {
-  name        = "test"
+resource "boundary_group" "org1" {
+	name        = "test"
 	description = "%s"
-  scope_id    = boundary_organization.foo.id
+	scope_id    = boundary_scope.org1.id
 }`, fooGroupDescriptionUpdate)
 
 	orgGroupWithMembers = `
-resource "boundary_user" "foo" {
-  description = "foo"
-  scope_id    = boundary_organization.foo.id
+resource "boundary_user" "org1" {
+	description = "org1"
+	scope_id    = boundary_scope.org1.id
 }
 
 resource "boundary_group" "with_members" {
 	description = "with members"
-	member_ids  = [boundary_user.foo.id]
-  scope_id    = boundary_organization.foo.id
+	member_ids  = [boundary_user.org1.id]
+	scope_id    = boundary_scope.org1.id
 }`
 
 	orgGroupWithMembersUpdate = `
-resource "boundary_user" "foo" {
-  description = "foo"
-  scope_id    = boundary_organization.foo.id
+resource "boundary_user" "org1" {
+	description = "org1"
+	scope_id    = boundary_scope.org1.id
 }
 
 resource "boundary_user" "bar" {
-  description = "bar"
-  scope_id    = boundary_organization.foo.id
+	description = "bar"
+	scope_id    = boundary_scope.org1.id
 }
 
 resource "boundary_group" "with_members" {
 	description = "with members"
-	member_ids  = [boundary_user.foo.id, boundary_user.bar.id]
-  scope_id    = boundary_organization.foo.id
+	member_ids  = [boundary_user.org1.id, boundary_user.bar.id]
+	scope_id    = boundary_scope.org1.id
 }`
 
-	orgToProjectGroupUpdate = fmt.Sprintf(`
-resource "boundary_group" "foo" {
-  name = "test"
-	description = "%s"
-	scope_id = boundary_project.foo.id
-}`, fooGroupDescriptionUpdate)
+	orgToProjectGroupUpdate = `
+resource "boundary_group" "org1" {
+	name = "test-to-proj"
+	description = "org1-test-to-proj"
+	scope_id = boundary_scope.proj1.id
+}`
 
-	projGroup = fmt.Sprintf(`
-resource "boundary_group" "foo" {
-  name = "test"
-	description = "%s"
-	scope_id = boundary_project.foo.id
-}`, fooGroupDescription)
+	projGroup = `
+resource "boundary_group" "proj1" {
+	name = "test-proj"
+	description = "desc-test-proj"
+	scope_id = boundary_scope.proj1.id
+}`
 
-	projGroupUpdate = fmt.Sprintf(`
-resource "boundary_group" "foo" {
-  name = "test"
-	description = "%s"
-	scope_id = boundary_project.foo.id
-}`, fooGroupDescriptionUpdate)
+	projGroupUpdate = `
+resource "boundary_group" "proj1" {
+	name = "test-proj-up"
+	description = "desc-test-proj-up"
+	scope_id = boundary_scope.proj1.id
+}`
 
-	// TODO When removing the scope_id the provider does not revert back to the provider
-	// default scope. As a workaround, you can move the resource into the org scope by
-	// manually setting the org scope ID as the scope_id field.
-	projToOrgGroupUpdate = fmt.Sprintf(`
-resource "boundary_group" "foo" {
-  name = "test"
-	description = "%s"
-	scope_id = "%s"
-}`, fooGroupDescriptionUpdate, tcOrg)
+	projToOrgGroupUpdate = `
+resource "boundary_group" "proj1" {
+	name = "test-back"
+	description = "desc-back"
+	scope_id = boundary_scope.org1.id
+}`
 )
 
 func TestAccGroup(t *testing.T) {
@@ -106,54 +104,54 @@ func TestAccGroup(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooOrg, orgGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
+					testAccCheckGroupResourceExists("boundary_group.org1"),
+					resource.TestCheckResourceAttr("boundary_group.org1", groupDescriptionKey, fooGroupDescription),
+					resource.TestCheckResourceAttr("boundary_group.org1", groupNameKey, "test"),
 				),
 			},
 			{
 				// test update
 				Config: testConfig(url, fooOrg, orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
+					testAccCheckGroupResourceExists("boundary_group.org1"),
+					resource.TestCheckResourceAttr("boundary_group.org1", groupDescriptionKey, fooGroupDescriptionUpdate),
 				),
 			},
 			{
 				// test update to project scope
-				Config: testConfig(url, fooOrg, fooProject, orgToProjectGroupUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
-					testAccCheckGroupProjectScope("boundary_group.foo"),
+					testAccCheckGroupResourceExists("boundary_group.org1"),
+					resource.TestCheckResourceAttr("boundary_group.org1", groupDescriptionKey, "org1-test-to-proj"),
+					testAccCheckGroupScope("boundary_group.org1", "p_"),
 				),
 			},
 			{
 				// test create
-				Config: testConfig(url, fooOrg, fooProject, projGroup),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescription),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupNameKey, "test"),
-					testAccCheckGroupProjectScope("boundary_group.foo"),
+					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-test-proj"),
+					resource.TestCheckResourceAttr("boundary_group.proj1", groupNameKey, "test-proj"),
+					testAccCheckGroupScope("boundary_group.proj1", "p_"),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, fooOrg, fooProject, projGroupUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
-					testAccCheckGroupProjectScope("boundary_group.foo"),
+					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-test-proj-up"),
+					testAccCheckGroupScope("boundary_group.proj1", "p_"),
 				),
 			},
 			{
 				// test update to org scope
-				Config: testConfig(url, fooOrg, fooProject, projToOrgGroupUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupDescriptionKey, fooGroupDescriptionUpdate),
-					resource.TestCheckResourceAttr("boundary_group.foo", groupScopeIDKey, tcOrg),
+					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-back"),
+					testAccCheckGroupScope("boundary_group.proj1", "o_"),
 				),
 			},
 		},
@@ -175,9 +173,9 @@ func TestAccGroupWithMembers(t *testing.T) {
 				Config: testConfig(url, fooOrg, orgGroupWithMembers),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.with_members"),
-					testAccCheckGroupResourceExists("boundary_user.foo"),
+					testAccCheckUserResourceExists("boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_group.with_members", groupDescriptionKey, "with members"),
-					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.foo"}),
+					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.org1"}),
 				),
 			},
 			{
@@ -185,9 +183,9 @@ func TestAccGroupWithMembers(t *testing.T) {
 				Config: testConfig(url, fooOrg, orgGroupWithMembersUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.with_members"),
-					testAccCheckGroupResourceExists("boundary_user.foo"),
+					testAccCheckUserResourceExists("boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_group.with_members", groupDescriptionKey, "with members"),
-					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.foo", "boundary_user.bar"}),
+					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.org1", "boundary_user.bar"}),
 				),
 			},
 		},
@@ -224,17 +222,14 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 
 		// check boundary to ensure it matches
 		md := testProvider.Meta().(*metaData)
-		client := md.client.Clone()
+		grpsClient := groups.NewClient(md.client)
 
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if ok {
-			client.SetScopeId(projID)
-		}
-		grpsClient := groups.NewClient(client)
-
-		g, _, err := grpsClient.Read(md.ctx, id)
+		g, apiErr, err := grpsClient.Read(md.ctx, id)
 		if err != nil {
-			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
+			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
+		}
+		if apiErr != nil {
+			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
 		}
 
 		// for every member set as a member on the group in the state, ensure
@@ -259,7 +254,7 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 	}
 }
 
-func testAccCheckGroupProjectScope(name string) resource.TestCheckFunc {
+func testAccCheckGroupScope(name, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -272,21 +267,18 @@ func testAccCheckGroupProjectScope(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projClient := md.client.Clone()
+		grps := groups.NewClient(md.client)
 
-		stateProjID, ok := rs.Primary.Attributes["scope_id"]
-		if ok {
-			projClient.SetScopeId(stateProjID)
-		}
-		grps := groups.NewClient(projClient)
-
-		g, _, err := grps.Read(md.ctx, id)
+		g, apiErr, err := grps.Read(md.ctx, id)
 		if err != nil {
 			return fmt.Errorf("could not read resource state %q: %v", id, err)
 		}
+		if apiErr != nil {
+			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
+		}
 
-		if g.Scope.Id != stateProjID {
-			return fmt.Errorf("project ID in state does not match boundary state: %s != %s", g.Scope.Id, stateProjID)
+		if !strings.HasPrefix(g.ScopeId, prefix) {
+			return fmt.Errorf("Scope ID in state does not have prefix: %s != %s", g.ScopeId, prefix)
 		}
 
 		return nil
@@ -306,15 +298,14 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projClient := md.client.Clone()
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if ok && projID != "" {
-			projClient.SetScopeId(projID)
-		}
-		grps := groups.NewClient(projClient)
+		grps := groups.NewClient(md.client)
 
-		if _, _, err := grps.Read(md.ctx, id); err != nil {
+		_, apiErr, err := grps.Read(md.ctx, id)
+		if err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
+		}
+		if apiErr != nil {
+			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
 		}
 
 		return nil
@@ -331,25 +322,21 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_organization":
-				continue
-			case "boundary_project":
+			case "boundary_scope":
 				continue
 			case "boundary_user":
 				continue
 			case "boundary_group":
-				projClient := md.client.Clone()
-				projID, ok := rs.Primary.Attributes["scope_id"]
-				if ok {
-					projClient.SetScopeId(projID)
-				}
-				grps := groups.NewClient(projClient)
+				grps := groups.NewClient(md.client)
 
 				id := rs.Primary.ID
 
-				_, apiErr, _ := grps.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusForbidden && apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 403 or 404 when reading destroyed resource %q: %v", id, apiErr)
+				_, apiErr, err := grps.Read(md.ctx, id)
+				if err != nil {
+					return err
+				}
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed resource %q: %v", id, apiErr)
 				}
 
 			default:

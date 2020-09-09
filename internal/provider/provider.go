@@ -47,13 +47,14 @@ func New() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"boundary_scope": resourceScope(),
 			"boundary_user":  resourceUser(),
+			"boundary_group": resourceGroup(),
 			/*
-				"boundary_group": resourceGroup(),
-					"boundary_host":         resourceHost(),
-					"boundary_host_catalog": resourceHostCatalog(),
-					"boundary_host_set":     resourceHostset(),
-					"boundary_role":         resourceRole(),
-					"boundary_target":       resourceTarget(),
+
+				"boundary_host":         resourceHost(),
+				"boundary_host_catalog": resourceHostCatalog(),
+				"boundary_host_set":     resourceHostset(),
+				"boundary_role":         resourceRole(),
+				"boundary_target":       resourceTarget(),
 			*/
 		},
 	}

@@ -4,15 +4,14 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/boundary/api/groups"
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
 	groupNameKey        = "name"
 	groupDescriptionKey = "description"
-	groupScopeIDKey     = "scope_id"
-	groupMemberIDsKey   = "member_ids"
+	groupScopeIdKey     = "scope_id"
+	groupMemberIdsKey   = "member_ids"
 )
 
 func resourceGroup() *schema.Resource {
@@ -30,13 +29,12 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			groupScopeIDKey: {
+			groupScopeIdKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Computed: true,
 			},
-			groupMemberIDsKey: {
+			groupMemberIdsKey: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -59,19 +57,14 @@ func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
 		}
 	}
 
-	// TODO when calling SetMembers() on a group the API returns
-	// a nil ScopeInfo so we are checking here to ensure
-	// we catch it. This work around can possibly ignore
-	// an updated scope ID when updating members and scope
-	// of a group simultaniously.
-	if g.Scope != nil && g.Scope.Id != "" {
-		if err := d.Set(groupScopeIDKey, g.Scope.Id); err != nil {
+	if g.ScopeId != "" {
+		if err := d.Set(groupScopeIdKey, g.ScopeId); err != nil {
 			return err
 		}
 	}
 
 	if g.MemberIds != nil {
-		if err := d.Set(groupMemberIDsKey, g.MemberIds); err != nil {
+		if err := d.Set(groupMemberIdsKey, g.MemberIds); err != nil {
 			return err
 		}
 	}
@@ -83,7 +76,7 @@ func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
 
 // convertResourceDataToGroup returns a localy built Group using the values provided in the ResourceData.
 func convertResourceDataToGroup(d *schema.ResourceData, meta *metaData) *groups.Group {
-	g := &groups.Group{Scope: &scopes.ScopeInfo{}}
+	g := new(groups.Group)
 
 	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
 		g.Description = descVal.(string)
@@ -93,11 +86,11 @@ func convertResourceDataToGroup(d *schema.ResourceData, meta *metaData) *groups.
 		g.Name = nameVal.(string)
 	}
 
-	if scopeIDVal, ok := d.GetOk(groupScopeIDKey); ok {
-		g.Scope.Id = scopeIDVal.(string)
+	if scopeIdVal, ok := d.GetOk(groupScopeIdKey); ok {
+		g.ScopeId = scopeIdVal.(string)
 	}
 
-	if val, ok := d.GetOk(groupMemberIDsKey); ok {
+	if val, ok := d.GetOk(groupMemberIdsKey); ok {
 		memberIds := val.(*schema.Set).List()
 		for _, i := range memberIds {
 			g.MemberIds = append(g.MemberIds, i.(string))
@@ -119,32 +112,31 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	memIDs := g.MemberIds
+	memIds := g.MemberIds
 
 	g, apiErr, err := grps.Create(
 		ctx,
-		groups.WithScopeId(g.Scope.Id),
+		g.ScopeId,
 		groups.WithName(g.Name),
 		groups.WithDescription(g.Description))
 	if err != nil {
-		return fmt.Errorf("error creating group: %s", err.Error())
+		return fmt.Errorf("error creating group: %w", err)
 	}
 	if apiErr != nil {
 		return fmt.Errorf("error creating group: %s", apiErr.Message)
 	}
 
-	if len(memIDs) > 0 {
+	if len(memIds) > 0 {
 		g, apiErr, err = grps.SetMembers(
 			ctx,
 			g.Id,
 			g.Version,
-			memIDs,
-			groups.WithScopeId(g.Scope.Id))
+			memIds)
 		if apiErr != nil {
-			return fmt.Errorf("error setting principals on role: %s\n", apiErr.Message)
+			return fmt.Errorf("error setting principals on role: %s", apiErr.Message)
 		}
 		if err != nil {
-			return fmt.Errorf("error setting principals on role: %s\n", err)
+			return fmt.Errorf("error setting principals on role: %w", err)
 		}
 	}
 
@@ -159,9 +151,9 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	g, apiErr, err := grps.Read(ctx, g.Id, groups.WithScopeId(g.Scope.Id))
+	g, apiErr, err := grps.Read(ctx, g.Id)
 	if err != nil {
-		return fmt.Errorf("error reading group: %s", err.Error())
+		return fmt.Errorf("error reading group: %w", err)
 	}
 	if apiErr != nil {
 		return fmt.Errorf("error reading group: %s", apiErr.Message)
@@ -178,46 +170,48 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	if d.HasChange(groupNameKey) {
-		g.Name = d.Get(groupNameKey).(string)
+	var updateGroup bool
+
+	switch {
+	case d.HasChange(groupNameKey),
+		d.HasChange(groupDescriptionKey):
+		updateGroup = true
 	}
 
-	if d.HasChange(groupDescriptionKey) {
-		g.Description = d.Get(groupDescriptionKey).(string)
+	if updateGroup {
+		_, apiErr, err := grps.Update(
+			ctx,
+			g.Id,
+			0,
+			groups.WithAutomaticVersioning(true),
+			groups.WithName(g.Name),
+			groups.WithDescription(g.Description))
+		if err != nil {
+			return fmt.Errorf("error updating group: %w", err)
+		}
+		if apiErr != nil {
+			return fmt.Errorf("error updating group: %s", apiErr.Message)
+		}
 	}
 
-	g.Scope.Id = d.Get(groupScopeIDKey).(string)
-
-	g, apiErr, err := grps.Update(
-		ctx,
-		g.Id,
-		0,
-		groups.WithScopeId(g.Scope.Id),
-		groups.WithAutomaticVersioning(),
-		groups.WithName(g.Name),
-		groups.WithDescription(g.Description))
-	if err != nil {
-		return err
-	}
-	if apiErr != nil {
-		return fmt.Errorf("%+v\n", apiErr.Message)
-	}
-
-	if d.HasChange(groupMemberIDsKey) {
+	if d.HasChange(groupMemberIdsKey) {
 		memberIds := []string{}
-		members := d.Get(groupMemberIDsKey).(*schema.Set).List()
+		members := d.Get(groupMemberIdsKey).(*schema.Set).List()
 		for _, member := range members {
 			memberIds = append(memberIds, member.(string))
 		}
 
-		g, apiErr, err = grps.SetMembers(
+		_, apiErr, err := grps.SetMembers(
 			ctx,
 			g.Id,
-			g.Version,
+			0,
 			memberIds,
-			groups.WithScopeId(g.Scope.Id))
-		if apiErr != nil || err != nil {
-			return fmt.Errorf("error updating members on group:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+			groups.WithAutomaticVersioning(true))
+		if err != nil {
+			return fmt.Errorf("error updating members on group: %w", err)
+		}
+		if apiErr != nil {
+			return fmt.Errorf("error updating members on group: %s", apiErr.Message)
 		}
 	}
 
@@ -232,7 +226,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	_, apiErr, err := grps.Delete(ctx, g.Id, groups.WithScopeId(g.Scope.Id))
+	_, apiErr, err := grps.Delete(ctx, g.Id)
 	if err != nil {
 		return fmt.Errorf("error deleting group: %s", err.Error())
 	}

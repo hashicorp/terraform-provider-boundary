@@ -19,17 +19,17 @@ const (
 
 var (
 	orgUser = fmt.Sprintf(`
-resource "boundary_user" "foo" {
+resource "boundary_user" "org1" {
 	name        = "test"
 	description = "%s"
-	scope_id    = boundary_scope.foo.id
+	scope_id    = boundary_scope.org1.id
 }`, fooUserDescription)
 
 	orgUserUpdate = fmt.Sprintf(`
-resource "boundary_user" "foo" {
+resource "boundary_user" "org1" {
 	name        = "test"
 	description = "%s"
-	scope_id    = boundary_scope.foo.id
+	scope_id    = boundary_scope.org1.id
 }`, fooUserDescriptionUpdate)
 )
 
@@ -46,18 +46,18 @@ func TestAccUser(t *testing.T) {
 				// test create
 				Config: testConfig(url, fooOrg, orgUser),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("boundary_user.foo"),
-					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescription),
-					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
+					testAccCheckUserResourceExists("boundary_user.org1"),
+					resource.TestCheckResourceAttr("boundary_user.org1", userDescriptionKey, fooUserDescription),
+					resource.TestCheckResourceAttr("boundary_user.org1", userNameKey, "test"),
 				),
 			},
 			{
 				// test update description
 				Config: testConfig(url, fooOrg, orgUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("boundary_user.foo"),
-					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
-					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
+					testAccCheckUserResourceExists("boundary_user.org1"),
+					resource.TestCheckResourceAttr("boundary_user.org1", userDescriptionKey, fooUserDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_user.org1", userNameKey, "test"),
 				),
 			},
 		},
