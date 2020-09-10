@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/boundary/api/hosts"
 	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -18,10 +18,10 @@ const (
 
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostCreate,
-		Read:   resourceHostRead,
-		Update: resourceHostUpdate,
-		Delete: resourceHostDelete,
+		CreateContext: resourceHostCreate,
+		ReadContext:   resourceHostRead,
+		UpdateContext: resourceHostUpdate,
+		DeleteContext: resourceHostDelete,
 		Schema: map[string]*schema.Schema{
 			hostNameKey: {
 				Type:     schema.TypeString,

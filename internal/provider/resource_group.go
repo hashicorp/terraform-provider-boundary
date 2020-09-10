@@ -1,10 +1,11 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/hashicorp/boundary/api/groups"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -16,10 +17,10 @@ const (
 
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateContext: resourceGroupCreate,
+		ReadContext:   resourceGroupRead,
+		UpdateContext: resourceGroupUpdate,
+		DeleteContext: resourceGroupDelete,
 		Schema: map[string]*schema.Schema{
 			groupNameKey: {
 				Type:     schema.TypeString,
@@ -44,28 +45,28 @@ func resourceGroup() *schema.Resource {
 }
 
 // convertGroupToResourceData creates a ResourceData type from a Group
-func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) error {
+func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) diag.Diagnostics {
 	if g.Name != "" {
 		if err := d.Set(groupNameKey, g.Name); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if g.Description != "" {
 		if err := d.Set(groupDescriptionKey, g.Description); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if g.ScopeId != "" {
 		if err := d.Set(groupScopeIdKey, g.ScopeId); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if g.MemberIds != nil {
 		if err := d.Set(groupMemberIdsKey, g.MemberIds); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -104,10 +105,9 @@ func convertResourceDataToGroup(d *schema.ResourceData, meta *metaData) *groups.
 	return g
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
@@ -120,10 +120,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		groups.WithName(g.Name),
 		groups.WithDescription(g.Description))
 	if err != nil {
-		return fmt.Errorf("error creating group: %w", err)
+		return diag.Errorf("error creating group: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating group: %s", apiErr.Message)
+		return diag.Errorf("error creating group: %s", apiErr.Message)
 	}
 
 	if len(memIds) > 0 {
@@ -133,39 +133,37 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			g.Version,
 			memIds)
 		if apiErr != nil {
-			return fmt.Errorf("error setting principals on role: %s", apiErr.Message)
+			return diag.Errorf("error setting principals on role: %s", apiErr.Message)
 		}
 		if err != nil {
-			return fmt.Errorf("error setting principals on role: %w", err)
+			return diag.Errorf("error setting principals on role: %v", err)
 		}
 	}
 
 	return convertGroupToResourceData(g, d)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
 	g, apiErr, err := grps.Read(ctx, g.Id)
 	if err != nil {
-		return fmt.Errorf("error reading group: %w", err)
+		return diag.Errorf("error reading group: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading group: %s", apiErr.Message)
+		return diag.Errorf("error reading group: %s", apiErr.Message)
 	}
 
 	return convertGroupToResourceData(g, d)
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
@@ -187,10 +185,10 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			groups.WithName(g.Name),
 			groups.WithDescription(g.Description))
 		if err != nil {
-			return fmt.Errorf("error updating group: %w", err)
+			return diag.Errorf("error updating group: %v", err)
 		}
 		if apiErr != nil {
-			return fmt.Errorf("error updating group: %s", apiErr.Message)
+			return diag.Errorf("error updating group: %s", apiErr.Message)
 		}
 	}
 
@@ -208,30 +206,29 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			memberIds,
 			groups.WithAutomaticVersioning(true))
 		if err != nil {
-			return fmt.Errorf("error updating members on group: %w", err)
+			return diag.Errorf("error updating members on group: %v", err)
 		}
 		if apiErr != nil {
-			return fmt.Errorf("error updating members on group: %s", apiErr.Message)
+			return diag.Errorf("error updating members on group: %s", apiErr.Message)
 		}
 	}
 
 	return convertGroupToResourceData(g, d)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
 	_, apiErr, err := grps.Delete(ctx, g.Id)
 	if err != nil {
-		return fmt.Errorf("error deleting group: %s", err.Error())
+		return diag.Errorf("error deleting group: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting group: %s", apiErr.Message)
+		return diag.Errorf("error deleting group: %s", apiErr.Message)
 	}
 
 	return nil

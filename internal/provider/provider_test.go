@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/testing/controller"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 var testProvider *schema.Provider
-var testProviders map[string]terraform.ResourceProvider
+var testProviders map[string]*schema.Provider
 
 var (
 	tcLoginName = "user"
@@ -28,8 +27,8 @@ var (
 )
 
 func init() {
-	testProvider = New().(*schema.Provider)
-	testProviders = map[string]terraform.ResourceProvider{
+	testProvider = New()
+	testProviders = map[string]*schema.Provider{
 		"boundary": testProvider,
 	}
 }
@@ -61,7 +60,7 @@ func setGrantScopeIdOnProject(scopeId, grantScopeId, principalId string, client 
 }
 
 func TestProvider(t *testing.T) {
-	if err := New().(*schema.Provider).InternalValidate(); err != nil {
+	if err := New().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }

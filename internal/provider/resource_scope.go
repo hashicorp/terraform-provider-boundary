@@ -1,11 +1,13 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -16,10 +18,10 @@ const (
 
 func resourceScope() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScopeCreate,
-		Read:   resourceScopeRead,
-		Update: resourceScopeUpdate,
-		Delete: resourceScopeDelete,
+		CreateContext: resourceScopeCreate,
+		ReadContext:   resourceScopeRead,
+		UpdateContext: resourceScopeUpdate,
+		DeleteContext: resourceScopeDelete,
 
 		Schema: map[string]*schema.Schema{
 			scopeNameKey: {
@@ -41,22 +43,22 @@ func resourceScope() *schema.Resource {
 
 // convertScopeToResourceData populates the provided ResourceData with the appropriate values from the provided Scope.
 // The scope passed into thie function should be one read from the boundary API with all fields populated.
-func convertScopeToResourceData(p *scopes.Scope, d *schema.ResourceData) error {
+func convertScopeToResourceData(p *scopes.Scope, d *schema.ResourceData) diag.Diagnostics {
 	if p.Name != "" {
 		if err := d.Set(scopeNameKey, p.Name); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if p.Description != "" {
 		if err := d.Set(scopeDescriptionKey, p.Description); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if p.ScopeId != "" {
 		if err := d.Set(scopeScopeIdKey, p.ScopeId); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -97,15 +99,14 @@ func convertResourceDataToScope(d *schema.ResourceData) (*scopes.Scope, error) {
 	return p, nil
 }
 
-func resourceScopeCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	scp := scopes.NewClient(client)
 	p, err := convertResourceDataToScope(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	p, apiErr, err := scp.Create(
@@ -114,42 +115,40 @@ func resourceScopeCreate(d *schema.ResourceData, meta interface{}) error {
 		scopes.WithName(p.Name),
 		scopes.WithDescription(p.Description))
 	if err != nil {
-		return fmt.Errorf("error calling new scope: %w", err)
+		return diag.Errorf("error calling new scope: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating scope: %s", apiErr.Message)
+		return diag.Errorf("error creating scope: %s", apiErr.Message)
 	}
 	d.SetId(p.Id)
 
 	return nil
 }
 
-func resourceScopeRead(d *schema.ResourceData, meta interface{}) error {
+func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	scp := scopes.NewClient(client)
 
 	p, apiErr, err := scp.Read(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error calling read scope: %w", err)
+		return diag.Errorf("error calling read scope: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading scope: %s", apiErr.Message)
+		return diag.Errorf("error reading scope: %s", apiErr.Message)
 	}
 	return convertScopeToResourceData(p, d)
 }
 
-func resourceScopeUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	scp := scopes.NewClient(client)
 	p, err := convertResourceDataToScope(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if d.HasChange(scopeDescriptionKey) {
@@ -171,32 +170,31 @@ func resourceScopeUpdate(d *schema.ResourceData, meta interface{}) error {
 		scopes.WithName(p.Name),
 	)
 	if err != nil {
-		return fmt.Errorf("error calling update scope: %w", err)
+		return diag.Errorf("error calling update scope: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating scope: %s", apiErr.Message)
+		return diag.Errorf("error updating scope: %s", apiErr.Message)
 	}
 
 	return convertScopeToResourceData(p, d)
 }
 
-func resourceScopeDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	scp := scopes.NewClient(client)
 	p, err := convertResourceDataToScope(d)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	_, apiErr, err := scp.Delete(ctx, p.Id)
 	if err != nil {
-		return fmt.Errorf("error calling delete scope: %w", err)
+		return diag.Errorf("error calling delete scope: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting scope: %s", apiErr.Message)
+		return diag.Errorf("error deleting scope: %s", apiErr.Message)
 	}
 	return nil
 }

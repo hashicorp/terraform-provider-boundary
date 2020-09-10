@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -18,10 +18,10 @@ const (
 
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRoleCreate,
-		Read:   resourceRoleRead,
-		Update: resourceRoleUpdate,
-		Delete: resourceRoleDelete,
+		CreateContext: resourceRoleCreate,
+		ReadContext:   resourceRoleRead,
+		UpdateContext: resourceRoleUpdate,
+		DeleteContext: resourceRoleDelete,
 		Schema: map[string]*schema.Schema{
 			roleNameKey: {
 				Type:     schema.TypeString,

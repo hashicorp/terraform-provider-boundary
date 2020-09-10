@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/boundary/api/authtokens"
 	"github.com/hashicorp/boundary/sdk/wrapper"
 	wrapping "github.com/hashicorp/go-kms-wrapping"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func New() terraform.ResourceProvider {
+func New() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"base_url": {
@@ -59,7 +59,7 @@ func New() terraform.ResourceProvider {
 		},
 	}
 
-	p.ConfigureFunc = providerConfigure(p)
+	p.ConfigureContextFunc = providerConfigure(p)
 
 	return p
 }
@@ -68,10 +68,9 @@ type metaData struct {
 	client             *api.Client
 	authToken          *authtokens.AuthToken
 	recoveryKmsWrapper wrapping.Wrapper
-	ctx                context.Context
 }
 
-func providerAuthenticate(d *schema.ResourceData, md *metaData) error {
+func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaData) error {
 	var credentials map[string]interface{}
 
 	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
@@ -81,13 +80,13 @@ func providerAuthenticate(d *schema.ResourceData, md *metaData) error {
 	case recoveryKmsHclOk:
 		wrapper, err := wrapper.GetWrapperFromHcl(recoveryKmsHcl.(string), "recovery")
 		if err != nil {
-			return fmt.Errorf(`error reading wrappers from "recovery_kms_hcl": %w`, err)
+			return fmt.Errorf(`error reading wrappers from "recovery_kms_hcl": %v`, err)
 		}
 		if wrapper == nil {
 			return errors.New(`No "kms" block with purpose "recovery" found in "recovery_kms_hcl"`)
 		}
-		if err := wrapper.Init(md.ctx); err != nil {
-			return fmt.Errorf("error initializing recovery kms: %w", err)
+		if err := wrapper.Init(ctx); err != nil {
+			return fmt.Errorf("error initializing recovery kms: %v", err)
 		}
 
 		md.recoveryKmsWrapper = wrapper
@@ -121,7 +120,7 @@ func providerAuthenticate(d *schema.ResourceData, md *metaData) error {
 
 	am := authmethods.NewClient(md.client)
 
-	at, apiErr, err := am.Authenticate(md.ctx, authMethodId.(string), credentials)
+	at, apiErr, err := am.Authenticate(ctx, authMethodId.(string), credentials)
 	if apiErr != nil {
 		return errors.New(apiErr.Message)
 	}
@@ -134,26 +133,25 @@ func providerAuthenticate(d *schema.ResourceData, md *metaData) error {
 	return nil
 }
 
-func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
-	return func(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
+	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		client, err := api.NewClient(nil)
 		if err != nil {
-			return nil, err
+			return nil, diag.FromErr(err)
 		}
 
 		if err := client.SetAddr(d.Get("base_url").(string)); err != nil {
-			return nil, err
+			return nil, diag.FromErr(err)
 		}
 
 		client.SetLimiter(5, 5)
 
 		md := &metaData{
 			client: client,
-			ctx:    p.StopContext(),
 		}
 
-		if err := providerAuthenticate(d, md); err != nil {
-			return nil, err
+		if err := providerAuthenticate(ctx, d, md); err != nil {
+			return nil, diag.FromErr(err)
 		}
 
 		return md, nil

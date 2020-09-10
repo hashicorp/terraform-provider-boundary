@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -8,8 +9,8 @@ import (
 
 	"github.com/hashicorp/boundary/api/groups"
 	"github.com/hashicorp/boundary/testing/controller"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
@@ -224,7 +225,7 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 		md := testProvider.Meta().(*metaData)
 		grpsClient := groups.NewClient(md.client)
 
-		g, apiErr, err := grpsClient.Read(md.ctx, id)
+		g, apiErr, err := grpsClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
 		}
@@ -269,7 +270,7 @@ func testAccCheckGroupScope(name, prefix string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		grps := groups.NewClient(md.client)
 
-		g, apiErr, err := grps.Read(md.ctx, id)
+		g, apiErr, err := grps.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("could not read resource state %q: %v", id, err)
 		}
@@ -300,7 +301,7 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		grps := groups.NewClient(md.client)
 
-		_, apiErr, err := grps.Read(md.ctx, id)
+		_, apiErr, err := grps.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
 		}
@@ -331,7 +332,7 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				id := rs.Primary.ID
 
-				_, apiErr, err := grps.Read(md.ctx, id)
+				_, apiErr, err := grps.Read(context.Background(), id)
 				if err != nil {
 					return err
 				}

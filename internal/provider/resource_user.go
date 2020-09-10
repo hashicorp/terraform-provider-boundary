@@ -1,10 +1,11 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/hashicorp/boundary/api/users"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -15,10 +16,10 @@ const (
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		CreateContext: resourceUserCreate,
+		ReadContext:   resourceUserRead,
+		UpdateContext: resourceUserUpdate,
+		DeleteContext: resourceUserDelete,
 		Schema: map[string]*schema.Schema{
 			userNameKey: {
 				Type:     schema.TypeString,
@@ -38,22 +39,22 @@ func resourceUser() *schema.Resource {
 }
 
 // convertUserToResourceData creates a ResourceData type from a User
-func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
+func convertUserToResourceData(u *users.User, d *schema.ResourceData) diag.Diagnostics {
 	if u.Name != "" {
 		if err := d.Set(userNameKey, u.Name); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if u.Description != "" {
 		if err := d.Set(userDescriptionKey, u.Description); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if u.ScopeId != "" {
 		if err := d.Set(userScopeIdKey, u.ScopeId); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -85,10 +86,9 @@ func convertResourceDataToUser(d *schema.ResourceData) *users.User {
 	return u
 }
 
-func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
@@ -99,10 +99,10 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 		users.WithName(u.Name),
 		users.WithDescription(u.Description))
 	if err != nil {
-		return fmt.Errorf("error calling new user: %w", err)
+		return diag.Errorf("error calling new user: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating user: %s", apiErr.Message)
+		return diag.Errorf("error creating user: %s", apiErr.Message)
 	}
 
 	d.SetId(u.Id)
@@ -110,29 +110,27 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	return convertUserToResourceData(u, d)
 }
 
-func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
 
 	u, apiErr, err := usrs.Read(ctx, u.Id)
 	if err != nil {
-		return fmt.Errorf("error reading user: %w", err)
+		return diag.Errorf("error reading user: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading user: %s", apiErr.Message)
+		return diag.Errorf("error reading user: %s", apiErr.Message)
 	}
 
 	return convertUserToResourceData(u, d)
 }
 
-func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
@@ -145,29 +143,28 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		users.WithName(u.Name),
 		users.WithDescription(u.Description))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating user: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
+		return diag.Errorf("error updating user: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
 	}
 
 	return convertUserToResourceData(u, d)
 }
 
-func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
-	ctx := md.ctx
 
 	u := convertResourceDataToUser(d)
 	usrs := users.NewClient(client)
 
 	_, apiErr, err := usrs.Delete(ctx, u.Id)
 	if err != nil {
-		return fmt.Errorf("error deleting user: %w", err)
+		return diag.Errorf("error deleting user: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting user: %s", apiErr.Message)
+		return diag.Errorf("error deleting user: %s", apiErr.Message)
 	}
 
 	return nil

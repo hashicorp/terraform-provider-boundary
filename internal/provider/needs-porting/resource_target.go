@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/targets"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -21,10 +21,10 @@ const (
 
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTargetCreate,
-		Read:   resourceTargetRead,
-		Update: resourceTargetUpdate,
-		Delete: resourceTargetDelete,
+		CreateContext: resourceTargetCreate,
+		ReadContext:   resourceTargetRead,
+		UpdateContext: resourceTargetUpdate,
+		DeleteContext: resourceTargetDelete,
 		Schema: map[string]*schema.Schema{
 			targetNameKey: {
 				Type:     schema.TypeString,

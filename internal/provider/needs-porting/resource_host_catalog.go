@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -19,10 +19,10 @@ const (
 
 func resourceHostCatalog() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostCatalogCreate,
-		Read:   resourceHostCatalogRead,
-		Update: resourceHostCatalogUpdate,
-		Delete: resourceHostCatalogDelete,
+		CreateContext: resourceHostCatalogCreate,
+		ReadContext:   resourceHostCatalogRead,
+		UpdateContext: resourceHostCatalogUpdate,
+		DeleteContext: resourceHostCatalogDelete,
 		Schema: map[string]*schema.Schema{
 			hostCatalogNameKey: {
 				Type:     schema.TypeString,

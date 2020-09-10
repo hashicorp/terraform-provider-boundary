@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/boundary/api/hostsets"
 	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -17,10 +17,10 @@ const (
 
 func resourceHostset() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostsetCreate,
-		Read:   resourceHostsetRead,
-		Update: resourceHostsetUpdate,
-		Delete: resourceHostsetDelete,
+		CreateContext: resourceHostsetCreate,
+		ReadContext:   resourceHostsetRead,
+		UpdateContext: resourceHostsetUpdate,
+		DeleteContext: resourceHostsetDelete,
 		Schema: map[string]*schema.Schema{
 			hostsetNameKey: {
 				Type:     schema.TypeString,
