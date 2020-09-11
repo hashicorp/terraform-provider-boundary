@@ -34,10 +34,13 @@ resource "boundary_user" "org1" {
 }`, fooUserDescriptionUpdate)
 )
 
+// NOTE: this test also tests out the direct token auth mechanism.
+
 func TestAccUser(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
+	token := tc.Token().Token
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testProviders,
@@ -45,7 +48,7 @@ func TestAccUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, orgUser),
+				Config: testConfigWithToken(url, token, fooOrg, orgUser),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_user.org1", userDescriptionKey, fooUserDescription),
@@ -54,7 +57,7 @@ func TestAccUser(t *testing.T) {
 			},
 			{
 				// test update description
-				Config: testConfig(url, fooOrg, orgUserUpdate),
+				Config: testConfigWithToken(url, token, fooOrg, orgUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_user.org1", userDescriptionKey, fooUserDescriptionUpdate),

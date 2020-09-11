@@ -58,11 +58,23 @@ func testWrapper(t *testing.T, key string) wrapping.Wrapper {
 func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
- 	addr             = "%s"
+	addr             = "%s"
 	auth_method_id       = "%s"
 	password_auth_method_login_name = "%s"
 	password_auth_method_password = "%s"
 }`, url, tcPAUM, tcLoginName, tcPassword)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
+}
+
+func testConfigWithToken(url, token string, res ...string) string {
+	provider := fmt.Sprintf(`
+provider "boundary" {
+	addr  = "%s"
+	token = "%s"
+}`, url, token)
 
 	c := []string{provider}
 	c = append(c, res...)
