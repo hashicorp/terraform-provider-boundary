@@ -75,50 +75,56 @@ func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) diag.Di
 	return nil
 }
 
-// convertResourceDataToGroup returns a localy built Group using the values provided in the ResourceData.
-func convertResourceDataToGroup(d *schema.ResourceData, meta *metaData) *groups.Group {
-	g := new(groups.Group)
-
-	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
-		g.Description = descVal.(string)
-	}
+// convertResourceDataToOpts returns a localy built set of Opts using the values provided in the ResourceData.
+func convertResourceDataToOpts(d *schema.ResourceData, meta *metaData) []groups.Option {
+	opts := []groups.Option{}
 
 	if nameVal, ok := d.GetOk(groupNameKey); ok {
-		g.Name = nameVal.(string)
+		opts = append(opts, groups.WithName(nameVal.(string)))
 	}
 
-	if scopeIdVal, ok := d.GetOk(groupScopeIdKey); ok {
-		g.ScopeId = scopeIdVal.(string)
+	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
+		opts = append(opts, groups.WithDescription(descVal.(string)))
 	}
 
-	if val, ok := d.GetOk(groupMemberIdsKey); ok {
-		memberIds := val.(*schema.Set).List()
-		for _, i := range memberIds {
-			g.MemberIds = append(g.MemberIds, i.(string))
-		}
-	}
-
-	if d.Id() != "" {
-		g.Id = d.Id()
-	}
-
-	return g
+	return opts
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
 
-	g := convertResourceDataToGroup(d, md)
-	grps := groups.NewClient(client)
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(groupScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
+	}
 
-	memIds := g.MemberIds
+	opts := []groups.Option{}
+
+	var name *string
+	nameVal, ok := d.GetOk(groupNameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		name = &nameStr
+		opts = append(opts, groups.WithName(nameStr))
+	}
+
+	var desc *string
+	descVal, ok := d.GetOk(groupDescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		desc = &descStr
+		opts = append(opts, groups.WithDescription(descStr))
+	}
+
+	grps := groups.NewClient(client)
 
 	g, apiErr, err := grps.Create(
 		ctx,
-		g.ScopeId,
-		groups.WithName(g.Name),
-		groups.WithDescription(g.Description))
+		scopeId,
+		opts...)
 	if err != nil {
 		return diag.Errorf("error creating group: %v", err)
 	}
@@ -126,64 +132,113 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error creating group: %s", apiErr.Message)
 	}
 
-	if len(memIds) > 0 {
+	if val, ok := d.GetOk(groupMemberIdsKey); ok {
+		list := val.(*schema.Set).List()
+		memberIds := make([]string, 0, len(list))
+		for _, i := range list {
+			memberIds = append(memberIds, i.(string))
+		}
 		g, apiErr, err = grps.SetMembers(
 			ctx,
 			g.Id,
 			g.Version,
-			memIds)
+			memberIds)
 		if apiErr != nil {
 			return diag.Errorf("error setting principals on role: %s", apiErr.Message)
 		}
 		if err != nil {
 			return diag.Errorf("error setting principals on role: %v", err)
 		}
+
+		if err := d.Set(groupMemberIdsKey, memberIds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
-	return convertGroupToResourceData(g, d)
+	if name != nil {
+		if err := d.Set(groupNameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if desc != nil {
+		if err := d.Set(groupDescriptionKey, *desc); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	d.SetId(g.Id)
+
+	return nil
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
 
-	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	g, apiErr, err := grps.Read(ctx, g.Id)
+	g, apiErr, err := grps.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error reading group: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading group: %s", apiErr.Message)
 	}
+	if g == nil {
+		return diag.Errorf("group nil after read")
+	}
 
-	return convertGroupToResourceData(g, d)
+	raw := g.LastResponseMap()
+	if raw == nil {
+		return []diag.Diagnostic{
+			{
+				Severity: diag.Warning,
+				Summary:  "response map empty after read",
+			},
+		}
+	}
+
+	d.Set(groupNameKey, raw["name"])
+	d.Set(groupDescriptionKey, raw["description"])
+	d.Set(groupScopeIdKey, raw["scope_id"])
+
+	return nil
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
 
-	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	var updateGroup bool
+	opts := []groups.Option{}
 
-	switch {
-	case d.HasChange(groupNameKey),
-		d.HasChange(groupDescriptionKey):
-		updateGroup = true
+	if d.HasChange(groupNameKey) {
+		nameVal, ok := d.GetOk(groupNameKey)
+		if ok {
+			opts = append(opts, groups.WithName(nameVal.(string)))
+		} else {
+			opts = append(opts, groups.DefaultName())
+		}
 	}
 
-	if updateGroup {
+	if d.HasChange(groupDescriptionKey) {
+		descVal, ok := d.GetOk(groupDescriptionKey)
+		if ok {
+			opts = append(opts, groups.WithDescription(descVal.(string)))
+		} else {
+			opts = append(opts, groups.DefaultDescription())
+		}
+	}
+
+	if len(opts) > 0 {
+		opts = append(opts, groups.WithAutomaticVersioning(true))
 		_, apiErr, err := grps.Update(
 			ctx,
-			g.Id,
+			d.Id(),
 			0,
-			groups.WithAutomaticVersioning(true),
-			groups.WithName(g.Name),
-			groups.WithDescription(g.Description))
+			opts...)
 		if err != nil {
 			return diag.Errorf("error updating group: %v", err)
 		}
@@ -198,10 +253,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		for _, member := range members {
 			memberIds = append(memberIds, member.(string))
 		}
-
 		_, apiErr, err := grps.SetMembers(
 			ctx,
-			g.Id,
+			d.Id(),
 			0,
 			memberIds,
 			groups.WithAutomaticVersioning(true))
@@ -213,17 +267,16 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	return convertGroupToResourceData(g, d)
+	return nil
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
 
-	g := convertResourceDataToGroup(d, md)
 	grps := groups.NewClient(client)
 
-	_, apiErr, err := grps.Delete(ctx, g.Id)
+	_, apiErr, err := grps.Delete(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error deleting group: %s", err.Error())
 	}
