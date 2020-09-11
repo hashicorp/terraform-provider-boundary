@@ -215,20 +215,18 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	opts := []groups.Option{}
 
 	if d.HasChange(groupNameKey) {
+		opts = append(opts, groups.DefaultName())
 		nameVal, ok := d.GetOk(groupNameKey)
 		if ok {
 			opts = append(opts, groups.WithName(nameVal.(string)))
-		} else {
-			opts = append(opts, groups.DefaultName())
 		}
 	}
 
 	if d.HasChange(groupDescriptionKey) {
+		opts = append(opts, groups.DefaultDescription())
 		descVal, ok := d.GetOk(groupDescriptionKey)
 		if ok {
 			opts = append(opts, groups.WithDescription(descVal.(string)))
-		} else {
-			opts = append(opts, groups.DefaultDescription())
 		}
 	}
 
