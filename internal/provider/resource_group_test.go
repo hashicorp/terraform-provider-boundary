@@ -83,6 +83,13 @@ resource "boundary_group" "proj1" {
 	scope_id = boundary_scope.proj1.id
 }`
 
+	projNameRemoval = `
+resource "boundary_group" "proj1" {
+	name = ""
+	description = "no-name"
+	scope_id = boundary_scope.proj1.id
+}`
+
 	projToOrgGroupUpdate = `
 resource "boundary_group" "proj1" {
 	name = "test-back"
@@ -145,6 +152,15 @@ func TestAccGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-test-proj-up"),
+					testAccCheckGroupScope("boundary_group.proj1", "p_"),
+				),
+			},
+			{
+				// test name removal
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projNameRemoval),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					resource.TestCheckResourceAttr("boundary_group.proj1", groupNameKey, ""),
 					testAccCheckGroupScope("boundary_group.proj1", "p_"),
 				),
 			},

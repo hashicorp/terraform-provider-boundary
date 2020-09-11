@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
-	"github.com/hashicorp/boundary/api/authtokens"
 	"github.com/hashicorp/boundary/sdk/wrapper"
 	wrapping "github.com/hashicorp/go-kms-wrapping"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,12 +20,17 @@ func New() *schema.Provider {
 			"base_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: `The base url of the Boundary API, e.g. "http://127.0.0.1"`,
+				Description: `The base url of the Boundary API, e.g. "http://127.0.0.1". If not set, it will be read from the "BOUNDARY_ADDR" env var.`,
+			},
+			"token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: `The Boundary token to use, as a string or path on disk containing just the string. If set, the token read here will be used in place of authenticating with the auth method specified in "auth_method_id", although the recovery KMS mechanism will still override this. Can also be set with the BOUNDARY_TOKEN environment variable.`,
 			},
 			"recovery_kms_hcl": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Can be a heredoc string or a path on disk. If set, the string/file will be parsed as HCL and used with the recovery KMS mechanism. While this is set, it will override other authentication information; the KMS mechanism will always be used.",
+				Description: "Can be a heredoc string or a path on disk. If set, the string/file will be parsed as HCL and used with the recovery KMS mechanism. While this is set, it will override any other authentication information; the KMS mechanism will always be used.",
 			},
 			"auth_method_id": {
 				Type:        schema.TypeString,
@@ -66,7 +70,6 @@ func New() *schema.Provider {
 
 type metaData struct {
 	client             *api.Client
-	authToken          *authtokens.AuthToken
 	recoveryKmsWrapper wrapping.Wrapper
 }
 
@@ -75,6 +78,9 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
 	recoveryKmsHcl, recoveryKmsHclOk := d.GetOk("recovery_kms_hcl")
+	if token, ok := d.GetOk("token"); ok {
+		md.client.SetToken(token.(string))
+	}
 
 	switch {
 	case recoveryKmsHclOk:
@@ -97,6 +103,9 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 		md.client.SetRecoveryKmsWrapper(wrapper)
 		return nil
 
+	case md.client.Token() != "":
+		// Use the token sourced from the conf file or env var
+
 	case authMethodIdOk:
 		switch {
 		case strings.HasPrefix(authMethodId.(string), "ampw"):
@@ -118,22 +127,21 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 			return errors.New("no suitable typed auth method information found")
 		}
 
+		am := authmethods.NewClient(md.client)
+
+		at, apiErr, err := am.Authenticate(ctx, authMethodId.(string), credentials)
+		if apiErr != nil {
+			return errors.New(apiErr.Message)
+		}
+		if err != nil {
+			return err
+		}
+		md.client.SetToken(at.Token)
+
 	default:
 		return errors.New("no suitable auth method information found")
 	}
 
-	am := authmethods.NewClient(md.client)
-
-	at, apiErr, err := am.Authenticate(ctx, authMethodId.(string), credentials)
-	if apiErr != nil {
-		return errors.New(apiErr.Message)
-	}
-	if err != nil {
-		return err
-	}
-	md.client.SetToken(at.Token)
-
-	md.authToken = at
 	return nil
 }
 
@@ -144,8 +152,11 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			return nil, diag.FromErr(err)
 		}
 
-		if err := client.SetAddr(d.Get("base_url").(string)); err != nil {
-			return nil, diag.FromErr(err)
+		if url, ok := d.GetOk("base_url"); ok {
+			client.SetAddr(url.(string))
+		}
+		if client.Addr() == "" {
+			return nil, diag.Errorf(`"no valid address could be determined from "base_url" or "BOUNDARY_ADDR" env var`)
 		}
 
 		client.SetLimiter(5, 5)
