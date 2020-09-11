@@ -214,19 +214,25 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	opts := []groups.Option{}
 
+	var name *string
 	if d.HasChange(groupNameKey) {
 		opts = append(opts, groups.DefaultName())
 		nameVal, ok := d.GetOk(groupNameKey)
 		if ok {
-			opts = append(opts, groups.WithName(nameVal.(string)))
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, groups.WithName(nameStr))
 		}
 	}
 
+	var desc *string
 	if d.HasChange(groupDescriptionKey) {
 		opts = append(opts, groups.DefaultDescription())
 		descVal, ok := d.GetOk(groupDescriptionKey)
 		if ok {
-			opts = append(opts, groups.WithDescription(descVal.(string)))
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, groups.WithDescription(descStr))
 		}
 	}
 
@@ -245,11 +251,20 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
+	if d.HasChange(groupNameKey) {
+		d.Set(groupNameKey, name)
+	}
+	if d.HasChange(groupDescriptionKey) {
+		d.Set(groupDescriptionKey, desc)
+	}
+
 	if d.HasChange(groupMemberIdsKey) {
-		memberIds := []string{}
-		members := d.Get(groupMemberIdsKey).(*schema.Set).List()
-		for _, member := range members {
-			memberIds = append(memberIds, member.(string))
+		var memberIds []string
+		if membersVal, ok := d.GetOk(groupMemberIdsKey); ok {
+			members := membersVal.(*schema.Set).List()
+			for _, member := range members {
+				memberIds = append(memberIds, member.(string))
+			}
 		}
 		_, apiErr, err := grps.SetMembers(
 			ctx,
@@ -263,6 +278,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if apiErr != nil {
 			return diag.Errorf("error updating members on group: %s", apiErr.Message)
 		}
+		d.Set(groupMemberIdsKey, memberIds)
 	}
 
 	return nil
