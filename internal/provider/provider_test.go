@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
@@ -9,6 +10,8 @@ import (
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/testing/controller"
+	wrapping "github.com/hashicorp/go-kms-wrapping"
+	"github.com/hashicorp/go-kms-wrapping/wrappers/aead"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -24,6 +27,7 @@ var (
 		controller.WithDefaultLoginName(tcLoginName),
 		controller.WithDefaultPassword(tcPassword),
 	}
+	tcRecoveryKey = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
 )
 
 func init() {
@@ -33,6 +37,24 @@ func init() {
 	}
 }
 
+func testWrapper(t *testing.T, key string) wrapping.Wrapper {
+	wrapper := aead.NewWrapper(nil)
+	keyBytes, err := base64.StdEncoding.DecodeString(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = wrapper.SetConfig(map[string]string{
+		"key_id": key,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := wrapper.SetAESGCMKeyBytes(keyBytes); err != nil {
+		t.Fatal(err)
+	}
+	return wrapper
+}
+
 func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
@@ -40,6 +62,28 @@ provider "boundary" {
 	auth_method_id       = "%s"
 	password_auth_method_login_name = "%s"
 	password_auth_method_password = "%s"
+}`, url, tcPAUM, tcLoginName, tcPassword)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
+}
+
+func testConfigWithRecovery(url string, res ...string) string {
+	provider := fmt.Sprintf(`
+provider "boundary" {
+	base_url             = "%s"
+	auth_method_id       = "%s"
+	password_auth_method_login_name = "%s"
+	password_auth_method_password = "%s"
+	recovery_kms_hcl = <<DOC
+	kms "aead" {
+		purpose = ["recovery", "config"]
+		aead_type = "aes-gcm"
+		key = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
+		key_id = "global_recovery"
+	}
+	DOC
 }`, url, tcPAUM, tcLoginName, tcPassword)
 
 	c := []string{provider}

@@ -91,8 +91,10 @@ resource "boundary_group" "proj1" {
 }`
 )
 
+// NOTE: this test also tests out the recovery KMS mechanism.
 func TestAccGroup(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
+	wrapper := testWrapper(t, tcRecoveryKey)
+	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
 
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
@@ -103,7 +105,7 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, orgGroup),
+				Config: testConfigWithRecovery(url, fooOrg, orgGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", groupDescriptionKey, fooGroupDescription),
@@ -112,7 +114,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooOrg, orgGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", groupDescriptionKey, fooGroupDescriptionUpdate),
@@ -120,7 +122,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update to project scope
-				Config: testConfig(url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", groupDescriptionKey, "org1-test-to-proj"),
@@ -129,7 +131,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projGroup),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-test-proj"),
@@ -139,7 +141,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-test-proj-up"),
@@ -148,7 +150,7 @@ func TestAccGroup(t *testing.T) {
 			},
 			{
 				// test update to org scope
-				Config: testConfig(url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists("boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", groupDescriptionKey, "desc-back"),

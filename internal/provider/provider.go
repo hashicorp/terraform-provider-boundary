@@ -78,7 +78,11 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 	switch {
 	case recoveryKmsHclOk:
-		wrapper, err := wrapper.GetWrapperFromHcl(recoveryKmsHcl.(string), "recovery")
+		recoveryHclStr, _, err := ReadPathOrContents(recoveryKmsHcl.(string))
+		if err != nil {
+			return fmt.Errorf(`error reading data from "recovery_kms_hcl": %v`, err)
+		}
+		wrapper, err := wrapper.GetWrapperFromHcl(recoveryHclStr, "recovery")
 		if err != nil {
 			return fmt.Errorf(`error reading wrappers from "recovery_kms_hcl": %v`, err)
 		}
