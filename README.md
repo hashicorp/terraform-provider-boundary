@@ -39,10 +39,10 @@ Please see our detailed docs for individual resource usage. Below is a complex e
 
 ```hcl
 provider "boundary" {
-  base_url             = "http://127.0.0.1:9200"
-  auth_method_id       = "ampw_0000000000"
-  auth_method_username = "foo"
-  auth_method_password = "foofoofoo"
+  addr                          = "http://127.0.0.1:9200"
+  auth_method_id                = "ampw_1234567890"
+  password_auth_method_username = "admin"
+  password_auth_method_password = "passpass"
 }
 
 variable "backend_team" {

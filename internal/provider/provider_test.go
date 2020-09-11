@@ -58,7 +58,7 @@ func testWrapper(t *testing.T, key string) wrapping.Wrapper {
 func testConfig(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
- 	base_url             = "%s"
+ 	addr             = "%s"
 	auth_method_id       = "%s"
 	password_auth_method_login_name = "%s"
 	password_auth_method_password = "%s"
@@ -72,7 +72,7 @@ provider "boundary" {
 func testConfigWithRecovery(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
-	base_url             = "%s"
+	addr             = "%s"
 	auth_method_id       = "%s"
 	password_auth_method_login_name = "%s"
 	password_auth_method_password = "%s"

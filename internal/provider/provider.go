@@ -17,7 +17,7 @@ import (
 func New() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"base_url": {
+			"addr": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: `The base url of the Boundary API, e.g. "http://127.0.0.1". If not set, it will be read from the "BOUNDARY_ADDR" env var.`,
@@ -152,11 +152,11 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 			return nil, diag.FromErr(err)
 		}
 
-		if url, ok := d.GetOk("base_url"); ok {
+		if url, ok := d.GetOk("addr"); ok {
 			client.SetAddr(url.(string))
 		}
 		if client.Addr() == "" {
-			return nil, diag.Errorf(`"no valid address could be determined from "base_url" or "BOUNDARY_ADDR" env var`)
+			return nil, diag.Errorf(`"no valid address could be determined from "addr" or "BOUNDARY_ADDR" env var`)
 		}
 
 		client.SetLimiter(5, 5)
