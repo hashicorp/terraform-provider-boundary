@@ -44,52 +44,6 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-// convertGroupToResourceData creates a ResourceData type from a Group
-func convertGroupToResourceData(g *groups.Group, d *schema.ResourceData) diag.Diagnostics {
-	if g.Name != "" {
-		if err := d.Set(groupNameKey, g.Name); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if g.Description != "" {
-		if err := d.Set(groupDescriptionKey, g.Description); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if g.ScopeId != "" {
-		if err := d.Set(groupScopeIdKey, g.ScopeId); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if g.MemberIds != nil {
-		if err := d.Set(groupMemberIdsKey, g.MemberIds); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	d.SetId(g.Id)
-
-	return nil
-}
-
-// convertResourceDataToOpts returns a localy built set of Opts using the values provided in the ResourceData.
-func convertResourceDataToOpts(d *schema.ResourceData, meta *metaData) []groups.Option {
-	opts := []groups.Option{}
-
-	if nameVal, ok := d.GetOk(groupNameKey); ok {
-		opts = append(opts, groups.WithName(nameVal.(string)))
-	}
-
-	if descVal, ok := d.GetOk(groupDescriptionKey); ok {
-		opts = append(opts, groups.WithDescription(descVal.(string)))
-	}
-
-	return opts
-}
-
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
@@ -126,7 +80,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		scopeId,
 		opts...)
 	if err != nil {
-		return diag.Errorf("error creating group: %v", err)
+		return diag.Errorf("error calling new group: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error creating group: %s", apiErr.Message)

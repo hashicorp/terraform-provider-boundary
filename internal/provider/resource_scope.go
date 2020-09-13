@@ -2,8 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -41,85 +39,60 @@ func resourceScope() *schema.Resource {
 	}
 }
 
-// convertScopeToResourceData populates the provided ResourceData with the appropriate values from the provided Scope.
-// The scope passed into thie function should be one read from the boundary API with all fields populated.
-func convertScopeToResourceData(p *scopes.Scope, d *schema.ResourceData) diag.Diagnostics {
-	if p.Name != "" {
-		if err := d.Set(scopeNameKey, p.Name); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if p.Description != "" {
-		if err := d.Set(scopeDescriptionKey, p.Description); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if p.ScopeId != "" {
-		if err := d.Set(scopeScopeIdKey, p.ScopeId); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	d.SetId(p.Id)
-	return nil
-}
-
-// convertResourceDataToScope returns a localy built Scope using the values provided in the ResourceData.
-func convertResourceDataToScope(d *schema.ResourceData) (*scopes.Scope, error) {
-	p := new(scopes.Scope)
-
-	if descVal, ok := d.GetOk(scopeDescriptionKey); ok {
-		p.Description = descVal.(string)
-	}
-
-	if nameVal, ok := d.GetOk(scopeNameKey); ok {
-		p.Name = nameVal.(string)
-	}
-
-	if scopeIdVal, ok := d.GetOk(scopeScopeIdKey); ok {
-		switch {
-		case strings.HasPrefix(d.Id(), "o_"), d.Id() == "global":
-			if scopeIdVal.(string) != "global" {
-				return p, fmt.Errorf("cannot use scope_id %q for scope management", "global")
-			}
-		case strings.HasPrefix(d.Id(), "p_"):
-			if !strings.HasPrefix(scopeIdVal.(string), "o_") {
-				return p, fmt.Errorf("cannot use scope_id %q for scope management", scopeIdVal.(string))
-			}
-		}
-		p.ScopeId = scopeIdVal.(string)
-	}
-
-	if d.Id() != "" {
-		p.Id = d.Id()
-	}
-
-	return p, nil
-}
-
 func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	client := md.client
 
-	scp := scopes.NewClient(client)
-	p, err := convertResourceDataToScope(d)
-	if err != nil {
-		return diag.FromErr(err)
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(scopeScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
 	}
+
+	opts := []scopes.Option{}
+
+	var name *string
+	nameVal, ok := d.GetOk(scopeNameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		name = &nameStr
+		opts = append(opts, scopes.WithName(nameStr))
+	}
+
+	var desc *string
+	descVal, ok := d.GetOk(scopeDescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		desc = &descStr
+		opts = append(opts, scopes.WithDescription(descStr))
+	}
+
+	scp := scopes.NewClient(client)
 
 	p, apiErr, err := scp.Create(
 		ctx,
-		p.ScopeId,
-		scopes.WithName(p.Name),
-		scopes.WithDescription(p.Description))
+		scopeId,
+		opts...)
 	if err != nil {
 		return diag.Errorf("error calling new scope: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error creating scope: %s", apiErr.Message)
 	}
+
+	if name != nil {
+		if err := d.Set(scopeNameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if desc != nil {
+		if err := d.Set(scopeDescriptionKey, *desc); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
 	d.SetId(p.Id)
 
 	return nil
@@ -131,14 +104,32 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	scp := scopes.NewClient(client)
 
-	p, apiErr, err := scp.Read(ctx, d.Id())
+	s, apiErr, err := scp.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read scope: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading scope: %s", apiErr.Message)
 	}
-	return convertScopeToResourceData(p, d)
+	if s == nil {
+		return diag.Errorf("scope nil after read")
+	}
+
+	raw := s.LastResponseMap()
+	if raw == nil {
+		return []diag.Diagnostic{
+			{
+				Severity: diag.Warning,
+				Summary:  "response map empty after read",
+			},
+		}
+	}
+
+	d.Set(scopeNameKey, raw["name"])
+	d.Set(scopeDescriptionKey, raw["description"])
+	d.Set(scopeScopeIdKey, raw["scope_id"])
+
+	return nil
 }
 
 func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -146,37 +137,54 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	client := md.client
 
 	scp := scopes.NewClient(client)
-	p, err := convertResourceDataToScope(d)
-	if err != nil {
-		return diag.FromErr(err)
+
+	opts := []scopes.Option{}
+
+	var name *string
+	if d.HasChange(scopeNameKey) {
+		opts = append(opts, scopes.DefaultName())
+		nameVal, ok := d.GetOk(scopeNameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, scopes.WithName(nameStr))
+		}
 	}
 
+	var desc *string
 	if d.HasChange(scopeDescriptionKey) {
-		desc := d.Get(scopeDescriptionKey).(string)
-		p.Description = desc
+		opts = append(opts, scopes.DefaultDescription())
+		descVal, ok := d.GetOk(scopeDescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, scopes.WithDescription(descStr))
+		}
+	}
+
+	if len(opts) > 0 {
+		opts = append(opts, scopes.WithAutomaticVersioning(true))
+		_, apiErr, err := scp.Update(
+			ctx,
+			d.Id(),
+			0,
+			opts...)
+		if err != nil {
+			return diag.Errorf("error calling update scope: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating scope: %s", apiErr.Message)
+		}
 	}
 
 	if d.HasChange(scopeNameKey) {
-		name := d.Get(scopeNameKey).(string)
-		p.Name = name
+		d.Set(scopeNameKey, name)
+	}
+	if d.HasChange(scopeDescriptionKey) {
+		d.Set(scopeDescriptionKey, desc)
 	}
 
-	p, apiErr, err := scp.Update(
-		ctx,
-		d.Id(),
-		0,
-		scopes.WithAutomaticVersioning(true),
-		scopes.WithDescription(p.Description),
-		scopes.WithName(p.Name),
-	)
-	if err != nil {
-		return diag.Errorf("error calling update scope: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error updating scope: %s", apiErr.Message)
-	}
-
-	return convertScopeToResourceData(p, d)
+	return nil
 }
 
 func resourceScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -184,17 +192,14 @@ func resourceScopeDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	client := md.client
 
 	scp := scopes.NewClient(client)
-	p, err := convertResourceDataToScope(d)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
-	_, apiErr, err := scp.Delete(ctx, p.Id)
+	_, apiErr, err := scp.Delete(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling delete scope: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error deleting scope: %s", apiErr.Message)
 	}
+
 	return nil
 }
