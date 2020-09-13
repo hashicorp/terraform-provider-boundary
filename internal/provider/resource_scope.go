@@ -8,12 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	scopeDescriptionKey = "description"
-	scopeNameKey        = "name"
-	scopeScopeIdKey     = "scope_id"
-)
-
 func resourceScope() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceScopeCreate,
@@ -22,15 +16,15 @@ func resourceScope() *schema.Resource {
 		DeleteContext: resourceScopeDelete,
 
 		Schema: map[string]*schema.Schema{
-			scopeNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			scopeDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			scopeScopeIdKey: {
+			ScopeIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -44,7 +38,7 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	client := md.client
 
 	var scopeId string
-	if scopeIdVal, ok := d.GetOk(scopeScopeIdKey); ok {
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
 		scopeId = scopeIdVal.(string)
 	} else {
 		return diag.Errorf("no scope ID provided")
@@ -53,7 +47,7 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	opts := []scopes.Option{}
 
 	var name *string
-	nameVal, ok := d.GetOk(scopeNameKey)
+	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
 		name = &nameStr
@@ -61,7 +55,7 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var desc *string
-	descVal, ok := d.GetOk(scopeDescriptionKey)
+	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
 		desc = &descStr
@@ -82,13 +76,13 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if name != nil {
-		if err := d.Set(scopeNameKey, name); err != nil {
+		if err := d.Set(NameKey, name); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
 	if desc != nil {
-		if err := d.Set(scopeDescriptionKey, *desc); err != nil {
+		if err := d.Set(DescriptionKey, *desc); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -125,9 +119,9 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	d.Set(scopeNameKey, raw["name"])
-	d.Set(scopeDescriptionKey, raw["description"])
-	d.Set(scopeScopeIdKey, raw["scope_id"])
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
 
 	return nil
 }
@@ -141,9 +135,9 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	opts := []scopes.Option{}
 
 	var name *string
-	if d.HasChange(scopeNameKey) {
+	if d.HasChange(NameKey) {
 		opts = append(opts, scopes.DefaultName())
-		nameVal, ok := d.GetOk(scopeNameKey)
+		nameVal, ok := d.GetOk(NameKey)
 		if ok {
 			nameStr := nameVal.(string)
 			name = &nameStr
@@ -152,9 +146,9 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var desc *string
-	if d.HasChange(scopeDescriptionKey) {
+	if d.HasChange(DescriptionKey) {
 		opts = append(opts, scopes.DefaultDescription())
-		descVal, ok := d.GetOk(scopeDescriptionKey)
+		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
 			descStr := descVal.(string)
 			desc = &descStr
@@ -177,11 +171,11 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange(scopeNameKey) {
-		d.Set(scopeNameKey, name)
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
 	}
-	if d.HasChange(scopeDescriptionKey) {
-		d.Set(scopeDescriptionKey, desc)
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
 	}
 
 	return nil

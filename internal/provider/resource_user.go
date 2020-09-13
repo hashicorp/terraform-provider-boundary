@@ -8,12 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	userNameKey        = "name"
-	userDescriptionKey = "description"
-	userScopeIdKey     = "scope_id"
-)
-
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
@@ -21,15 +15,15 @@ func resourceUser() *schema.Resource {
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
 		Schema: map[string]*schema.Schema{
-			userNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			userDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			userScopeIdKey: {
+			ScopeIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -43,7 +37,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	client := md.client
 
 	var scopeId string
-	if scopeIdVal, ok := d.GetOk(userScopeIdKey); ok {
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
 		scopeId = scopeIdVal.(string)
 	} else {
 		return diag.Errorf("no scope ID provided")
@@ -52,7 +46,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	opts := []users.Option{}
 
 	var name *string
-	nameVal, ok := d.GetOk(userNameKey)
+	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
 		name = &nameStr
@@ -60,7 +54,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	var desc *string
-	descVal, ok := d.GetOk(userDescriptionKey)
+	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
 		desc = &descStr
@@ -81,13 +75,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if name != nil {
-		if err := d.Set(userNameKey, name); err != nil {
+		if err := d.Set(NameKey, name); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
 	if desc != nil {
-		if err := d.Set(userDescriptionKey, *desc); err != nil {
+		if err := d.Set(DescriptionKey, *desc); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -124,9 +118,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 	}
 
-	d.Set(userNameKey, raw["name"])
-	d.Set(userDescriptionKey, raw["description"])
-	d.Set(userScopeIdKey, raw["scope_id"])
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
 
 	return nil
 }
@@ -140,9 +134,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	opts := []users.Option{}
 
 	var name *string
-	if d.HasChange(userNameKey) {
+	if d.HasChange(NameKey) {
 		opts = append(opts, users.DefaultName())
-		nameVal, ok := d.GetOk(userNameKey)
+		nameVal, ok := d.GetOk(NameKey)
 		if ok {
 			nameStr := nameVal.(string)
 			name = &nameStr
@@ -151,9 +145,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	var desc *string
-	if d.HasChange(userDescriptionKey) {
+	if d.HasChange(DescriptionKey) {
 		opts = append(opts, users.DefaultDescription())
-		descVal, ok := d.GetOk(userDescriptionKey)
+		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
 			descStr := descVal.(string)
 			desc = &descStr
@@ -176,11 +170,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange(userNameKey) {
-		d.Set(userNameKey, name)
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
 	}
-	if d.HasChange(userDescriptionKey) {
-		d.Set(userDescriptionKey, desc)
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
 	}
 
 	return nil

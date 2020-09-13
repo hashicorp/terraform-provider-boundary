@@ -53,8 +53,8 @@ func TestAccScopeCreation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists("boundary_scope.org1"),
 					testAccCheckScopeResourceExists("boundary_scope.proj1"),
-					resource.TestCheckResourceAttr("boundary_scope.proj1", scopeDescriptionKey, "foo"),
-					resource.TestCheckResourceAttr("boundary_scope.proj2", scopeDescriptionKey, "project2"),
+					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "foo"),
+					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
 			// Updates the first project to have description bar
@@ -62,8 +62,8 @@ func TestAccScopeCreation(t *testing.T) {
 				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists("boundary_scope.proj1"),
-					resource.TestCheckResourceAttr("boundary_scope.proj1", scopeDescriptionKey, "bar"),
-					resource.TestCheckResourceAttr("boundary_scope.proj2", scopeDescriptionKey, "project2"),
+					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
+					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
 			// Remove second project
@@ -71,7 +71,7 @@ func TestAccScopeCreation(t *testing.T) {
 				Config: testConfig(url, fooOrg, firstProjectBar),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists("boundary_scope.proj1"),
-					resource.TestCheckResourceAttr("boundary_scope.proj1", scopeDescriptionKey, "bar"),
+					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
 				),
 			},
 		},

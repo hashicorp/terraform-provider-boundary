@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	fooUserDescription       = "bar"
-	fooUserDescriptionUpdate = "foo bar"
-	fooUserDescriptionUnset  = ""
+	fooDescription       = "bar"
+	fooDescriptionUpdate = "foo bar"
+	fooDescriptionUnset  = ""
 )
 
 var (
@@ -24,14 +24,14 @@ resource "boundary_user" "org1" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
-}`, fooUserDescription)
+}`, fooDescription)
 
 	orgUserUpdate = fmt.Sprintf(`
 resource "boundary_user" "org1" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
-}`, fooUserDescriptionUpdate)
+}`, fooDescriptionUpdate)
 )
 
 // NOTE: this test also tests out the direct token auth mechanism.
@@ -51,8 +51,8 @@ func TestAccUser(t *testing.T) {
 				Config: testConfigWithToken(url, token, fooOrg, orgUser),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.org1"),
-					resource.TestCheckResourceAttr("boundary_user.org1", userDescriptionKey, fooUserDescription),
-					resource.TestCheckResourceAttr("boundary_user.org1", userNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescription),
+					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
 			{
@@ -60,8 +60,8 @@ func TestAccUser(t *testing.T) {
 				Config: testConfigWithToken(url, token, fooOrg, orgUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists("boundary_user.org1"),
-					resource.TestCheckResourceAttr("boundary_user.org1", userDescriptionKey, fooUserDescriptionUpdate),
-					resource.TestCheckResourceAttr("boundary_user.org1", userNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
 		},

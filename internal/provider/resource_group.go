@@ -9,10 +9,7 @@ import (
 )
 
 const (
-	groupNameKey        = "name"
-	groupDescriptionKey = "description"
-	groupScopeIdKey     = "scope_id"
-	groupMemberIdsKey   = "member_ids"
+	groupMemberIdsKey = "member_ids"
 )
 
 func resourceGroup() *schema.Resource {
@@ -22,15 +19,15 @@ func resourceGroup() *schema.Resource {
 		UpdateContext: resourceGroupUpdate,
 		DeleteContext: resourceGroupDelete,
 		Schema: map[string]*schema.Schema{
-			groupNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			groupDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			groupScopeIdKey: {
+			ScopeIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,7 +46,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	client := md.client
 
 	var scopeId string
-	if scopeIdVal, ok := d.GetOk(groupScopeIdKey); ok {
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
 		scopeId = scopeIdVal.(string)
 	} else {
 		return diag.Errorf("no scope ID provided")
@@ -58,7 +55,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	opts := []groups.Option{}
 
 	var name *string
-	nameVal, ok := d.GetOk(groupNameKey)
+	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
 		name = &nameStr
@@ -66,7 +63,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var desc *string
-	descVal, ok := d.GetOk(groupDescriptionKey)
+	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
 		desc = &descStr
@@ -110,13 +107,13 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if name != nil {
-		if err := d.Set(groupNameKey, name); err != nil {
+		if err := d.Set(NameKey, name); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 
 	if desc != nil {
-		if err := d.Set(groupDescriptionKey, *desc); err != nil {
+		if err := d.Set(DescriptionKey, *desc); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -153,9 +150,10 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	d.Set(groupNameKey, raw["name"])
-	d.Set(groupDescriptionKey, raw["description"])
-	d.Set(groupScopeIdKey, raw["scope_id"])
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(groupMemberIdsKey, raw["member_ids"])
 
 	return nil
 }
@@ -169,9 +167,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	opts := []groups.Option{}
 
 	var name *string
-	if d.HasChange(groupNameKey) {
+	if d.HasChange(NameKey) {
 		opts = append(opts, groups.DefaultName())
-		nameVal, ok := d.GetOk(groupNameKey)
+		nameVal, ok := d.GetOk(NameKey)
 		if ok {
 			nameStr := nameVal.(string)
 			name = &nameStr
@@ -180,9 +178,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var desc *string
-	if d.HasChange(groupDescriptionKey) {
+	if d.HasChange(DescriptionKey) {
 		opts = append(opts, groups.DefaultDescription())
-		descVal, ok := d.GetOk(groupDescriptionKey)
+		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
 			descStr := descVal.(string)
 			desc = &descStr
@@ -205,11 +203,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange(groupNameKey) {
-		d.Set(groupNameKey, name)
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
 	}
-	if d.HasChange(groupDescriptionKey) {
-		d.Set(groupDescriptionKey, desc)
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
 	}
 
 	if d.HasChange(groupMemberIdsKey) {
