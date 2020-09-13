@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	hostCatalogTypeKey    = "type"
 	hostCatalogTypeStatic = "static"
 )
 
@@ -33,7 +32,7 @@ func resourceHostCatalog() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			hostCatalogTypeKey: {
+			TypeKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,7 +53,7 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	var typeStr string
-	if typeVal, ok := d.GetOk(hostCatalogTypeKey); ok {
+	if typeVal, ok := d.GetOk(TypeKey); ok {
 		typeStr = typeVal.(string)
 	} else {
 		return diag.Errorf("no type provided")
@@ -98,18 +97,12 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if name != nil {
-		if err := d.Set(NameKey, name); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(NameKey, name)
 	}
-
 	if desc != nil {
-		if err := d.Set(DescriptionKey, *desc); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(DescriptionKey, *desc)
 	}
-
-	d.Set(hostCatalogTypeKey, hc.Type)
+	d.Set(TypeKey, hc.Type)
 	d.SetId(hc.Id)
 
 	return nil
@@ -143,7 +136,7 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(hostCatalogTypeKey, raw["type"])
+	d.Set(TypeKey, raw["type"])
 
 	return nil
 }

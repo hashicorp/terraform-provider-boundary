@@ -75,17 +75,11 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if name != nil {
-		if err := d.Set(NameKey, name); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(NameKey, name)
 	}
-
 	if desc != nil {
-		if err := d.Set(DescriptionKey, *desc); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(DescriptionKey, *desc)
 	}
-
 	d.SetId(p.Id)
 
 	return nil

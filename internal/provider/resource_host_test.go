@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -20,34 +21,34 @@ const (
 var (
 	projHost = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "test catalog"
-  scope_id    = boundary_project.foo.id
+	scope_id    = boundary_scope.proj1.id
 	type        = "static"
 }
 
 resource "boundary_host" "foo" {
-  name            = "test"
+	name            = "test"
 	description     = "test host"
 	host_catalog_id = boundary_host_catalog.foo.id
+	type            = "static"
 	address         = "%s"
-	scope_id        = boundary_project.foo.id
 }`, fooHostAddress)
 
 	projHostUpdate = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "test catalog"
-  scope_id    = boundary_project.foo.id
+	scope_id    = boundary_scope.proj1.id
 	type        = "static"
 }
 
 resource "boundary_host" "foo" {
-  name            = "test"
-  description     = "test host"
+	name            = "test"
+	description     = "test host"
 	host_catalog_id = boundary_host_catalog.foo.id
+	type            = "static"
 	address         = "%s"
-	scope_id        = boundary_project.foo.id
 }`, fooHostAddressUpdate)
 )
 
@@ -63,7 +64,7 @@ func TestAccHost(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test project host create
-				Config: testConfig(url, fooOrg, fooProject, projHost),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projHost),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostAttributeSet("boundary_host.foo", "address", fooHostAddress),
 					testAccCheckHostResourceExists("boundary_host.foo"),
@@ -74,7 +75,7 @@ func TestAccHost(t *testing.T) {
 			},
 			{
 				// test project host update
-				Config: testConfig(url, fooOrg, fooProject, projHostUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projHostUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostAttributeSet("boundary_host.foo", "address", fooHostAddressUpdate),
 					testAccCheckHostResourceExists("boundary_host.foo"),
@@ -101,21 +102,9 @@ func testAccCheckHostResourceExists(name string) resource.TestCheckFunc {
 
 		md := testProvider.Meta().(*metaData)
 
-		hostCatalogID, ok := rs.Primary.Attributes["host_catalog_id"]
-		if !ok {
-			return errors.New("host_catalog_id is not set")
-		}
+		hostsClient := hosts.NewClient(md.client)
 
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if !ok {
-			return fmt.Errorf("scope_id is not set")
-		}
-
-		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
-		hostsClient := hosts.NewClient(projClient)
-
-		if _, _, err := hostsClient.Read(md.ctx, hostCatalogID, id); err != nil {
+		if _, _, err := hostsClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading host %q: %v", id, err)
 		}
 
@@ -135,21 +124,10 @@ func testAccCheckHostAttributeSet(name, attrKey, wantAttrVal string) resource.Te
 			return fmt.Errorf("No ID is set")
 		}
 
-		hostCatalogID, ok := rs.Primary.Attributes["host_catalog_id"]
-		if !ok {
-			return errors.New("host_catalog_id is not set")
-		}
-
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if !ok {
-			return fmt.Errorf("scope_id is not set")
-		}
-		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
-		hostsClient := hosts.NewClient(projClient)
+		hostsClient := hosts.NewClient(md.client)
 
-		h, _, err := hostsClient.Read(md.ctx, hostCatalogID, id)
+		h, _, err := hostsClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading host %q: %v", id, err)
 		}
@@ -180,30 +158,19 @@ func testAccCheckHostResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_project":
-				continue
-			case "boundary_organization":
+			case "boundary_scope":
 				continue
 			case "boundary_host":
-
 				id := rs.Primary.ID
-				hostCatalogID, ok := rs.Primary.Attributes["host_catalog_id"]
-				if !ok {
-					return errors.New("host_catalog_id is not set")
+
+				hostsClient := hosts.NewClient(md.client)
+
+				_, apiErr, err := hostsClient.Read(context.Background(), id)
+				if err != nil {
+					return fmt.Errorf("Error when reading destroyed host %q: %v", id, err)
 				}
-
-				projID, ok := rs.Primary.Attributes["scope_id"]
-				if !ok {
-					return fmt.Errorf("scope_id is not set")
-				}
-
-				projClient := md.client.Clone()
-				projClient.SetScopeId(projID)
-				hostsClient := hosts.NewClient(projClient)
-
-				_, apiErr, _ := hostsClient.Read(md.ctx, hostCatalogID, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
-					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed host %q: %v", id, apiErr)
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed host %q: %v", id, apiErr)
 				}
 
 			default:
