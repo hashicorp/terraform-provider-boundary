@@ -2,8 +2,6 @@ package provider
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -47,7 +45,6 @@ func resourceHostCatalog() *schema.Resource {
 
 func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
 
 	var scopeId string
 	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
@@ -86,7 +83,7 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		opts = append(opts, hostcatalogs.WithDescription(descStr))
 	}
 
-	hcClient := hostcatalogs.NewClient(client)
+	hcClient := hostcatalogs.NewClient(md.client)
 
 	hc, apiErr, err := hcClient.Create(
 		ctx,
@@ -94,7 +91,7 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		scopeId,
 		opts...)
 	if err != nil {
-		return diag.Errorf("error calling new host catalog: %v", err)
+		return diag.Errorf("error calling create host catalog: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error creating host catalog: %s", apiErr.Message)
@@ -120,13 +117,11 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	hcClient := hostcatalogs.NewClient(client)
+	hcClient := hostcatalogs.NewClient(md.client)
 
 	hc, apiErr, err := hcClient.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling new host catalog: %v", err)
+		return diag.Errorf("error calling read host catalog: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading host catalog: %s", apiErr.Message)
@@ -153,65 +148,69 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceHostCatalogUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	hcClient := hostcatalogs.NewClient(md.client)
 
-	h := convertResourceDataToHostCatalog(d)
-	hcClient := hostcatalogs.NewClient(client)
+	opts := []hostcatalogs.Option{}
 
-	if d.HasChange(hostCatalogNameKey) {
-		h.Name = d.Get(hostCatalogNameKey).(string)
+	var name *string
+	if d.HasChange(NameKey) {
+		opts = append(opts, hostcatalogs.DefaultName())
+		nameVal, ok := d.GetOk(NameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, hostcatalogs.WithName(nameStr))
+		}
 	}
 
-	if d.HasChange(hostCatalogDescriptionKey) {
-		h.Description = d.Get(hostCatalogDescriptionKey).(string)
+	var desc *string
+	if d.HasChange(DescriptionKey) {
+		opts = append(opts, hostcatalogs.DefaultDescription())
+		descVal, ok := d.GetOk(DescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, hostcatalogs.WithDescription(descStr))
+		}
 	}
 
-	if d.HasChange(hostCatalogScopeIDKey) {
-		h.Scope.Id = d.Get(hostCatalogScopeIDKey).(string)
+	if len(opts) > 0 {
+		opts = append(opts, hostcatalogs.WithAutomaticVersioning(true))
+		_, apiErr, err := hcClient.Update(
+			ctx,
+			d.Id(),
+			0,
+			opts...)
+		if err != nil {
+			return diag.Errorf("error calling update host catalog: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating host catalog: %s", apiErr.Message)
+		}
 	}
 
-	if d.HasChange(hostCatalogTypeKey) {
-		return errors.New("error updating host catalog: A host catalog can not have its type modified.")
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
+	}
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
 	}
 
-	// Type is a read-only value that can not be updated. It is added in the method to convert from a
-	// resource to a HostCatalog type, so it needs to be unset when calling update.
-	h.Type = ""
-	h, apiErr, err := hcClient.Update(
-		ctx,
-		h.Id,
-		0,
-		hostcatalogs.WithScopeId(h.Scope.Id),
-		hostcatalogs.WithAutomaticVersioning(),
-		hostcatalogs.WithName(h.Name),
-		hostcatalogs.WithDescription(h.Description))
-	if err != nil {
-		return err
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error updating host catalog: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
-	}
-
-	return convertHostCatalogToResourceData(h, d)
+	return nil
 }
 
-func resourceHostCatalogDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	hcClient := hostcatalogs.NewClient(md.client)
 
-	h := convertResourceDataToHostCatalog(d)
-	hcClient := hostcatalogs.NewClient(client)
-
-	_, apiErr, err := hcClient.Delete(ctx, h.Id, hostcatalogs.WithScopeId(h.Scope.Id))
+	_, apiErr, err := hcClient.Delete(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error calling new host catalog: %s", err.Error())
+		return diag.Errorf("error calling delete host catalog: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error reading host catalog: %s", apiErr.Message)
+		return diag.Errorf("error deleting host catalog: %s", apiErr.Message)
 	}
 
 	return nil

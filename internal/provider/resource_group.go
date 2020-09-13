@@ -43,7 +43,6 @@ func resourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
 
 	var scopeId string
 	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
@@ -70,14 +69,14 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		opts = append(opts, groups.WithDescription(descStr))
 	}
 
-	grps := groups.NewClient(client)
+	grps := groups.NewClient(md.client)
 
 	g, apiErr, err := grps.Create(
 		ctx,
 		scopeId,
 		opts...)
 	if err != nil {
-		return diag.Errorf("error calling new group: %v", err)
+		return diag.Errorf("error calling create group: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error creating group: %s", apiErr.Message)
@@ -125,13 +124,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	grps := groups.NewClient(client)
+	grps := groups.NewClient(md.client)
 
 	g, apiErr, err := grps.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error reading group: %v", err)
+		return diag.Errorf("error calling read group: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading group: %s", apiErr.Message)
@@ -160,9 +157,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	grps := groups.NewClient(client)
+	grps := groups.NewClient(md.client)
 
 	opts := []groups.Option{}
 
@@ -196,7 +191,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			0,
 			opts...)
 		if err != nil {
-			return diag.Errorf("error updating group: %v", err)
+			return diag.Errorf("error calling update group: %v", err)
 		}
 		if apiErr != nil {
 			return diag.Errorf("error updating group: %s", apiErr.Message)
@@ -238,13 +233,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	grps := groups.NewClient(client)
+	grps := groups.NewClient(md.client)
 
 	_, apiErr, err := grps.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error deleting group: %s", err.Error())
+		return diag.Errorf("error calling delete group: %s", err.Error())
 	}
 	if apiErr != nil {
 		return diag.Errorf("error deleting group: %s", apiErr.Message)

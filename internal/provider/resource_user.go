@@ -34,7 +34,6 @@ func resourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
 
 	var scopeId string
 	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
@@ -61,14 +60,14 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		opts = append(opts, users.WithDescription(descStr))
 	}
 
-	usrs := users.NewClient(client)
+	usrs := users.NewClient(md.client)
 
 	u, apiErr, err := usrs.Create(
 		ctx,
 		scopeId,
 		opts...)
 	if err != nil {
-		return diag.Errorf("error calling new user: %v", err)
+		return diag.Errorf("error calling create user: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error creating user: %s", apiErr.Message)
@@ -93,13 +92,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	usrs := users.NewClient(client)
+	usrs := users.NewClient(md.client)
 
 	u, apiErr, err := usrs.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error reading user: %v", err)
+		return diag.Errorf("error calling read user: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading user: %s", apiErr.Message)
@@ -127,9 +124,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	usrs := users.NewClient(client)
+	usrs := users.NewClient(md.client)
 
 	opts := []users.Option{}
 
@@ -163,7 +158,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			0,
 			opts...)
 		if err != nil {
-			return diag.Errorf("error updating user: %v", err)
+			return diag.Errorf("error calling update user: %v", err)
 		}
 		if apiErr != nil {
 			return diag.Errorf("error updating user: %s", apiErr.Message)
@@ -182,9 +177,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	usrs := users.NewClient(client)
+	usrs := users.NewClient(md.client)
 
 	_, apiErr, err := usrs.Delete(ctx, d.Id())
 	if err != nil {

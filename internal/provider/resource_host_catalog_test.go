@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -9,7 +10,6 @@ import (
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -20,17 +20,17 @@ const (
 var (
 	projHostCatalog = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
-  name        = "foo"
+	name        = "foo"
 	description = "%s"
-	scope_id    = boundary_project.foo.id 
+	scope_id    = boundary_scope.proj1.id 
 	type        = "static"
 }`, fooHostCatalogDescription)
 
 	projHostCatalogUpdate = fmt.Sprintf(`
 resource "boundary_host_catalog" "foo" {
-  name        = "foo"
+	name        = "foo"
 	description = "%s"
-	scope_id    = boundary_project.foo.id 
+	scope_id    = boundary_scope.proj1.id 
 	type        = "static"
 }`, fooHostCatalogDescriptionUpdate)
 )
@@ -46,20 +46,20 @@ func TestAccHostCatalogCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, fooProject, projHostCatalog),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalog),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationResourceExists("boundary_organization.foo"),
-					testAccCheckProjectResourceExists("boundary_project.foo"),
+					testAccCheckScopeResourceExists("boundary_scope.org1"),
+					testAccCheckScopeResourceExists("boundary_scope.proj1"),
 					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
-					resource.TestCheckResourceAttr("boundary_host_catalog.foo", hostCatalogDescriptionKey, fooHostCatalogDescription),
+					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescription),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, fooOrg, fooProject, projHostCatalogUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalogUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
-					resource.TestCheckResourceAttr("boundary_host_catalog.foo", hostCatalogDescriptionKey, fooHostCatalogDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescriptionUpdate),
 				),
 			},
 		},
@@ -79,13 +79,9 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if !ok {
-			return fmt.Errorf("scope_id is not set")
-		}
 		hcClient := hostcatalogs.NewClient(md.client)
 
-		if _, _, err := hcClient.Read(md.ctx, id, hostcatalogs.WithScopeId(projID)); err != nil {
+		if _, _, err := hcClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading host catalog %q: %v", id, err)
 		}
 
@@ -104,16 +100,14 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 			case "boundary_host_catalog":
 
 				id := rs.Primary.ID
-				projID, ok := rs.Primary.Attributes["scope_id"]
-				if !ok {
-					return fmt.Errorf("scope_id is not set")
-				}
-
 				hcClient := hostcatalogs.NewClient(md.client)
 
-				_, apiErr, _ := hcClient.Read(md.ctx, id, hostcatalogs.WithScopeId(projID))
-				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
-					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed host catalog %q: %v", id, apiErr)
+				_, apiErr, err := hcClient.Read(context.Background(), id)
+				if err != nil {
+					return fmt.Errorf("Error when reading destroyed host catalog %q: %v", id, err)
+				}
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, apiErr)
 				}
 
 			default:
@@ -121,34 +115,5 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 			}
 		}
 		return nil
-	}
-}
-
-func TestHostCatalogValidateType(t *testing.T) {
-	cases := []struct {
-		name   string
-		config string
-		numErr int
-		numWrn int
-	}{
-		{
-			name:   "should validate when correct values are passed",
-			config: hostCatalogTypeStatic,
-			numErr: 0,
-			numWrn: 0,
-		},
-		{
-			name:   "should error when incorrect values are passed",
-			config: "nope",
-			numErr: 1,
-			numWrn: 0,
-		}}
-
-	for _, tCase := range cases {
-		t.Run(tCase.name, func(t *testing.T) {
-			wrn, err := validateHostCatalogType(tCase.config, "")
-			assert.Len(t, wrn, tCase.numWrn)
-			assert.Len(t, err, tCase.numErr)
-		})
 	}
 }

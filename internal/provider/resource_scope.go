@@ -35,7 +35,6 @@ func resourceScope() *schema.Resource {
 
 func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
 
 	var scopeId string
 	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
@@ -62,14 +61,14 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		opts = append(opts, scopes.WithDescription(descStr))
 	}
 
-	scp := scopes.NewClient(client)
+	scp := scopes.NewClient(md.client)
 
 	p, apiErr, err := scp.Create(
 		ctx,
 		scopeId,
 		opts...)
 	if err != nil {
-		return diag.Errorf("error calling new scope: %v", err)
+		return diag.Errorf("error calling create scope: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error creating scope: %s", apiErr.Message)
@@ -94,9 +93,7 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	scp := scopes.NewClient(client)
+	scp := scopes.NewClient(md.client)
 
 	s, apiErr, err := scp.Read(ctx, d.Id())
 	if err != nil {
@@ -128,9 +125,7 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	scp := scopes.NewClient(client)
+	scp := scopes.NewClient(md.client)
 
 	opts := []scopes.Option{}
 
@@ -183,9 +178,7 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-
-	scp := scopes.NewClient(client)
+	scp := scopes.NewClient(md.client)
 
 	_, apiErr, err := scp.Delete(ctx, d.Id())
 	if err != nil {

@@ -49,13 +49,13 @@ func New() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"boundary_scope": resourceScope(),
-			"boundary_user":  resourceUser(),
-			"boundary_group": resourceGroup(),
+			"boundary_group":        resourceGroup(),
+			"boundary_host_catalog": resourceHostCatalog(),
+			"boundary_scope":        resourceScope(),
+			"boundary_user":         resourceUser(),
 			/*
 
 				"boundary_host":         resourceHost(),
-				"boundary_host_catalog": resourceHostCatalog(),
 				"boundary_host_set":     resourceHostset(),
 				"boundary_role":         resourceRole(),
 				"boundary_target":       resourceTarget(),
