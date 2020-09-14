@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -19,53 +20,55 @@ const (
 var (
 	fooHostSet = `
 resource "boundary_host_catalog" "foo" {
-  name        = "test"
-	description = "test catalog"
-  scope_id    = boundary_project.foo.id
 	type        = "static"
+	name        = "test"
+	description = "test catalog"
+	scope_id    = boundary_scope.proj1.id
 }
 
 resource "boundary_host" "foo" {
-  name            = "foo"
+	name            = "foo"
 	host_catalog_id = boundary_host_catalog.foo.id
-	scope_id        = boundary_project.foo.id
+	type            = "static"
 	address         = "10.0.0.1:80"
 }
 
 resource "boundary_host" "bar" {
-  name            = "bar"
+	name            = "bar"
 	host_catalog_id = boundary_host_catalog.foo.id
-	scope_id        = boundary_project.foo.id
+	type            = "static"
 	address         = "10.0.0.1:80"
 }
 
 resource "boundary_host_set" "foo" {
-  name            = "foo"
-  host_catalog_id = boundary_host_catalog.foo.id
-
-  host_ids = [
-    boundary_host.foo.id,
+	name            = "foo"
+	type            = "static"
+	host_catalog_id = boundary_host_catalog.foo.id
+	host_ids = [
+		boundary_host.foo.id,
 		boundary_host.bar.id,
 	]
 }`
 
 	fooTarget = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-  name         = "test"
+	name         = "test"
 	description  = "%s"
-	scope_id     = boundary_project.foo.id
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
 	host_set_ids = [
-    boundary_host_set.foo.id
+		boundary_host_set.foo.id
 	]
 }`, fooTargetDescription)
 
 	fooTargetUpdate = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-  name         = "test"
+	name         = "test"
 	description  = "%s"
-	scope_id     = boundary_project.foo.id
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
 	host_set_ids = [
-    boundary_host_set.foo.id
+		boundary_host_set.foo.id
 	]
 }`, fooTargetDescriptionUpdate)
 )
@@ -82,19 +85,19 @@ func TestAccTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, fooProject, fooHostSet, fooTarget),
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostSet, fooTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists("boundary_target.foo"),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetDescriptionKey, fooTargetDescription),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetNameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
 				),
 			},
 			{
 				// test update
-				Config: testConfig(url, fooOrg, fooProject, fooHostSet, fooTargetUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostSet, fooTargetUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists("boundary_target.foo"),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetDescriptionKey, fooTargetDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
 				),
 			},
 		},
@@ -131,15 +134,9 @@ func testAccCheckTargetResourceMembersSet(name string, hostSets []string) resour
 
 		// check boundary to ensure it matches
 		md := testProvider.Meta().(*metaData)
-		client := md.client.Clone()
+		tgtsClient := targets.NewClient(md.client)
 
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if ok {
-			client.SetScopeId(projID)
-		}
-		tgtsClient := targets.NewClient(client)
-
-		t, _, err := tgtsClient.Read(md.ctx, id)
+		t, _, err := tgtsClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
@@ -177,14 +174,9 @@ func testAccCheckTargetResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projClient := md.client.Clone()
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if ok && projID != "" {
-			projClient.SetScopeId(projID)
-		}
-		tgts := targets.NewClient(projClient)
+		tgts := targets.NewClient(md.client)
 
-		if _, _, err := tgts.Read(md.ctx, id); err != nil {
+		if _, _, err := tgts.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
 
@@ -203,18 +195,16 @@ func testAccCheckTargetResourceDestroy(t *testing.T) resource.TestCheckFunc {
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
 			case "boundary_target":
-				projClient := md.client.Clone()
-				projID, ok := rs.Primary.Attributes["scope_id"]
-				if ok {
-					projClient.SetScopeId(projID)
-				}
-				tgts := targets.NewClient(projClient)
+				tgts := targets.NewClient(md.client)
 
 				id := rs.Primary.ID
 
-				_, apiErr, _ := tgts.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusForbidden && apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 403 or 404 when reading destroyed resource %q: %v", id, apiErr)
+				_, apiErr, err := tgts.Read(context.Background(), id)
+				if err != nil {
+					return fmt.Errorf("Error when reading destroyed target %q: %v", id, err)
+				}
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed target %q: %v", id, apiErr)
 				}
 
 			default:

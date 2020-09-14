@@ -74,12 +74,8 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error creating scope: %s", apiErr.Message)
 	}
 
-	if name != nil {
-		d.Set(NameKey, name)
-	}
-	if desc != nil {
-		d.Set(DescriptionKey, *desc)
-	}
+	d.Set(NameKey, name)
+	d.Set(DescriptionKey, desc)
 	d.SetId(p.Id)
 
 	return nil

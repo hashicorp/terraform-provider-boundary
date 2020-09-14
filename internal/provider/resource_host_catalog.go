@@ -96,12 +96,8 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("error creating host catalog: %s", apiErr.Message)
 	}
 
-	if name != nil {
-		d.Set(NameKey, name)
-	}
-	if desc != nil {
-		d.Set(DescriptionKey, *desc)
-	}
+	d.Set(NameKey, name)
+	d.Set(DescriptionKey, desc)
 	d.Set(TypeKey, hc.Type)
 	d.SetId(hc.Id)
 

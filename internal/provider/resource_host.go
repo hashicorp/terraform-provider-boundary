@@ -112,19 +112,13 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error creating host: %s", apiErr.Message)
 	}
 
-	if name != nil {
-		d.Set(NameKey, name)
-	}
-	if desc != nil {
-		d.Set(DescriptionKey, *desc)
-	}
+	d.Set(NameKey, name)
+	d.Set(DescriptionKey, desc)
 	d.Set(TypeKey, h.Type)
 	{
 		switch h.Type {
-		case "static":
-			if address != nil {
-				d.Set(hostAddressKey, *address)
-			}
+		case hostTypeStatic:
+			d.Set(hostAddressKey, address)
 		}
 	}
 	d.SetId(h.Id)
@@ -164,7 +158,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	if typ, ok := raw["type"]; ok {
 		switch typ.(string) {
-		case "static":
+		case hostTypeStatic:
 			if attrsVal, ok := raw["attributes"]; ok {
 				attrs := attrsVal.(map[string]interface{})
 				d.Set(hostAddressKey, attrs["address"])
@@ -206,7 +200,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var address *string
 	if d.HasChange(hostAddressKey) {
 		switch d.Get(TypeKey).(string) {
-		case "static":
+		case hostTypeStatic:
 			opts = append(opts, hosts.DefaultStaticHostAddress())
 			addrVal, ok := d.GetOk(hostAddressKey)
 			if ok {

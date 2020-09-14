@@ -99,16 +99,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.Errorf("error setting principals on role: %v", err)
 		}
-
 		d.Set(groupMemberIdsKey, memberIds)
 	}
 
-	if name != nil {
-		d.Set(NameKey, name)
-	}
-	if desc != nil {
-		d.Set(DescriptionKey, *desc)
-	}
+	d.Set(NameKey, name)
+	d.Set(DescriptionKey, desc)
 	d.SetId(g.Id)
 
 	return nil

@@ -126,12 +126,8 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set(hostsetHostIdsKey, hostIds)
 	}
 
-	if name != nil {
-		d.Set(NameKey, name)
-	}
-	if desc != nil {
-		d.Set(DescriptionKey, *desc)
-	}
+	d.Set(NameKey, name)
+	d.Set(DescriptionKey, desc)
 	d.Set(TypeKey, hs.Type)
 	d.SetId(hs.Id)
 
@@ -170,7 +166,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if typ, ok := raw["type"]; ok {
 		switch typ.(string) {
-		case "static":
+		case hostsetTypeStatic:
 			if attrsVal, ok := raw["attributes"]; ok {
 				attrs := attrsVal.(map[string]interface{})
 				d.Set(hostsetHostIdsKey, attrs["host_ids"])

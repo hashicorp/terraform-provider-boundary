@@ -73,12 +73,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error creating user: %s", apiErr.Message)
 	}
 
-	if name != nil {
-		d.Set(NameKey, name)
-	}
-	if desc != nil {
-		d.Set(DescriptionKey, *desc)
-	}
+	d.Set(NameKey, name)
+	d.Set(DescriptionKey, desc)
 	d.SetId(u.Id)
 
 	return nil
