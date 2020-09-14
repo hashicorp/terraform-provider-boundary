@@ -99,7 +99,7 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	hsClient := hostsets.NewClient(md.client)
 
-	hs, apiErr, err := hsClient.Create(
+	hscr, apiErr, err := hsClient.Create(
 		ctx,
 		hostsetHostCatalogId,
 		opts...)
@@ -111,10 +111,10 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if hostIds != nil {
-		hs, apiErr, err = hsClient.SetHosts(
+		_, apiErr, err = hsClient.SetHosts(
 			ctx,
-			hs.Id,
-			hs.Version,
+			hscr.Item.Id,
+			hscr.Item.Version,
 			hostIds)
 		if apiErr != nil {
 			return diag.Errorf("error setting hosts on host set: %s", apiErr.Message)
@@ -128,8 +128,9 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set(NameKey, name)
 	d.Set(DescriptionKey, desc)
-	d.Set(TypeKey, hs.Type)
-	d.SetId(hs.Id)
+	d.Set(TypeKey, hscr.Item.Type)
+	d.Set(HostCatalogIdKey, hostsetHostCatalogId)
+	d.SetId(hscr.Item.Id)
 
 	return nil
 }
@@ -149,7 +150,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("host set nil after read")
 	}
 
-	raw := hs.LastResponseMap()
+	raw := hs.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{
@@ -163,16 +164,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
 	d.Set(TypeKey, raw["type"])
-
-	if typ, ok := raw["type"]; ok {
-		switch typ.(string) {
-		case hostsetTypeStatic:
-			if attrsVal, ok := raw["attributes"]; ok {
-				attrs := attrsVal.(map[string]interface{})
-				d.Set(hostsetHostIdsKey, attrs["host_ids"])
-			}
-		}
-	}
+	d.Set(hostsetHostIdsKey, raw["host_ids"])
 
 	return nil
 }

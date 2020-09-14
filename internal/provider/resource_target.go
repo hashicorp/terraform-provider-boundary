@@ -77,19 +77,15 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	opts := []targets.Option{}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, targets.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, targets.WithDescription(descStr))
 	}
 
@@ -115,7 +111,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	tc := targets.NewClient(md.client)
 
-	t, apiErr, err := tc.Create(
+	tcr, apiErr, err := tc.Create(
 		ctx,
 		typeStr,
 		scopeId,
@@ -127,11 +123,13 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("error creating target: %s", apiErr.Message)
 	}
 
+	raw := tcr.ResponseMap()
+
 	if hostSetIds != nil {
-		t, apiErr, err = tc.SetHostSets(
+		tur, apiErr, err := tc.SetHostSets(
 			ctx,
-			t.Id,
-			t.Version,
+			tcr.Item.Id,
+			tcr.Item.Version,
 			hostSetIds)
 		if apiErr != nil {
 			return diag.Errorf("error setting host sets on target: %s", apiErr.Message)
@@ -140,13 +138,25 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error setting host sets on target: %v", err)
 		}
 		d.Set(targetHostSetIdsKey, hostSetIds)
+		raw = tur.ResponseMap()
 	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(targetDefaultPortKey, defaultPort)
-	d.Set(TypeKey, t.Type)
-	d.SetId(t.Id)
+	if raw == nil {
+		return []diag.Diagnostic{
+			{
+				Severity: diag.Warning,
+				Summary:  "response map empty after read",
+			},
+		}
+	}
+
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(TypeKey, raw["type"])
+	d.Set(targetDefaultPortKey, raw["default_port"])
+	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
+	d.SetId(tcr.Item.Id)
 
 	return nil
 }
@@ -166,7 +176,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("target nil after read")
 	}
 
-	raw := t.LastResponseMap()
+	raw := t.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{
@@ -178,19 +188,10 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
-	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
+	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(TypeKey, raw["type"])
 	d.Set(targetDefaultPortKey, raw["default_port"])
-
-	if typ, ok := raw["type"]; ok {
-		switch typ.(string) {
-		case targetTypeTcp:
-			if attrsVal, ok := raw["attributes"]; ok {
-				attrs := attrsVal.(map[string]interface{})
-				d.Set(targetHostSetIdsKey, attrs["host_set_ids"])
-			}
-		}
-	}
+	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
 
 	return nil
 }

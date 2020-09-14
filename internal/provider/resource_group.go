@@ -71,7 +71,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	grps := groups.NewClient(md.client)
 
-	g, apiErr, err := grps.Create(
+	gcr, apiErr, err := grps.Create(
 		ctx,
 		scopeId,
 		opts...)
@@ -88,10 +88,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		for _, i := range list {
 			memberIds = append(memberIds, i.(string))
 		}
-		g, apiErr, err = grps.SetMembers(
+		_, apiErr, err := grps.SetMembers(
 			ctx,
-			g.Id,
-			g.Version,
+			gcr.Item.Id,
+			gcr.Item.Version,
 			memberIds)
 		if apiErr != nil {
 			return diag.Errorf("error setting principals on role: %s", apiErr.Message)
@@ -104,7 +104,8 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(NameKey, name)
 	d.Set(DescriptionKey, desc)
-	d.SetId(g.Id)
+	d.Set(ScopeIdKey, scopeId)
+	d.SetId(gcr.Item.Id)
 
 	return nil
 }
@@ -124,7 +125,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("group nil after read")
 	}
 
-	raw := g.LastResponseMap()
+	raw := g.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

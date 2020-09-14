@@ -158,11 +158,11 @@ func testAccCheckHostsetHostIDsSet(name string, wantHostIDs []string) resource.T
 			return fmt.Errorf("Got an error when reading hostset %q: %v", id, err)
 		}
 
-		if len(hs.HostIds) == 0 {
+		if len(hs.Item.HostIds) == 0 {
 			return fmt.Errorf("no hosts found on hostset %v; %v found in state; %#v in hs map", id, gotHostIDs, hs)
 		}
 
-		for _, stateHost := range hs.HostIds {
+		for _, stateHost := range hs.Item.HostIds {
 			ok := false
 			for _, gotHost := range gotHostIDs {
 				if gotHost == stateHost {

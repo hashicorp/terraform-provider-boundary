@@ -253,11 +253,11 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 
 		// for every member set as a member on the group in the state, ensure
 		// each group in boundary has the same setings
-		if len(g.MemberIds) == 0 {
+		if len(g.Item.MemberIds) == 0 {
 			return fmt.Errorf("no members found on group")
 		}
 
-		for _, stateMember := range g.MemberIds {
+		for _, stateMember := range g.Item.MemberIds {
 			ok := false
 			for _, gotMember := range memberIDs {
 				if gotMember == stateMember {
@@ -296,8 +296,8 @@ func testAccCheckGroupScope(name, prefix string) resource.TestCheckFunc {
 			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
 		}
 
-		if !strings.HasPrefix(g.ScopeId, prefix) {
-			return fmt.Errorf("Scope ID in state does not have prefix: %s != %s", g.ScopeId, prefix)
+		if !strings.HasPrefix(g.Item.ScopeId, prefix) {
+			return fmt.Errorf("Scope ID in state does not have prefix: %s != %s", g.Item.ScopeId, prefix)
 		}
 
 		return nil

@@ -63,7 +63,7 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	scp := scopes.NewClient(md.client)
 
-	p, apiErr, err := scp.Create(
+	scr, apiErr, err := scp.Create(
 		ctx,
 		scopeId,
 		opts...)
@@ -76,7 +76,8 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(NameKey, name)
 	d.Set(DescriptionKey, desc)
-	d.SetId(p.Id)
+	d.Set(ScopeIdKey, scopeId)
+	d.SetId(scr.Item.Id)
 
 	return nil
 }
@@ -96,7 +97,7 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("scope nil after read")
 	}
 
-	raw := s.LastResponseMap()
+	raw := s.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

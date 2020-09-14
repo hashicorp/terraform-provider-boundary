@@ -132,11 +132,11 @@ func testAccCheckHostAttributeSet(name, attrKey, wantAttrVal string) resource.Te
 			return fmt.Errorf("Got an error when reading host %q: %v", id, err)
 		}
 
-		if len(h.Attributes) == 0 {
+		if len(h.Item.Attributes) == 0 {
 			return errors.New("no host attributes found")
 		}
 
-		gotAttrVal, ok := h.Attributes[attrKey]
+		gotAttrVal, ok := h.Item.Attributes[attrKey]
 		if !ok {
 			return fmt.Errorf("attribute not found on host: '%s'", attrKey)
 		}

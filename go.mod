@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.16 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
-	github.com/hashicorp/boundary v0.0.0-20200913014308-2914b4c14c5a
+	github.com/hashicorp/boundary v0.0.0-20200914201844-ddeff7ebf936
 	github.com/hashicorp/go-kms-wrapping v0.5.14
 	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
@@ -17,7 +17,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/stretchr/testify v1.6.1
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	github.com/zclconf/go-cty v1.6.1 // indirect
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect

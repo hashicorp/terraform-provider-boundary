@@ -141,11 +141,11 @@ func testAccCheckTargetResourceMembersSet(name string, hostSets []string) resour
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
 
-		if len(t.HostSetIds) == 0 {
+		if len(t.Item.HostSetIds) == 0 {
 			return fmt.Errorf("no hostSets found on target")
 		}
 
-		for _, stateHostSet := range t.HostSetIds {
+		for _, stateHostSet := range t.Item.HostSetIds {
 			ok := false
 			for _, gotHostSetID := range hostSetIDs {
 				if gotHostSetID == stateHostSet {

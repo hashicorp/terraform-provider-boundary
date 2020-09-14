@@ -84,7 +84,7 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	hcClient := hostcatalogs.NewClient(md.client)
 
-	hc, apiErr, err := hcClient.Create(
+	hccr, apiErr, err := hcClient.Create(
 		ctx,
 		typeStr,
 		scopeId,
@@ -98,8 +98,9 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(NameKey, name)
 	d.Set(DescriptionKey, desc)
-	d.Set(TypeKey, hc.Type)
-	d.SetId(hc.Id)
+	d.Set(TypeKey, hccr.Item.Type)
+	d.Set(ScopeIdKey, scopeId)
+	d.SetId(hccr.Item.Id)
 
 	return nil
 }
@@ -119,7 +120,7 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	raw := hc.LastResponseMap()
+	raw := hc.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

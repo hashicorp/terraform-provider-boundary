@@ -48,9 +48,9 @@ func resourceHost() *schema.Resource {
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	var hostHostCatalogId string
-	if hostHostCatalogIdVal, ok := d.GetOk(HostCatalogIdKey); ok {
-		hostHostCatalogId = hostHostCatalogIdVal.(string)
+	var hostCatalogId string
+	if hostCatalogIdVal, ok := d.GetOk(HostCatalogIdKey); ok {
+		hostCatalogId = hostCatalogIdVal.(string)
 	} else {
 		return diag.Errorf("no host catalog ID provided")
 	}
@@ -101,9 +101,9 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	hClient := hosts.NewClient(md.client)
 
-	h, apiErr, err := hClient.Create(
+	hcr, apiErr, err := hClient.Create(
 		ctx,
-		hostHostCatalogId,
+		hostCatalogId,
 		opts...)
 	if err != nil {
 		return diag.Errorf("error calling create host: %v", err)
@@ -114,14 +114,15 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(NameKey, name)
 	d.Set(DescriptionKey, desc)
-	d.Set(TypeKey, h.Type)
+	d.Set(HostCatalogIdKey, hostCatalogId)
+	d.Set(TypeKey, hcr.Item.Type)
 	{
-		switch h.Type {
+		switch hcr.Item.Type {
 		case hostTypeStatic:
 			d.Set(hostAddressKey, address)
 		}
 	}
-	d.SetId(h.Id)
+	d.SetId(hcr.Item.Id)
 
 	return nil
 }
@@ -141,7 +142,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("host nil after read")
 	}
 
-	raw := hc.LastResponseMap()
+	raw := hc.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

@@ -62,7 +62,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	usrs := users.NewClient(md.client)
 
-	u, apiErr, err := usrs.Create(
+	ucr, apiErr, err := usrs.Create(
 		ctx,
 		scopeId,
 		opts...)
@@ -75,7 +75,8 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(NameKey, name)
 	d.Set(DescriptionKey, desc)
-	d.SetId(u.Id)
+	d.Set(ScopeIdKey, scopeId)
+	d.SetId(ucr.Item.Id)
 
 	return nil
 }
@@ -95,7 +96,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("user nil after read")
 	}
 
-	raw := u.LastResponseMap()
+	raw := u.ResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{
