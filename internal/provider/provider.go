@@ -52,10 +52,10 @@ func New() *schema.Provider {
 			"boundary_group":        resourceGroup(),
 			"boundary_host":         resourceHost(),
 			"boundary_host_catalog": resourceHostCatalog(),
+			"boundary_host_set":     resourceHostset(),
 			"boundary_scope":        resourceScope(),
 			"boundary_user":         resourceUser(),
 			/*
-				"boundary_host_set":     resourceHostset(),
 				"boundary_role":         resourceRole(),
 				"boundary_target":       resourceTarget(),
 			*/

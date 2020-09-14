@@ -70,6 +70,8 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("no type provided")
 	}
 	switch typeStr {
+	// NOTE: When other types are added, ensure they don't accept address if
+	// it's not allowed
 	case hostTypeStatic:
 		if address != nil {
 			opts = append(opts, hosts.WithStaticHostAddress(*address))

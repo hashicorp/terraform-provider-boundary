@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -14,17 +15,18 @@ import (
 var (
 	fooHostset = ` 
 resource "boundary_host_catalog" "foo" {
-	scope_id    = boundary_project.foo.id
+	scope_id    = boundary_scope.proj1.id
 	type        = "static"
 }
 
 resource "boundary_host" "foo" {
-	scope_id        = boundary_project.foo.id
+	type            = "static"
 	host_catalog_id = boundary_host_catalog.foo.id
 	address         = "10.0.0.1:80"
 }
 
 resource "boundary_host_set" "foo" {
+	type               = "static"
 	name               = "test"
 	description        = "test hostset"
 	host_catalog_id    = boundary_host_catalog.foo.id
@@ -33,26 +35,27 @@ resource "boundary_host_set" "foo" {
 
 	fooHostsetUpdate = `
 resource "boundary_host_catalog" "foo" {
-	scope_id    = boundary_project.foo.id
+	scope_id    = boundary_scope.proj1.id
 	type        = "static"
 }
 
 resource "boundary_host" "foo" {
-	scope_id        = boundary_project.foo.id
+	type            = "static"
 	host_catalog_id = boundary_host_catalog.foo.id
 	address         = "10.0.0.1:80"
 }
 
 resource "boundary_host" "bar" {
-	scope_id        = boundary_project.foo.id
+	type            = "static"
 	host_catalog_id = boundary_host_catalog.foo.id
 	address         = "10.0.0.2:80"
 }
 
 resource "boundary_host_set" "foo" {
+	type               = "static"
+	host_catalog_id    = boundary_host_catalog.foo.id
 	name               = "test"
 	description        = "test hostset"
-	host_catalog_id    = boundary_host_catalog.foo.id
 	host_ids           = [
 	  	boundary_host.foo.id, 
 		boundary_host.bar.id,
@@ -72,7 +75,7 @@ func TestAccHostset(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
-				Config: testConfig(url, fooOrg, fooProject, fooHostset),
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostset),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostsetResourceExists("boundary_host_set.foo"),
 					testAccCheckHostsetHostIDsSet("boundary_host_set.foo", []string{"boundary_host.foo"}),
@@ -82,7 +85,7 @@ func TestAccHostset(t *testing.T) {
 			},
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, fooProject, fooHostsetUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostsetUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostsetResourceExists("boundary_host_set.foo"),
 					testAccCheckHostsetHostIDsSet("boundary_host_set.foo", []string{"boundary_host.foo", "boundary_host.bar"}),
@@ -107,10 +110,9 @@ func testAccCheckHostsetResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-
 		hostsetsClient := hostsets.NewClient(md.client)
 
-		if _, _, err := hostsetsClient.Read2(md.ctx, id); err != nil {
+		if _, _, err := hostsetsClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading hostset %q: %v", id, err)
 		}
 
@@ -122,12 +124,12 @@ func testAccCheckHostsetHostIDsSet(name string, wantHostIDs []string) resource.T
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("role resource not found: %s", name)
+			return fmt.Errorf("host set resource not found: %s", name)
 		}
 
 		id := rs.Primary.ID
 		if id == "" {
-			return fmt.Errorf("host resource ID is not set")
+			return fmt.Errorf("host set resource ID is not set")
 		}
 
 		gotHostIDs := []string{}
@@ -151,13 +153,13 @@ func testAccCheckHostsetHostIDsSet(name string, wantHostIDs []string) resource.T
 
 		hstClient := hostsets.NewClient(client)
 
-		hs, _, err := hstClient.Read2(md.ctx, id)
+		hs, _, err := hstClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading hostset %q: %v", id, err)
 		}
 
 		if len(hs.HostIds) == 0 {
-			return fmt.Errorf("no hosts found on hostset")
+			return fmt.Errorf("no hosts found on hostset %v; %v found in state; %#v in hs map", id, gotHostIDs, hs)
 		}
 
 		for _, stateHost := range hs.HostIds {
@@ -185,9 +187,7 @@ func testAccCheckHostsetResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_project":
-				continue
-			case "boundary_organization":
+			case "boundary_scope":
 				continue
 			case "boundary_host_set":
 
@@ -195,9 +195,12 @@ func testAccCheckHostsetResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				hostsetsClient := hostsets.NewClient(md.client)
 
-				_, apiErr, _ := hostsetsClient.Read2(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
-					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed hostset %q: %v", id, apiErr)
+				_, apiErr, err := hostsetsClient.Read(context.Background(), id)
+				if err != nil {
+					return fmt.Errorf("Error when reading destroyed host set %q: %v", id, err)
+				}
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed host set %q: %v", id, apiErr)
 				}
 
 			default:

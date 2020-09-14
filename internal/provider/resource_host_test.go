@@ -28,10 +28,10 @@ resource "boundary_host_catalog" "foo" {
 }
 
 resource "boundary_host" "foo" {
+	type            = "static"
+	host_catalog_id = boundary_host_catalog.foo.id
 	name            = "test"
 	description     = "test host"
-	host_catalog_id = boundary_host_catalog.foo.id
-	type            = "static"
 	address         = "%s"
 }`, fooHostAddress)
 
@@ -44,10 +44,10 @@ resource "boundary_host_catalog" "foo" {
 }
 
 resource "boundary_host" "foo" {
+	type            = "static"
+	host_catalog_id = boundary_host_catalog.foo.id
 	name            = "test"
 	description     = "test host"
-	host_catalog_id = boundary_host_catalog.foo.id
-	type            = "static"
 	address         = "%s"
 }`, fooHostAddressUpdate)
 )

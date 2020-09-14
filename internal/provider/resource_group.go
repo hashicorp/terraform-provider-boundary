@@ -100,9 +100,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return diag.Errorf("error setting principals on role: %v", err)
 		}
 
-		if err := d.Set(groupMemberIdsKey, memberIds); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(groupMemberIdsKey, memberIds)
 	}
 
 	if name != nil {
@@ -199,6 +197,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set(DescriptionKey, desc)
 	}
 
+	// The above call may not actually happen, so we use d.Id() and automatic
+	// versioning here
 	if d.HasChange(groupMemberIdsKey) {
 		var memberIds []string
 		if membersVal, ok := d.GetOk(groupMemberIdsKey); ok {
@@ -206,6 +206,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			for _, member := range members {
 				memberIds = append(memberIds, member.(string))
 			}
+
 		}
 		_, apiErr, err := grps.SetMembers(
 			ctx,
@@ -214,10 +215,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			memberIds,
 			groups.WithAutomaticVersioning(true))
 		if err != nil {
-			return diag.Errorf("error updating members on group: %v", err)
+			return diag.Errorf("error updating members in group: %v", err)
 		}
 		if apiErr != nil {
-			return diag.Errorf("error updating members on group: %s", apiErr.Message)
+			return diag.Errorf("error updating members in group: %s", apiErr.Message)
 		}
 		d.Set(groupMemberIdsKey, memberIds)
 	}
