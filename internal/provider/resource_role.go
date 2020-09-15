@@ -1,9 +1,7 @@
 package provider
 
-/*
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,6 +53,16 @@ func resourceRole() *schema.Resource {
 	}
 }
 
+func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(rolePrincipalIdsKey, raw["principal_ids"])
+	d.Set(roleGrantStringsKey, raw["grant_strings"])
+	d.Set(roleGrantScopeIdKey, raw["grant_scope_id"])
+	d.SetId(raw["id"].(string))
+}
+
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -67,27 +75,21 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	opts := []roles.Option{}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, roles.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, roles.WithDescription(descStr))
 	}
 
-	var grantScopeId *string
 	grantScopeIdVal, ok := d.GetOk(roleGrantScopeIdKey)
 	if ok {
 		grantScopeIdStr := grantScopeIdVal.(string)
-		grantScopeId = &grantScopeIdStr
 		opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
 	}
 
@@ -111,7 +113,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	rc := roles.NewClient(md.client)
 
-	t, apiErr, err := rc.Create(
+	tcr, apiErr, err := rc.Create(
 		ctx,
 		scopeId,
 		opts...)
@@ -121,42 +123,50 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if apiErr != nil {
 		return diag.Errorf("error creating role: %s", apiErr.Message)
 	}
+	if tcr == nil {
+		return diag.Errorf("nil role after create")
+	}
+	raw := tcr.GetResponseMap()
 
 	if principalIds != nil {
-		t, apiErr, err = rc.SetPrincipals(
+		tspr, apiErr, err := rc.SetPrincipals(
 			ctx,
-			t.Id,
-			t.Version,
-			principalIds)
+			tcr.Item.Id,
+			0,
+			principalIds,
+			roles.WithAutomaticVersioning(true))
 		if apiErr != nil {
 			return diag.Errorf("error setting principal IDs on role: %s", apiErr.Message)
 		}
 		if err != nil {
 			return diag.Errorf("error setting principal IDs on role: %v", err)
 		}
-		d.Set(rolePrincipalIdsKey, principalIds)
+		if tspr == nil {
+			return diag.Errorf("nil role after setting principal IDs")
+		}
+		raw = tspr.GetResponseMap()
 	}
 
 	if grantStrings != nil {
-		t, apiErr, err = rc.SetGrants(
+		tsgr, apiErr, err := rc.SetGrants(
 			ctx,
-			t.Id,
-			t.Version,
-			grantStrings)
+			tcr.Item.Id,
+			0,
+			grantStrings,
+			roles.WithAutomaticVersioning(true))
 		if apiErr != nil {
 			return diag.Errorf("error setting grant strings on role: %s", apiErr.Message)
 		}
 		if err != nil {
 			return diag.Errorf("error setting grant strings on role: %v", err)
 		}
-		d.Set(roleGrantStringsKey, grantStrings)
+		if tsgr == nil {
+			return diag.Errorf("nil role after setting grant strings")
+		}
+		raw = tsgr.GetResponseMap()
 	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(ScopeIdKey, scopeId)
-	d.Set(roleGrantScopeIdKey, grantScopeId)
-	d.SetId(t.Id)
+	setFromRoleResponseMap(d, raw)
 
 	return nil
 }
@@ -165,118 +175,146 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	md := meta.(*metaData)
 	rc := roles.NewClient(md.client)
 
-	t, apiErr, err := rc.Read(ctx, d.Id())
+	trr, apiErr, err := rc.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read role: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading role: %s", apiErr.Message)
 	}
-	if t == nil {
+	if trr == nil {
 		return diag.Errorf("role nil after read")
 	}
 
-	raw := t.LastResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(roleGrantScopeIdKey, raw["grant_scope_id"])
-	d.Set(rolePrincipalIdsKey, raw["principal_ids"])
-	d.Set(roleGrantStringsKey, raw["grant_strings"])
+	setFromRoleResponseMap(d, trr.GetResponseMap())
 
 	return nil
 }
 
-func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	rc := roles.NewClient(md.client)
 
-	r := convertResourceDataToRole(d)
-	rolesClient := roles.NewClient(client)
+	opts := []roles.Option{}
 
-	if d.HasChange(roleNameKey) {
-		r.Name = d.Get(roleNameKey).(string)
-	}
-
-	if d.HasChange(roleDescriptionKey) {
-		r.Description = d.Get(roleDescriptionKey).(string)
-	}
-
-	r, apiErr, err := rolesClient.Update(
-		ctx,
-		r.Id,
-		0,
-		roles.WithAutomaticVersioning(),
-		roles.WithName(r.Name),
-		roles.WithDescription(r.Description),
-		roles.WithScopeId(r.Scope.Id))
-	if apiErr != nil || err != nil {
-		return fmt.Errorf("error updating role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
-	}
-
-	if d.HasChange(roleGrantsKey) {
-		grants := []string{}
-		grantSet := d.Get(roleGrantsKey).(*schema.Set).List()
-
-		for _, grant := range grantSet {
-			grants = append(grants, grant.(string))
+	var name *string
+	if d.HasChange(NameKey) {
+		opts = append(opts, roles.DefaultName())
+		nameVal, ok := d.GetOk(NameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, roles.WithName(nameStr))
 		}
+	}
 
-		r, apiErr, err = rolesClient.SetGrants(
+	var desc *string
+	if d.HasChange(DescriptionKey) {
+		opts = append(opts, roles.DefaultDescription())
+		descVal, ok := d.GetOk(DescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, roles.WithDescription(descStr))
+		}
+	}
+
+	var grantScopeId *string
+	if d.HasChange(roleGrantScopeIdKey) {
+		opts = append(opts, roles.DefaultGrantScopeId())
+		grantScopeIdVal, ok := d.GetOk(roleGrantScopeIdKey)
+		if ok {
+			grantScopeIdStr := grantScopeIdVal.(string)
+			grantScopeId = &grantScopeIdStr
+			opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
+		}
+	}
+
+	if len(opts) > 0 {
+		opts = append(opts, roles.WithAutomaticVersioning(true))
+		_, apiErr, err := rc.Update(
 			ctx,
-			r.Id,
-			r.Version,
-			grants,
-			roles.WithScopeId(r.Scope.Id))
-		if apiErr != nil || err != nil {
-			return fmt.Errorf("error setting grants on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+			d.Id(),
+			0,
+			opts...)
+		if err != nil {
+			return diag.Errorf("error calling update target: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating target: %s", apiErr.Message)
 		}
 	}
 
-	if d.HasChange(rolePrincipalsKey) {
-		principalIds := []string{}
-		principals := d.Get(rolePrincipalsKey).(*schema.Set).List()
-		for _, principal := range principals {
-			principalIds = append(principalIds, principal.(string))
-		}
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
+	}
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
+	}
+	if d.HasChange(roleGrantScopeIdKey) {
+		d.Set(roleGrantScopeIdKey, grantScopeId)
+	}
 
-		r, apiErr, err = rolesClient.SetPrincipals(
+	if d.HasChange(roleGrantStringsKey) {
+		var grantStrings []string
+		if grantStringsVal, ok := d.GetOk(roleGrantStringsKey); ok {
+			grants := grantStringsVal.(*schema.Set).List()
+			for _, grant := range grants {
+				grantStrings = append(grantStrings, grant.(string))
+			}
+		}
+		_, apiErr, err := rc.SetGrants(
 			ctx,
-			r.Id,
-			r.Version,
+			d.Id(),
+			0,
+			grantStrings,
+			roles.WithAutomaticVersioning(true))
+		if err != nil {
+			return diag.Errorf("error updating grant strings on role: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating grant strings on role: %s", apiErr.Message)
+		}
+		d.Set(roleGrantStringsKey, grantStrings)
+	}
+
+	if d.HasChange(rolePrincipalIdsKey) {
+		var principalIds []string
+		if principalIdsVal, ok := d.GetOk(rolePrincipalIdsKey); ok {
+			principals := principalIdsVal.(*schema.Set).List()
+			for _, principal := range principals {
+				principalIds = append(principalIds, principal.(string))
+			}
+		}
+		_, apiErr, err := rc.SetPrincipals(
+			ctx,
+			d.Id(),
+			0,
 			principalIds,
-			roles.WithScopeId(r.Scope.Id))
-		if apiErr != nil || err != nil {
-			return fmt.Errorf("error updating principal on role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+			roles.WithAutomaticVersioning(true))
+		if err != nil {
+			return diag.Errorf("error updating grant strings on role: %v", err)
 		}
-	}
-
-	return convertRoleToResourceData(r, d)
-}
-
-func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	r := convertResourceDataToRole(d)
-	rolesClient := roles.NewClient(client)
-
-	_, apiErr, err := rolesClient.Delete(ctx, r.Id, roles.WithScopeId(r.Scope.Id))
-	if apiErr != nil || err != nil {
-		return fmt.Errorf("error deleting role:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+		if apiErr != nil {
+			return diag.Errorf("error updating grant strings on role: %s", apiErr.Message)
+		}
+		d.Set(rolePrincipalIdsKey, principalIds)
 	}
 
 	return nil
 }
-*/
+
+func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+	rc := roles.NewClient(md.client)
+
+	_, apiErr, err := rc.Delete(ctx, d.Id())
+	if err != nil {
+		return diag.Errorf("error calling delete role: %s", err.Error())
+	}
+	if apiErr != nil {
+		return diag.Errorf("error deleting role: %s", apiErr.Message)
+	}
+
+	return nil
+}
