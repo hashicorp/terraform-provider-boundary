@@ -53,6 +53,16 @@ func resourceTarget() *schema.Resource {
 	}
 }
 
+func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(TypeKey, raw["type"])
+	d.Set(targetDefaultPortKey, raw["default_port"])
+	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
+	d.SetId(raw["id"].(string))
+}
+
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -122,8 +132,11 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if apiErr != nil {
 		return diag.Errorf("error creating target: %s", apiErr.Message)
 	}
+	if tcr == nil {
+		return diag.Errorf("target nil after create")
+	}
 
-	raw := tcr.ResponseMap()
+	raw := tcr.GetResponseMap()
 
 	if hostSetIds != nil {
 		tur, apiErr, err := tc.SetHostSets(
@@ -138,25 +151,10 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error setting host sets on target: %v", err)
 		}
 		d.Set(targetHostSetIdsKey, hostSetIds)
-		raw = tur.ResponseMap()
+		raw = tur.GetResponseMap()
 	}
 
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
-	d.Set(targetDefaultPortKey, raw["default_port"])
-	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
-	d.SetId(tcr.Item.Id)
+	setFromTargetResponseMap(d, raw)
 
 	return nil
 }
@@ -165,33 +163,18 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	md := meta.(*metaData)
 	tc := targets.NewClient(md.client)
 
-	t, apiErr, err := tc.Read(ctx, d.Id())
+	trr, apiErr, err := tc.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read target: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading target: %s", apiErr.Message)
 	}
-	if t == nil {
+	if trr == nil {
 		return diag.Errorf("target nil after read")
 	}
 
-	raw := t.ResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
-	d.Set(targetDefaultPortKey, raw["default_port"])
-	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
+	setFromTargetResponseMap(d, trr.GetResponseMap())
 
 	return nil
 }

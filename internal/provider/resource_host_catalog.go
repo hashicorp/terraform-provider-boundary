@@ -120,7 +120,7 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	raw := hc.ResponseMap()
+	raw := hc.GetResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

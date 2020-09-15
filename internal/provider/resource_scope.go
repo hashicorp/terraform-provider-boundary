@@ -33,6 +33,13 @@ func resourceScope() *schema.Resource {
 	}
 }
 
+func setFromScopeResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.SetId(raw["id"].(string))
+}
+
 func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -45,19 +52,15 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	opts := []scopes.Option{}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, scopes.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, scopes.WithDescription(descStr))
 	}
 
@@ -73,11 +76,11 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if apiErr != nil {
 		return diag.Errorf("error creating scope: %s", apiErr.Message)
 	}
+	if scr == nil {
+		return diag.Errorf("scope nil after create")
+	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(ScopeIdKey, scopeId)
-	d.SetId(scr.Item.Id)
+	setFromScopeResponseMap(d, scr.GetResponseMap())
 
 	return nil
 }
@@ -86,30 +89,18 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	md := meta.(*metaData)
 	scp := scopes.NewClient(md.client)
 
-	s, apiErr, err := scp.Read(ctx, d.Id())
+	srr, apiErr, err := scp.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read scope: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading scope: %s", apiErr.Message)
 	}
-	if s == nil {
+	if srr == nil {
 		return diag.Errorf("scope nil after read")
 	}
 
-	raw := s.ResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
+	setFromScopeResponseMap(d, srr.GetResponseMap())
 
 	return nil
 }

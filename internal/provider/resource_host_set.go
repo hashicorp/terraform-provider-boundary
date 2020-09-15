@@ -150,7 +150,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("host set nil after read")
 	}
 
-	raw := hs.ResponseMap()
+	raw := hs.GetResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

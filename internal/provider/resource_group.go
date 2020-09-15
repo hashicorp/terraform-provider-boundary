@@ -125,7 +125,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("group nil after read")
 	}
 
-	raw := g.ResponseMap()
+	raw := g.GetResponseMap()
 	if raw == nil {
 		return []diag.Diagnostic{
 			{

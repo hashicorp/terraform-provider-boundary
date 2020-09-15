@@ -45,6 +45,23 @@ func resourceHost() *schema.Resource {
 	}
 }
 
+func setFromHostResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
+	d.Set(TypeKey, raw["type"])
+
+	switch raw["type"].(string) {
+	case hostTypeStatic:
+		if attrsVal, ok := raw["attributes"]; ok {
+			attrs := attrsVal.(map[string]interface{})
+			d.Set(hostAddressKey, attrs["address"])
+		}
+	}
+
+	d.SetId(raw["id"].(string))
+}
+
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -83,19 +100,15 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("invalid type provided")
 	}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, hosts.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, hosts.WithDescription(descStr))
 	}
 
@@ -111,18 +124,11 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if apiErr != nil {
 		return diag.Errorf("error creating host: %s", apiErr.Message)
 	}
-
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(HostCatalogIdKey, hostCatalogId)
-	d.Set(TypeKey, hcr.Item.Type)
-	{
-		switch hcr.Item.Type {
-		case hostTypeStatic:
-			d.Set(hostAddressKey, address)
-		}
+	if hcr == nil {
+		return diag.Errorf("host nil after create")
 	}
-	d.SetId(hcr.Item.Id)
+
+	setFromHostResponseMap(d, hcr.GetResponseMap())
 
 	return nil
 }
@@ -131,41 +137,18 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	md := meta.(*metaData)
 	hClient := hosts.NewClient(md.client)
 
-	hc, apiErr, err := hClient.Read(ctx, d.Id())
+	hrr, apiErr, err := hClient.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read host: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading host: %s", apiErr.Message)
 	}
-	if hc == nil {
+	if hrr == nil {
 		return diag.Errorf("host nil after read")
 	}
 
-	raw := hc.ResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
-	d.Set(TypeKey, raw["type"])
-
-	if typ, ok := raw["type"]; ok {
-		switch typ.(string) {
-		case hostTypeStatic:
-			if attrsVal, ok := raw["attributes"]; ok {
-				attrs := attrsVal.(map[string]interface{})
-				d.Set(hostAddressKey, attrs["address"])
-			}
-		}
-	}
+	setFromHostResponseMap(d, hrr.GetResponseMap())
 
 	return nil
 }

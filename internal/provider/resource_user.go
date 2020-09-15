@@ -32,6 +32,13 @@ func resourceUser() *schema.Resource {
 	}
 }
 
+func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.SetId(raw["id"].(string))
+}
+
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -44,19 +51,15 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	opts := []users.Option{}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, users.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, users.WithDescription(descStr))
 	}
 
@@ -72,11 +75,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if apiErr != nil {
 		return diag.Errorf("error creating user: %s", apiErr.Message)
 	}
+	if ucr == nil {
+		return diag.Errorf("user nil after create")
+	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(ScopeIdKey, scopeId)
-	d.SetId(ucr.Item.Id)
+	setFromUserResponseMap(d, ucr.GetResponseMap())
 
 	return nil
 }
@@ -85,30 +88,18 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	md := meta.(*metaData)
 	usrs := users.NewClient(md.client)
 
-	u, apiErr, err := usrs.Read(ctx, d.Id())
+	urr, apiErr, err := usrs.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read user: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading user: %s", apiErr.Message)
 	}
-	if u == nil {
+	if urr == nil {
 		return diag.Errorf("user nil after read")
 	}
 
-	raw := u.ResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
+	setFromUserResponseMap(d, urr.GetResponseMap())
 
 	return nil
 }
