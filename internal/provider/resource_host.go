@@ -1,236 +1,240 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/hashicorp/boundary/api/hosts"
-	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
-	hostNameKey        = "name"
-	hostDescriptionKey = "description"
-	hostScopeIDKey     = "scope_id"
-	hostCatalogIDKey   = "host_catalog_id"
-	hostAddressKey     = "address"
+	hostTypeStatic = "static"
+	hostAddressKey = "address"
 )
 
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostCreate,
-		Read:   resourceHostRead,
-		Update: resourceHostUpdate,
-		Delete: resourceHostDelete,
+		CreateContext: resourceHostCreate,
+		ReadContext:   resourceHostRead,
+		UpdateContext: resourceHostUpdate,
+		DeleteContext: resourceHostDelete,
 		Schema: map[string]*schema.Schema{
-			hostNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			hostDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			hostCatalogIDKey: {
+			TypeKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
+				ForceNew: true,
+			},
+			HostCatalogIdKey: {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			hostAddressKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			hostScopeIDKey: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
 		},
 	}
 }
 
-// convertHostToResourceData creates a ResourceData type from a Host
-func convertHostToResourceData(h *hosts.Host, d *schema.ResourceData) error {
-	if h.Name != "" {
-		if err := d.Set(hostNameKey, h.Name); err != nil {
-			return err
+func setFromHostResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
+	d.Set(TypeKey, raw["type"])
+
+	switch raw["type"].(string) {
+	case hostTypeStatic:
+		if attrsVal, ok := raw["attributes"]; ok {
+			attrs := attrsVal.(map[string]interface{})
+			d.Set(hostAddressKey, attrs["address"])
 		}
 	}
 
-	if h.Description != "" {
-		if err := d.Set(hostDescriptionKey, h.Description); err != nil {
-			return err
-		}
+	d.SetId(raw["id"].(string))
+}
+
+func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+
+	var hostCatalogId string
+	if hostCatalogIdVal, ok := d.GetOk(HostCatalogIdKey); ok {
+		hostCatalogId = hostCatalogIdVal.(string)
+	} else {
+		return diag.Errorf("no host catalog ID provided")
 	}
 
-	if h.Scope.Id != "" {
-		if err := d.Set(hostScopeIDKey, h.Scope.Id); err != nil {
-			return err
-		}
+	var address *string
+	if addressVal, ok := d.GetOk(hostAddressKey); ok {
+		hostAddress := addressVal.(string)
+		address = &hostAddress
 	}
 
-	if h.HostCatalogId != "" {
-		if err := d.Set(hostCatalogIDKey, h.HostCatalogId); err != nil {
-			return err
+	opts := []hosts.Option{}
+
+	var typeStr string
+	if typeVal, ok := d.GetOk(TypeKey); ok {
+		typeStr = typeVal.(string)
+	} else {
+		return diag.Errorf("no type provided")
+	}
+	switch typeStr {
+	// NOTE: When other types are added, ensure they don't accept address if
+	// it's not allowed
+	case hostTypeStatic:
+		if address != nil {
+			opts = append(opts, hosts.WithStaticHostAddress(*address))
+		} else {
+			return diag.Errorf("no address provided")
 		}
+
+	default:
+		return diag.Errorf("invalid type provided")
 	}
 
-	if len(h.Attributes) != 0 {
-		if addr, ok := h.Attributes["address"]; ok {
-			if err := d.Set(hostAddressKey, addr); err != nil {
-				return err
-			}
-		}
+	nameVal, ok := d.GetOk(NameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		opts = append(opts, hosts.WithName(nameStr))
 	}
 
-	d.SetId(h.Id)
+	descVal, ok := d.GetOk(DescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		opts = append(opts, hosts.WithDescription(descStr))
+	}
+
+	hClient := hosts.NewClient(md.client)
+
+	hcr, apiErr, err := hClient.Create(
+		ctx,
+		hostCatalogId,
+		opts...)
+	if err != nil {
+		return diag.Errorf("error calling create host: %v", err)
+	}
+	if apiErr != nil {
+		return diag.Errorf("error creating host: %s", apiErr.Message)
+	}
+	if hcr == nil {
+		return diag.Errorf("host nil after create")
+	}
+
+	setFromHostResponseMap(d, hcr.GetResponseMap())
 
 	return nil
 }
 
-// convertResourceDataToHost returns a localy built Host using the values provided in the ResourceData.
-func convertResourceDataToHost(d *schema.ResourceData) *hosts.Host {
-	// if you're manually defining the host in TF, it's always going
-	// to be of type "static"
-	h := &hosts.Host{
-		Scope: &scopes.ScopeInfo{},
-		Type:  hostCatalogTypeStatic,
-		Attributes: map[string]interface{}{
-			"address": "",
-		},
-	}
-
-	if descVal, ok := d.GetOk(hostDescriptionKey); ok {
-		h.Description = descVal.(string)
-	}
-
-	if nameVal, ok := d.GetOk(hostNameKey); ok {
-		h.Name = nameVal.(string)
-	}
-
-	if scopeIDVal, ok := d.GetOk(hostScopeIDKey); ok {
-		h.Scope.Id = scopeIDVal.(string)
-	}
-
-	if hostCatalogVal, ok := d.GetOk(hostCatalogIDKey); ok {
-		h.HostCatalogId = hostCatalogVal.(string)
-	}
-
-	if hostAddrVal, ok := d.GetOk(hostAddressKey); ok {
-		h.Attributes["address"] = hostAddrVal.(string)
-	}
-
-	if d.Id() != "" {
-		h.Id = d.Id()
-	}
-
-	return h
-}
-
-func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	hClient := hosts.NewClient(md.client)
 
-	h := convertResourceDataToHost(d)
-	usrs := hosts.NewClient(client)
-
-	h, apiErr, err := usrs.Create(
-		ctx,
-		h.HostCatalogId,
-		hosts.WithName(h.Name),
-		hosts.WithDescription(h.Description),
-		// not checking the key or the type because it's guaranteed set and string
-		// when calling convertResourceDataToHost()
-		hosts.WithStaticHostAddress(h.Attributes["address"].(string)),
-		hosts.WithScopeId(h.Scope.Id))
+	hrr, apiErr, err := hClient.Read(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error calling new host: %s", err.Error())
+		return diag.Errorf("error calling read host: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating host: %s", apiErr.Message)
+		return diag.Errorf("error reading host: %s", apiErr.Message)
+	}
+	if hrr == nil {
+		return diag.Errorf("host nil after read")
 	}
 
-	d.SetId(h.Id)
+	setFromHostResponseMap(d, hrr.GetResponseMap())
 
-	return convertHostToResourceData(h, d)
+	return nil
 }
 
-func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
+func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	hClient := hosts.NewClient(md.client)
 
-	h := convertResourceDataToHost(d)
-	usrs := hosts.NewClient(client)
+	opts := []hosts.Option{}
 
-	h, apiErr, err := usrs.Read(ctx, h.HostCatalogId, h.Id, hosts.WithScopeId(h.Scope.Id))
-	if err != nil {
-		return fmt.Errorf("error reading host: %s", err.Error())
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error reading host: %s", apiErr.Message)
-	}
-
-	return convertHostToResourceData(h, d)
-}
-
-func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	h := convertResourceDataToHost(d)
-	usrs := hosts.NewClient(client)
-
-	if d.HasChange(hostNameKey) {
-		h.Name = d.Get(hostNameKey).(string)
+	var name *string
+	if d.HasChange(NameKey) {
+		opts = append(opts, hosts.DefaultName())
+		nameVal, ok := d.GetOk(NameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, hosts.WithName(nameStr))
+		}
 	}
 
-	if d.HasChange(hostDescriptionKey) {
-		h.Description = d.Get(hostDescriptionKey).(string)
+	var desc *string
+	if d.HasChange(DescriptionKey) {
+		opts = append(opts, hosts.DefaultDescription())
+		descVal, ok := d.GetOk(DescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, hosts.WithDescription(descStr))
+		}
 	}
 
+	var address *string
 	if d.HasChange(hostAddressKey) {
-		h.Attributes["address"] = d.Get(hostAddressKey).(string)
+		switch d.Get(TypeKey).(string) {
+		case hostTypeStatic:
+			opts = append(opts, hosts.DefaultStaticHostAddress())
+			addrVal, ok := d.GetOk(hostAddressKey)
+			if ok {
+				addrStr := addrVal.(string)
+				address = &addrStr
+				opts = append(opts, hosts.WithStaticHostAddress(addrStr))
+			}
+		default:
+			return diag.Errorf("address cannot be used with this type of host")
+		}
 	}
 
-	h.Scope.Id = d.Get(hostScopeIDKey).(string)
-
-	h, apiErr, err := usrs.Update(
-		ctx,
-		h.HostCatalogId,
-		h.Id,
-		0,
-		hosts.WithStaticHostAddress(h.Attributes["address"].(string)),
-		hosts.WithAutomaticVersioning(),
-		hosts.WithName(h.Name),
-		hosts.WithDescription(h.Description),
-		hosts.WithScopeId(h.Scope.Id))
-	if err != nil {
-		return err
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error updating host: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
+	if len(opts) > 0 {
+		opts = append(opts, hosts.WithAutomaticVersioning(true))
+		_, apiErr, err := hClient.Update(
+			ctx,
+			d.Id(),
+			0,
+			opts...)
+		if err != nil {
+			return diag.Errorf("error calling update host: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating host: %s", apiErr.Message)
+		}
 	}
 
-	return convertHostToResourceData(h, d)
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
+	}
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
+	}
+	if d.HasChange(hostAddressKey) {
+		d.Set(hostAddressKey, *address)
+	}
+
+	return nil
 }
 
-func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	hClient := hosts.NewClient(md.client)
 
-	h := convertResourceDataToHost(d)
-	usrs := hosts.NewClient(client)
-
-	_, apiErr, err := usrs.Delete(ctx, h.HostCatalogId, h.Id, hosts.WithScopeId(h.Scope.Id))
+	_, apiErr, err := hClient.Delete(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting host: %s", err.Error())
+		return diag.Errorf("error calling delete host: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting host: %s", apiErr.Message)
+		return diag.Errorf("error deleting host: %s", apiErr.Message)
 	}
 
 	return nil

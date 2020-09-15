@@ -1,186 +1,172 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/users"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-)
-
-const (
-	userNameKey        = "name"
-	userDescriptionKey = "description"
-	userScopeIDKey     = "scope_id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		CreateContext: resourceUserCreate,
+		ReadContext:   resourceUserRead,
+		UpdateContext: resourceUserUpdate,
+		DeleteContext: resourceUserDelete,
 		Schema: map[string]*schema.Schema{
-			userNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			userDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			userScopeIDKey: {
+			ScopeIdKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Computed: true,
 			},
 		},
 	}
 }
 
-// convertUserToResourceData creates a ResourceData type from a User
-func convertUserToResourceData(u *users.User, d *schema.ResourceData) error {
-	if u.Name != "" {
-		if err := d.Set(userNameKey, u.Name); err != nil {
-			return err
-		}
+func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.SetId(raw["id"].(string))
+}
+
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
 	}
 
-	if u.Description != "" {
-		if err := d.Set(userDescriptionKey, u.Description); err != nil {
-			return err
-		}
+	opts := []users.Option{}
+
+	nameVal, ok := d.GetOk(NameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		opts = append(opts, users.WithName(nameStr))
 	}
 
-	if u.Scope.Id != "" {
-		if err := d.Set(userScopeIDKey, u.Scope.Id); err != nil {
-			return err
-		}
+	descVal, ok := d.GetOk(DescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		opts = append(opts, users.WithDescription(descStr))
 	}
 
-	d.SetId(u.Id)
+	usrs := users.NewClient(md.client)
+
+	ucr, apiErr, err := usrs.Create(
+		ctx,
+		scopeId,
+		opts...)
+	if err != nil {
+		return diag.Errorf("error calling create user: %v", err)
+	}
+	if apiErr != nil {
+		return diag.Errorf("error creating user: %s", apiErr.Message)
+	}
+	if ucr == nil {
+		return diag.Errorf("user nil after create")
+	}
+
+	setFromUserResponseMap(d, ucr.GetResponseMap())
 
 	return nil
 }
 
-// convertResourceDataToUser returns a localy built User using the values provided in the ResourceData.
-func convertResourceDataToUser(d *schema.ResourceData) *users.User {
-	u := &users.User{Scope: &scopes.ScopeInfo{}}
-
-	if descVal, ok := d.GetOk(userDescriptionKey); ok {
-		u.Description = descVal.(string)
-	}
-
-	if nameVal, ok := d.GetOk(userNameKey); ok {
-		u.Name = nameVal.(string)
-	}
-
-	if scopeIDVal, ok := d.GetOk(userScopeIDKey); ok {
-		u.Scope.Id = scopeIDVal.(string)
-	}
-
-	if d.Id() != "" {
-		u.Id = d.Id()
-	}
-
-	return u
-}
-
-func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	usrs := users.NewClient(md.client)
 
-	u := convertResourceDataToUser(d)
-	usrs := users.NewClient(client)
-
-	u, apiErr, err := usrs.Create(
-		ctx,
-		users.WithName(u.Name),
-		users.WithDescription(u.Description),
-		users.WithScopeId(u.Scope.Id))
+	urr, apiErr, err := usrs.Read(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error calling new user: %s", err.Error())
+		return diag.Errorf("error calling read user: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating user: %s", apiErr.Message)
+		return diag.Errorf("error reading user: %s", apiErr.Message)
+	}
+	if urr == nil {
+		return diag.Errorf("user nil after read")
 	}
 
-	d.SetId(u.Id)
+	setFromUserResponseMap(d, urr.GetResponseMap())
 
-	return convertUserToResourceData(u, d)
+	return nil
 }
 
-func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	usrs := users.NewClient(md.client)
 
-	u := convertResourceDataToUser(d)
-	usrs := users.NewClient(client)
+	opts := []users.Option{}
 
-	u, apiErr, err := usrs.Read(ctx, u.Id, users.WithScopeId(u.Scope.Id))
-	if err != nil {
-		return fmt.Errorf("error reading user: %s", err.Error())
+	var name *string
+	if d.HasChange(NameKey) {
+		opts = append(opts, users.DefaultName())
+		nameVal, ok := d.GetOk(NameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, users.WithName(nameStr))
+		}
 	}
-	if apiErr != nil {
-		return fmt.Errorf("error reading user: %s", apiErr.Message)
+
+	var desc *string
+	if d.HasChange(DescriptionKey) {
+		opts = append(opts, users.DefaultDescription())
+		descVal, ok := d.GetOk(DescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, users.WithDescription(descStr))
+		}
 	}
 
-	return convertUserToResourceData(u, d)
+	if len(opts) > 0 {
+		opts = append(opts, users.WithAutomaticVersioning(true))
+		_, apiErr, err := usrs.Update(
+			ctx,
+			d.Id(),
+			0,
+			opts...)
+		if err != nil {
+			return diag.Errorf("error calling update user: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating user: %s", apiErr.Message)
+		}
+	}
+
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
+	}
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
+	}
+
+	return nil
 }
 
-func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	usrs := users.NewClient(md.client)
 
-	u := convertResourceDataToUser(d)
-	usrs := users.NewClient(client)
-
-	if d.HasChange(userNameKey) {
-		u.Name = d.Get(userNameKey).(string)
-	}
-
-	if d.HasChange(userDescriptionKey) {
-		u.Description = d.Get(userDescriptionKey).(string)
-	}
-
-	u.Scope.Id = d.Get(userScopeIDKey).(string)
-
-	u, apiErr, err := usrs.Update(
-		ctx,
-		u.Id,
-		0,
-		users.WithAutomaticVersioning(),
-		users.WithName(u.Name),
-		users.WithDescription(u.Description),
-		users.WithScopeId(u.Scope.Id))
+	_, apiErr, err := usrs.Delete(ctx, d.Id())
 	if err != nil {
-		return err
+		return diag.Errorf("error calling delete user: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error updating user: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
-	}
-
-	return convertUserToResourceData(u, d)
-}
-
-func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	u := convertResourceDataToUser(d)
-	usrs := users.NewClient(client)
-
-	_, apiErr, err := usrs.Delete(ctx, u.Id, users.WithScopeId(u.Scope.Id))
-	if err != nil {
-		return fmt.Errorf("error deleting user: %s", err.Error())
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error deleting user: %s", apiErr.Message)
+		return diag.Errorf("error deleting user: %s", apiErr.Message)
 	}
 
 	return nil

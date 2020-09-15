@@ -1,51 +1,51 @@
 package provider
 
 import (
-	"fmt"
+	"context"
+	"encoding/json"
 
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/targets"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
-	targetNameKey        = "name"
-	targetDescriptionKey = "description"
-	targetScopeIDKey     = "scope_id"
-	targetHostSetIDsKey  = "host_set_ids"
-	targetProtoKey       = "proto"
+	targetHostSetIdsKey  = "host_set_ids"
 	targetDefaultPortKey = "default_port"
 
-	targetProtoTCP = "tcp"
+	targetTypeTcp = "tcp"
 )
 
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTargetCreate,
-		Read:   resourceTargetRead,
-		Update: resourceTargetUpdate,
-		Delete: resourceTargetDelete,
+		CreateContext: resourceTargetCreate,
+		ReadContext:   resourceTargetRead,
+		UpdateContext: resourceTargetUpdate,
+		DeleteContext: resourceTargetDelete,
 		Schema: map[string]*schema.Schema{
-			targetNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			targetDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			targetProtoKey: {
+			TypeKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
-			targetScopeIDKey: {
+			ScopeIdKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Computed: true,
 			},
-			targetHostSetIDsKey: {
+			targetDefaultPortKey: {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			targetHostSetIdsKey: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -54,200 +54,237 @@ func resourceTarget() *schema.Resource {
 	}
 }
 
-// convertTargetToResourceData creates a ResourceData type from a Group
-func convertTargetToResourceData(t *targets.Target, d *schema.ResourceData) error {
-	if t.Name != "" {
-		if err := d.Set(targetNameKey, t.Name); err != nil {
-			return err
+func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(TypeKey, raw["type"])
+	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
+	defPort := raw["default_port"].(json.Number)
+	defPortInt, _ := defPort.Int64()
+	d.Set(targetDefaultPortKey, int(defPortInt))
+	d.SetId(raw["id"].(string))
+}
+
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
+	}
+
+	var typeStr string
+	if typeVal, ok := d.GetOk(TypeKey); ok {
+		typeStr = typeVal.(string)
+	} else {
+		return diag.Errorf("no type provided")
+	}
+	switch typeStr {
+	case targetTypeTcp:
+	default:
+		return diag.Errorf("invalid type provided")
+	}
+
+	opts := []targets.Option{}
+
+	nameVal, ok := d.GetOk(NameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		opts = append(opts, targets.WithName(nameStr))
+	}
+
+	descVal, ok := d.GetOk(DescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		opts = append(opts, targets.WithDescription(descStr))
+	}
+
+	var defaultPort *int
+	defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
+	if ok {
+		defaultPortInt := defaultPortVal.(int)
+		if defaultPortInt < 0 {
+			return diag.Errorf(`"default_port" cannot be less than zero`)
+		}
+		defaultPort = &defaultPortInt
+		opts = append(opts, targets.WithDefaultPort(uint32(*defaultPort)))
+	}
+
+	var hostSetIds []string
+	if hostSetIdsVal, ok := d.GetOk(targetHostSetIdsKey); ok {
+		list := hostSetIdsVal.(*schema.Set).List()
+		hostSetIds = make([]string, 0, len(list))
+		for _, i := range list {
+			hostSetIds = append(hostSetIds, i.(string))
 		}
 	}
 
-	if t.Description != "" {
-		if err := d.Set(targetDescriptionKey, t.Description); err != nil {
-			return err
+	tc := targets.NewClient(md.client)
+
+	tcr, apiErr, err := tc.Create(
+		ctx,
+		typeStr,
+		scopeId,
+		opts...)
+	if err != nil {
+		return diag.Errorf("error calling create target: %v", err)
+	}
+	if apiErr != nil {
+		return diag.Errorf("error creating target: %s", apiErr.Message)
+	}
+	if tcr == nil {
+		return diag.Errorf("target nil after create")
+	}
+	raw := tcr.GetResponseMap()
+
+	if hostSetIds != nil {
+		tur, apiErr, err := tc.SetHostSets(
+			ctx,
+			tcr.Item.Id,
+			tcr.Item.Version,
+			hostSetIds)
+		if apiErr != nil {
+			return diag.Errorf("error setting host sets on target: %s", apiErr.Message)
 		}
+		if err != nil {
+			return diag.Errorf("error setting host sets on target: %v", err)
+		}
+		raw = tur.GetResponseMap()
 	}
 
-	if t.Scope != nil && t.Scope.Id != "" {
-		if err := d.Set(targetScopeIDKey, t.Scope.Id); err != nil {
-			return err
-		}
-	}
-
-	if t.HostSetIds != nil {
-		if err := d.Set(targetHostSetIDsKey, t.HostSetIds); err != nil {
-			return err
-		}
-	}
-
-	d.SetId(t.Id)
+	setFromTargetResponseMap(d, raw)
 
 	return nil
 }
 
-// convertResourceDataToTarget returns a localy built Group using the values provided in the ResourceData.
-func convertResourceDataToTarget(d *schema.ResourceData, meta *metaData) (*targets.Target, string) {
-	t := &targets.Target{Scope: &scopes.ScopeInfo{}}
-	proto := targetProtoTCP
-
-	if descVal, ok := d.GetOk(targetDescriptionKey); ok {
-		t.Description = descVal.(string)
-	}
-
-	if nameVal, ok := d.GetOk(targetNameKey); ok {
-		t.Name = nameVal.(string)
-	}
-
-	if scopeIDVal, ok := d.GetOk(targetScopeIDKey); ok {
-		t.Scope.Id = scopeIDVal.(string)
-	}
-
-	if protoVal, ok := d.GetOk(targetProtoKey); ok {
-		proto = protoVal.(string)
-	}
-
-	if val, ok := d.GetOk(targetHostSetIDsKey); ok {
-		hostSetIds := val.(*schema.Set).List()
-		for _, i := range hostSetIds {
-			t.HostSetIds = append(t.HostSetIds, i.(string))
-		}
-	}
-
-	if d.Id() != "" {
-		t.Id = d.Id()
-	}
-
-	return t, proto
-}
-
-func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	tc := targets.NewClient(md.client)
 
-	t, proto := convertResourceDataToTarget(d, md)
-	tgts := targets.NewClient(client)
-
-	hostSetIDs := t.HostSetIds
-
-	t, apiErr, err := tgts.Create(
-		ctx,
-		proto,
-		t.Scope.Id,
-		targets.WithName(t.Name),
-		targets.WithDescription(t.Description))
+	trr, apiErr, err := tc.Read(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error creating target: %s", err.Error())
+		return diag.Errorf("error calling read target: %v", err)
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error creating target: %s", apiErr.Message)
+		return diag.Errorf("error reading target: %s", apiErr.Message)
+	}
+	if trr == nil {
+		return diag.Errorf("target nil after read")
 	}
 
-	if len(hostSetIDs) > 0 {
-		t, apiErr, err = tgts.SetHostSets(
-			ctx,
-			t.Id,
-			t.Version,
-			hostSetIDs,
-			targets.WithScopeId(t.Scope.Id))
-		if apiErr != nil {
-			return fmt.Errorf("error setting host sets on target: %s\n", apiErr.Message)
+	setFromTargetResponseMap(d, trr.GetResponseMap())
+
+	return nil
+}
+
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+	tc := targets.NewClient(md.client)
+
+	opts := []targets.Option{}
+
+	var name *string
+	if d.HasChange(NameKey) {
+		opts = append(opts, targets.DefaultName())
+		nameVal, ok := d.GetOk(NameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, targets.WithName(nameStr))
 		}
+	}
+
+	var desc *string
+	if d.HasChange(DescriptionKey) {
+		opts = append(opts, targets.DefaultDescription())
+		descVal, ok := d.GetOk(DescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, targets.WithDescription(descStr))
+		}
+	}
+
+	var defaultPort *int
+	if d.HasChange(targetDefaultPortKey) {
+		opts = append(opts, targets.DefaultDefaultPort())
+		defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
+		if ok {
+			defaultPortInt := defaultPortVal.(int)
+			if defaultPortInt < 0 {
+				return diag.Errorf(`"default_port" cannot be less than zero`)
+			}
+			defaultPort = &defaultPortInt
+			opts = append(opts, targets.WithDefaultPort(uint32(defaultPortInt)))
+		}
+	}
+
+	if len(opts) > 0 {
+		opts = append(opts, targets.WithAutomaticVersioning(true))
+		_, apiErr, err := tc.Update(
+			ctx,
+			d.Id(),
+			0,
+			opts...)
 		if err != nil {
-			return fmt.Errorf("error setting host sets on target: %s\n", err)
+			return diag.Errorf("error calling update target: %v", err)
+		}
+		if apiErr != nil {
+			return diag.Errorf("error updating target: %s", apiErr.Message)
 		}
 	}
 
-	return convertTargetToResourceData(t, d)
-}
-
-func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	t, _ := convertResourceDataToTarget(d, md)
-	tgts := targets.NewClient(client)
-
-	t, apiErr, err := tgts.Read(ctx, t.Id, targets.WithScopeId(t.Scope.Id))
-	if err != nil {
-		return fmt.Errorf("error reading target: %s", err.Error())
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
 	}
-	if apiErr != nil {
-		return fmt.Errorf("error reading target: %s", apiErr.Message)
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
+	}
+	if d.HasChange(targetDefaultPortKey) {
+		d.Set(targetDefaultPortKey, defaultPort)
 	}
 
-	return convertTargetToResourceData(t, d)
-}
-
-func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	t, _ := convertResourceDataToTarget(d, md)
-	tgts := targets.NewClient(client)
-
-	if d.HasChange(targetNameKey) {
-		t.Name = d.Get(targetNameKey).(string)
-	}
-
-	if d.HasChange(targetDescriptionKey) {
-		t.Description = d.Get(targetDescriptionKey).(string)
-	}
-
-	t.Scope.Id = d.Get(targetScopeIDKey).(string)
-
-	t, apiErr, err := tgts.Update(
-		ctx,
-		t.Id,
-		0,
-		targets.WithScopeId(t.Scope.Id),
-		targets.WithAutomaticVersioning(),
-		targets.WithName(t.Name),
-		targets.WithDescription(t.Description))
-	if err != nil {
-		return err
-	}
-	if apiErr != nil {
-		return fmt.Errorf("%+v\n", apiErr.Message)
-	}
-
-	if d.HasChange(targetHostSetIDsKey) {
-		hostSetIds := []string{}
-		hostSets := d.Get(targetHostSetIDsKey).(*schema.Set).List()
-		for _, hostSet := range hostSets {
-			hostSetIds = append(hostSetIds, hostSet.(string))
+	// The above call may not actually happen, so we use d.Id() and automatic
+	// versioning here
+	if d.HasChange(targetHostSetIdsKey) {
+		var hostSetIds []string
+		if hostSetIdsVal, ok := d.GetOk(targetHostSetIdsKey); ok {
+			hostSets := hostSetIdsVal.(*schema.Set).List()
+			for _, hostSet := range hostSets {
+				hostSetIds = append(hostSetIds, hostSet.(string))
+			}
 		}
-
-		t, apiErr, err = tgts.SetHostSets(
+		_, apiErr, err := tc.SetHostSets(
 			ctx,
-			t.Id,
-			t.Version,
+			d.Id(),
+			0,
 			hostSetIds,
-			targets.WithScopeId(t.Scope.Id))
-		if apiErr != nil || err != nil {
-			return fmt.Errorf("error updating hostSets on target:\n  API Err: %+v\n  Err: %+v\n", *apiErr, err)
+			targets.WithAutomaticVersioning(true))
+		if err != nil {
+			return diag.Errorf("error updating host sets in target: %v", err)
 		}
+		if apiErr != nil {
+			return diag.Errorf("error updating host sets in target: %s", apiErr.Message)
+		}
+		d.Set(targetHostSetIdsKey, hostSetIds)
 	}
 
-	return convertTargetToResourceData(t, d)
+	return nil
 }
 
-func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	tc := targets.NewClient(md.client)
 
-	t, _ := convertResourceDataToTarget(d, md)
-	tgts := targets.NewClient(client)
-
-	_, apiErr, err := tgts.Delete(ctx, t.Id, targets.WithScopeId(t.Scope.Id))
+	_, apiErr, err := tc.Delete(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting target: %s", err.Error())
+		return diag.Errorf("error calling delete target: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting target: %s", apiErr.Message)
+		return diag.Errorf("error deleting target: %s", apiErr.Message)
 	}
 
 	return nil

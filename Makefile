@@ -9,7 +9,6 @@ testacc-ci: install-go
 	git config --global --add url."git@github.com:".insteadOf "https://github.com/"
 	TF_ACC=1 ~/.go/bin/go test ./... -v $(TESTARGS) -timeout 120m
 
-
 install-go:
 	./ci/goinstall.sh
 	

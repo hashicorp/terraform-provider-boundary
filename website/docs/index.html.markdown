@@ -16,11 +16,10 @@ Do not keep your authentication password in HCL for production environments, use
 
 ```hcl
 provider "boundary" {
-  base_url             = "http://127.0.0.1:9200"
-  default_scope        = "global"
-  auth_method_id       = "paum_1234567890"      # changeme
-  auth_method_username = "myuser"               # changeme
-  auth_method_password = "$uper$ecure9ass^^ord" # changeme
+  addr                          = "http://127.0.0.1:9200"
+  auth_method_id                = "ampw_1234567890"      # changeme
+  password_auth_method_username = "myuser"               # changeme
+  password_auth_method_password = "$uper$ecure9ass^^ord" # changeme
 }
 ```
 
@@ -28,13 +27,11 @@ provider "boundary" {
 
 ```hcl
 provider "boundary" {
-  base_url             = "http://127.0.0.1:9200"
-  default_scope        = "global"
-  auth_method_id       = "paum_1234567890"      # changeme
-  auth_method_username = "myuser"               # changeme
-  auth_method_password = "$uper$ecure9ass^^ord" # changeme
+  addr                          = "http://127.0.0.1:9200"
+  auth_method_id                = "ampw_1234567890"      # changeme
+  password_auth_method_username = "myuser"               # changeme
+  password_auth_method_password = "$uper$ecure9ass^^ord" # changeme
 }
-
 
 variable "backend_team" {
   type    = set(string)

@@ -1,40 +1,43 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/hashicorp/boundary/api/hostsets"
-	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
-	hostsetNameKey        = "name"
-	hostsetDescriptionKey = "description"
-	hostsetCatalogIDKey   = "host_catalog_id"
-	hostsetHostIDsKey     = "host_ids"
+	hostsetHostIdsKey = "host_ids"
+	hostsetTypeStatic = "static"
 )
 
 func resourceHostset() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostsetCreate,
-		Read:   resourceHostsetRead,
-		Update: resourceHostsetUpdate,
-		Delete: resourceHostsetDelete,
+		CreateContext: resourceHostsetCreate,
+		ReadContext:   resourceHostsetRead,
+		UpdateContext: resourceHostsetUpdate,
+		DeleteContext: resourceHostsetDelete,
 		Schema: map[string]*schema.Schema{
-			hostsetNameKey: {
+			NameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			hostsetDescriptionKey: {
+			DescriptionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			hostsetCatalogIDKey: {
+			TypeKey: {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
+				ForceNew: true,
 			},
-			hostsetHostIDsKey: {
+			HostCatalogIdKey: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			hostsetHostIdsKey: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -43,207 +46,210 @@ func resourceHostset() *schema.Resource {
 	}
 }
 
-// convertHostsetToResourceData creates a ResourceData type from a Host
-func convertHostsetToResourceData(h *hostsets.HostSet, d *schema.ResourceData) error {
-	if h.Name != "" {
-		if err := d.Set(hostsetNameKey, h.Name); err != nil {
-			return err
+func setFromHostSetResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
+	d.Set(TypeKey, raw["type"])
+	d.Set(hostsetHostIdsKey, raw["host_ids"])
+	d.SetId(raw["id"].(string))
+}
+
+func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+
+	var hostsetHostCatalogId string
+	if hostsetHostCatalogIdVal, ok := d.GetOk(HostCatalogIdKey); ok {
+		hostsetHostCatalogId = hostsetHostCatalogIdVal.(string)
+	} else {
+		return diag.Errorf("no host catalog ID provided")
+	}
+
+	var hostIds []string
+	if hostIdsVal, ok := d.GetOk(hostsetHostIdsKey); ok {
+		list := hostIdsVal.(*schema.Set).List()
+		hostIds = make([]string, 0, len(list))
+		for _, i := range list {
+			hostIds = append(hostIds, i.(string))
 		}
 	}
 
-	if h.Description != "" {
-		if err := d.Set(hostsetDescriptionKey, h.Description); err != nil {
-			return err
-		}
+	opts := []hostsets.Option{}
+
+	var typeStr string
+	if typeVal, ok := d.GetOk(TypeKey); ok {
+		typeStr = typeVal.(string)
+	} else {
+		return diag.Errorf("no type provided")
+	}
+	switch typeStr {
+	// NOTE: When other types are added, ensure they don't accept hostSetIds if
+	// it's not allowed
+	case hostsetTypeStatic:
+	default:
+		return diag.Errorf("invalid type provided")
 	}
 
-	if h.HostCatalogId != "" {
-		if err := d.Set(hostsetCatalogIDKey, h.HostCatalogId); err != nil {
-			return err
-		}
+	nameVal, ok := d.GetOk(NameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		opts = append(opts, hostsets.WithName(nameStr))
 	}
 
-	if h.HostIds != nil {
-		if err := d.Set(hostsetHostIDsKey, h.HostIds); err != nil {
-			return err
-		}
+	descVal, ok := d.GetOk(DescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		opts = append(opts, hostsets.WithDescription(descStr))
 	}
 
-	d.SetId(h.Id)
+	hsClient := hostsets.NewClient(md.client)
+
+	hscr, apiErr, err := hsClient.Create(
+		ctx,
+		hostsetHostCatalogId,
+		opts...)
+	if err != nil {
+		return diag.Errorf("error calling create host set: %v", err)
+	}
+	if apiErr != nil {
+		return diag.Errorf("error creating host set: %s", apiErr.Message)
+	}
+	if hscr == nil {
+		return diag.Errorf("nil host set after create")
+	}
+	raw := hscr.GetResponseMap()
+
+	if hostIds != nil {
+		hsshr, apiErr, err := hsClient.SetHosts(
+			ctx,
+			hscr.Item.Id,
+			hscr.Item.Version,
+			hostIds)
+		if apiErr != nil {
+			return diag.Errorf("error setting hosts on host set: %s", apiErr.Message)
+		}
+		if err != nil {
+			return diag.Errorf("error setting hosts on host set: %v", err)
+		}
+		if hsshr == nil {
+			return diag.Errorf("nil host set after setting hosts")
+		}
+		raw = hsshr.GetResponseMap()
+	}
+
+	setFromHostSetResponseMap(d, raw)
 
 	return nil
 }
 
-// convertResourceDataToHostset returns a localy built Host using the values provided in the ResourceData.
-func convertResourceDataToHostset(d *schema.ResourceData) *hostsets.HostSet {
-	// if you're manually defining the hostset in TF, it's always going
-	// to be of type "static"
-	h := &hostsets.HostSet{
-		Scope:      &scopes.ScopeInfo{},
-		HostIds:    []string{},
-		Attributes: map[string]interface{}{},
+func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+	hsClient := hostsets.NewClient(md.client)
+
+	hsrr, apiErr, err := hsClient.Read(ctx, d.Id())
+	if err != nil {
+		return diag.Errorf("error calling read host set: %v", err)
+	}
+	if apiErr != nil {
+		return diag.Errorf("error reading host set: %s", apiErr.Message)
+	}
+	if hsrr == nil {
+		return diag.Errorf("host set nil after read")
 	}
 
-	if descVal, ok := d.GetOk(hostsetDescriptionKey); ok {
-		h.Description = descVal.(string)
-	}
+	setFromHostSetResponseMap(d, hsrr.GetResponseMap())
 
-	if nameVal, ok := d.GetOk(hostsetNameKey); ok {
-		h.Name = nameVal.(string)
-	}
+	return nil
+}
 
-	if hostsetCatalogVal, ok := d.GetOk(hostCatalogIDKey); ok {
-		h.HostCatalogId = hostsetCatalogVal.(string)
-	}
+func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+	hsClient := hostsets.NewClient(md.client)
 
-	if val, ok := d.GetOk(hostsetHostIDsKey); ok {
-		hostIds := val.(*schema.Set).List()
-		for _, i := range hostIds {
-			h.HostIds = append(h.HostIds, i.(string))
+	opts := []hostsets.Option{}
+
+	var name *string
+	if d.HasChange(NameKey) {
+		opts = append(opts, hostsets.DefaultName())
+		nameVal, ok := d.GetOk(NameKey)
+		if ok {
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, hostsets.WithName(nameStr))
 		}
 	}
 
-	if d.Id() != "" {
-		h.Id = d.Id()
+	var desc *string
+	if d.HasChange(DescriptionKey) {
+		opts = append(opts, hostsets.DefaultDescription())
+		descVal, ok := d.GetOk(DescriptionKey)
+		if ok {
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, hostsets.WithDescription(descStr))
+		}
 	}
 
-	return h
-}
-
-func resourceHostsetCreate(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	h := convertResourceDataToHostset(d)
-	hst := hostsets.NewClient(client)
-
-	hostIDs := h.HostIds
-
-	h, apiErr, err := hst.Create2(
-		ctx,
-		h.HostCatalogId,
-		hostsets.WithName(h.Name),
-		hostsets.WithDescription(h.Description))
-	if err != nil {
-		return fmt.Errorf("error calling new hostset: %s", err.Error())
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error creating hostset: %s", apiErr.Message)
-	}
-
-	d.SetId(h.Id)
-
-	if len(hostIDs) != 0 {
-		h, apiErr, err = hst.SetHosts2(
+	if len(opts) > 0 {
+		opts = append(opts, hostsets.WithAutomaticVersioning(true))
+		_, apiErr, err := hsClient.Update(
 			ctx,
-			h.Id,
+			d.Id(),
 			0,
-			hostIDs,
-			hostsets.WithAutomaticVersioning(),
-			hostsets.WithName(h.Name),
-			hostsets.WithDescription(h.Description))
+			opts...)
 		if err != nil {
-			return fmt.Errorf("error setting hosts on hostset: %s", err.Error())
+			return diag.Errorf("error calling update host set: %v", err)
 		}
 		if apiErr != nil {
-			return fmt.Errorf("error setting hosts on hostset: %s", apiErr.Message)
+			return diag.Errorf("error updating host set: %s", apiErr.Message)
 		}
 	}
 
-	return convertHostsetToResourceData(h, d)
-}
-
-func resourceHostsetRead(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	h := convertResourceDataToHostset(d)
-	hst := hostsets.NewClient(client)
-
-	h, apiErr, err := hst.Read2(ctx, h.Id)
-	if err != nil {
-		return fmt.Errorf("error reading hostset: %s", err.Error())
+	if d.HasChange(NameKey) {
+		d.Set(NameKey, name)
 	}
-	if apiErr != nil {
-		return fmt.Errorf("error reading hostset: %s", apiErr.Message)
+	if d.HasChange(DescriptionKey) {
+		d.Set(DescriptionKey, desc)
 	}
 
-	return convertHostsetToResourceData(h, d)
-}
-
-func resourceHostsetUpdate(d *schema.ResourceData, meta interface{}) error {
-	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
-
-	h := convertResourceDataToHostset(d)
-	hst := hostsets.NewClient(client)
-
-	if d.HasChange(hostsetNameKey) {
-		h.Name = d.Get(hostsetNameKey).(string)
-	}
-
-	if d.HasChange(hostsetDescriptionKey) {
-		h.Description = d.Get(hostsetDescriptionKey).(string)
-	}
-
-	if d.HasChange(hostsetHostIDsKey) {
-		hostIDs := []string{}
-		hosts := d.Get(hostsetHostIDsKey).(*schema.Set).List()
-
-		for _, host := range hosts {
-			hostIDs = append(hostIDs, host.(string))
+	// The above call may not actually happen, so we use d.Id() and automatic
+	// versioning here
+	if d.HasChange(hostsetHostIdsKey) {
+		var hostIds []string
+		if hostIdsVal, ok := d.GetOk(hostsetHostIdsKey); ok {
+			hosts := hostIdsVal.(*schema.Set).List()
+			for _, host := range hosts {
+				hostIds = append(hostIds, host.(string))
+			}
 		}
-
-		_, apiErr, err := hst.SetHosts2(
+		_, apiErr, err := hsClient.SetHosts(
 			ctx,
-			h.Id,
+			d.Id(),
 			0,
-			hostIDs,
-			hostsets.WithAutomaticVersioning(),
-			hostsets.WithName(h.Name),
-			hostsets.WithDescription(h.Description))
+			hostIds,
+			hostsets.WithAutomaticVersioning(true))
 		if err != nil {
-			return fmt.Errorf("error setting hosts on hostset: %s", err.Error())
+			return diag.Errorf("error updating hosts in host set: %v", err)
 		}
 		if apiErr != nil {
-			return fmt.Errorf("error setting hosts on hostset: %s", apiErr.Message)
+			return diag.Errorf("error updating hosts in host set: %s", apiErr.Message)
 		}
+		d.Set(hostsetHostIdsKey, hostIds)
 	}
 
-	h, apiErr, err := hst.Update2(
-		ctx,
-		h.Id,
-		0,
-		hostsets.WithAutomaticVersioning(),
-		hostsets.WithName(h.Name),
-		hostsets.WithDescription(h.Description))
-	if err != nil {
-		return err
-	}
-	if apiErr != nil {
-		return fmt.Errorf("error updating hostset: %s\n   Invalid request fields: %v\n", apiErr.Message, apiErr.Details.RequestFields)
-	}
-
-	return convertHostsetToResourceData(h, d)
+	return nil
 }
 
-func resourceHostsetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostsetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	client := md.client
-	ctx := md.ctx
+	hsClient := hostsets.NewClient(md.client)
 
-	h := convertResourceDataToHostset(d)
-	hst := hostsets.NewClient(client)
-
-	_, apiErr, err := hst.Delete2(ctx, h.Id)
+	_, apiErr, err := hsClient.Delete(ctx, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting hostset: %s", err.Error())
+		return diag.Errorf("error calling delete host set: %s", err.Error())
 	}
 	if apiErr != nil {
-		return fmt.Errorf("error deleting hostset: %s", apiErr.Message)
+		return diag.Errorf("error deleting host set: %s", apiErr.Message)
 	}
 
 	return nil

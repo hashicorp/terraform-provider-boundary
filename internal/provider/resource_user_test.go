@@ -1,42 +1,46 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/boundary/testing/controller"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
-	fooUserDescription       = "bar"
-	fooUserDescriptionUpdate = "foo bar"
-	fooUserDescriptionUnset  = ""
+	fooDescription       = "bar"
+	fooDescriptionUpdate = "foo bar"
+	fooDescriptionUnset  = ""
 )
 
 var (
 	orgUser = fmt.Sprintf(`
-resource "boundary_user" "foo" {
-  name        = "test"
+resource "boundary_user" "org1" {
+	name        = "test"
 	description = "%s"
-  scope_id    = boundary_organization.foo.id
-}`, fooUserDescription)
+	scope_id    = boundary_scope.org1.id
+}`, fooDescription)
 
 	orgUserUpdate = fmt.Sprintf(`
-resource "boundary_user" "foo" {
-  name        = "test"
+resource "boundary_user" "org1" {
+	name        = "test"
 	description = "%s"
-  scope_id    = boundary_organization.foo.id
-}`, fooUserDescriptionUpdate)
+	scope_id    = boundary_scope.org1.id
+}`, fooDescriptionUpdate)
 )
+
+// NOTE: this test also tests out the direct token auth mechanism.
 
 func TestAccUser(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
+	token := tc.Token().Token
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testProviders,
@@ -44,20 +48,20 @@ func TestAccUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, orgUser),
+				Config: testConfigWithToken(url, token, fooOrg, orgUser),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("boundary_user.foo"),
-					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescription),
-					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
+					testAccCheckUserResourceExists("boundary_user.org1"),
+					resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescription),
+					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
 			{
 				// test update description
-				Config: testConfig(url, fooOrg, orgUserUpdate),
+				Config: testConfigWithToken(url, token, fooOrg, orgUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserResourceExists("boundary_user.foo"),
-					resource.TestCheckResourceAttr("boundary_user.foo", userDescriptionKey, fooUserDescriptionUpdate),
-					resource.TestCheckResourceAttr("boundary_user.foo", userNameKey, "test"),
+					testAccCheckUserResourceExists("boundary_user.org1"),
+					resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
 		},
@@ -77,16 +81,14 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 		}
 
 		md := testProvider.Meta().(*metaData)
-		projID, ok := rs.Primary.Attributes["scope_id"]
-		if !ok {
-			return fmt.Errorf("scope_id is not set")
-		}
-		projClient := md.client.Clone()
-		projClient.SetScopeId(projID)
-		usrs := users.NewClient(projClient)
+		usrs := users.NewClient(md.client)
 
-		if _, _, err := usrs.Read(md.ctx, id); err != nil {
+		_, apiErr, err := usrs.Read(context.Background(), id)
+		if err != nil {
 			return fmt.Errorf("Got an error when reading user %q: %v", id, err)
+		}
+		if apiErr != nil {
+			return fmt.Errorf("Got an api error when reading user %q: %v", id, apiErr.Message)
 		}
 
 		return nil
@@ -105,17 +107,14 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			case "boundary_user":
 
 				id := rs.Primary.ID
-				projID, ok := rs.Primary.Attributes["scope_id"]
-				if !ok {
-					return fmt.Errorf("scope_id is not set")
-				}
-				projClient := md.client.Clone()
-				projClient.SetScopeId(projID)
-				usrs := users.NewClient(projClient)
+				usrs := users.NewClient(md.client)
 
-				_, apiErr, _ := usrs.Read(md.ctx, id)
-				if apiErr == nil || apiErr.Status != http.StatusNotFound && apiErr.Status != http.StatusForbidden {
-					return fmt.Errorf("Didn't get a 404 or 403 when reading destroyed user %q: %v", id, apiErr)
+				_, apiErr, err := usrs.Read(context.Background(), id)
+				if err != nil {
+					return fmt.Errorf("Error when reading destroyed user %q: %v", id, err)
+				}
+				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, apiErr)
 				}
 
 			default:
