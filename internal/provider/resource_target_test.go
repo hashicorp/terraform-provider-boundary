@@ -59,6 +59,7 @@ resource "boundary_target" "foo" {
 	host_set_ids = [
 		boundary_host_set.foo.id
 	]
+	default_port = 22
 }`, fooTargetDescription)
 
 	fooTargetUpdate = fmt.Sprintf(`
@@ -70,6 +71,7 @@ resource "boundary_target" "foo" {
 	host_set_ids = [
 		boundary_host_set.foo.id
 	]
+	default_port = 80
 }`, fooTargetDescriptionUpdate)
 )
 
@@ -90,6 +92,7 @@ func TestAccTarget(t *testing.T) {
 					testAccCheckTargetResourceExists("boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
 				),
 			},
 			{
@@ -98,6 +101,7 @@ func TestAccTarget(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists("boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
 				),
 			},
 		},
