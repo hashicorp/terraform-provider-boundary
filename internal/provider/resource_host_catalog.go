@@ -39,7 +39,14 @@ func resourceHostCatalog() *schema.Resource {
 			},
 		},
 	}
+}
 
+func setFromHostCatalogResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(TypeKey, raw["type"])
+	d.SetId(raw["id"].(string))
 }
 
 func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -66,19 +73,15 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	opts := []hostcatalogs.Option{}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, hostcatalogs.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, hostcatalogs.WithDescription(descStr))
 	}
 
@@ -95,12 +98,11 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 	if apiErr != nil {
 		return diag.Errorf("error creating host catalog: %s", apiErr.Message)
 	}
+	if hccr == nil {
+		return diag.Errorf("nil host catalog after create")
+	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(TypeKey, hccr.Item.Type)
-	d.Set(ScopeIdKey, scopeId)
-	d.SetId(hccr.Item.Id)
+	setFromHostCatalogResponseMap(d, hccr.GetResponseMap())
 
 	return nil
 }
@@ -109,31 +111,18 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
-	hc, apiErr, err := hcClient.Read(ctx, d.Id())
+	hcrr, apiErr, err := hcClient.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read host catalog: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading host catalog: %s", apiErr.Message)
 	}
-	if hc == nil {
+	if hcrr == nil {
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	raw := hc.GetResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
+	setFromHostCatalogResponseMap(d, hcrr.GetResponseMap())
 
 	return nil
 }

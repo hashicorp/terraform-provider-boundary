@@ -46,6 +46,15 @@ func resourceHostset() *schema.Resource {
 	}
 }
 
+func setFromHostSetResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
+	d.Set(TypeKey, raw["type"])
+	d.Set(hostsetHostIdsKey, raw["host_ids"])
+	d.SetId(raw["id"].(string))
+}
+
 func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -81,19 +90,15 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("invalid type provided")
 	}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, hostsets.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, hostsets.WithDescription(descStr))
 	}
 
@@ -109,9 +114,13 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if apiErr != nil {
 		return diag.Errorf("error creating host set: %s", apiErr.Message)
 	}
+	if hscr == nil {
+		return diag.Errorf("nil host set after create")
+	}
+	raw := hscr.GetResponseMap()
 
 	if hostIds != nil {
-		_, apiErr, err = hsClient.SetHosts(
+		hsshr, apiErr, err := hsClient.SetHosts(
 			ctx,
 			hscr.Item.Id,
 			hscr.Item.Version,
@@ -122,15 +131,13 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("error setting hosts on host set: %v", err)
 		}
-
-		d.Set(hostsetHostIdsKey, hostIds)
+		if hsshr == nil {
+			return diag.Errorf("nil host set after setting hosts")
+		}
+		raw = hsshr.GetResponseMap()
 	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(TypeKey, hscr.Item.Type)
-	d.Set(HostCatalogIdKey, hostsetHostCatalogId)
-	d.SetId(hscr.Item.Id)
+	setFromHostSetResponseMap(d, raw)
 
 	return nil
 }
@@ -139,32 +146,18 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	md := meta.(*metaData)
 	hsClient := hostsets.NewClient(md.client)
 
-	hs, apiErr, err := hsClient.Read(ctx, d.Id())
+	hsrr, apiErr, err := hsClient.Read(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling read host set: %v", err)
 	}
 	if apiErr != nil {
 		return diag.Errorf("error reading host set: %s", apiErr.Message)
 	}
-	if hs == nil {
+	if hsrr == nil {
 		return diag.Errorf("host set nil after read")
 	}
 
-	raw := hs.GetResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
-	d.Set(TypeKey, raw["type"])
-	d.Set(hostsetHostIdsKey, raw["host_ids"])
+	setFromHostSetResponseMap(d, hsrr.GetResponseMap())
 
 	return nil
 }

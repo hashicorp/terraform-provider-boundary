@@ -135,7 +135,6 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if tcr == nil {
 		return diag.Errorf("target nil after create")
 	}
-
 	raw := tcr.GetResponseMap()
 
 	if hostSetIds != nil {
@@ -150,7 +149,6 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return diag.Errorf("error setting host sets on target: %v", err)
 		}
-		d.Set(targetHostSetIdsKey, hostSetIds)
 		raw = tur.GetResponseMap()
 	}
 

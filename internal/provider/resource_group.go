@@ -41,6 +41,14 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
+func setFromGroupResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(groupMemberIdsKey, raw["member_ids"])
+	d.SetId(raw["id"].(string))
+}
+
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
@@ -53,19 +61,15 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	opts := []groups.Option{}
 
-	var name *string
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
-		name = &nameStr
 		opts = append(opts, groups.WithName(nameStr))
 	}
 
-	var desc *string
 	descVal, ok := d.GetOk(DescriptionKey)
 	if ok {
 		descStr := descVal.(string)
-		desc = &descStr
 		opts = append(opts, groups.WithDescription(descStr))
 	}
 
@@ -81,6 +85,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if apiErr != nil {
 		return diag.Errorf("error creating group: %s", apiErr.Message)
 	}
+	if gcr == nil {
+		return diag.Errorf("group nil after create")
+	}
+	raw := gcr.GetResponseMap()
 
 	if val, ok := d.GetOk(groupMemberIdsKey); ok {
 		list := val.(*schema.Set).List()
@@ -88,7 +96,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		for _, i := range list {
 			memberIds = append(memberIds, i.(string))
 		}
-		_, apiErr, err := grps.SetMembers(
+		gcsmr, apiErr, err := grps.SetMembers(
 			ctx,
 			gcr.Item.Id,
 			gcr.Item.Version,
@@ -99,13 +107,13 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.Errorf("error setting principals on role: %v", err)
 		}
-		d.Set(groupMemberIdsKey, memberIds)
+		if gcsmr == nil {
+			return diag.Errorf("group nil after setting members")
+		}
+		raw = gcsmr.GetResponseMap()
 	}
 
-	d.Set(NameKey, name)
-	d.Set(DescriptionKey, desc)
-	d.Set(ScopeIdKey, scopeId)
-	d.SetId(gcr.Item.Id)
+	setFromGroupResponseMap(d, raw)
 
 	return nil
 }
@@ -125,20 +133,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("group nil after read")
 	}
 
-	raw := g.GetResponseMap()
-	if raw == nil {
-		return []diag.Diagnostic{
-			{
-				Severity: diag.Warning,
-				Summary:  "response map empty after read",
-			},
-		}
-	}
-
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(groupMemberIdsKey, raw["member_ids"])
+	setFromGroupResponseMap(d, g.GetResponseMap())
 
 	return nil
 }
