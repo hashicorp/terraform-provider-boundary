@@ -49,6 +49,8 @@ func New() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
+			"boundary_account":      resourceAccount(),
+			"boundary_auth_method":  resourceAuthMethod(),
 			"boundary_group":        resourceGroup(),
 			"boundary_host":         resourceHost(),
 			"boundary_host_catalog": resourceHostCatalog(),

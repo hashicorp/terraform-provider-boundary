@@ -11,4 +11,6 @@ const (
 	TypeKey = "type"
 	// Key used for common "host_catalog_id" resource attribute
 	HostCatalogIdKey = "host_catalog_id"
+	// Key used for common "auth_method_id" resource attribute
+	AuthMethodIdKey = "auth_method_id"
 )
