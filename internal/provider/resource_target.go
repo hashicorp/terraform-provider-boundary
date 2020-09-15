@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/hashicorp/boundary/api/targets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -58,8 +59,10 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(TypeKey, raw["type"])
-	d.Set(targetDefaultPortKey, raw["default_port"])
 	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
+	defPort := raw["default_port"].(json.Number)
+	defPortInt, _ := defPort.Int64()
+	d.Set(targetDefaultPortKey, int(defPortInt))
 	d.SetId(raw["id"].(string))
 }
 
