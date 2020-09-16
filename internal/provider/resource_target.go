@@ -60,9 +60,17 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(TypeKey, raw["type"])
 	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
-	defPort := raw["default_port"].(json.Number)
-	defPortInt, _ := defPort.Int64()
-	d.Set(targetDefaultPortKey, int(defPortInt))
+
+	switch raw["type"].(string) {
+	case targetTypeTcp:
+		if attrsVal, ok := raw["attributes"]; ok {
+			attrs := attrsVal.(map[string]interface{})
+			defPort := attrs["default_port"].(json.Number)
+			defPortInt, _ := defPort.Int64()
+			d.Set(targetDefaultPortKey, int(defPortInt))
+		}
+	}
+
 	d.SetId(raw["id"].(string))
 }
 
@@ -110,7 +118,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf(`"default_port" cannot be less than zero`)
 		}
 		defaultPort = &defaultPortInt
-		opts = append(opts, targets.WithDefaultPort(uint32(*defaultPort)))
+		opts = append(opts, targets.WithTcpTargetDefaultPort(uint32(*defaultPort)))
 	}
 
 	var hostSetIds []string
@@ -210,7 +218,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var defaultPort *int
 	if d.HasChange(targetDefaultPortKey) {
-		opts = append(opts, targets.DefaultDefaultPort())
+		opts = append(opts, targets.DefaultTcpTargetDefaultPort())
 		defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
 		if ok {
 			defaultPortInt := defaultPortVal.(int)
@@ -218,7 +226,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				return diag.Errorf(`"default_port" cannot be less than zero`)
 			}
 			defaultPort = &defaultPortInt
-			opts = append(opts, targets.WithDefaultPort(uint32(defaultPortInt)))
+			opts = append(opts, targets.WithTcpTargetDefaultPort(uint32(defaultPortInt)))
 		}
 	}
 
