@@ -43,10 +43,12 @@ func resourceAuthMethod() *schema.Resource {
 			authmethodMinLoginNameLengthKey: {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			authmethodMinPasswordLengthKey: {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}

@@ -62,7 +62,6 @@ func setFromAccountResponseMap(d *schema.ResourceData, raw map[string]interface{
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
 			d.Set(accountLoginNameKey, attrs["login_name"])
-			d.Set(accountPasswordKey, attrs["password"])
 		}
 	}
 
@@ -106,6 +105,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		if password != nil {
 			opts = append(opts, accounts.WithPasswordAccountPassword(*password))
+			d.Set(accountPasswordKey, *password)
 		}
 	default:
 		return diag.Errorf("invalid type provided")
