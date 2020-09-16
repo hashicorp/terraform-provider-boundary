@@ -18,8 +18,8 @@ Do not keep your authentication password in HCL for production environments, use
 provider "boundary" {
   addr                          = "http://127.0.0.1:9200"
   auth_method_id                = "ampw_1234567890"      # changeme
-  password_auth_method_username = "myuser"               # changeme
-  password_auth_method_password = "$uper$ecure9ass^^ord" # changeme
+  password_auth_method_login_name = "myuser"               # changeme
+  password_auth_method_password = "passpass" # changeme
 }
 ```
 
@@ -29,8 +29,8 @@ provider "boundary" {
 provider "boundary" {
   addr                          = "http://127.0.0.1:9200"
   auth_method_id                = "ampw_1234567890"      # changeme
-  password_auth_method_username = "myuser"               # changeme
-  password_auth_method_password = "$uper$ecure9ass^^ord" # changeme
+  password_auth_method_login_name = "myuser"               # changeme
+  password_auth_method_password = "passpass" # changeme
 }
 
 variable "backend_team" {
@@ -89,7 +89,7 @@ resource "boundary_scope" "global" {
   scope_id     = "global"
 }
 
-resource "boundary_scope "corp" {
+resource "boundary_scope" "corp" {
   scope_id         = boundary_scope.global.id
   auto_create_role = true
 }
