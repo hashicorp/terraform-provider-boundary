@@ -65,9 +65,10 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	case targetTypeTcp:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
-			defPort := attrs["default_port"].(json.Number)
-			defPortInt, _ := defPort.Int64()
-			d.Set(targetDefaultPortKey, int(defPortInt))
+			if defPort, ok := attrs["default_port"].(json.Number); ok {
+				defPortInt, _ := defPort.Int64()
+				d.Set(targetDefaultPortKey, int(defPortInt))
+			}
 		}
 	}
 
