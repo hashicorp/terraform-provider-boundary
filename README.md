@@ -216,21 +216,21 @@ resource "boundary_host" "frontend_servers_ssh" {
 resource "boundary_host_catalog" "web_servers" {
   name        = "web_servers"
   description = "Web servers for frontend team"
-  type        = "Static"
+  type        = "static"
   scope_id    = boundary_scope.core_infra.id
 }
 
 resource "boundary_host_catalog" "backend_servers" {
   name        = "backend_servers"
   description = "Web servers for backend team"
-  type        = "Static"
+  type        = "static"
   scope_id    = boundary_scope.core_infra.id
 }
 
 resource "boundary_host_catalog" "frontend_servers" {
   name        = "frontend_servers"
   description = "Web servers for backend team"
-  type        = "Static"
+  type        = "static"
   scope_id    = boundary_scope.core_infra.id
 }
 
@@ -325,6 +325,7 @@ resource "boundary_role" "admin_frontend_core_infra" {
   grant_strings = ["id=${boundary_host_catalog.web_servers.id};actions=create,read,update,delete"]
   scope_id    = boundary_scope.core_infra.id
 }
+
 ```
 
 Developing the Provider
