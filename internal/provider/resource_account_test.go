@@ -20,34 +20,36 @@ const (
 var (
 	fooAccount = fmt.Sprintf(`
 resource "boundary_auth_method" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "test account"
 	type        = "password"
-  scope_id    = boundary_scope.org1.id
+	scope_id    = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }
 
 resource "boundary_account" "foo" {
-  name           = "test"
+	name           = "test"
 	description    = "%s"
 	type           = "password"
-  login_name     = "foo"
+	login_name     = "foo"
 	password       = "foofoofoo"
 	auth_method_id = boundary_auth_method.foo.id
 }`, fooAccountDesc)
 
 	fooAccountUpdate = fmt.Sprintf(`
 resource "boundary_auth_method" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "test account"
 	type        = "password"
-  scope_id    = boundary_scope.org1.id
+	scope_id    = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }
 
 resource "boundary_account" "foo" {
-  name           = "test"
+	name           = "test"
 	description    = "%s"
 	type           = "password"
-  login_name     = "foo"
+	login_name     = "foo"
 	password       = "foofoofoo"
 	auth_method_id = boundary_auth_method.foo.id
 }`, fooAccountDescUpdate)

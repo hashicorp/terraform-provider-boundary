@@ -25,6 +25,7 @@ resource "boundary_host_catalog" "foo" {
 	description = "test catalog"
 	scope_id    = boundary_scope.proj1.id
 	type        = "static"
+	depends_on  = [boundary_role.proj1_admin]
 }
 
 resource "boundary_host" "foo" {
@@ -41,6 +42,7 @@ resource "boundary_host_catalog" "foo" {
 	description = "test catalog"
 	scope_id    = boundary_scope.proj1.id
 	type        = "static"
+	depends_on  = [boundary_role.proj1_admin]
 }
 
 resource "boundary_host" "foo" {

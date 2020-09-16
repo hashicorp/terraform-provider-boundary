@@ -20,18 +20,20 @@ const (
 var (
 	fooAuthMethod = fmt.Sprintf(`
 resource "boundary_auth_method" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "%s"
 	type        = "password"
-  scope_id    = boundary_scope.org1.id
+	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooAuthMethodDesc)
 
 	fooAuthMethodUpdate = fmt.Sprintf(`
 resource "boundary_auth_method" "foo" {
-  name        = "test"
+	name        = "test"
 	description = "%s"
 	type        = "password"
-  scope_id    = boundary_scope.org1.id
+	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooAuthMethodDescUpdate)
 )
 

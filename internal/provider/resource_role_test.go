@@ -25,6 +25,7 @@ resource "boundary_role" "foo" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooRoleDescription)
 
 	orgRoleUpdate = fmt.Sprintf(`
@@ -32,6 +33,7 @@ resource "boundary_role" "foo" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooRoleDescriptionUpdate)
 
 	projRole = fmt.Sprintf(`
@@ -39,6 +41,7 @@ resource "boundary_role" "foo" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.proj1.id
+	depends_on  = [boundary_role.proj1_admin]
 }`, fooRoleDescription)
 
 	projRoleUpdate = fmt.Sprintf(`
@@ -46,12 +49,14 @@ resource "boundary_role" "foo" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.proj1.id
+	depends_on  = [boundary_role.proj1_admin]
 }`, fooRoleDescriptionUpdate)
 
 	projRoleWithPrincipal = `
 resource "boundary_user" "foo" {
-	name     = "foo"
-	scope_id = boundary_scope.org1.id
+	name       = "foo"
+	scope_id   = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }
 
 resource "boundary_role" "with_principal" {
@@ -59,17 +64,20 @@ resource "boundary_role" "with_principal" {
 	description    = "with principal"
 	principal_ids  = [boundary_user.foo.id]
 	scope_id       = boundary_scope.proj1.id
+	depends_on     = [boundary_role.proj1_admin]
 }`
 
 	projRoleWithPrincipalUpdate = `
 resource "boundary_user" "foo" {
-	name     = "foo"
-	scope_id = boundary_scope.org1.id
+	name       = "foo"
+	scope_id   = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }
 
 resource "boundary_user" "bar" {
-	name     = "bar"
-	scope_id = boundary_scope.org1.id
+	name       = "bar"
+	scope_id   = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }
 
 resource "boundary_role" "with_principal" {
@@ -77,12 +85,14 @@ resource "boundary_role" "with_principal" {
 	description    = "with principal"
 	principal_ids  = [boundary_user.foo.id, boundary_user.bar.id]
 	scope_id       = boundary_scope.proj1.id
+	depends_on     = [boundary_role.proj1_admin]
 }`
 
 	projRoleWithGroups = `
 resource "boundary_group" "foo" {
-	name     = "foo"
-	scope_id = boundary_scope.proj1.id
+	name       = "foo"
+	scope_id   = boundary_scope.proj1.id
+	depends_on = [boundary_role.proj1_admin]
 }
 
 resource "boundary_role" "with_groups" {
@@ -90,17 +100,20 @@ resource "boundary_role" "with_groups" {
 	description    = "with groups"
 	principal_ids  = [boundary_group.foo.id]
 	scope_id       = boundary_scope.proj1.id
+	depends_on     = [boundary_role.proj1_admin]
 }`
 
 	projRoleWithGroupsUpdate = `
 resource "boundary_group" "foo" {
-	name     = "foo"
-	scope_id = boundary_scope.proj1.id
+	name       = "foo"
+	scope_id   = boundary_scope.proj1.id
+	depends_on = [boundary_role.proj1_admin]
 }
 
 resource "boundary_group" "bar" {
-	name     = "bar"
-	scope_id = boundary_scope.proj1.id
+	name       = "bar"
+	scope_id   = boundary_scope.proj1.id
+	depends_on = [boundary_role.proj1_admin]
 }
 
 resource "boundary_role" "with_groups" {
@@ -108,6 +121,7 @@ resource "boundary_role" "with_groups" {
 	description    = "with groups"
 	principal_ids  = [boundary_group.foo.id, boundary_group.bar.id]
 	scope_id       = boundary_scope.proj1.id
+	depends_on     = [boundary_role.proj1_admin]
 }`
 
 	readonlyGrant       = "id=*;actions=read"
@@ -119,6 +133,7 @@ resource "boundary_role" "with_grants" {
 	description   = "with grants"
 	grant_strings = ["%s"]
 	scope_id      = boundary_scope.proj1.id
+	depends_on    = [boundary_role.proj1_admin]
 }`, readonlyGrant)
 
 	projRoleWithGrantsUpdate = fmt.Sprintf(`
@@ -127,6 +142,7 @@ resource "boundary_role" "with_grants" {
 	description   = "with grants"
 	grant_strings = ["%s", "%s"]
 	scope_id      = boundary_scope.proj1.id
+	depends_on    = [boundary_role.proj1_admin]
 }`, readonlyGrant, readonlyGrantUpdate)
 )
 

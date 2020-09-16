@@ -12,6 +12,7 @@ const (
 	roleGrantScopeIdKey = "grant_scope_id"
 	rolePrincipalIdsKey = "principal_ids"
 	roleGrantStringsKey = "grant_strings"
+	roleDefaultRoleKey  = "default_role"
 )
 
 func resourceRole() *schema.Resource {
@@ -49,6 +50,11 @@ func resourceRole() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			roleDefaultRoleKey: {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Indicates that the role containing this value is the default role (that is, has the id 'r_default'), which triggers some specialized behavior to allow it to be imported and managed.",
+			},
 		},
 	}
 }
@@ -64,6 +70,11 @@ func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 }
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.Get(roleDefaultRoleKey).(bool) {
+		d.SetId("r_default")
+		return resourceRoleRead(ctx, d, meta)
+	}
+
 	md := meta.(*metaData)
 
 	var scopeId string
