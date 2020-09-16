@@ -12,32 +12,45 @@ The target resource allows you to configure a Boundary target.
 ## Example Usage
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "global" {
+  global_scope     = true
+  scope_id         = "global"
+  auto_create_role = true
+}
 
-resource "boundary_project" "foo" {
-  name     = "foo_project"
-  scope_id = boundary_organization.foo.id
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = boundary_scope.global.id
+  auto_create_role = true
+}
+
+resource "boundary_scope" "project" {
+  name             = "project_one"
+  description      = "My first scope!"
+  scope_id         = boundary_scope.org.id
+  auto_create_role = true
 }
 
 resource "boundary_host_catalog" "foo" {
   name        = "test"
 	description = "test catalog"
-  scope_id    = boundary_project.foo.id
-	type        = "static"
+  scope_id    = boundary_scope.project.id
+  type        = "static"
 }
 
 resource "boundary_host" "foo" {
   name            = "foo"
 	host_catalog_id = boundary_host_catalog.foo.id
-	scope_id        = boundary_project.foo.id
-	address         = "10.0.0.1:80"
+	scope_id        = boundary_scope.project.id
+	address         = "10.0.0.1"
 }
 
 resource "boundary_host" "bar" {
   name            = "bar"
 	host_catalog_id = boundary_host_catalog.foo.id
-	scope_id        = boundary_project.foo.id
-	address         = "10.0.0.1:80"
+	scope_id        = boundary_scope.project.id
+	address         = "10.0.0.1"
 }
 
 resource "boundary_host_set" "foo" {
@@ -53,7 +66,8 @@ resource "boundary_host_set" "foo" {
 resource "boundary_target" "foo" {
   name         = "foo"
 	description  = "Foo target"
-	scope_id     = boundary_project.foo.id
+  default_port = "22"
+	scope_id     = boundary_scope.project.id
 	host_set_ids = [
     boundary_host_set.foo.id
 	]
@@ -67,3 +81,5 @@ The following arguments are optional:
 * `name` - The target name. Defaults to the resource name.
 * `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
 * `host_set_ids` - A list of host set ID's.
+* `default_port` - The default port for this target.
+* `type` - The target resource type.
