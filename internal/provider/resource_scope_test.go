@@ -14,27 +14,83 @@ import (
 
 const (
 	fooOrg = `
-resource "boundary_scope" "org1" {
-	name     = "test"
+resource "boundary_scope" "global" {
+	global_scope = true
+	name = "global"
+	description = "Global Scope"
 	scope_id = "global"
-}`
+}
+
+resource "boundary_role" "default" {
+	default_role = true
+	description = "Default role created on first instantiation of Boundary. It is meant to provide enough permissions for users to successfully authenticate via various client types."
+	grant_scope_id = "global"
+	name = "default"
+	scope_id = boundary_scope.global.id
+	principal_ids = ["u_auth", "u_anon"]
+	grant_strings = [
+		"type=scope;actions=list",
+		"type=auth-method;actions=authenticate,list"
+	]
+}
+
+resource "boundary_scope" "org1" {
+	name = "org1"
+	scope_id = boundary_scope.global.id
+}
+
+resource "boundary_role" "org1_admin" {
+	scope_id = boundary_scope.global.id
+	grant_scope_id = boundary_scope.org1.id
+	grant_strings = ["id=*;actions=*"]
+	principal_ids = ["u_auth"]
+}
+`
 
 	firstProjectFoo = `
 resource "boundary_scope" "proj1" {
+	name = "proj1"
 	scope_id    = boundary_scope.org1.id
 	description = "foo"
-}`
+	depends_on = [boundary_role.org1_admin]
+}
+
+resource "boundary_role" "proj1_admin" {
+	scope_id = boundary_scope.org1.id
+	grant_scope_id = boundary_scope.proj1.id
+	grant_strings = ["id=*;actions=*"]
+	principal_ids = ["u_auth"]
+}
+`
 
 	firstProjectBar = `
 resource "boundary_scope" "proj1" {
+	name = "proj1"
 	scope_id    = boundary_scope.org1.id
 	description = "bar"
-}`
+	depends_on = [boundary_role.org1_admin]
+}
 
+resource "boundary_role" "proj1_admin" {
+	scope_id = boundary_scope.org1.id
+	grant_scope_id = boundary_scope.proj1.id
+	grant_strings = ["id=*;actions=*"]
+	principal_ids = ["u_auth"]
+}
+`
 	secondProject = `
 resource "boundary_scope" "proj2" {
+	name = "proj2"
 	scope_id    = boundary_scope.org1.id
 	description = "project2"
+	depends_on = [boundary_role.org1_admin]
+}
+
+resource "boundary_role" "proj2_admin" {
+	scope_id = boundary_scope.org1.id
+	grant_scope_id = boundary_scope.proj2.id
+	grant_strings = ["id=*;actions=*"]
+	principal_ids = ["u_auth"]
 }
 `
 )

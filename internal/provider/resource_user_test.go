@@ -24,6 +24,7 @@ resource "boundary_user" "org1" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooDescription)
 
 	orgUserUpdate = fmt.Sprintf(`
@@ -31,6 +32,7 @@ resource "boundary_user" "org1" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooDescriptionUpdate)
 )
 

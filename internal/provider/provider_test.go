@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"strings"
@@ -38,12 +39,28 @@ func init() {
 }
 
 func testWrapper(t *testing.T, key string) wrapping.Wrapper {
-	wrapper := aead.NewWrapper(nil)
-	keyBytes, err := base64.StdEncoding.DecodeString(key)
-	if err != nil {
-		t.Fatal(err)
+	var keyBytes []byte
+	switch key {
+	case "":
+		keyBytes = make([]byte, 32)
+		n, err := rand.Read(keyBytes)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != 32 {
+			t.Fatal(n)
+		}
+		key = base64.StdEncoding.EncodeToString(keyBytes)
+	default:
+		var err error
+		keyBytes, err = base64.StdEncoding.DecodeString(key)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
-	_, err = wrapper.SetConfig(map[string]string{
+	wrapper := aead.NewWrapper(nil)
+
+	_, err := wrapper.SetConfig(map[string]string{
 		"key_id": key,
 	})
 	if err != nil {

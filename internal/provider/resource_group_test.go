@@ -24,6 +24,7 @@ resource "boundary_group" "org1" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }`, fooGroupDescription)
 
 	orgGroupUpdate = fmt.Sprintf(`
@@ -31,35 +32,41 @@ resource "boundary_group" "org1" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`, fooGroupDescriptionUpdate)
 
 	orgGroupWithMembers = `
 resource "boundary_user" "org1" {
 	description = "org1"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }
 
 resource "boundary_group" "with_members" {
 	description = "with members"
 	member_ids  = [boundary_user.org1.id]
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`
 
 	orgGroupWithMembersUpdate = `
 resource "boundary_user" "org1" {
 	description = "org1"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }
 
 resource "boundary_user" "bar" {
 	description = "bar"
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }
 
 resource "boundary_group" "with_members" {
 	description = "with members"
 	member_ids  = [boundary_user.org1.id, boundary_user.bar.id]
 	scope_id    = boundary_scope.org1.id
+	depends_on  = [boundary_role.org1_admin]
 }`
 
 	orgToProjectGroupUpdate = `
@@ -67,6 +74,7 @@ resource "boundary_group" "org1" {
 	name = "test-to-proj"
 	description = "org1-test-to-proj"
 	scope_id = boundary_scope.proj1.id
+	depends_on = [boundary_role.org1_admin]
 }`
 
 	projGroup = `
@@ -74,6 +82,7 @@ resource "boundary_group" "proj1" {
 	name = "test-proj"
 	description = "desc-test-proj"
 	scope_id = boundary_scope.proj1.id
+	depends_on = [boundary_role.org1_admin]
 }`
 
 	projGroupUpdate = `
@@ -81,6 +90,7 @@ resource "boundary_group" "proj1" {
 	name = "test-proj-up"
 	description = "desc-test-proj-up"
 	scope_id = boundary_scope.proj1.id
+	depends_on = [boundary_role.org1_admin]
 }`
 
 	projNameRemoval = `
@@ -88,6 +98,7 @@ resource "boundary_group" "proj1" {
 	name = ""
 	description = "no-name"
 	scope_id = boundary_scope.proj1.id
+	depends_on = [boundary_role.org1_admin]
 }`
 
 	projToOrgGroupUpdate = `
@@ -95,6 +106,7 @@ resource "boundary_group" "proj1" {
 	name = "test-back"
 	description = "desc-back"
 	scope_id = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
 }`
 )
 

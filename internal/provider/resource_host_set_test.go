@@ -17,6 +17,7 @@ var (
 resource "boundary_host_catalog" "foo" {
 	scope_id    = boundary_scope.proj1.id
 	type        = "static"
+	depends_on  = [boundary_role.proj1_admin]
 }
 
 resource "boundary_host" "foo" {
@@ -37,6 +38,7 @@ resource "boundary_host_set" "foo" {
 resource "boundary_host_catalog" "foo" {
 	scope_id    = boundary_scope.proj1.id
 	type        = "static"
+	depends_on  = [boundary_role.proj1_admin]
 }
 
 resource "boundary_host" "foo" {

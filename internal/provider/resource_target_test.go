@@ -24,6 +24,7 @@ resource "boundary_host_catalog" "foo" {
 	name        = "test"
 	description = "test catalog"
 	scope_id    = boundary_scope.proj1.id
+	depends_on  = [boundary_role.proj1_admin]
 }
 
 resource "boundary_host" "foo" {
@@ -60,6 +61,7 @@ resource "boundary_target" "foo" {
 		boundary_host_set.foo.id
 	]
 	default_port = 22
+	depends_on  = [boundary_role.proj1_admin]
 }`, fooTargetDescription)
 
 	fooTargetUpdate = fmt.Sprintf(`
@@ -72,6 +74,7 @@ resource "boundary_target" "foo" {
 		boundary_host_set.foo.id
 	]
 	default_port = 80
+	depends_on  = [boundary_role.proj1_admin]
 }`, fooTargetDescriptionUpdate)
 )
 

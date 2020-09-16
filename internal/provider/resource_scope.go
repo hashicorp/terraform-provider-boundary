@@ -8,6 +8,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const (
+	scopeGlobalScopeKey = "global_scope"
+	scopeAutoCreateRole = "auto_create_role"
+)
+
 func resourceScope() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceScopeCreate,
@@ -29,6 +34,16 @@ func resourceScope() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			scopeGlobalScopeKey: {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.",
+			},
+			scopeAutoCreateRole: {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
+			},
 		},
 	}
 }
@@ -36,11 +51,20 @@ func resourceScope() *schema.Resource {
 func setFromScopeResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
+	if d.Id() == "global" {
+		d.Set(ScopeIdKey, "global")
+	} else {
+		d.Set(ScopeIdKey, raw["scope_id"])
+	}
 	d.SetId(raw["id"].(string))
 }
 
 func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.Get(scopeGlobalScopeKey).(bool) {
+		d.SetId("global")
+		return resourceScopeRead(ctx, d, meta)
+	}
+
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -62,6 +86,20 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if ok {
 		descStr := descVal.(string)
 		opts = append(opts, scopes.WithDescription(descStr))
+	}
+
+	// Always skip unless overridden, because if you're using TF to manage this
+	// creates a resource outside of TF's control. So the normal TF paradigm
+	// would be to create a role in the current scope giving permissions in the
+	// new scope, once you have the new scope ID, and TF can figure out the
+	// ordering.
+	//
+	// TODO: (?) Put authentication information, if available, into a data
+	// source from the current token, so that the user can be introspected when
+	// defining these roles instead of having to be explicitly defined in
+	// config.
+	if !d.Get(scopeAutoCreateRole).(bool) {
+		opts = append(opts, scopes.WithSkipRoleCreation(true))
 	}
 
 	scp := scopes.NewClient(md.client)
@@ -159,6 +197,10 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.Get(scopeGlobalScopeKey).(bool) {
+		return nil
+	}
+
 	md := meta.(*metaData)
 	scp := scopes.NewClient(md.client)
 

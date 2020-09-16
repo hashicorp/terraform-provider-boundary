@@ -24,6 +24,7 @@ resource "boundary_host_catalog" "foo" {
 	description = "%s"
 	scope_id    = boundary_scope.proj1.id 
 	type        = "static"
+	depends_on  = [boundary_role.proj1_admin]
 }`, fooHostCatalogDescription)
 
 	projHostCatalogUpdate = fmt.Sprintf(`
@@ -32,6 +33,7 @@ resource "boundary_host_catalog" "foo" {
 	description = "%s"
 	scope_id    = boundary_scope.proj1.id 
 	type        = "static"
+	depends_on  = [boundary_role.proj1_admin]
 }`, fooHostCatalogDescriptionUpdate)
 )
 
