@@ -14,18 +14,25 @@ ID in hand to successfully configure a host.
 ## Example Usage
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
-resource "boundary_project" "example" {
-  description = "My first project!"
-  scope_id    = boundary_organization.foo.id
+resource "boundary_scope" "project" {
+  name             = "project_one"
+  description      = "My first scope!"
+  scope_id         = boundary_scope.org.id
+  auto_create_role = true
 }
 
 resource "boundary_host" "example" {
   name        = "My catalog"
   description = "My first host!"
   address     = "10.0.0.1:8080"
-  scope_id    = boundary_project.example.id
+  scope_id    = boundary_scope.project.id
 }
 ```
 

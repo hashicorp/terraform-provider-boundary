@@ -12,12 +12,17 @@ The user resource allows you to configure a Boundary user.
 ## Example Usage
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
 resource "boundary_user" "example" {
   name        = "My user"
   description = "My first user!"
-  scope_id    = boundary_organization.foo.id 
+  scope_id    = boundary_scope.org.id 
 }
 ```
 

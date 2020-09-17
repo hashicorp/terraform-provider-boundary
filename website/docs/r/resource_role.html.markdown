@@ -13,35 +13,45 @@ The role resource allows you to configure a Boundary role.
 Basic usage:
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
 resource "boundary_role" "example" {
   name        = "My role"
   description = "My first role!"
-  scope_id    = boundary_organization.foo.id
+  scope_id    = boundary_scope.org.id
 }
 ```
 
 Usage with a user resource:
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
 resource "boundary_user" "foo" {
   name     = "User 1"
-  scope_id = boundary_organization.foo.id
+  scope_id = boundary_scope.org.id
 }
 
 resource "boundary_user" "bar" {
   name     = "User 2"
-  scope_id = boundary_organization.foo.id
+  scope_id = boundary_scope.org.id
 }
 
 resource "boundary_role" "example" {
   name        = "My role"
   description = "My first role!"
   principals  = [boundary_user.foo.id, boundary_user.bar.id]
-  scope_id    = boundary_organization.foo.id
+  scope_id    = boundary_scope.org.id
 }
 
 ```
@@ -49,12 +59,17 @@ resource "boundary_role" "example" {
 Usage with user and grants resource:
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
 resource "boundary_user" "readonly" {
   name        = "readonly"
   description = "A readonly user"
-  scope_id    = boundary_organization.foo.id
+  scope_id    = boundary_scope.org.id
 }
 
 resource "boundary_role" "readonly" {
@@ -62,24 +77,31 @@ resource "boundary_role" "readonly" {
   description = "A readonly role"
   principals  = [boundary_user.readonly.id]
   grants      = ["id=*;action=read"]
-  scope_id    = boundary_organization.foo.id
+  scope_id    = boundary_scope.org.id
 }
 ```
 
 Usage for a project-specific role:
 
 ```hcl
-resource "boundary_organization" "foo" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
-resource "boundary_project" "foo" {
-  name     = "foo_project"
-  scope_id = boundary_organization.foo.id
+resource "boundary_scope" "project" {
+  name             = "project_one"
+  description      = "My first scope!"
+  scope_id         = boundary_scope.org.id
+  auto_create_role = true
 }
 
 resource "boundary_user" "readonly" {
   name        = "readonly"
   description = "A readonly user"
-  scope_id    = boundary_organization.foo.id
+  scope_id    = boundary_scope.org.id
 }
 
 resource "boundary_role" "readonly" {
@@ -87,7 +109,7 @@ resource "boundary_role" "readonly" {
   description = "A readonly role"
   principals  = [boundary_user.readonly.id]
   grants      = ["id=*;action=read"]
-  scope_id    = boundary_project.foo.id
+  scope_id    = boundary_scope.project.id
 }
 ```
 

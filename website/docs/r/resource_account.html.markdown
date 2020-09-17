@@ -12,10 +12,15 @@ The account resource allows you to configure a Boundary account.
 ## Example Usage
 
 ```hcl
-resource "boundary_organization" "main" {}
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = "global" 
+  auto_create_role = true
+}
 
 resource "boundary_auth_method" "password" {
-  scope_id = boundary_organization.main.id
+  scope_id = boundary_scope.org.id
   type     = "password"
 }
 

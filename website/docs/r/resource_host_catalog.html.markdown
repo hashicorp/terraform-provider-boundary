@@ -14,15 +14,25 @@ the project ID in hand to successfully configure a host catalog.
 ## Example Usage
 
 ```hcl
-resource "boundary_project" "example" {
-  description = "My first project!"
+resource "boundary_scope" "org" {
+  name             = "organization_one"
+  description      = "My first scope!"
+  scope_id         = boundary_scope.global.id
+  auto_create_role = true
+}
+
+resource "boundary_scope" "project" {
+  name             = "project_one"
+  description      = "My first scope!"
+  scope_id         = boundary_scope.org.id
+  auto_create_role = true
 }
 
 resource "boundary_host_catalog" "example" {
   name        = "My catalog"
   description = "My first host catalog!"
   type        = "Static"
-  scope_id    = boundary_project.example.id
+  scope_id    = boundary_scope.project.id
 }
 ```
 
