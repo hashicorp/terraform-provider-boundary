@@ -13,7 +13,7 @@ Building The Provider
 1. Clone the repository
 1. Enter the repository directory
 1. Build the provider using `make dev`. This will place the provider onto your system in a [Terraform 0.13-compliant](https://www.terraform.io/upgrade-guides/0-13.html#in-house-providers) manner.
-```sh
+
 You'll need to ensure that your Terraform file contains the information necessary to find the plugin when running `terraform init`. `make dev` will use a version number of 0.0.1, so the following block will work:
 
 ```hcl
