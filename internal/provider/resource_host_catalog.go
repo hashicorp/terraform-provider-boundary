@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -116,6 +117,10 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("error calling read host catalog: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading host catalog: %s", apiErr.Message)
 	}
 	if hcrr == nil {

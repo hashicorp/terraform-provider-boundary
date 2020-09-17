@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -132,6 +133,10 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("error calling read scope: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading scope: %s", apiErr.Message)
 	}
 	if srr == nil {

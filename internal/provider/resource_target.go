@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/targets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -178,6 +179,10 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error calling read target: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading target: %s", apiErr.Message)
 	}
 	if trr == nil {

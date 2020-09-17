@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/groups"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -127,6 +128,10 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("error calling read group: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading group: %s", apiErr.Message)
 	}
 	if g == nil {
