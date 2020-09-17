@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/hosts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -142,6 +143,10 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("error calling read host: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading host: %s", apiErr.Message)
 	}
 	if hrr == nil {

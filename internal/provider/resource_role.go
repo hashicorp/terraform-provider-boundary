@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -191,6 +192,10 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("error calling read role: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading role: %s", apiErr.Message)
 	}
 	if trr == nil {

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/hostsets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -151,6 +152,10 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error calling read host set: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading host set: %s", apiErr.Message)
 	}
 	if hsrr == nil {

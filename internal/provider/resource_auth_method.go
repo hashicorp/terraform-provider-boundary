@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -163,6 +164,10 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("error calling read auth method: %v", err)
 	}
 	if apiErr != nil {
+		if apiErr.Status == int32(http.StatusNotFound) {
+			d.SetId("")
+			return nil
+		}
 		return diag.Errorf("error reading auth method: %s", apiErr.Message)
 	}
 	if amrr == nil {
