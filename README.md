@@ -1,3 +1,5 @@
+![](boundary.png)
+
 Terraform Provider Boundary
 ==================
 
