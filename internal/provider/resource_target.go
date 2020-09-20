@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	targetHostSetIdsKey  = "host_set_ids"
-	targetDefaultPortKey = "default_port"
+	targetHostSetIdsKey             = "host_set_ids"
+	targetDefaultPortKey            = "default_port"
+	targetSessionMaxSecondsKey      = "session_max_seconds"
+	targetSessionConnectionLimitKey = "session_connection_limit"
 
 	targetTypeTcp = "tcp"
 )
@@ -51,6 +53,16 @@ func resourceTarget() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			targetSessionMaxSecondsKey: {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			targetSessionConnectionLimitKey: {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -61,6 +73,8 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(TypeKey, raw["type"])
 	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
+	d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"])
+	d.Set(targetSessionConnectionLimitKey, raw["session_connection_limit"])
 
 	switch raw["type"].(string) {
 	case targetTypeTcp:
@@ -112,15 +126,31 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		opts = append(opts, targets.WithDescription(descStr))
 	}
 
-	var defaultPort *int
 	defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
 	if ok {
 		defaultPortInt := defaultPortVal.(int)
 		if defaultPortInt < 0 {
 			return diag.Errorf(`"default_port" cannot be less than zero`)
 		}
-		defaultPort = &defaultPortInt
-		opts = append(opts, targets.WithTcpTargetDefaultPort(uint32(*defaultPort)))
+		opts = append(opts, targets.WithTcpTargetDefaultPort(uint32(defaultPortInt)))
+	}
+
+	sessionMaxSecondsVal, ok := d.GetOk(targetSessionMaxSecondsKey)
+	if ok {
+		sessionMaxSecondsInt := sessionMaxSecondsVal.(int)
+		if sessionMaxSecondsInt < 0 {
+			return diag.Errorf(`"session_max_seconds" cannot be less than zero`)
+		}
+		opts = append(opts, targets.WithSessionMaxSeconds(uint32(sessionMaxSecondsInt)))
+	}
+
+	sessionConnectionLimitVal, ok := d.GetOk(targetSessionConnectionLimitKey)
+	if ok {
+		sessionConnectionLimitInt := sessionConnectionLimitVal.(int)
+		if sessionConnectionLimitInt < 0 {
+			return diag.Errorf(`"session_connection_limit" cannot be less than zero`)
+		}
+		opts = append(opts, targets.WithSessionConnectionLimit(uint32(sessionConnectionLimitInt)))
 	}
 
 	var hostSetIds []string
@@ -236,6 +266,34 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	var sessionMaxSeconds *int
+	if d.HasChange(targetSessionMaxSecondsKey) {
+		opts = append(opts, targets.DefaultSessionMaxSeconds())
+		sessionMaxSecondsVal, ok := d.GetOk(targetSessionMaxSecondsKey)
+		if ok {
+			sessionMaxSecondsInt := sessionMaxSecondsVal.(int)
+			if sessionMaxSecondsInt < 0 {
+				return diag.Errorf(`"session_max_seconds" cannot be less than zero`)
+			}
+			sessionMaxSeconds = &sessionMaxSecondsInt
+			opts = append(opts, targets.WithSessionMaxSeconds(uint32(sessionMaxSecondsInt)))
+		}
+	}
+
+	var sessionConnectionLimit *int
+	if d.HasChange(targetSessionConnectionLimitKey) {
+		opts = append(opts, targets.DefaultSessionConnectionLimit())
+		sessionConnectionLimitVal, ok := d.GetOk(targetSessionConnectionLimitKey)
+		if ok {
+			sessionConnectionLimitInt := sessionConnectionLimitVal.(int)
+			if sessionConnectionLimitInt < 0 {
+				return diag.Errorf(`"session_connection_limit" cannot be less than zero`)
+			}
+			sessionConnectionLimit = &sessionConnectionLimitInt
+			opts = append(opts, targets.WithSessionConnectionLimit(uint32(sessionConnectionLimitInt)))
+		}
+	}
+
 	if len(opts) > 0 {
 		opts = append(opts, targets.WithAutomaticVersioning(true))
 		_, apiErr, err := tc.Update(
@@ -259,6 +317,12 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange(targetDefaultPortKey) {
 		d.Set(targetDefaultPortKey, defaultPort)
+	}
+	if d.HasChange(targetSessionMaxSecondsKey) {
+		d.Set(targetSessionMaxSecondsKey, sessionMaxSeconds)
+	}
+	if d.HasChange(targetSessionConnectionLimitKey) {
+		d.Set(targetSessionConnectionLimitKey, sessionConnectionLimit)
 	}
 
 	// The above call may not actually happen, so we use d.Id() and automatic
