@@ -36,7 +36,7 @@ resource "boundary_host_catalog" "static" {
 resource "boundary_host" "1" {
   name            = "host_1"
   description     = "My first host!"
-  address         = "10.0.0.1:8080"
+  address         = "10.0.0.1"
   host_catalog_id = boundary_host_catalog.static.id
   scope_id        = boundary_scope.project.id
 }
@@ -44,7 +44,7 @@ resource "boundary_host" "1" {
 resource "boundary_host" "2" {
   name            = "host_2"
   description     = "My second host!"
-  address         = "10.0.0.2:8080"
+  address         = "10.0.0.2"
   host_catalog_id = boundary_host_catalog.static.id
   scope_id        = boundary_scope.project.id
 }

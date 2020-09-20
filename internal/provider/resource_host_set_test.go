@@ -23,7 +23,7 @@ resource "boundary_host_catalog" "foo" {
 resource "boundary_host" "foo" {
 	type            = "static"
 	host_catalog_id = boundary_host_catalog.foo.id
-	address         = "10.0.0.1:80"
+	address         = "10.0.0.1"
 }
 
 resource "boundary_host_set" "foo" {
@@ -44,13 +44,13 @@ resource "boundary_host_catalog" "foo" {
 resource "boundary_host" "foo" {
 	type            = "static"
 	host_catalog_id = boundary_host_catalog.foo.id
-	address         = "10.0.0.1:80"
+	address         = "10.0.0.1"
 }
 
 resource "boundary_host" "bar" {
 	type            = "static"
 	host_catalog_id = boundary_host_catalog.foo.id
-	address         = "10.0.0.2:80"
+	address         = "10.0.0.2"
 }
 
 resource "boundary_host_set" "foo" {

@@ -31,14 +31,14 @@ resource "boundary_host" "foo" {
 	name            = "foo"
 	host_catalog_id = boundary_host_catalog.foo.id
 	type            = "static"
-	address         = "10.0.0.1:80"
+	address         = "10.0.0.1"
 }
 
 resource "boundary_host" "bar" {
 	name            = "bar"
 	host_catalog_id = boundary_host_catalog.foo.id
 	type            = "static"
-	address         = "10.0.0.1:80"
+	address         = "10.0.0.1"
 }
 
 resource "boundary_host_set" "foo" {

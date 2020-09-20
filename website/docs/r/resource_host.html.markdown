@@ -31,7 +31,7 @@ resource "boundary_scope" "project" {
 resource "boundary_host" "example" {
   name        = "My catalog"
   description = "My first host!"
-  address     = "10.0.0.1:8080"
+  address     = "10.0.0.1"
   scope_id    = boundary_scope.project.id
 }
 ```
