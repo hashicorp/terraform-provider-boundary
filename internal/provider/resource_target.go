@@ -138,8 +138,8 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	sessionMaxSecondsVal, ok := d.GetOk(targetSessionMaxSecondsKey)
 	if ok {
 		sessionMaxSecondsInt := sessionMaxSecondsVal.(int)
-		if sessionMaxSecondsInt < 0 {
-			return diag.Errorf(`"session_max_seconds" cannot be less than zero`)
+		if sessionMaxSecondsInt <= 0 {
+			return diag.Errorf(`"session_max_seconds" must be greater than zero`)
 		}
 		opts = append(opts, targets.WithSessionMaxSeconds(uint32(sessionMaxSecondsInt)))
 	}
@@ -147,10 +147,10 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	sessionConnectionLimitVal, ok := d.GetOk(targetSessionConnectionLimitKey)
 	if ok {
 		sessionConnectionLimitInt := sessionConnectionLimitVal.(int)
-		if sessionConnectionLimitInt < 0 {
-			return diag.Errorf(`"session_connection_limit" cannot be less than zero`)
+		if sessionConnectionLimitInt != -1 && sessionConnectionLimitInt <= 0 {
+			return diag.Errorf(`"session_connection_limit" must be -1 or greater than zero`)
 		}
-		opts = append(opts, targets.WithSessionConnectionLimit(uint32(sessionConnectionLimitInt)))
+		opts = append(opts, targets.WithSessionConnectionLimit(int32(sessionConnectionLimitInt)))
 	}
 
 	var hostSetIds []string
@@ -272,8 +272,8 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		sessionMaxSecondsVal, ok := d.GetOk(targetSessionMaxSecondsKey)
 		if ok {
 			sessionMaxSecondsInt := sessionMaxSecondsVal.(int)
-			if sessionMaxSecondsInt < 0 {
-				return diag.Errorf(`"session_max_seconds" cannot be less than zero`)
+			if sessionMaxSecondsInt <= 0 {
+				return diag.Errorf(`"session_max_seconds" must be greater than zero`)
 			}
 			sessionMaxSeconds = &sessionMaxSecondsInt
 			opts = append(opts, targets.WithSessionMaxSeconds(uint32(sessionMaxSecondsInt)))
@@ -286,11 +286,11 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		sessionConnectionLimitVal, ok := d.GetOk(targetSessionConnectionLimitKey)
 		if ok {
 			sessionConnectionLimitInt := sessionConnectionLimitVal.(int)
-			if sessionConnectionLimitInt < 0 {
-				return diag.Errorf(`"session_connection_limit" cannot be less than zero`)
+			if sessionConnectionLimitInt != -1 && sessionConnectionLimitInt <= 0 {
+				return diag.Errorf(`"session_connection_limit" must be -1 or greater than zero`)
 			}
 			sessionConnectionLimit = &sessionConnectionLimitInt
-			opts = append(opts, targets.WithSessionConnectionLimit(uint32(sessionConnectionLimitInt)))
+			opts = append(opts, targets.WithSessionConnectionLimit(int32(sessionConnectionLimitInt)))
 		}
 	}
 
