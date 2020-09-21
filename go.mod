@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go v1.34.16 // indirect
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
-	github.com/hashicorp/boundary v0.0.0-20200920195439-5764b2c70a3d
+	github.com/hashicorp/boundary v0.0.0-20200921150544-9b2646eaf970
 	github.com/hashicorp/go-kms-wrapping v0.5.14
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.3
