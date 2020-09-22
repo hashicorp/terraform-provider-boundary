@@ -321,6 +321,10 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.Get(roleDefaultRoleKey).(bool) {
+		return nil
+	}
+
 	md := meta.(*metaData)
 	rc := roles.NewClient(md.client)
 
