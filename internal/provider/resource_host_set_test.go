@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -114,7 +115,7 @@ func testAccCheckHostsetResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		hostsetsClient := hostsets.NewClient(md.client)
 
-		if _, _, err := hostsetsClient.Read(context.Background(), id); err != nil {
+		if _, err := hostsetsClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading hostset %q: %v", id, err)
 		}
 
@@ -155,7 +156,7 @@ func testAccCheckHostsetHostIDsSet(name string, wantHostIDs []string) resource.T
 
 		hstClient := hostsets.NewClient(client)
 
-		hs, _, err := hstClient.Read(context.Background(), id)
+		hs, err := hstClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading hostset %q: %v", id, err)
 		}
@@ -197,11 +198,8 @@ func testAccCheckHostsetResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				hostsetsClient := hostsets.NewClient(md.client)
 
-				_, apiErr, err := hostsetsClient.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("Error when reading destroyed host set %q: %v", id, err)
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+				_, err := hostsetsClient.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed host set %q: %v", id, apiErr)
 				}
 

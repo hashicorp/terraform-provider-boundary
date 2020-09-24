@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,15 +106,9 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	hsClient := hostsets.NewClient(md.client)
 
-	hscr, apiErr, err := hsClient.Create(
-		ctx,
-		hostsetHostCatalogId,
-		opts...)
+	hscr, err := hsClient.Create(ctx, hostsetHostCatalogId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create host set: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating host set: %s", apiErr.Message)
+		return diag.Errorf("error creating host set: %v", err)
 	}
 	if hscr == nil {
 		return diag.Errorf("nil host set after create")
@@ -121,14 +116,7 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	raw := hscr.GetResponseMap()
 
 	if hostIds != nil {
-		hsshr, apiErr, err := hsClient.SetHosts(
-			ctx,
-			hscr.Item.Id,
-			hscr.Item.Version,
-			hostIds)
-		if apiErr != nil {
-			return diag.Errorf("error setting hosts on host set: %s", apiErr.Message)
-		}
+		hsshr, err := hsClient.SetHosts(ctx, hscr.Item.Id, hscr.Item.Version, hostIds)
 		if err != nil {
 			return diag.Errorf("error setting hosts on host set: %v", err)
 		}
@@ -147,16 +135,13 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	md := meta.(*metaData)
 	hsClient := hostsets.NewClient(md.client)
 
-	hsrr, apiErr, err := hsClient.Read(ctx, d.Id())
+	hsrr, err := hsClient.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read host set: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading host set: %s", apiErr.Message)
+		return diag.Errorf("error reading host set: %v", err)
 	}
 	if hsrr == nil {
 		return diag.Errorf("host set nil after read")
@@ -197,16 +182,9 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if len(opts) > 0 {
 		opts = append(opts, hostsets.WithAutomaticVersioning(true))
-		_, apiErr, err := hsClient.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := hsClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update host set: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating host set: %s", apiErr.Message)
+			return diag.Errorf("error updating host set: %v", err)
 		}
 	}
 
@@ -227,17 +205,9 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				hostIds = append(hostIds, host.(string))
 			}
 		}
-		_, apiErr, err := hsClient.SetHosts(
-			ctx,
-			d.Id(),
-			0,
-			hostIds,
-			hostsets.WithAutomaticVersioning(true))
+		_, err := hsClient.SetHosts(ctx, d.Id(), 0, hostIds, hostsets.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error updating hosts in host set: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating hosts in host set: %s", apiErr.Message)
 		}
 		d.Set(hostsetHostIdsKey, hostIds)
 	}
@@ -249,12 +219,9 @@ func resourceHostsetDelete(ctx context.Context, d *schema.ResourceData, meta int
 	md := meta.(*metaData)
 	hsClient := hostsets.NewClient(md.client)
 
-	_, apiErr, err := hsClient.Delete(ctx, d.Id())
+	_, err := hsClient.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete host set: %s", err.Error())
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting host set: %s", apiErr.Message)
+		return diag.Errorf("error deleting host set: %s", err.Error())
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -135,16 +136,9 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	amClient := authmethods.NewClient(md.client)
 
-	amcr, apiErr, err := amClient.Create(
-		ctx,
-		typeStr,
-		scopeId,
-		opts...)
+	amcr, err := amClient.Create(ctx, typeStr, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create auth method: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating auth method: %s", apiErr.Message)
+		return diag.Errorf("error creating auth method: %v", err)
 	}
 	if amcr == nil {
 		return diag.Errorf("nil auth method after create")
@@ -159,16 +153,13 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 	md := meta.(*metaData)
 	amClient := authmethods.NewClient(md.client)
 
-	amrr, apiErr, err := amClient.Read(ctx, d.Id())
+	amrr, err := amClient.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read auth method: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading auth method: %s", apiErr.Message)
+		return diag.Errorf("error reading auth method: %v", err)
 	}
 	if amrr == nil {
 		return diag.Errorf("auth method nil after read")
@@ -241,16 +232,9 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if len(opts) > 0 {
 		opts = append(opts, authmethods.WithAutomaticVersioning(true))
-		_, apiErr, err := amClient.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := amClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update auth method: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating auth method: %s", apiErr.Message)
+			return diag.Errorf("error updating auth method: %v", err)
 		}
 	}
 
@@ -274,12 +258,9 @@ func resourceAuthMethodDelete(ctx context.Context, d *schema.ResourceData, meta 
 	md := meta.(*metaData)
 	amClient := authmethods.NewClient(md.client)
 
-	_, apiErr, err := amClient.Delete(ctx, d.Id())
+	_, err := amClient.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete auth method: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting auth method: %s", apiErr.Message)
+		return diag.Errorf("error deleting auth method: %v", err)
 	}
 
 	return nil

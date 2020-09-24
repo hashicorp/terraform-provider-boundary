@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/groups"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -76,15 +77,9 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	grps := groups.NewClient(md.client)
 
-	gcr, apiErr, err := grps.Create(
-		ctx,
-		scopeId,
-		opts...)
+	gcr, err := grps.Create(ctx, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create group: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating group: %s", apiErr.Message)
+		return diag.Errorf("error creating group: %v", err)
 	}
 	if gcr == nil {
 		return diag.Errorf("group nil after create")
@@ -97,14 +92,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		for _, i := range list {
 			memberIds = append(memberIds, i.(string))
 		}
-		gcsmr, apiErr, err := grps.SetMembers(
-			ctx,
-			gcr.Item.Id,
-			gcr.Item.Version,
-			memberIds)
-		if apiErr != nil {
-			return diag.Errorf("error setting principals on role: %s", apiErr.Message)
-		}
+		gcsmr, err := grps.SetMembers(ctx, gcr.Item.Id, gcr.Item.Version, memberIds)
 		if err != nil {
 			return diag.Errorf("error setting principals on role: %v", err)
 		}
@@ -123,16 +111,13 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	md := meta.(*metaData)
 	grps := groups.NewClient(md.client)
 
-	g, apiErr, err := grps.Read(ctx, d.Id())
+	g, err := grps.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read group: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading group: %s", apiErr.Message)
+		return diag.Errorf("error reading group: %v", err)
 	}
 	if g == nil {
 		return diag.Errorf("group nil after read")
@@ -173,16 +158,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if len(opts) > 0 {
 		opts = append(opts, groups.WithAutomaticVersioning(true))
-		_, apiErr, err := grps.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := grps.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update group: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating group: %s", apiErr.Message)
+			return diag.Errorf("error updating group: %v", err)
 		}
 	}
 
@@ -204,17 +182,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 
 		}
-		_, apiErr, err := grps.SetMembers(
-			ctx,
-			d.Id(),
-			0,
-			memberIds,
-			groups.WithAutomaticVersioning(true))
+		_, err := grps.SetMembers(ctx, d.Id(), 0, memberIds, groups.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error updating members in group: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating members in group: %s", apiErr.Message)
 		}
 		d.Set(groupMemberIdsKey, memberIds)
 	}
@@ -226,12 +196,9 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	md := meta.(*metaData)
 	grps := groups.NewClient(md.client)
 
-	_, apiErr, err := grps.Delete(ctx, d.Id())
+	_, err := grps.Delete(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling delete group: %s", err.Error())
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting group: %s", apiErr.Message)
 	}
 
 	return nil

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/targets"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -151,7 +152,7 @@ func testAccCheckTargetResourceMembersSet(name string, hostSets []string) resour
 		md := testProvider.Meta().(*metaData)
 		tgtsClient := targets.NewClient(md.client)
 
-		t, _, err := tgtsClient.Read(context.Background(), id)
+		t, err := tgtsClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
@@ -191,7 +192,7 @@ func testAccCheckTargetResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		tgts := targets.NewClient(md.client)
 
-		if _, _, err := tgts.Read(context.Background(), id); err != nil {
+		if _, err := tgts.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
 
@@ -214,11 +215,8 @@ func testAccCheckTargetResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				id := rs.Primary.ID
 
-				_, apiErr, err := tgts.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("Error when reading destroyed target %q: %v", id, err)
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+				_, err := tgts.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed target %q: %v", id, apiErr)
 				}
 

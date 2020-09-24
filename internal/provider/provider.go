@@ -128,10 +128,7 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 		am := authmethods.NewClient(md.client)
 
-		at, apiErr, err := am.Authenticate(ctx, authMethodId.(string), credentials)
-		if apiErr != nil {
-			return errors.New(apiErr.Message)
-		}
+		at, err := am.Authenticate(ctx, authMethodId.(string), credentials)
 		if err != nil {
 			return err
 		}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/targets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -164,16 +165,9 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	tc := targets.NewClient(md.client)
 
-	tcr, apiErr, err := tc.Create(
-		ctx,
-		typeStr,
-		scopeId,
-		opts...)
+	tcr, err := tc.Create(ctx, typeStr, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create target: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating target: %s", apiErr.Message)
+		return diag.Errorf("error creating target: %v", err)
 	}
 	if tcr == nil {
 		return diag.Errorf("target nil after create")
@@ -181,14 +175,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	raw := tcr.GetResponseMap()
 
 	if hostSetIds != nil {
-		tur, apiErr, err := tc.SetHostSets(
-			ctx,
-			tcr.Item.Id,
-			tcr.Item.Version,
-			hostSetIds)
-		if apiErr != nil {
-			return diag.Errorf("error setting host sets on target: %s", apiErr.Message)
-		}
+		tur, err := tc.SetHostSets(ctx, tcr.Item.Id, tcr.Item.Version, hostSetIds)
 		if err != nil {
 			return diag.Errorf("error setting host sets on target: %v", err)
 		}
@@ -204,16 +191,13 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	md := meta.(*metaData)
 	tc := targets.NewClient(md.client)
 
-	trr, apiErr, err := tc.Read(ctx, d.Id())
+	trr, err := tc.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read target: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading target: %s", apiErr.Message)
+		return diag.Errorf("error reading target: %v", err)
 	}
 	if trr == nil {
 		return diag.Errorf("target nil after read")
@@ -296,16 +280,9 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if len(opts) > 0 {
 		opts = append(opts, targets.WithAutomaticVersioning(true))
-		_, apiErr, err := tc.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := tc.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update target: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating target: %s", apiErr.Message)
+			return diag.Errorf("error updating target: %v", err)
 		}
 	}
 
@@ -335,17 +312,9 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				hostSetIds = append(hostSetIds, hostSet.(string))
 			}
 		}
-		_, apiErr, err := tc.SetHostSets(
-			ctx,
-			d.Id(),
-			0,
-			hostSetIds,
-			targets.WithAutomaticVersioning(true))
+		_, err := tc.SetHostSets(ctx, d.Id(), 0, hostSetIds, targets.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error updating host sets in target: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating host sets in target: %s", apiErr.Message)
 		}
 		d.Set(targetHostSetIdsKey, hostSetIds)
 	}
@@ -357,12 +326,9 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	md := meta.(*metaData)
 	tc := targets.NewClient(md.client)
 
-	_, apiErr, err := tc.Delete(ctx, d.Id())
+	_, err := tc.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete target: %s", err.Error())
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting target: %s", apiErr.Message)
+		return diag.Errorf("error deleting target: %s", err.Error())
 	}
 
 	return nil

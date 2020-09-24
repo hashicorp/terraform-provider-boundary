@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/groups"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -255,12 +256,9 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 		md := testProvider.Meta().(*metaData)
 		grpsClient := groups.NewClient(md.client)
 
-		g, apiErr, err := grpsClient.Read(context.Background(), id)
+		g, err := grpsClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
-		}
-		if apiErr != nil {
-			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
 		}
 
 		// for every member set as a member on the group in the state, ensure
@@ -300,12 +298,9 @@ func testAccCheckGroupScope(name, prefix string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		grps := groups.NewClient(md.client)
 
-		g, apiErr, err := grps.Read(context.Background(), id)
+		g, err := grps.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("could not read resource state %q: %v", id, err)
-		}
-		if apiErr != nil {
-			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
 		}
 
 		if !strings.HasPrefix(g.Item.ScopeId, prefix) {
@@ -331,12 +326,9 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		grps := groups.NewClient(md.client)
 
-		_, apiErr, err := grps.Read(context.Background(), id)
+		_, err := grps.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
-		}
-		if apiErr != nil {
-			return fmt.Errorf("Got an API error when reading group %q: %v", id, apiErr.Message)
 		}
 
 		return nil
@@ -362,11 +354,8 @@ func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				id := rs.Primary.ID
 
-				_, apiErr, err := grps.Read(context.Background(), id)
-				if err != nil {
-					return err
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
+				_, err := grps.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed resource %q: %v", id, apiErr)
 				}
 

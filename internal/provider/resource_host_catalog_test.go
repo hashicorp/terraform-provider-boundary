@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -83,7 +84,7 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		hcClient := hostcatalogs.NewClient(md.client)
 
-		if _, _, err := hcClient.Read(context.Background(), id); err != nil {
+		if _, err := hcClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading host catalog %q: %v", id, err)
 		}
 
@@ -104,12 +105,9 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc
 				id := rs.Primary.ID
 				hcClient := hostcatalogs.NewClient(md.client)
 
-				_, apiErr, err := hcClient.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("Error when reading destroyed host catalog %q: %v", id, err)
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, apiErr)
+				_, err := hcClient.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, err)
 				}
 
 			default:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -125,15 +126,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	rc := roles.NewClient(md.client)
 
-	tcr, apiErr, err := rc.Create(
-		ctx,
-		scopeId,
-		opts...)
+	tcr, err := rc.Create(ctx, scopeId, opts...)
 	if err != nil {
 		return diag.Errorf("error calling create role: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating role: %s", apiErr.Message)
 	}
 	if tcr == nil {
 		return diag.Errorf("nil role after create")
@@ -141,15 +136,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	raw := tcr.GetResponseMap()
 
 	if principalIds != nil {
-		tspr, apiErr, err := rc.SetPrincipals(
-			ctx,
-			tcr.Item.Id,
-			0,
-			principalIds,
-			roles.WithAutomaticVersioning(true))
-		if apiErr != nil {
-			return diag.Errorf("error setting principal IDs on role: %s", apiErr.Message)
-		}
+		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error setting principal IDs on role: %v", err)
 		}
@@ -160,15 +147,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if grantStrings != nil {
-		tsgr, apiErr, err := rc.SetGrants(
-			ctx,
-			tcr.Item.Id,
-			0,
-			grantStrings,
-			roles.WithAutomaticVersioning(true))
-		if apiErr != nil {
-			return diag.Errorf("error setting grant strings on role: %s", apiErr.Message)
-		}
+		tsgr, err := rc.SetGrants(ctx, tcr.Item.Id, 0, grantStrings, roles.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error setting grant strings on role: %v", err)
 		}
@@ -187,16 +166,13 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	md := meta.(*metaData)
 	rc := roles.NewClient(md.client)
 
-	trr, apiErr, err := rc.Read(ctx, d.Id())
+	trr, err := rc.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read role: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading role: %s", apiErr.Message)
+		return diag.Errorf("error calling read role: %v", err)
 	}
 	if trr == nil {
 		return diag.Errorf("role nil after read")
@@ -248,16 +224,9 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if len(opts) > 0 {
 		opts = append(opts, roles.WithAutomaticVersioning(true))
-		_, apiErr, err := rc.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := rc.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update target: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating target: %s", apiErr.Message)
+			return diag.Errorf("error updating target: %v", err)
 		}
 	}
 
@@ -279,17 +248,9 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				grantStrings = append(grantStrings, grant.(string))
 			}
 		}
-		_, apiErr, err := rc.SetGrants(
-			ctx,
-			d.Id(),
-			0,
-			grantStrings,
-			roles.WithAutomaticVersioning(true))
+		_, err := rc.SetGrants(ctx, d.Id(), 0, grantStrings, roles.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error updating grant strings on role: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating grant strings on role: %s", apiErr.Message)
 		}
 		d.Set(roleGrantStringsKey, grantStrings)
 	}
@@ -302,17 +263,9 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				principalIds = append(principalIds, principal.(string))
 			}
 		}
-		_, apiErr, err := rc.SetPrincipals(
-			ctx,
-			d.Id(),
-			0,
-			principalIds,
-			roles.WithAutomaticVersioning(true))
+		_, err := rc.SetPrincipals(ctx, d.Id(), 0, principalIds, roles.WithAutomaticVersioning(true))
 		if err != nil {
 			return diag.Errorf("error updating grant strings on role: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating grant strings on role: %s", apiErr.Message)
 		}
 		d.Set(rolePrincipalIdsKey, principalIds)
 	}
@@ -328,12 +281,9 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	md := meta.(*metaData)
 	rc := roles.NewClient(md.client)
 
-	_, apiErr, err := rc.Delete(ctx, d.Id())
+	_, err := rc.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete role: %s", err.Error())
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting role: %s", apiErr.Message)
+		return diag.Errorf("error deleting role: %s", err.Error())
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,15 +67,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	usrs := users.NewClient(md.client)
 
-	ucr, apiErr, err := usrs.Create(
-		ctx,
-		scopeId,
-		opts...)
+	ucr, err := usrs.Create(ctx, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create user: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating user: %s", apiErr.Message)
+		return diag.Errorf("error creating user: %v", err)
 	}
 	if ucr == nil {
 		return diag.Errorf("user nil after create")
@@ -89,16 +84,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	md := meta.(*metaData)
 	usrs := users.NewClient(md.client)
 
-	urr, apiErr, err := usrs.Read(ctx, d.Id())
+	urr, err := usrs.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read user: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading user: %s", apiErr.Message)
+		return diag.Errorf("error calling read user: %v", err)
 	}
 	if urr == nil {
 		return diag.Errorf("user nil after read")
@@ -139,16 +131,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if len(opts) > 0 {
 		opts = append(opts, users.WithAutomaticVersioning(true))
-		_, apiErr, err := usrs.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := usrs.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update user: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating user: %s", apiErr.Message)
+			return diag.Errorf("error updating user: %v", err)
 		}
 	}
 
@@ -166,12 +151,9 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	md := meta.(*metaData)
 	usrs := users.NewClient(md.client)
 
-	_, apiErr, err := usrs.Delete(ctx, d.Id())
+	_, err := usrs.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete user: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting user: %s", apiErr.Message)
+		return diag.Errorf("error deleting user: %v", err)
 	}
 
 	return nil

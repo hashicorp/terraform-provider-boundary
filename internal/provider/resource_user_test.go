@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -85,12 +86,9 @@ func testAccCheckUserResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		usrs := users.NewClient(md.client)
 
-		_, apiErr, err := usrs.Read(context.Background(), id)
+		_, err := usrs.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading user %q: %v", id, err)
-		}
-		if apiErr != nil {
-			return fmt.Errorf("Got an api error when reading user %q: %v", id, apiErr.Message)
 		}
 
 		return nil
@@ -111,12 +109,9 @@ func testAccCheckUserResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				id := rs.Primary.ID
 				usrs := users.NewClient(md.client)
 
-				_, apiErr, err := usrs.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("Error when reading destroyed user %q: %v", id, err)
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, apiErr)
+				_, err := usrs.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, err)
 				}
 
 			default:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -88,16 +89,9 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	hcClient := hostcatalogs.NewClient(md.client)
 
-	hccr, apiErr, err := hcClient.Create(
-		ctx,
-		typeStr,
-		scopeId,
-		opts...)
+	hccr, err := hcClient.Create(ctx, typeStr, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create host catalog: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating host catalog: %s", apiErr.Message)
+		return diag.Errorf("error creating host catalog: %v", err)
 	}
 	if hccr == nil {
 		return diag.Errorf("nil host catalog after create")
@@ -112,16 +106,13 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
-	hcrr, apiErr, err := hcClient.Read(ctx, d.Id())
+	hcrr, err := hcClient.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read host catalog: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading host catalog: %s", apiErr.Message)
+		return diag.Errorf("error reading host catalog: %v", err)
 	}
 	if hcrr == nil {
 		return diag.Errorf("host catalog nil after read")
@@ -162,16 +153,9 @@ func resourceHostCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if len(opts) > 0 {
 		opts = append(opts, hostcatalogs.WithAutomaticVersioning(true))
-		_, apiErr, err := hcClient.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := hcClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update host catalog: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating host catalog: %s", apiErr.Message)
+			return diag.Errorf("error updating host catalog: %v", err)
 		}
 	}
 
@@ -189,12 +173,9 @@ func resourceHostCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
-	_, apiErr, err := hcClient.Delete(ctx, d.Id())
+	_, err := hcClient.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete host catalog: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting host catalog: %s", apiErr.Message)
+		return diag.Errorf("error deleting host catalog: %v", err)
 	}
 
 	return nil

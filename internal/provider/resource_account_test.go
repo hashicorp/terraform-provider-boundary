@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/accounts"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -108,7 +109,7 @@ func testAccCheckAccountResourceExists(name string) resource.TestCheckFunc {
 
 		amClient := accounts.NewClient(md.client)
 
-		if _, _, err := amClient.Read(context.Background(), id); err != nil {
+		if _, err := amClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading account %q: %v", id, err)
 		}
 
@@ -130,12 +131,9 @@ func testAccCheckAccountResourceDestroy(t *testing.T) resource.TestCheckFunc {
 
 				amClient := accounts.NewClient(md.client)
 
-				_, apiErr, err := amClient.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("Error when reading destroyed account %q: %v", id, err)
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed account %q: %v", id, apiErr)
+				_, err := amClient.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed account %q: %v", id, err)
 				}
 
 			default:

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -148,12 +149,9 @@ func testAccCheckScopeResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		scp := scopes.NewClient(md.client)
 
-		_, apiErr, err := scp.Read(context.Background(), id)
+		_, err := scp.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading scope %q: %v", id, err)
-		}
-		if apiErr != nil {
-			return fmt.Errorf("Got an API error when reading scope %q: %v", id, apiErr.Message)
 		}
 
 		return nil
@@ -170,12 +168,9 @@ func testAccCheckScopeResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			id := rs.Primary.ID
 			switch rs.Type {
 			case "boundary_scope":
-				_, apiErr, err := scp.Read(context.Background(), id)
-				if err != nil {
-					return err
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed resource %q: %v", id, apiErr)
+				_, err := scp.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed resource %q: %w", id, err)
 				}
 			default:
 				t.Logf("Got unknown resource type %q", rs.Type)

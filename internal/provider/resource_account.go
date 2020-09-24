@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/accounts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -126,15 +127,9 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	aClient := accounts.NewClient(md.client)
 
-	acr, apiErr, err := aClient.Create(
-		ctx,
-		authMethodId,
-		opts...)
+	acr, err := aClient.Create(ctx, authMethodId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create account: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating account: %s", apiErr.Message)
+		return diag.Errorf("error creating account: %v", err)
 	}
 	if acr == nil {
 		return diag.Errorf("nil account after create")
@@ -149,16 +144,13 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	md := meta.(*metaData)
 	aClient := accounts.NewClient(md.client)
 
-	arr, apiErr, err := aClient.Read(ctx, d.Id())
+	arr, err := aClient.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read account: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading account: %s", apiErr.Message)
+		return diag.Errorf("error reading account: %v", err)
 	}
 	if arr == nil {
 		return diag.Errorf("account nil after read")
@@ -231,16 +223,9 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if len(opts) > 0 {
 		opts = append(opts, accounts.WithAutomaticVersioning(true))
-		_, apiErr, err := aClient.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := aClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update account: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating account: %s", apiErr.Message)
+			return diag.Errorf("error updating account: %v", err)
 		}
 	}
 
@@ -264,12 +249,9 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	md := meta.(*metaData)
 	aClient := accounts.NewClient(md.client)
 
-	_, apiErr, err := aClient.Delete(ctx, d.Id())
+	_, err := aClient.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete account: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting account: %s", apiErr.Message)
+		return diag.Errorf("error deleting account: %v", err)
 	}
 
 	return nil

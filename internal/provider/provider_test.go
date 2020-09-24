@@ -1,15 +1,12 @@
 package provider
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/testing/controller"
 	wrapping "github.com/hashicorp/go-kms-wrapping"
 	"github.com/hashicorp/go-kms-wrapping/wrappers/aead"
@@ -118,18 +115,6 @@ provider "boundary" {
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
-}
-
-func setGrantScopeIdOnProject(scopeId, grantScopeId, principalId string, client *api.Client) error {
-	roleClient := roles.NewClient(client)
-	_, err, _ := roleClient.Create(
-		context.Background(),
-		scopeId,
-		roles.WithName(fmt.Sprintf("TestRole_%s", grantScopeId)),
-		roles.WithDescription(fmt.Sprintf("Terraform test management role for %s", grantScopeId)),
-		roles.WithGrantScopeId(grantScopeId))
-
-	return fmt.Errorf("%s", err.Message)
 }
 
 func TestProvider(t *testing.T) {

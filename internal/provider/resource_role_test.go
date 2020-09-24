@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -329,7 +330,8 @@ func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		rolesClient := roles.NewClient(md.client)
 
-		if _, apiErr, _ := rolesClient.Read(context.Background(), id); apiErr == nil || apiErr.Status != http.StatusNotFound {
+		_, err := rolesClient.Read(context.Background(), id)
+		if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Role not destroyed %q: %v", id, apiErr))
 		}
 
@@ -352,7 +354,7 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 		md := testProvider.Meta().(*metaData)
 		rolesClient := roles.NewClient(md.client)
 
-		if _, _, err := rolesClient.Read(context.Background(), id); err != nil {
+		if _, err := rolesClient.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
 
@@ -390,7 +392,7 @@ func testAccCheckRoleResourcePrincipalsSet(name string, principals []string) res
 		md := testProvider.Meta().(*metaData)
 		rolesClient := roles.NewClient(md.client)
 
-		rr, _, err := rolesClient.Read(context.Background(), id)
+		rr, err := rolesClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
@@ -447,7 +449,7 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 		md := testProvider.Meta().(*metaData)
 		rolesClient := roles.NewClient(md.client)
 
-		rr, _, err := rolesClient.Read(context.Background(), id)
+		rr, err := rolesClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
@@ -489,7 +491,7 @@ func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) res
 		md := testProvider.Meta().(*metaData)
 		rolesClient := roles.NewClient(md.client)
 
-		rr, _, err := rolesClient.Read(context.Background(), id)
+		rr, err := rolesClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading role %q: %v", id, err)
 		}
@@ -535,12 +537,9 @@ func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
 				id := rs.Primary.ID
 				rolesClient := roles.NewClient(md.client)
 
-				_, apiErr, err := rolesClient.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("Error when reading destroyed role %q: %v", id, err)
-				}
-				if apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed role %q: %v", id, apiErr)
+				_, err := rolesClient.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+					return fmt.Errorf("Didn't get a 404 when reading destroyed role %q: %v", id, err)
 				}
 
 			default:

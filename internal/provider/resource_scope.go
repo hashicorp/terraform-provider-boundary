@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,15 +106,9 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	scp := scopes.NewClient(md.client)
 
-	scr, apiErr, err := scp.Create(
-		ctx,
-		scopeId,
-		opts...)
+	scr, err := scp.Create(ctx, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create scope: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating scope: %s", apiErr.Message)
+		return diag.Errorf("error creating scope: %v", err)
 	}
 	if scr == nil {
 		return diag.Errorf("scope nil after create")
@@ -128,16 +123,13 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	md := meta.(*metaData)
 	scp := scopes.NewClient(md.client)
 
-	srr, apiErr, err := scp.Read(ctx, d.Id())
+	srr, err := scp.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read scope: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading scope: %s", apiErr.Message)
+		return diag.Errorf("error calling read scope: %v", err)
 	}
 	if srr == nil {
 		return diag.Errorf("scope nil after read")
@@ -178,16 +170,9 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if len(opts) > 0 {
 		opts = append(opts, scopes.WithAutomaticVersioning(true))
-		_, apiErr, err := scp.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := scp.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update scope: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating scope: %s", apiErr.Message)
+			return diag.Errorf("error updating scope: %v", err)
 		}
 	}
 
@@ -209,12 +194,9 @@ func resourceScopeDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	md := meta.(*metaData)
 	scp := scopes.NewClient(md.client)
 
-	_, apiErr, err := scp.Delete(ctx, d.Id())
+	_, err := scp.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete scope: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting scope: %s", apiErr.Message)
+		return diag.Errorf("error deleting scope: %v", err)
 	}
 
 	return nil

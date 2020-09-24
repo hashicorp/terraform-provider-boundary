@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hosts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -115,15 +116,9 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	hClient := hosts.NewClient(md.client)
 
-	hcr, apiErr, err := hClient.Create(
-		ctx,
-		hostCatalogId,
-		opts...)
+	hcr, err := hClient.Create(ctx, hostCatalogId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling create host: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error creating host: %s", apiErr.Message)
+		return diag.Errorf("error creating host: %v", err)
 	}
 	if hcr == nil {
 		return diag.Errorf("host nil after create")
@@ -138,16 +133,13 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	md := meta.(*metaData)
 	hClient := hosts.NewClient(md.client)
 
-	hrr, apiErr, err := hClient.Read(ctx, d.Id())
+	hrr, err := hClient.Read(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling read host: %v", err)
-	}
-	if apiErr != nil {
-		if apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading host: %s", apiErr.Message)
+		return diag.Errorf("error reading host: %v", err)
 	}
 	if hrr == nil {
 		return diag.Errorf("host nil after read")
@@ -204,16 +196,9 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if len(opts) > 0 {
 		opts = append(opts, hosts.WithAutomaticVersioning(true))
-		_, apiErr, err := hClient.Update(
-			ctx,
-			d.Id(),
-			0,
-			opts...)
+		_, err := hClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error calling update host: %v", err)
-		}
-		if apiErr != nil {
-			return diag.Errorf("error updating host: %s", apiErr.Message)
+			return diag.Errorf("error updating host: %v", err)
 		}
 	}
 
@@ -234,12 +219,9 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	md := meta.(*metaData)
 	hClient := hosts.NewClient(md.client)
 
-	_, apiErr, err := hClient.Delete(ctx, d.Id())
+	_, err := hClient.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error calling delete host: %v", err)
-	}
-	if apiErr != nil {
-		return diag.Errorf("error deleting host: %s", apiErr.Message)
+		return diag.Errorf("error deleting host: %v", err)
 	}
 
 	return nil
