@@ -17,7 +17,7 @@ require (
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.0.0-20200924213458-fd0da998e851
+	github.com/hashicorp/boundary v0.0.0-20200925141712-61a0ae02c118
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.5.16
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
