@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+const userAccountIDsKey = "account_ids"
+
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceUserCreate,
@@ -30,6 +32,11 @@ func resourceUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			userAccountIDsKey: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -38,6 +45,7 @@ func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(userAccountIDsKey, raw["account_ids"])
 	d.SetId(raw["id"].(string))
 }
 
@@ -74,8 +82,25 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if ucr == nil {
 		return diag.Errorf("user nil after create")
 	}
+	raw := ucr.GetResponseMap()
 
-	setFromUserResponseMap(d, ucr.GetResponseMap())
+	if val, ok := d.GetOk(userAccountIDsKey); ok {
+		list := val.(*schema.Set).List()
+		acctIds := make([]string, 0, len(list))
+		for _, i := range list {
+			acctIds = append(acctIds, i.(string))
+		}
+		usrac, err := usrs.SetAccounts(ctx, ucr.Item.Id, ucr.Item.Version, acctIds)
+		if err != nil {
+			return diag.Errorf("error setting accounts on user: %v", err)
+		}
+		if usrac == nil {
+			return diag.Errorf("user nil after setting accounts")
+		}
+		raw = usrac.GetResponseMap()
+	}
+
+	setFromUserResponseMap(d, raw)
 
 	return nil
 }
@@ -142,6 +167,22 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange(DescriptionKey) {
 		d.Set(DescriptionKey, desc)
+	}
+
+	if d.HasChange(userAccountIDsKey) {
+		var accountIds []string
+		if accountsVal, ok := d.GetOk(userAccountIDsKey); ok {
+			accounts := accountsVal.(*schema.Set).List()
+			for _, account := range accounts {
+				accountIds = append(accountIds, account.(string))
+			}
+
+		}
+		_, err := usrs.SetAccounts(ctx, d.Id(), 0, accountIds, users.WithAutomaticVersioning(true))
+		if err != nil {
+			return diag.Errorf("error updating accounts on user: %v", err)
+		}
+		d.Set(userAccountIDsKey, accountIds)
 	}
 
 	return nil
