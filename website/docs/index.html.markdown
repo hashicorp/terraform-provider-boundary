@@ -10,18 +10,33 @@ description: |-
 
 This provider configures Boundary.
 
-## Example Usage
+## Getting Started 
 
 Do not keep your authentication password in HCL for production environments, use Terraform environment variables.
+
+The following example sets up the provider for authenticating with Boundary running in [dev mode](https://boundaryproject.io/docs/getting-started#what-is-dev-mode).
+
+### Start Boundary in Dev Mode
+
+First, we need an instance of Boundary running locally, start it up in dev mode and override the username and password:
+
+```bash
+$ boundary dev -password=passpass -login-name=myuser
+```
+
+Now use the values pass in above to configure your provider:
 
 ```hcl
 provider "boundary" {
   addr                          = "http://127.0.0.1:9200"
-  auth_method_id                = "ampw_1234567890"      # changeme
-  password_auth_method_login_name = "myuser"               # changeme
-  password_auth_method_password = "passpass" # changeme
+  auth_method_id                = "ampw_1234567890"
+  password_auth_method_login_name = "myuser"
+  password_auth_method_password = "passpass"
 }
 ```
+
+### Provision a Boundary Target
+TBD
 
 ## Complex Usage
 
