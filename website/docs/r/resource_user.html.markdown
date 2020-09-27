@@ -19,9 +19,22 @@ resource "boundary_scope" "org" {
   auto_create_role = true
 }
 
-resource "boundary_user" "example" {
-  name        = "My user"
-  description = "My first user!"
+resource "boundary_auth_method" "password" {
+  scope_id = boundary_scope.org.id
+  type     = "password"
+}
+
+resource "boundary_account" "jeff" {
+  auth_method_id = boundary_auth_method.password.id
+  type           = "password"
+  login_name     = "jeff"
+  password       = "$uper$ecure"
+}
+
+resource "boundary_user" "jeff" {
+  name        = "jeff"
+  description = "Jeff's user resource"
+  account_ids = [boundary_account.jeff.id]
   scope_id    = boundary_scope.org.id 
 }
 ```
@@ -29,6 +42,7 @@ resource "boundary_user" "example" {
 ## Argument Reference
 
 The following arguments are optional:
+* `account_ids` - Account ID's to associate with this user resource.
 * `name` - The username. Defaults to the resource name.
 * `description` - The user description.
 * `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
