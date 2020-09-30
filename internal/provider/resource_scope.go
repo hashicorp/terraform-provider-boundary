@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	scopeGlobalScopeKey = "global_scope"
-	scopeAutoCreateRole = "auto_create_role"
+	scopeGlobalScopeKey        = "global_scope"
+	scopeAutoCreateAdminRole   = "auto_create_admin_role"
+	scopeAutoCreateDefaultRole = "auto_create_default_role"
 )
 
 func resourceScope() *schema.Resource {
@@ -41,10 +42,15 @@ func resourceScope() *schema.Resource {
 				Optional:    true,
 				Description: "Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.",
 			},
-			scopeAutoCreateRole: {
+			scopeAutoCreateAdminRole: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
+			},
+			scopeAutoCreateDefaultRole: {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
 			},
 		},
 	}
@@ -100,8 +106,11 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// source from the current token, so that the user can be introspected when
 	// defining these roles instead of having to be explicitly defined in
 	// config.
-	if !d.Get(scopeAutoCreateRole).(bool) {
-		opts = append(opts, scopes.WithSkipRoleCreation(true))
+	if !d.Get(scopeAutoCreateAdminRole).(bool) {
+		opts = append(opts, scopes.WithSkipAdminRoleCreation(true))
+	}
+	if !d.Get(scopeAutoCreateDefaultRole).(bool) {
+		opts = append(opts, scopes.WithSkipDefaultRoleCreation(true))
 	}
 
 	scp := scopes.NewClient(md.client)
