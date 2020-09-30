@@ -26,12 +26,12 @@ resource "boundary_role" "default" {
 	default_role = true
 	description = "Default role created on first instantiation of Boundary. It is meant to provide enough permissions for users to successfully authenticate via various client types."
 	grant_scope_id = "global"
-	name = "default"
+	name = "Default Grants"
 	scope_id = boundary_scope.global.id
-	principal_ids = ["u_auth", "u_anon"]
+	principal_ids = ["u_anon"]
 	grant_strings = [
-		"type=scope;actions=list",
-		"type=auth-method;actions=authenticate,list"
+		"id=*;type=scope;actions=list",
+		"id=*;type=auth-method;actions=authenticate,list"
 	]
 }
 
