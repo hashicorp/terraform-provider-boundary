@@ -125,8 +125,8 @@ resource "boundary_role" "with_groups" {
 	depends_on     = [boundary_role.proj1_admin]
 }`
 
-	readonlyGrant       = "id=*;actions=read"
-	readonlyGrantUpdate = "id=*;actions=read,create"
+	readonlyGrant       = "id=*;type=*;actions=read"
+	readonlyGrantUpdate = "id=*;type=*;actions=read,create"
 
 	projRoleWithGrants = fmt.Sprintf(`
 resource "boundary_role" "with_grants" {
