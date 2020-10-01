@@ -22,19 +22,6 @@ resource "boundary_scope" "global" {
 	scope_id = "global"
 }
 
-resource "boundary_role" "default" {
-	default_role = true
-	description = "Default role created on first instantiation of Boundary. It is meant to provide enough permissions for users to successfully authenticate via various client types."
-	grant_scope_id = "global"
-	name = "Default Grants"
-	scope_id = boundary_scope.global.id
-	principal_ids = ["u_anon"]
-	grant_strings = [
-		"id=*;type=scope;actions=list",
-		"id=*;type=auth-method;actions=authenticate,list"
-	]
-}
-
 resource "boundary_scope" "org1" {
 	name = "org1"
 	scope_id = boundary_scope.global.id
@@ -43,7 +30,7 @@ resource "boundary_scope" "org1" {
 resource "boundary_role" "org1_admin" {
 	scope_id = boundary_scope.global.id
 	grant_scope_id = boundary_scope.org1.id
-	grant_strings = ["id=*;actions=*"]
+	grant_strings = ["id=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
 `
@@ -59,7 +46,7 @@ resource "boundary_scope" "proj1" {
 resource "boundary_role" "proj1_admin" {
 	scope_id = boundary_scope.org1.id
 	grant_scope_id = boundary_scope.proj1.id
-	grant_strings = ["id=*;actions=*"]
+	grant_strings = ["id=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
 `
@@ -75,7 +62,7 @@ resource "boundary_scope" "proj1" {
 resource "boundary_role" "proj1_admin" {
 	scope_id = boundary_scope.org1.id
 	grant_scope_id = boundary_scope.proj1.id
-	grant_strings = ["id=*;actions=*"]
+	grant_strings = ["id=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
 `
@@ -90,7 +77,7 @@ resource "boundary_scope" "proj2" {
 resource "boundary_role" "proj2_admin" {
 	scope_id = boundary_scope.org1.id
 	grant_scope_id = boundary_scope.proj2.id
-	grant_strings = ["id=*;actions=*"]
+	grant_strings = ["id=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
 `
