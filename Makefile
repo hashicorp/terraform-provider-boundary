@@ -2,6 +2,8 @@ default: update-deps testacc
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 INSTALL_PATH=~/.local/share/terraform/plugins/localhost/providers/boundary/0.0.1/linux_$(GOARCH)
+BUILD_ALL_PATH=${PWD}/bin
+
 ifeq ($(GOOS), darwin)
 	INSTALL_PATH=~/Library/Application\ Support/io.terraform/plugins/localhost/providers/boundary/0.0.1/darwin_$(GOARCH)
 endif
@@ -27,3 +29,9 @@ update-deps:
 dev:
 	mkdir -p $(INSTALL_PATH)	
 	go build -o $(INSTALL_PATH)/terraform-provider-boundary main.go
+
+all:
+	mkdir -p $(BUILD_ALL_PATH)
+	GOOS=darwin go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_darwin-amd64 main.go
+	GOOS=windows go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_windows-amd64 main.go
+	GOOS=linux go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_linux-amd64 main.go
