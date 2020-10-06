@@ -1,14 +1,13 @@
 ---
-layout: "boundary"
 page_title: "Provider: Boundary"
-sidebar_current: "docs-boundary-index"
+subcategory: ""
 description: |-
-  Terraform provider Boundary.
+  Terraform provider for configuring Boundary.
 ---
 
 # Boundary Provider
 
-This provider configures Boundary.
+Terraform provider for configuring Boundary.
 
 ## Example Usage
 

@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: target_resource"
-sidebar_current: "docs-boundary-target-resource"
+subcategory: ""
 description: |-
   Target resource for the Boundary Terraform provider.
 ---

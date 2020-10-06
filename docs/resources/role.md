@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: role_resource"
-sidebar_current: "docs-boundary-role-resource"
+subcategory: ""
 description: |-
   Role resource for the Boundary Terraform provider.
 ---

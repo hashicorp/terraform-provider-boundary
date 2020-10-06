@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: account_resource"
-sidebar_current: "docs-boundary-account-resource"
+subcategory: ""
 description: |-
   Account resource for the Boundary Terraform provider.
 ---

@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: scope_resource"
-sidebar_current: "docs-boundary-scope-resource"
+subcategory: ""
 description: |-
   Scope resource for the Boundary Terraform provider.
 ---

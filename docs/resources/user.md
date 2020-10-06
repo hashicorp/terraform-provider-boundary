@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: user_resource"
-sidebar_current: "docs-boundary-user-resource"
+subcategory: ""
 description: |-
   User resource for the Boundary Terraform provider.
 ---

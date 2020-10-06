@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: hostset_resource"
-sidebar_current: "docs-boundary-hostset-catalog-resource"
+subcategory: ""
 description: |-
   Hostset resource for the Boundary Terraform provider.
 ---

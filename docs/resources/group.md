@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: group_resource"
-sidebar_current: "docs-boundary-group-resource"
+subcategory: ""
 description: |-
   Group resource for the Boundary Terraform provider.
 ---

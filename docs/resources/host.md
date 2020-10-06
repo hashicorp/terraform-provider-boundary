@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: host_resource"
-sidebar_current: "docs-boundary-host-catalog-resource"
+subcategory: ""
 description: |-
   Host resource for the Boundary Terraform provider.
 ---

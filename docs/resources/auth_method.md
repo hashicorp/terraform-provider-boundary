@@ -1,7 +1,6 @@
 ---
-layout: "boundary"
 page_title: "Boundary: auth_method_resource"
-sidebar_current: "docs-boundary-auth-method-resource"
+subcategory: ""
 description: |-
   Auth Method resource for the Boundary Terraform provider.
 ---
