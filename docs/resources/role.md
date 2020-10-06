@@ -1,21 +1,23 @@
 ---
-page_title: "Boundary: role_resource"
+page_title: "boundary_role Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Role resource for the Boundary Terraform provider.
+  The role resource allows you to configure a Boundary role.
 ---
 
-# role_resource 
-The role resource allows you to configure a Boundary role. 
+# Resource `boundary_role`
+
+The role resource allows you to configure a Boundary role.
 
 ## Example Usage
+
 Basic usage:
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -28,11 +30,11 @@ resource "boundary_role" "example" {
 
 Usage with a user resource:
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -52,16 +54,15 @@ resource "boundary_role" "example" {
   principals  = [boundary_user.foo.id, boundary_user.bar.id]
   scope_id    = boundary_scope.org.id
 }
-
 ```
 
 Usage with user and grants resource:
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -82,11 +83,11 @@ resource "boundary_role" "readonly" {
 
 Usage for a project-specific role:
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -112,11 +113,18 @@ resource "boundary_role" "readonly" {
 }
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are optional:
-* `description` - The role description.
-* `grants` - A list of stringified grants for the role.
-* `name` - The role name. Defaults to the resource name.
-* `principals` - A list of principal (user or group) IDs to add as principals on the role.
-* `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+### Required
+
+- **scope_id** (String, Required) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+
+### Optional
+
+- **default_role** (Boolean, Optional) Indicates that the role containing this value is the default role (that is, has the id 'r_default'), which triggers some specialized behavior to allow it to be imported and managed.
+- **description** (String, Optional) The role description.
+- **grant_scope_id** (String, Optional)
+- **grant_strings** (Set of String, Optional) A list of stringified grants for the role.
+- **id** (String, Optional) The ID of this resource.
+- **name** (String, Optional) The role name. Defaults to the resource name.
+- **principal_ids** (Set of String, Optional) A list of principal (user or group) IDs to add as principals on the role.

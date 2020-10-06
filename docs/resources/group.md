@@ -1,20 +1,21 @@
 ---
-page_title: "Boundary: group_resource"
+page_title: "boundary_group Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Group resource for the Boundary Terraform provider.
+  The group resource allows you to configure a Boundary group.
 ---
 
-# boundary_group_resource 
-The group resource allows you to configure a Boundary group. 
+# Resource `boundary_group`
+
+The group resource allows you to configure a Boundary group.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -33,11 +34,11 @@ resource "boundary_group" "example" {
 
 Usage for project-specific group:
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -61,10 +62,15 @@ resource "boundary_group" "example" {
 }
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are optional:
-* `description` - The group description.
-* `name` - The group name. Defaults to the resource name.
-* `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
-* `member_ids` - Resource IDs for group members, these are most likely boundary users.
+### Required
+
+- **scope_id** (String, Required) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+
+### Optional
+
+- **description** (String, Optional) The group description.
+- **id** (String, Optional) The ID of this resource.
+- **member_ids** (Set of String, Optional) Resource IDs for group members, these are most likely boundary users.
+- **name** (String, Optional) The group name. Defaults to the resource name.

@@ -1,18 +1,17 @@
 ---
-page_title: "Boundary: host_catalog_resource"
+page_title: "boundary_host_catalog Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Host catalog resource for the Boundary Terraform provider.
+  The host catalog resource allows you to configure a Boundary host catalog. Host catalogs are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host catalog.
 ---
 
-# host_catalog_resource 
-The host catalog resource allows you to configure a Boundary host catalog. Host catalogs
-are always part of a project, so a project resource should be used inline or you should have
-the project ID in hand to successfully configure a host catalog. 
+# Resource `boundary_host_catalog`
+
+The host catalog resource allows you to configure a Boundary host catalog. Host catalogs are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host catalog.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
@@ -35,12 +34,17 @@ resource "boundary_host_catalog" "example" {
 }
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are required:
-* `type` - The host catalog type. Only `Static` (yes, title case) is supported.
-* `scope_id` - The scope ID in which the resource is created.
+### Required
 
-The following arguments are optional:
-* `name` - The host catalog name. Defaults to the resource name.
-* `description` - The host catalog description.
+- **scope_id** (String, Required) The scope ID in which the resource is created.
+- **type** (String, Required) The host catalog type. Only `Static` (yes, title case) is supported.
+
+### Optional
+
+- **description** (String, Optional) The host catalog description.
+- **id** (String, Optional) The ID of this resource.
+- **name** (String, Optional) The host catalog name. Defaults to the resource name.
+
+

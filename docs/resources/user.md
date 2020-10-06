@@ -1,20 +1,21 @@
 ---
-page_title: "Boundary: user_resource"
+page_title: "boundary_user Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  User resource for the Boundary Terraform provider.
+  The user resource allows you to configure a Boundary user.
 ---
 
-# user_resource 
-The user resource allows you to configure a Boundary user. 
+# Resource `boundary_user`
+
+The user resource allows you to configure a Boundary user.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -34,14 +35,21 @@ resource "boundary_user" "jeff" {
   name        = "jeff"
   description = "Jeff's user resource"
   account_ids = [boundary_account.jeff.id]
-  scope_id    = boundary_scope.org.id 
+  scope_id    = boundary_scope.org.id
 }
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are optional:
-* `account_ids` - Account ID's to associate with this user resource.
-* `name` - The username. Defaults to the resource name.
-* `description` - The user description.
-* `scope_id` - The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+### Required
+
+- **scope_id** (String, Required) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+
+### Optional
+
+- **account_ids** (Set of String, Optional) Account ID's to associate with this user resource.
+- **description** (String, Optional) The user description.
+- **id** (String, Optional) The ID of this resource.
+- **name** (String, Optional) The username. Defaults to the resource name.
+
+

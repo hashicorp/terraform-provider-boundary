@@ -1,17 +1,3 @@
----
-page_title: "boundary_target Resource - terraform-provider-boundary"
-subcategory: ""
-description: |-
-  The target resource allows you to configure a Boundary target.
----
-
-# Resource `boundary_target`
-
-The target resource allows you to configure a Boundary target.
-
-## Example Usage
-
-```terraform
 resource "boundary_scope" "global" {
   global_scope     = true
   scope_id         = "global"
@@ -72,23 +58,3 @@ resource "boundary_target" "foo" {
     boundary_host_set.foo.id
   ]
 }
-```
-
-## Schema
-
-### Required
-
-- **scope_id** (String, Required) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
-- **type** (String, Required) The target resource type.
-
-### Optional
-
-- **default_port** (Number, Optional) The default port for this target.
-- **description** (String, Optional) The target description.
-- **host_set_ids** (Set of String, Optional) A list of host set ID's.
-- **id** (String, Optional) The ID of this resource.
-- **name** (String, Optional) The target name. Defaults to the resource name.
-- **session_connection_limit** (Number, Optional)
-- **session_max_seconds** (Number, Optional)
-
-

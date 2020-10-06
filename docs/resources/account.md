@@ -1,20 +1,21 @@
 ---
-page_title: "Boundary: account_resource"
+page_title: "boundary_account Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Account resource for the Boundary Terraform provider.
+  The account resource allows you to configure a Boundary account.
 ---
 
-# boundary_account_resource 
-The account resource allows you to configure a Boundary account. 
+# Resource `boundary_account`
+
+The account resource allows you to configure a Boundary account.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -28,18 +29,22 @@ resource "boundary_account" "jeff" {
   type           = "password"
   login_name     = "jeff"
   password       = "$uper$ecure"
-}  
+}
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are required:
-* `auth_method_id` - The resource ID for the authentication method.
-* `type` - The resource type
+### Required
 
-The following arguments are optional:
-* `description` - The account description.
-* `name` - The account name. Defaults to the resource name.
-* `login_name` - The login name for this account. 
-* `password` - The account password. 
+- **auth_method_id** (String, Required) The resource ID for the authentication method.
+- **type** (String, Required) The resource type.
+
+### Optional
+
+- **description** (String, Optional) The account description.
+- **id** (String, Optional) The ID of this resource.
+- **login_name** (String, Optional) The login name for this account.
+- **name** (String, Optional) The account name. Defaults to the resource name.
+- **password** (String, Optional) The account password.
+
 

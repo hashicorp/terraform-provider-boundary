@@ -1,0 +1,30 @@
+---
+page_title: "boundary_role Resource - terraform-provider-boundary"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# Resource `boundary_role`
+
+{{ .Description | trimspace }}
+
+## Example Usage
+
+Basic usage:
+
+{{tffile "examples/resources/boundary_role/simple/resource.tf"}}
+
+Usage with a user resource:
+
+{{tffile "examples/resources/boundary_role/user/resource.tf"}}
+
+Usage with user and grants resource:
+
+{{tffile "examples/resources/boundary_role/user-grants/resource.tf"}}
+
+Usage for a project-specific role:
+
+{{tffile "examples/resources/boundary_role/project-specific/resource.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}

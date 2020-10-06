@@ -1,23 +1,21 @@
 ---
-page_title: "Boundary: hostset_resource"
+page_title: "boundary_host_set Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Hostset resource for the Boundary Terraform provider.
+  The host_set resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
 ---
 
-# host_set_resource 
-The host_set resource allows you to configure a Boundary host set. Host sets are
-always part of a host catalog, so a host catalog resource should be used inline
-or you should have the host catalog ID in hand to successfully configure a host
-set. 
+# Resource `boundary_host_set`
+
+The host_set resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -50,19 +48,25 @@ resource "boundary_host" "2" {
 
 resource "boundary_host_set" "web" {
   host_catalog_id = boundary_host_catalog.static.id
-  host_ids        = [
+  host_ids = [
     boundary_host.1.id,
     boundary_host.2.id,
   ]
 }
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are required:
-* `host_catalog_id`- The catalog for the hostset.
+### Required
 
-The following arguments are optional:
-* `name` - The hostset name. Defaults to the resource name.
-* `description` - The hostset description.
-* `host_ids` - The list of host IDs contained in this set. 
+- **host_catalog_id** (String, Required) The catalog for the hostset.
+- **type** (String, Required)
+
+### Optional
+
+- **description** (String, Optional) The hostset description.
+- **host_ids** (Set of String, Optional) The list of host IDs contained in this set.
+- **id** (String, Optional) The ID of this resource.
+- **name** (String, Optional) The hostset name. Defaults to the resource name.
+
+

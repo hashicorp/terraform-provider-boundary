@@ -1,20 +1,21 @@
 ---
-page_title: "Boundary: auth_method_resource"
+page_title: "boundary_auth_method Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Auth Method resource for the Boundary Terraform provider.
+  The auth method resource allows you to configure a Boundary auth_method.
 ---
 
-# boundary_auth_method_resource 
-The auth method resource allows you to configure a Boundary auth_method. 
+# Resource `boundary_auth_method`
+
+The auth method resource allows you to configure a Boundary auth_method.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "boundary_scope" "org" {
   name             = "organization_one"
   description      = "My first scope!"
-  scope_id         = "global" 
+  scope_id         = "global"
   auto_create_role = true
 }
 
@@ -24,15 +25,19 @@ resource "boundary_auth_method" "password" {
 }
 ```
 
-## Argument Reference
+## Schema
 
-The following arguments are required:
-* `scope_id` - The scope ID. 
-* `type` - The resource type.
+### Required
 
-The following arguments are optional:
-* `description` - The auth method description.
-* `name` - The auth method name. Defaults to the resource name.
-* `min_login_name_length` - The minimum login name length.
-* `min_password_length` - The minimum password length.
+- **scope_id** (String, Required) The scope ID.
+- **type** (String, Required) The resource type.
+
+### Optional
+
+- **description** (String, Optional) The auth method description.
+- **id** (String, Optional) The ID of this resource.
+- **min_login_name_length** (Number, Optional) The minimum login name length.
+- **min_password_length** (Number, Optional) The minimum password length.
+- **name** (String, Optional) The auth method name. Defaults to the resource name.
+
 

@@ -18,6 +18,8 @@ const (
 
 func resourceScope() *schema.Resource {
 	return &schema.Resource{
+		Description: "The scope resource allows you to configure a Boundary scope.",
+
 		CreateContext: resourceScopeCreate,
 		ReadContext:   resourceScopeRead,
 		UpdateContext: resourceScopeUpdate,
@@ -25,32 +27,35 @@ func resourceScope() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The scope name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The scope description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			ScopeIdKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The scope ID containing the sub scope resource.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			scopeGlobalScopeKey: {
+				Description: "Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.",
 			},
 			scopeAutoCreateAdminRole: {
+				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
 			},
 			scopeAutoCreateDefaultRole: {
+				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
 			},
 		},
 	}
