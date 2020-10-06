@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-boundary
 
-go 1.13
+go 1.15
 
 require (
 	cloud.google.com/go v0.66.0 // indirect
@@ -22,7 +22,8 @@ require (
 	github.com/hashicorp/go-kms-wrapping v0.5.16
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.3
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.4
+	github.com/hashicorp/terraform-plugin-test/v2 v2.1.2 // indirect
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
