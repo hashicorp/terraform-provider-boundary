@@ -65,8 +65,8 @@ func TestAccUser(t *testing.T) {
 	token := tc.Token().Token
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckUserResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckUserResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test create
@@ -97,8 +97,8 @@ func TestAccUserWithAccounts(t *testing.T) {
 	token := tc.Token().Token
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckUserResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckUserResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test create

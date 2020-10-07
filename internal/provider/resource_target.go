@@ -22,45 +22,37 @@ const (
 
 func resourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "The target resource allows you to configure a Boundary target.",
-
 		CreateContext: resourceTargetCreate,
 		ReadContext:   resourceTargetRead,
 		UpdateContext: resourceTargetUpdate,
 		DeleteContext: resourceTargetDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Description: "The target name. Defaults to the resource name.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			DescriptionKey: {
-				Description: "The target description.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			TypeKey: {
-				Description: "The target resource type.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			ScopeIdKey: {
-				Description: "The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			targetDefaultPortKey: {
-				Description: "The default port for this target.",
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			targetHostSetIdsKey: {
-				Description: "A list of host set ID's.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			targetSessionMaxSecondsKey: {
 				Type:     schema.TypeInt,

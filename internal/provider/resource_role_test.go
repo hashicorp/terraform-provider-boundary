@@ -153,8 +153,8 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test org role create
@@ -202,8 +202,8 @@ func TestAccRoleWithGrants(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test project role create with grants
@@ -236,8 +236,8 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test create
@@ -271,8 +271,8 @@ func TestAccRoleWithGroups(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckRoleResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test create

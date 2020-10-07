@@ -89,8 +89,8 @@ func TestAccScopeCreation(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckScopeResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckScopeResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, secondProject),

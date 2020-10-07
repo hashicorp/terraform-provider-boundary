@@ -44,8 +44,8 @@ func TestAccAuthMethod(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckAuthMethodResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				//create

@@ -120,8 +120,8 @@ func TestAccGroup(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckGroupResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckGroupResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test create
@@ -197,8 +197,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-
+		Providers:    testProviders,
 		CheckDestroy: testAccCheckGroupResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{

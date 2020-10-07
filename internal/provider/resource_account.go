@@ -18,44 +18,36 @@ const (
 
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Description: "The account resource allows you to configure a Boundary account.",
-
 		CreateContext: resourceAccountCreate,
 		ReadContext:   resourceAccountRead,
 		UpdateContext: resourceAccountUpdate,
 		DeleteContext: resourceAccountDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Description: "The account name. Defaults to the resource name.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			DescriptionKey: {
-				Description: "The account description.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			AuthMethodIdKey: {
-				Description: "The resource ID for the authentication method.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			TypeKey: {
-				Description: "The resource type.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			accountLoginNameKey: {
-				Description: "The login name for this account.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			accountPasswordKey: {
-				Description: "The account password.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}

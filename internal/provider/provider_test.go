@@ -13,6 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var testProvider *schema.Provider
+var testProviders map[string]*schema.Provider
+
 var (
 	tcLoginName = "user"
 	tcPassword  = "passpass"
@@ -25,10 +28,11 @@ var (
 	tcRecoveryKey = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
 )
 
-var providerFactories = map[string]func() (*schema.Provider, error){
-	"boundary": func() (*schema.Provider, error) {
-		return New(), nil
-	},
+func init() {
+	testProvider = New()
+	testProviders = map[string]*schema.Provider{
+		"boundary": testProvider,
+	}
 }
 
 func testWrapper(t *testing.T, key string) wrapping.Wrapper {

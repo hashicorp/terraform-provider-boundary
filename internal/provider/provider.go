@@ -14,11 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func init() {
-	// descriptions are written in markdown for docs
-	schema.DescriptionKind = schema.StringMarkdown
-}
-
 func New() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{

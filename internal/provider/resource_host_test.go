@@ -62,8 +62,8 @@ func TestAccHost(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckHostResourceDestroy(t),
+		Providers:    testProviders,
+		CheckDestroy: testAccCheckHostResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test project host create
