@@ -59,6 +59,15 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 $ make testacc
 ```
 
+Generating Docs
+----------------------
+
+From the root of the repo run:
+
+```
+go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+```
+
 Using the provider
 ----------------------
 Please see our detailed docs for individual resource usage. Below is a complex example using the Boundary provider to configure all resource types available:
