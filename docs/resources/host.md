@@ -48,6 +48,10 @@ resource "boundary_host" "example" {
 - **description** (String, Optional) The host description.
 - **name** (String, Optional) The host name. Defaults to the resource name.
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the host.
+
 ## Import
 
 Import is supported using the following syntax:

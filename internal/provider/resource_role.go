@@ -30,6 +30,11 @@ func resourceRole() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the role.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			NameKey: {
 				Description: "The role name. Defaults to the resource name.",
 				Type:        schema.TypeString,

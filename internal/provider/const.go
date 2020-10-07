@@ -1,6 +1,8 @@
 package provider
 
 const (
+	// Key used for common SDK ID resource attribute
+	IDKey = "id"
 	// Key used for common "name" resource attribute
 	NameKey = "name"
 	// Key used for common "description" resource attribute

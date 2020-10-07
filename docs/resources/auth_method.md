@@ -40,6 +40,10 @@ resource "boundary_auth_method" "password" {
 - **min_password_length** (Number, Optional) The minimum password length.
 - **name** (String, Optional) The auth method name. Defaults to the resource name.
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the account.
+
 ## Import
 
 Import is supported using the following syntax:

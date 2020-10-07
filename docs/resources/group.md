@@ -76,6 +76,10 @@ resource "boundary_group" "example" {
 - **member_ids** (Set of String, Optional) Resource IDs for group members, these are most likely boundary users.
 - **name** (String, Optional) The group name. Defaults to the resource name.
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the group.
+
 ## Import
 
 Import is supported using the following syntax:

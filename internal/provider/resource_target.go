@@ -33,6 +33,11 @@ func resourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the target.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			NameKey: {
 				Description: "The target name. Defaults to the resource name.",
 				Type:        schema.TypeString,

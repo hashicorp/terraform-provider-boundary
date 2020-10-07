@@ -30,6 +30,11 @@ func resourceHost() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the host.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			NameKey: {
 				Description: "The host name. Defaults to the resource name.",
 				Type:        schema.TypeString,

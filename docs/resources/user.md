@@ -52,6 +52,10 @@ resource "boundary_user" "jeff" {
 - **description** (String, Optional) The user description.
 - **name** (String, Optional) The username. Defaults to the resource name.
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the user.
+
 ## Import
 
 Import is supported using the following syntax:
