@@ -17,7 +17,9 @@ require (
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.1.0-beta.3
+	github.com/hashicorp/boundary v0.1.0-beta.3.0.20201007181827-029468387634
+	github.com/hashicorp/boundary/api v0.0.1
+	github.com/hashicorp/boundary/sdk v0.0.1
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.5.16
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -28,7 +30,6 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
-	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible // indirect
 	github.com/prometheus/common v0.14.0 // indirect
@@ -37,7 +38,6 @@ require (
 	github.com/zclconf/go-cty v1.6.1 // indirect
 	golang.org/x/net v0.0.0-20201006153459-a7d1128ccaa0 // indirect
 	golang.org/x/sys v0.0.0-20201006155630-ac719f4daadf // indirect
-	google.golang.org/api v0.32.0 // indirect
 	google.golang.org/genproto v0.0.0-20201006033701-bcad7cf615f2 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )
