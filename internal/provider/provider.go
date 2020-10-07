@@ -35,7 +35,7 @@ func New() *schema.Provider {
 			"recovery_kms_hcl": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Can be a heredoc string or a path on disk. If set, the string/file will be parsed as HCL and used with the recovery KMS mechanism. While this is set, it will override any other authentication information; the KMS mechanism will always be used.",
+				Description: "Can be a heredoc string or a path on disk. If set, the string/file will be parsed as HCL and used with the recovery KMS mechanism. While this is set, it will override any other authentication information; the KMS mechanism will always be used. See Boundary's KMS docs for examples: https://boundaryproject.io/docs/configuration/kms",
 			},
 			"auth_method_id": {
 				Type:        schema.TypeString,
