@@ -26,10 +26,14 @@ var (
 	tcRecoveryKey = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
 )
 
-var providerFactories = map[string]func() (*schema.Provider, error){
-	"boundary": func() (*schema.Provider, error) {
-		return New(), nil
-	},
+func providerFactories(p **schema.Provider) map[string]func() (*schema.Provider, error) {
+	// TODO: eventually rework this to real factories...
+	*p = New()
+	return map[string]func() (*schema.Provider, error){
+		"boundary": func() (*schema.Provider, error) {
+			return *p, nil
+		},
+	}
 }
 
 func testWrapper(t *testing.T, key string) wrapping.Wrapper {

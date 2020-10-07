@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/boundary/api/hosts"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -61,16 +62,17 @@ func TestAccHost(t *testing.T) {
 	//	org := iam.TestOrg(t, tc.IamRepo())
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckHostResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckHostResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test project host create
 				Config: testConfig(url, fooOrg, firstProjectFoo, projHost),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostAttributeSet("boundary_host.foo", "address", fooHostAddress),
-					testAccCheckHostResourceExists("boundary_host.foo"),
+					testAccCheckHostAttributeSet(provider, "boundary_host.foo", "address", fooHostAddress),
+					testAccCheckHostResourceExists(provider, "boundary_host.foo"),
 					resource.TestCheckResourceAttr("boundary_host.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_host.foo", "description", "test host"),
 					resource.TestCheckResourceAttr("boundary_host.foo", "address", fooHostAddress),
@@ -81,8 +83,8 @@ func TestAccHost(t *testing.T) {
 				// test project host update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projHostUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostAttributeSet("boundary_host.foo", "address", fooHostAddressUpdate),
-					testAccCheckHostResourceExists("boundary_host.foo"),
+					testAccCheckHostAttributeSet(provider, "boundary_host.foo", "address", fooHostAddressUpdate),
+					testAccCheckHostResourceExists(provider, "boundary_host.foo"),
 					resource.TestCheckResourceAttr("boundary_host.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_host.foo", "description", "test host"),
 					resource.TestCheckResourceAttr("boundary_host.foo", "address", fooHostAddressUpdate),
@@ -93,7 +95,7 @@ func TestAccHost(t *testing.T) {
 	})
 }
 
-func testAccCheckHostResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckHostResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -117,7 +119,7 @@ func testAccCheckHostResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckHostAttributeSet(name, attrKey, wantAttrVal string) resource.TestCheckFunc {
+func testAccCheckHostAttributeSet(testProvider *schema.Provider, name, attrKey, wantAttrVal string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -154,7 +156,7 @@ func testAccCheckHostAttributeSet(name, attrKey, wantAttrVal string) resource.Te
 	}
 }
 
-func testAccCheckHostResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckHostResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")

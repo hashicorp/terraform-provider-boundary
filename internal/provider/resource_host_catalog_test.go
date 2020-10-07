@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -43,17 +44,18 @@ func TestAccHostCatalogCreate(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
 				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalog),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.org1"),
-					testAccCheckScopeResourceExists("boundary_scope.proj1"),
-					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
+					testAccCheckHostCatalogResourceExists(provider, "boundary_host_catalog.foo"),
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescription),
 				),
 			},
@@ -62,7 +64,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalogUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostCatalogResourceExists("boundary_host_catalog.foo"),
+					testAccCheckHostCatalogResourceExists(provider, "boundary_host_catalog.foo"),
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescriptionUpdate),
 				),
 			},
@@ -71,7 +73,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 	})
 }
 
-func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckHostCatalogResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -94,7 +96,7 @@ func testAccCheckHostCatalogResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckHostCatalogResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		md := testProvider.Meta().(*metaData)
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/api/accounts"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -61,9 +62,11 @@ func TestAccAccount(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
+
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckAccountResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				//create
@@ -74,10 +77,10 @@ func TestAccAccount(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_account.foo", "type", "password"),
 					resource.TestCheckResourceAttr("boundary_account.foo", "login_name", "foo"),
 					resource.TestCheckResourceAttr("boundary_account.foo", "password", "foofoofoo"),
-					testAccCheckAccountResourceExists("boundary_account.foo"),
+					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
 				),
 			},
-			importStep("boundary_account.foo"),
+			importStep("boundary_account.foo", "password"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAccountUpdate),
@@ -87,15 +90,15 @@ func TestAccAccount(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_account.foo", "type", "password"),
 					resource.TestCheckResourceAttr("boundary_account.foo", "login_name", "foo"),
 					resource.TestCheckResourceAttr("boundary_account.foo", "password", "foofoofoo"),
-					testAccCheckAccountResourceExists("boundary_account.foo"),
+					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
 				),
 			},
-			importStep("boundary_account.foo"),
+			importStep("boundary_account.foo", "password"),
 		},
 	})
 }
 
-func testAccCheckAccountResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckAccountResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -119,7 +122,7 @@ func testAccCheckAccountResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAccountResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")

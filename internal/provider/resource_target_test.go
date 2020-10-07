@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/api/targets"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -89,15 +90,16 @@ func TestAccTarget(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckTargetResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckTargetResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
 				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostSet, fooTarget),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetResourceExists("boundary_target.foo"),
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
@@ -110,7 +112,7 @@ func TestAccTarget(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostSet, fooTargetUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetResourceExists("boundary_target.foo"),
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
@@ -122,7 +124,7 @@ func TestAccTarget(t *testing.T) {
 	})
 }
 
-func testAccCheckTargetResourceMembersSet(name string, hostSets []string) resource.TestCheckFunc {
+func testAccCheckTargetResourceMembersSet(testProvider *schema.Provider, name string, hostSets []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -179,7 +181,7 @@ func testAccCheckTargetResourceMembersSet(name string, hostSets []string) resour
 	}
 }
 
-func testAccCheckTargetResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckTargetResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -202,7 +204,7 @@ func testAccCheckTargetResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTargetResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckTargetResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")

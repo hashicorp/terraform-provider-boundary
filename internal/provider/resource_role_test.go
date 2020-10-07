@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/boundary/api/roles"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -152,15 +153,16 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test org role create
 				Config: testConfig(url, fooOrg, orgRole),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescription),
 				),
@@ -170,7 +172,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 				// test org role update
 				Config: testConfig(url, fooOrg, orgRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescriptionUpdate),
 				),
@@ -180,7 +182,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 				// test org to project role create
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRole),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescription),
 				),
@@ -190,7 +192,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 				// test project role update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.foo"),
+					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescriptionUpdate),
 				),
@@ -205,16 +207,17 @@ func TestAccRoleWithGrants(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test project role create with grants
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrants),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.with_grants"),
-					testAccCheckRoleResourceGrantsSet("boundary_role.with_grants", []string{readonlyGrant}),
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
+					testAccCheckRoleResourceGrantsSet(provider, "boundary_role.with_grants", []string{readonlyGrant}),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
 				),
@@ -224,9 +227,8 @@ func TestAccRoleWithGrants(t *testing.T) {
 				// test project role update with grants
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrantsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.with_grants"),
-
-					testAccCheckRoleResourceGrantsSet("boundary_role.with_grants", []string{readonlyGrant, readonlyGrantUpdate}),
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
+					testAccCheckRoleResourceGrantsSet(provider, "boundary_role.with_grants", []string{readonlyGrant, readonlyGrantUpdate}),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
 				),
@@ -241,17 +243,18 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithPrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.with_principal"),
-					testAccCheckRoleResourcePrincipalsSet("boundary_role.with_principal", []string{"boundary_user.foo"}),
-					testAccCheckUserResourceExists("boundary_user.foo"),
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
+					testAccCheckRoleResourcePrincipalsSet(provider, "boundary_role.with_principal", []string{"boundary_user.foo"}),
+					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
 					resource.TestCheckResourceAttr("boundary_role.with_principal", DescriptionKey, "with principal"),
 					resource.TestCheckResourceAttr("boundary_role.with_principal", NameKey, "with_principal"),
 					resource.TestCheckResourceAttr("boundary_user.foo", "name", "foo"),
@@ -262,10 +265,10 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithPrincipalUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.with_principal"),
-					testAccCheckUserResourceExists("boundary_user.foo"),
-					testAccCheckUserResourceExists("boundary_user.bar"),
-					testAccCheckRoleResourcePrincipalsSet("boundary_role.with_principal", []string{"boundary_user.foo", "boundary_user.bar"}),
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
+					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
+					testAccCheckUserResourceExists(provider, "boundary_user.bar"),
+					testAccCheckRoleResourcePrincipalsSet(provider, "boundary_role.with_principal", []string{"boundary_user.foo", "boundary_user.bar"}),
 				),
 			},
 			importStep("boundary_role.with_principal"),
@@ -278,17 +281,18 @@ func TestAccRoleWithGroups(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGroups),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.with_groups"),
-					testAccCheckRoleResourceGroupsSet("boundary_role.with_groups", []string{"boundary_group.foo"}),
-					testAccCheckGroupResourceExists("boundary_group.foo"),
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_groups"),
+					testAccCheckRoleResourceGroupsSet(provider, "boundary_role.with_groups", []string{"boundary_group.foo"}),
+					testAccCheckGroupResourceExists(provider, "boundary_group.foo"),
 					resource.TestCheckResourceAttr("boundary_role.with_groups", DescriptionKey, "with groups"),
 					resource.TestCheckResourceAttr("boundary_role.with_groups", NameKey, "with_groups"),
 					resource.TestCheckResourceAttr("boundary_group.foo", "name", "foo"),
@@ -299,10 +303,10 @@ func TestAccRoleWithGroups(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGroupsUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleResourceExists("boundary_role.with_groups"),
-					testAccCheckGroupResourceExists("boundary_group.foo"),
-					testAccCheckGroupResourceExists("boundary_group.bar"),
-					testAccCheckRoleResourceGroupsSet("boundary_role.with_groups", []string{"boundary_group.foo", "boundary_group.bar"}),
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_groups"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.foo"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.bar"),
+					testAccCheckRoleResourceGroupsSet(provider, "boundary_role.with_groups", []string{"boundary_group.foo", "boundary_group.bar"}),
 				),
 			},
 			importStep("boundary_role.with_groups"),
@@ -320,7 +324,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 //
 // It does check Boundary if the resource is found in state to point out any
 // misalignment between what is in state and the actual configuration.
-func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
+func testAccCheckRoleDestroyed(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -349,7 +353,7 @@ func testAccCheckRoleDestroyed(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckRoleResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -372,7 +376,7 @@ func testAccCheckRoleResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRoleResourcePrincipalsSet(name string, principals []string) resource.TestCheckFunc {
+func testAccCheckRoleResourcePrincipalsSet(testProvider *schema.Provider, name string, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -429,7 +433,7 @@ func testAccCheckRoleResourcePrincipalsSet(name string, principals []string) res
 	}
 }
 
-func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.TestCheckFunc {
+func testAccCheckRoleResourceGroupsSet(testProvider *schema.Provider, name string, groups []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -486,7 +490,7 @@ func testAccCheckRoleResourceGroupsSet(name string, groups []string) resource.Te
 	}
 }
 
-func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) resource.TestCheckFunc {
+func testAccCheckRoleResourceGrantsSet(testProvider *schema.Provider, name string, expectedGrants []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -527,7 +531,7 @@ func testAccCheckRoleResourceGrantsSet(name string, expectedGrants []string) res
 	}
 }
 
-func testAccCheckRoleResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckRoleResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
