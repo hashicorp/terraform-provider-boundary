@@ -90,8 +90,8 @@ func TestAccTarget(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testProviders,
-		CheckDestroy: testAccCheckTargetResourceDestroy(t),
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckTargetResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test create

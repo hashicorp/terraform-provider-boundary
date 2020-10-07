@@ -73,8 +73,8 @@ func TestAccHostset(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testProviders,
-		CheckDestroy: testAccCheckHostsetResourceDestroy(t),
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckHostsetResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
