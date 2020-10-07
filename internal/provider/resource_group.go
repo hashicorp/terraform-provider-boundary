@@ -16,28 +16,34 @@ const (
 
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
+		Description: "The group resource allows you to configure a Boundary group.",
+
 		CreateContext: resourceGroupCreate,
 		ReadContext:   resourceGroupRead,
 		UpdateContext: resourceGroupUpdate,
 		DeleteContext: resourceGroupDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The group name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The group description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			ScopeIdKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			groupMemberIdsKey: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: "Resource IDs for group members, these are most likely boundary users.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

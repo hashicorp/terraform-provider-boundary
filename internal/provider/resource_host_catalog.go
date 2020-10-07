@@ -16,28 +16,36 @@ const (
 
 func resourceHostCatalog() *schema.Resource {
 	return &schema.Resource{
+		Description: "The host catalog resource allows you to configure a Boundary host catalog. Host " +
+			"catalogs are always part of a project, so a project resource should be used inline or you " +
+			"should have the project ID in hand to successfully configure a host catalog.",
+
 		CreateContext: resourceHostCatalogCreate,
 		ReadContext:   resourceHostCatalogRead,
 		UpdateContext: resourceHostCatalogUpdate,
 		DeleteContext: resourceHostCatalogDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The host catalog name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The host catalog description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			ScopeIdKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The scope ID in which the resource is created.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			TypeKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The host catalog type. Only `Static` (yes, title case) is supported.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 		},
 	}

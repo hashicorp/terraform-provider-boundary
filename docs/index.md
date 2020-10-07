@@ -1,0 +1,37 @@
+---
+page_title: "Provider: Boundary"
+subcategory: ""
+description: |-
+  Terraform provider for configuring Boundary.
+---
+
+# Boundary Provider
+
+Terraform provider for configuring Boundary.
+
+## Example Usage
+
+Do not keep your authentication password in HCL for production environments, use Terraform environment variables.
+
+```terraform
+provider "boundary" {
+  addr                            = "http://127.0.0.1:9200"
+  auth_method_id                  = "ampw_1234567890" # changeme
+  password_auth_method_login_name = "myuser"          # changeme
+  password_auth_method_password   = "passpass"        # changeme
+}
+```
+
+## Schema
+
+### Required
+
+- **addr** (String, Required) The base url of the Boundary API, e.g. "http://127.0.0.1". If not set, it will be read from the "BOUNDARY_ADDR" env var.
+
+### Optional
+
+- **auth_method_id** (String, Optional) The auth method ID e.g. ampw_1234567890
+- **password_auth_method_login_name** (String, Optional) The auth method login name for password-style auth methods
+- **password_auth_method_password** (String, Optional) The auth method password for password-style auth methods
+- **recovery_kms_hcl** (String, Optional) Can be a heredoc string or a path on disk. If set, the string/file will be parsed as HCL and used with the recovery KMS mechanism. While this is set, it will override any other authentication information; the KMS mechanism will always be used.
+- **token** (String, Optional) The Boundary token to use, as a string or path on disk containing just the string. If set, the token read here will be used in place of authenticating with the auth method specified in "auth_method_id", although the recovery KMS mechanism will still override this. Can also be set with the BOUNDARY_TOKEN environment variable.

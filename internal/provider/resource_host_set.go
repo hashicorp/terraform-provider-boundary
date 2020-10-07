@@ -17,18 +17,24 @@ const (
 
 func resourceHostset() *schema.Resource {
 	return &schema.Resource{
+		Description: "The host_set resource allows you to configure a Boundary host set. Host sets are " +
+			"always part of a host catalog, so a host catalog resource should be used inline or you " +
+			"should have the host catalog ID in hand to successfully configure a host set.",
+
 		CreateContext: resourceHostsetCreate,
 		ReadContext:   resourceHostsetRead,
 		UpdateContext: resourceHostsetUpdate,
 		DeleteContext: resourceHostsetDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The hostset name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The hostset description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			TypeKey: {
 				Type:     schema.TypeString,
@@ -36,13 +42,15 @@ func resourceHostset() *schema.Resource {
 				ForceNew: true,
 			},
 			HostCatalogIdKey: {
-				Type:     schema.TypeString,
-				Required: true,
+				Description: "The catalog for the hostset.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			hostsetHostIdsKey: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: "The list of host IDs contained in this set.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

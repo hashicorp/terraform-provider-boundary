@@ -19,38 +19,46 @@ const (
 
 func resourceAuthMethod() *schema.Resource {
 	return &schema.Resource{
+		Description: "The auth method resource allows you to configure a Boundary auth_method.",
+
 		CreateContext: resourceAuthMethodCreate,
 		ReadContext:   resourceAuthMethodRead,
 		UpdateContext: resourceAuthMethodUpdate,
 		DeleteContext: resourceAuthMethodDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The auth method name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The auth method description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			ScopeIdKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The scope ID.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			TypeKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The resource type.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			authmethodMinLoginNameLengthKey: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Description: "The minimum login name length.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
 			},
 			authmethodMinPasswordLengthKey: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Description: "The minimum password length.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}

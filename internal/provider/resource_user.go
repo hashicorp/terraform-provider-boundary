@@ -14,28 +14,34 @@ const userAccountIDsKey = "account_ids"
 
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
+		Description: "The user resource allows you to configure a Boundary user.",
+
 		CreateContext: resourceUserCreate,
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The username. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The user description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			ScopeIdKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			userAccountIDsKey: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: "Account ID's to associate with this user resource.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}

@@ -7,7 +7,7 @@ Requirements
 ------------
 
 -	[Terraform](https://www.terraform.io/downloads.html) >= 0.12.x
--	[Go](https://golang.org/doc/install) >= 1.12
+-	[Go](https://golang.org/doc/install) >= 1.15
 
 Building The Provider
 ---------------------
@@ -57,6 +57,15 @@ In order to run the full suite of Acceptance tests, run `make testacc`.
 
 ```sh
 $ make testacc
+```
+
+Generating Docs
+----------------------
+
+From the root of the repo run:
+
+```
+go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 ```
 
 Using the provider

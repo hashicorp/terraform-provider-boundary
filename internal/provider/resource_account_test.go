@@ -62,8 +62,8 @@ func TestAccAccount(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resource.Test(t, resource.TestCase{
-		Providers:    testProviders,
-		CheckDestroy: testAccCheckAccountResourceDestroy(t),
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckAccountResourceDestroy(t),
 		Steps: []resource.TestStep{
 			{
 				//create

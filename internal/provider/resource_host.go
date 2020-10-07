@@ -17,18 +17,24 @@ const (
 
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
+		Description: "The host resource allows you to configure a Boundary static host. Hosts are " +
+			"always part of a project, so a project resource should be used inline or you should have " +
+			"the project ID in hand to successfully configure a host.",
+
 		CreateContext: resourceHostCreate,
 		ReadContext:   resourceHostRead,
 		UpdateContext: resourceHostUpdate,
 		DeleteContext: resourceHostDelete,
 		Schema: map[string]*schema.Schema{
 			NameKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The host name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			DescriptionKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The host description.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 			TypeKey: {
 				Type:     schema.TypeString,
@@ -40,8 +46,9 @@ func resourceHost() *schema.Resource {
 				Required: true,
 			},
 			hostAddressKey: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Description: "The static address of the host resource as `<IP>:<port>` or a domain name.",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 	}
