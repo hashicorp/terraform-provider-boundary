@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -43,9 +44,10 @@ func TestAccAuthMethod(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				//create
@@ -54,9 +56,10 @@ func TestAccAuthMethod(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "type", "password"),
-					testAccCheckAuthMethodResourceExists("boundary_auth_method.foo"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method.foo"),
 				),
 			},
+			importStep("boundary_auth_method.foo"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAuthMethodUpdate),
@@ -64,14 +67,15 @@ func TestAccAuthMethod(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooAuthMethodDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "type", "password"),
-					testAccCheckAuthMethodResourceExists("boundary_auth_method.foo"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method.foo"),
 				),
 			},
+			importStep("boundary_auth_method.foo"),
 		},
 	})
 }
 
-func testAccCheckAuthMethodResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckAuthMethodResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -95,7 +99,7 @@ func testAccCheckAuthMethodResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAuthMethodResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")

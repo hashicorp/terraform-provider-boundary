@@ -20,6 +20,10 @@ func resourceUser() *schema.Resource {
 		ReadContext:   resourceUserRead,
 		UpdateContext: resourceUserUpdate,
 		DeleteContext: resourceUserDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The username. Defaults to the resource name.",

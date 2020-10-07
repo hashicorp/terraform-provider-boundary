@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -88,41 +89,46 @@ func TestAccScopeCreation(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckScopeResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.org1"),
-					testAccCheckScopeResourceExists("boundary_scope.proj1"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "foo"),
 					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
+			importStep("boundary_scope.org1"),
+			importStep("boundary_scope.proj1"),
 			// Updates the first project to have description bar
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.proj1"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
 					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
+			importStep("boundary_scope.proj1"),
 			// Remove second project
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists("boundary_scope.proj1"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
 				),
 			},
+			importStep("boundary_scope.proj1"),
 		},
 	})
 }
 
-func testAccCheckScopeResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckScopeResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -145,7 +151,7 @@ func testAccCheckScopeResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckScopeResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckScopeResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// retrieve the connection established in Provider configuration
 		md := testProvider.Meta().(*metaData)
@@ -155,6 +161,10 @@ func testAccCheckScopeResourceDestroy(t *testing.T) resource.TestCheckFunc {
 			id := rs.Primary.ID
 			switch rs.Type {
 			case "boundary_scope":
+				if rs.Primary.Attributes["global_scope"] == "true" {
+					// skip resource, its the global scope
+					continue
+				}
 				_, err := scp.Read(context.Background(), id)
 				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed resource %q: %w", id, err)

@@ -91,4 +91,10 @@ resource "boundary_target" "foo" {
 - **session_connection_limit** (Number, Optional)
 - **session_max_seconds** (Number, Optional)
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_target.foo <my-id>
+```

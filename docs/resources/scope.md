@@ -74,3 +74,11 @@ resource "boundary_role" "org_admin" {
 - **global_scope** (Boolean, Optional) Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.
 - **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The scope name. Defaults to the resource name.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_scope.foo <my-id>
+```

@@ -40,4 +40,10 @@ resource "boundary_auth_method" "password" {
 - **min_password_length** (Number, Optional) The minimum password length.
 - **name** (String, Optional) The auth method name. Defaults to the resource name.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_auth_method.foo <my-id>
+```

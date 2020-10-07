@@ -69,4 +69,10 @@ resource "boundary_host_set" "web" {
 - **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The hostset name. Defaults to the resource name.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_host_set.foo <my-id>
+```

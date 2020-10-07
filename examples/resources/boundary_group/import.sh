@@ -1,0 +1,1 @@
+terraform import boundary_group.foo <my-id>

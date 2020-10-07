@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/testing/controller"
 	wrapping "github.com/hashicorp/go-kms-wrapping"
 	"github.com/hashicorp/go-kms-wrapping/wrappers/aead"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -25,10 +26,14 @@ var (
 	tcRecoveryKey = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
 )
 
-var providerFactories = map[string]func() (*schema.Provider, error){
-	"boundary": func() (*schema.Provider, error) {
-		return New(), nil
-	},
+func providerFactories(p **schema.Provider) map[string]func() (*schema.Provider, error) {
+	// TODO: eventually rework this to real factories...
+	*p = New()
+	return map[string]func() (*schema.Provider, error){
+		"boundary": func() (*schema.Provider, error) {
+			return *p, nil
+		},
+	}
 }
 
 func testWrapper(t *testing.T, key string) wrapping.Wrapper {
@@ -111,6 +116,20 @@ provider "boundary" {
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
+}
+
+func importStep(name string, ignore ...string) resource.TestStep {
+	step := resource.TestStep{
+		ResourceName:      name,
+		ImportState:       true,
+		ImportStateVerify: true,
+	}
+
+	if len(ignore) > 0 {
+		step.ImportStateVerifyIgnore = ignore
+	}
+
+	return step
 }
 
 func TestProvider(t *testing.T) {

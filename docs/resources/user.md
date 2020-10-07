@@ -52,4 +52,10 @@ resource "boundary_user" "jeff" {
 - **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The username. Defaults to the resource name.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_user.foo <my-id>
+```

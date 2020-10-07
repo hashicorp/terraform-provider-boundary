@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/boundary/api/groups"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
@@ -119,73 +120,81 @@ func TestAccGroup(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
-		CheckDestroy:      testAccCheckGroupResourceDestroy(t),
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
 				Config: testConfigWithRecovery(url, fooOrg, orgGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.org1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, fooGroupDescription),
 					resource.TestCheckResourceAttr("boundary_group.org1", NameKey, "test"),
 				),
 			},
+			importStep("boundary_group.org1"),
 			{
 				// test update
 				Config: testConfigWithRecovery(url, fooOrg, orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.org1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, fooGroupDescriptionUpdate),
 				),
 			},
+			importStep("boundary_group.org1"),
 			{
 				// test update to project scope
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.org1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, "org1-test-to-proj"),
-					testAccCheckGroupScope("boundary_group.org1", "p_"),
+					testAccCheckGroupScope(provider, "boundary_group.org1", "p_"),
 				),
 			},
+			importStep("boundary_group.org1"),
 			{
 				// test create
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", DescriptionKey, "desc-test-proj"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", NameKey, "test-proj"),
-					testAccCheckGroupScope("boundary_group.proj1", "p_"),
+					testAccCheckGroupScope(provider, "boundary_group.proj1", "p_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 			{
 				// test update
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", DescriptionKey, "desc-test-proj-up"),
-					testAccCheckGroupScope("boundary_group.proj1", "p_"),
+					testAccCheckGroupScope(provider, "boundary_group.proj1", "p_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 			{
 				// test name removal
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projNameRemoval),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", NameKey, ""),
-					testAccCheckGroupScope("boundary_group.proj1", "p_"),
+					testAccCheckGroupScope(provider, "boundary_group.proj1", "p_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 			{
 				// test update to org scope
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.proj1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", DescriptionKey, "desc-back"),
-					testAccCheckGroupScope("boundary_group.proj1", "o_"),
+					testAccCheckGroupScope(provider, "boundary_group.proj1", "o_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 		},
 	})
 }
@@ -196,36 +205,40 @@ func TestAccGroupWithMembers(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories,
+		ProviderFactories: providerFactories(&provider),
 
-		CheckDestroy: testAccCheckGroupResourceDestroy(t),
+		CheckDestroy: testAccCheckGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
 				Config: testConfig(url, fooOrg, orgGroupWithMembers),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.with_members"),
-					testAccCheckUserResourceExists("boundary_user.org1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.with_members"),
+					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_group.with_members", DescriptionKey, "with members"),
-					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.org1"}),
+					testAccCheckGroupResourceMembersSet(provider, "boundary_group.with_members", []string{"boundary_user.org1"}),
 				),
 			},
+			importStep("boundary_group.with_members"),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, orgGroupWithMembersUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists("boundary_group.with_members"),
-					testAccCheckUserResourceExists("boundary_user.org1"),
+					testAccCheckGroupResourceExists(provider, "boundary_group.with_members"),
+					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_group.with_members", DescriptionKey, "with members"),
-					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.org1", "boundary_user.bar"}),
+					testAccCheckGroupResourceMembersSet(provider, "boundary_group.with_members", []string{"boundary_user.org1", "boundary_user.bar"}),
 				),
 			},
+			importStep("boundary_group.with_members"),
+			importStep("boundary_user.org1"),
 		},
 	})
 }
 
-func testAccCheckGroupResourceMembersSet(name string, members []string) resource.TestCheckFunc {
+func testAccCheckGroupResourceMembersSet(testProvider *schema.Provider, name string, members []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -284,7 +297,7 @@ func testAccCheckGroupResourceMembersSet(name string, members []string) resource
 	}
 }
 
-func testAccCheckGroupScope(name, prefix string) resource.TestCheckFunc {
+func testAccCheckGroupScope(testProvider *schema.Provider, name, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -312,7 +325,7 @@ func testAccCheckGroupScope(name, prefix string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
+func testAccCheckGroupResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -336,7 +349,7 @@ func testAccCheckGroupResourceExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGroupResourceDestroy(t *testing.T) resource.TestCheckFunc {
+func testAccCheckGroupResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")

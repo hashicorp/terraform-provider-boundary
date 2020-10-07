@@ -47,4 +47,10 @@ resource "boundary_host_catalog" "example" {
 - **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The host catalog name. Defaults to the resource name.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_host_catalog.foo <my-id>
+```

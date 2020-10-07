@@ -25,6 +25,10 @@ func resourceRole() *schema.Resource {
 		ReadContext:   resourceRoleRead,
 		UpdateContext: resourceRoleUpdate,
 		DeleteContext: resourceRoleDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The role name. Defaults to the resource name.",
