@@ -132,6 +132,7 @@ func TestAccGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_group.org1", NameKey, "test"),
 				),
 			},
+			importStep("boundary_group.org1"),
 			{
 				// test update
 				Config: testConfigWithRecovery(url, fooOrg, orgGroupUpdate),
@@ -140,6 +141,7 @@ func TestAccGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, fooGroupDescriptionUpdate),
 				),
 			},
+			importStep("boundary_group.org1"),
 			{
 				// test update to project scope
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
@@ -149,6 +151,7 @@ func TestAccGroup(t *testing.T) {
 					testAccCheckGroupScope("boundary_group.org1", "p_"),
 				),
 			},
+			importStep("boundary_group.org1"),
 			{
 				// test create
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroup),
@@ -159,6 +162,7 @@ func TestAccGroup(t *testing.T) {
 					testAccCheckGroupScope("boundary_group.proj1", "p_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 			{
 				// test update
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroupUpdate),
@@ -168,6 +172,7 @@ func TestAccGroup(t *testing.T) {
 					testAccCheckGroupScope("boundary_group.proj1", "p_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 			{
 				// test name removal
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projNameRemoval),
@@ -177,6 +182,7 @@ func TestAccGroup(t *testing.T) {
 					testAccCheckGroupScope("boundary_group.proj1", "p_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 			{
 				// test update to org scope
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
@@ -186,6 +192,7 @@ func TestAccGroup(t *testing.T) {
 					testAccCheckGroupScope("boundary_group.proj1", "o_"),
 				),
 			},
+			importStep("boundary_group.proj1"),
 		},
 	})
 }
@@ -211,6 +218,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.org1"}),
 				),
 			},
+			importStep("boundary_group.with_members"),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, orgGroupWithMembersUpdate),
@@ -221,6 +229,8 @@ func TestAccGroupWithMembers(t *testing.T) {
 					testAccCheckGroupResourceMembersSet("boundary_group.with_members", []string{"boundary_user.org1", "boundary_user.bar"}),
 				),
 			},
+			importStep("boundary_group.with_members"),
+			importStep("boundary_user.org1"),
 		},
 	})
 }

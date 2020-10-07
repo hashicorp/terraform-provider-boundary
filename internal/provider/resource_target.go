@@ -28,6 +28,10 @@ func resourceTarget() *schema.Resource {
 		ReadContext:   resourceTargetRead,
 		UpdateContext: resourceTargetUpdate,
 		DeleteContext: resourceTargetDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The target name. Defaults to the resource name.",

@@ -25,6 +25,10 @@ func resourceAuthMethod() *schema.Resource {
 		ReadContext:   resourceAuthMethodRead,
 		UpdateContext: resourceAuthMethodUpdate,
 		DeleteContext: resourceAuthMethodDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The auth method name. Defaults to the resource name.",

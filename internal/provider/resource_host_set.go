@@ -25,6 +25,10 @@ func resourceHostset() *schema.Resource {
 		ReadContext:   resourceHostsetRead,
 		UpdateContext: resourceHostsetUpdate,
 		DeleteContext: resourceHostsetDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The hostset name. Defaults to the resource name.",

@@ -57,6 +57,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescription),
 				),
 			},
+			importStep("boundary_host_catalog.foo"),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalogUpdate),
@@ -65,6 +66,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescriptionUpdate),
 				),
 			},
+			importStep("boundary_host_catalog.foo"),
 		},
 	})
 }

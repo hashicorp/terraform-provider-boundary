@@ -165,6 +165,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescription),
 				),
 			},
+			importStep("boundary_role.foo"),
 			{
 				// test org role update
 				Config: testConfig(url, fooOrg, orgRoleUpdate),
@@ -174,6 +175,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescriptionUpdate),
 				),
 			},
+			importStep("boundary_role.foo"),
 			{
 				// test org to project role create
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRole),
@@ -183,6 +185,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescription),
 				),
 			},
+			importStep("boundary_role.foo"),
 			{
 				// test project role update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleUpdate),
@@ -192,6 +195,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.foo", "description", fooRoleDescriptionUpdate),
 				),
 			},
+			importStep("boundary_role.foo"),
 		},
 	})
 }
@@ -215,6 +219,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
 				),
 			},
+			importStep("boundary_role.with_grants"),
 			{
 				// test project role update with grants
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrantsUpdate),
@@ -226,6 +231,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
 				),
 			},
+			importStep("boundary_role.with_grants"),
 		},
 	})
 }
@@ -251,6 +257,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_user.foo", "name", "foo"),
 				),
 			},
+			importStep("boundary_role.with_principal"),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithPrincipalUpdate),
@@ -261,6 +268,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 					testAccCheckRoleResourcePrincipalsSet("boundary_role.with_principal", []string{"boundary_user.foo", "boundary_user.bar"}),
 				),
 			},
+			importStep("boundary_role.with_principal"),
 		},
 	})
 }
@@ -286,6 +294,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_group.foo", "name", "foo"),
 				),
 			},
+			importStep("boundary_role.with_groups"),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGroupsUpdate),
@@ -296,6 +305,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 					testAccCheckRoleResourceGroupsSet("boundary_role.with_groups", []string{"boundary_group.foo", "boundary_group.bar"}),
 				),
 			},
+			importStep("boundary_role.with_groups"),
 		},
 	})
 }

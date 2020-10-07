@@ -1,0 +1,1 @@
+terraform import boundary_scope.foo <my-id>

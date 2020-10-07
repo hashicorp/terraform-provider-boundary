@@ -25,6 +25,10 @@ func resourceHost() *schema.Resource {
 		ReadContext:   resourceHostRead,
 		UpdateContext: resourceHostUpdate,
 		DeleteContext: resourceHostDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The host name. Defaults to the resource name.",

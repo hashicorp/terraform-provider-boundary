@@ -128,3 +128,11 @@ resource "boundary_role" "readonly" {
 - **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The role name. Defaults to the resource name.
 - **principal_ids** (Set of String, Optional) A list of principal (user or group) IDs to add as principals on the role.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_role.foo <my-id>
+```

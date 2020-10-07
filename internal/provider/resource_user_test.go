@@ -77,6 +77,7 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
+			importStep("boundary_user.org1"),
 			{
 				// test update description
 				Config: testConfigWithToken(url, token, fooOrg, orgUserUpdate),
@@ -86,6 +87,7 @@ func TestAccUser(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
+			importStep("boundary_user.org1"),
 		},
 	})
 }
@@ -111,6 +113,8 @@ func TestAccUserWithAccounts(t *testing.T) {
 					testAccCheckUserResourceAccountsSet("boundary_user.org1", []string{"boundary_account.foo"}),
 				),
 			},
+			importStep("boundary_user.org1"),
+			importStep("boundary_account.foo"),
 			{
 				// test update description
 				Config: testConfigWithToken(url, token, fooOrg, fooAccount, orgUserWithAcctsUpdate),
@@ -121,6 +125,8 @@ func TestAccUserWithAccounts(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
 				),
 			},
+			importStep("boundary_user.org1"),
+			importStep("boundary_account.foo"),
 		},
 	})
 }

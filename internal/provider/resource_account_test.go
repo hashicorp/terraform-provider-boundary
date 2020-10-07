@@ -77,6 +77,7 @@ func TestAccAccount(t *testing.T) {
 					testAccCheckAccountResourceExists("boundary_account.foo"),
 				),
 			},
+			importStep("boundary_account.foo"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAccountUpdate),
@@ -89,6 +90,7 @@ func TestAccAccount(t *testing.T) {
 					testAccCheckAccountResourceExists("boundary_account.foo"),
 				),
 			},
+			importStep("boundary_account.foo"),
 		},
 	})
 }

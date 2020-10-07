@@ -1,0 +1,1 @@
+terraform import boundary_user.foo <my-id>

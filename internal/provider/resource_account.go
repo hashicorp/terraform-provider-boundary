@@ -24,6 +24,10 @@ func resourceAccount() *schema.Resource {
 		ReadContext:   resourceAccountRead,
 		UpdateContext: resourceAccountUpdate,
 		DeleteContext: resourceAccountDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The account name. Defaults to the resource name.",

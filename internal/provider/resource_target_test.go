@@ -105,6 +105,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
 				),
 			},
+			importStep("boundary_target.foo"),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostSet, fooTargetUpdate),
@@ -116,6 +117,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 				),
 			},
+			importStep("boundary_target.foo"),
 		},
 	})
 }

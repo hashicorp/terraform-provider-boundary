@@ -57,6 +57,7 @@ func TestAccAuthMethod(t *testing.T) {
 					testAccCheckAuthMethodResourceExists("boundary_auth_method.foo"),
 				),
 			},
+			importStep("boundary_auth_method.foo"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAuthMethodUpdate),
@@ -67,6 +68,7 @@ func TestAccAuthMethod(t *testing.T) {
 					testAccCheckAuthMethodResourceExists("boundary_auth_method.foo"),
 				),
 			},
+			importStep("boundary_auth_method.foo"),
 		},
 	})
 }

@@ -22,6 +22,10 @@ func resourceGroup() *schema.Resource {
 		ReadContext:   resourceGroupRead,
 		UpdateContext: resourceGroupUpdate,
 		DeleteContext: resourceGroupDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The group name. Defaults to the resource name.",

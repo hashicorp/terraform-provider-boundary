@@ -24,6 +24,10 @@ func resourceHostCatalog() *schema.Resource {
 		ReadContext:   resourceHostCatalogRead,
 		UpdateContext: resourceHostCatalogUpdate,
 		DeleteContext: resourceHostCatalogDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			NameKey: {
 				Description: "The host catalog name. Defaults to the resource name.",

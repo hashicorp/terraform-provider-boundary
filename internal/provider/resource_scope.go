@@ -24,6 +24,9 @@ func resourceScope() *schema.Resource {
 		ReadContext:   resourceScopeRead,
 		UpdateContext: resourceScopeUpdate,
 		DeleteContext: resourceScopeDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			NameKey: {

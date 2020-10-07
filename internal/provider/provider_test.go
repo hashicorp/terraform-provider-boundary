@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/testing/controller"
 	wrapping "github.com/hashicorp/go-kms-wrapping"
 	"github.com/hashicorp/go-kms-wrapping/wrappers/aead"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -111,6 +112,20 @@ provider "boundary" {
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
+}
+
+func importStep(name string, ignore ...string) resource.TestStep {
+	step := resource.TestStep{
+		ResourceName:      name,
+		ImportState:       true,
+		ImportStateVerify: true,
+	}
+
+	if len(ignore) > 0 {
+		step.ImportStateVerifyIgnore = ignore
+	}
+
+	return step
 }
 
 func TestProvider(t *testing.T) {

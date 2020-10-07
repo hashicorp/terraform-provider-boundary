@@ -76,6 +76,7 @@ func TestAccHost(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_host.foo", "address", fooHostAddress),
 				),
 			},
+			importStep("boundary_host.foo"),
 			{
 				// test project host update
 				Config: testConfig(url, fooOrg, firstProjectFoo, projHostUpdate),
@@ -87,6 +88,7 @@ func TestAccHost(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_host.foo", "address", fooHostAddressUpdate),
 				),
 			},
+			importStep("boundary_host.foo"),
 		},
 	})
 }

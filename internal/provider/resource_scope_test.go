@@ -101,6 +101,8 @@ func TestAccScopeCreation(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
+			importStep("boundary_scope.org1"),
+			importStep("boundary_scope.proj1"),
 			// Updates the first project to have description bar
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
@@ -110,6 +112,7 @@ func TestAccScopeCreation(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
+			importStep("boundary_scope.proj1"),
 			// Remove second project
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar),
@@ -118,6 +121,7 @@ func TestAccScopeCreation(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
 				),
 			},
+			importStep("boundary_scope.proj1"),
 		},
 	})
 }
