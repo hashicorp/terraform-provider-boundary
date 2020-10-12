@@ -40,7 +40,7 @@ func resourceAccount() *schema.Resource {
 				Optional:    true,
 			},
 			AuthMethodIdKey: {
-				Description: "The resource ID for the authentication method.",
+				Description: "The resource ID for the auth method.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,

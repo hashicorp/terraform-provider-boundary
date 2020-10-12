@@ -36,7 +36,7 @@ resource "boundary_account" "jeff" {
 
 ### Required
 
-- **auth_method_id** (String, Required) The resource ID for the authentication method.
+- **auth_method_id** (String, Required) The resource ID for the auth method.
 - **type** (String, Required) The resource type.
 
 ### Optional
