@@ -1,4 +1,4 @@
-default: update-deps testacc 
+default: testacc 
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 INSTALL_PATH=~/.local/share/terraform/plugins/localhost/providers/boundary/0.0.1/linux_$(GOARCH)
@@ -22,9 +22,6 @@ testacc-ci: install-go
 
 install-go:
 	./ci/goinstall.sh
-	
-update-deps:
-	GOPROXY=direct GOSUMDB=off go get -u
 
 dev:
 	mkdir -p $(INSTALL_PATH)	
