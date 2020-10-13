@@ -11,8 +11,10 @@ ifeq ($(GOOS), "windows")
 	INSTALL_PATH=%APPDATA%/HashiCorp/Terraform/plugins/localhost/providers/boundary/0.0.1/windows_$(GOARCH)
 endif
 
+tools:
+	go generate -tags tools tools/tools.go
+
 # Run acceptance tests
-.PHONY: testacc
 testacc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
@@ -35,3 +37,5 @@ all:
 
 rm-id-flag-from-docs:
 	find docs/ -name "*.md" -type f | xargs sed -i -e '/- \*\*id\*\*/d'
+
+.PHONY: testacc tools
