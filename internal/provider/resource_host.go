@@ -50,7 +50,7 @@ func resourceHost() *schema.Resource {
 				Required: true,
 			},
 			hostAddressKey: {
-				Description: "The static address of the host resource as `<IP>:<port>` or a domain name.",
+				Description: "The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
