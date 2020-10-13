@@ -56,7 +56,7 @@ func resourceScope() *schema.Resource {
 				Optional:    true,
 			},
 			scopeAutoCreateDefaultRole: {
-				Description: "If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
+				Description: "Only relevant when creating an org scope. If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
