@@ -66,7 +66,6 @@ resource "boundary_host_set" "web" {
 
 - **description** (String, Optional) The hostset description.
 - **host_ids** (Set of String, Optional) The list of host IDs contained in this set.
-- **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The hostset name. Defaults to the resource name.
 
 ## Import

@@ -35,3 +35,6 @@ all:
 	GOOS=darwin go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_darwin-amd64 main.go
 	GOOS=windows go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_windows-amd64 main.go
 	GOOS=linux go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_linux-amd64 main.go
+
+rm-id-flag-from-docs:
+	find docs/ -name "*.md" -type f | xargs sed -i -e '/- \*\*id\*\*/d'

@@ -125,7 +125,6 @@ resource "boundary_role" "readonly" {
 - **description** (String, Optional) The role description.
 - **grant_scope_id** (String, Optional)
 - **grant_strings** (Set of String, Optional) A list of stringified grants for the role.
-- **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The role name. Defaults to the resource name.
 - **principal_ids** (Set of String, Optional) A list of principal (user or group) IDs to add as principals on the role.
 
