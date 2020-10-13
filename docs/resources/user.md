@@ -49,7 +49,6 @@ resource "boundary_user" "jeff" {
 
 - **account_ids** (Set of String, Optional) Account ID's to associate with this user resource.
 - **description** (String, Optional) The user description.
-- **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The username. Defaults to the resource name.
 
 ## Import

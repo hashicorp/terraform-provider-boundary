@@ -45,7 +45,6 @@ resource "boundary_host" "example" {
 
 - **address** (String, Optional) The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.
 - **description** (String, Optional) The host description.
-- **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The host name. Defaults to the resource name.
 
 ## Import

@@ -72,7 +72,6 @@ resource "boundary_role" "org_admin" {
 - **auto_create_default_role** (Boolean, Optional) If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
 - **description** (String, Optional) The scope description.
 - **global_scope** (Boolean, Optional) Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.
-- **id** (String, Optional) The ID of this resource.
 - **name** (String, Optional) The scope name. Defaults to the resource name.
 
 ## Import
