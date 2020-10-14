@@ -15,9 +15,8 @@ Creating the global scope:
 
 ```terraform
 resource "boundary_scope" "global" {
-  global_scope     = true
-  scope_id         = "global"
-  auto_create_role = true
+  global_scope = true
+  scope_id     = "global"
 }
 ```
 
@@ -25,10 +24,11 @@ Creating an organization scope within global:
 
 ```terraform
 resource "boundary_scope" "org" {
-  name             = "organization_one"
-  description      = "My first scope!"
-  scope_id         = boundary_scope.global.id
-  auto_create_role = true
+  name                     = "organization_one"
+  description              = "My first scope!"
+  scope_id                 = boundary_scope.global.id
+  auto_create_admin_role   = true
+  auto_create_default_role = true
 }
 ```
 
@@ -36,10 +36,10 @@ Creating an project scope within an organization:
 
 ```terraform
 resource "boundary_scope" "project" {
-  name             = "project_one"
-  description      = "My first scope!"
-  scope_id         = boundary_scope.org.id
-  auto_create_role = true
+  name                   = "project_one"
+  description            = "My first scope!"
+  scope_id               = boundary_scope.org.id
+  auto_create_admin_role = true
 }
 ```
 
@@ -69,7 +69,7 @@ resource "boundary_role" "org_admin" {
 ### Optional
 
 - **auto_create_admin_role** (Boolean, Optional) If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
-- **auto_create_default_role** (Boolean, Optional) If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
+- **auto_create_default_role** (Boolean, Optional) Only relevant when creating an org scope. If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
 - **description** (String, Optional) The scope description.
 - **global_scope** (Boolean, Optional) Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.
 - **name** (String, Optional) The scope name. Defaults to the resource name.

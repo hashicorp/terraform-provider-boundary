@@ -452,8 +452,6 @@ github.com/gogo/protobuf v1.2.1/go.mod h1:hp+jE20tsWTFYpLwKvXlhS1hjn+gTNwPg2I6zV
 github.com/gogo/protobuf v1.3.1 h1:DqDEcV5aeaTmdFBePNpYsp3FlcVH/2ISVVM9Qf8PSls=
 github.com/gogo/protobuf v1.3.1/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=
 github.com/goji/httpauth v0.0.0-20160601135302-2da839ab0f4d/go.mod h1:nnjvkQ9ptGaCkuDUx6wNykzzlUixGxvkme+H/lnzb+A=
-github.com/golang-migrate/migrate/v4 v4.12.2 h1:QI43Tlouiwpp2dK5Y767OouX0snJNRP/NubsVaArzDU=
-github.com/golang-migrate/migrate/v4 v4.12.2/go.mod h1:HQ1DaC8uLHkg4afY8ZQ8D/P5SG+YW9X5INZBVvm+d2k=
 github.com/golang-migrate/migrate/v4 v4.13.0 h1:5S7HMjiq9u50X3+WXpzXPbUj1qUFuZRm8NCsX989Tn4=
 github.com/golang-migrate/migrate/v4 v4.13.0/go.mod h1:RUEXGkgYXTOdBY9Rbs9izc/SOalUK+dDi7YphFV/CUI=
 github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe h1:lXe2qZdvpiX5WZkZR4hgp4KJVfY3nMkvmwbVkpv1rVY=
@@ -563,8 +561,6 @@ github.com/hashicorp/consul/api v1.1.0/go.mod h1:VmuI/Lkw1nC05EYQWNKwWGbkg+FbDBt
 github.com/hashicorp/consul/api v1.3.0/go.mod h1:MmDNSzIMUjNpY/mQ398R4bk2FnqQLoPndWW5VkKPlCE=
 github.com/hashicorp/consul/sdk v0.1.1/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyNV1vwHyQBF0x8=
 github.com/hashicorp/consul/sdk v0.3.0/go.mod h1:VKf9jXwCTEY1QZP2MOLRhb5i/I/ssyNV1vwHyQBF0x8=
-github.com/hashicorp/dbassert v0.0.0-20200928193136-88d5f2091187 h1:KULp/ad4VAihhHelqgAy7610xMVEsCIXQ9Tu+uK6Asg=
-github.com/hashicorp/dbassert v0.0.0-20200928193136-88d5f2091187/go.mod h1:+B5eZq7vXqN4Gxkgjm4ub1bwG6OTcYzFL0r+bMvWorg=
 github.com/hashicorp/dbassert v0.0.0-20200930125617-6218396928df h1:Y5++qCYLnJsz036XXKjawzg09aCvWe5Pq2n2DhbgyrA=
 github.com/hashicorp/dbassert v0.0.0-20200930125617-6218396928df/go.mod h1:+B5eZq7vXqN4Gxkgjm4ub1bwG6OTcYzFL0r+bMvWorg=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=

@@ -115,8 +115,9 @@ resource "boundary_scope" "global" {
 }
 
 resource "boundary_scope" "corp" {
-  scope_id         = boundary_scope.global.id
-  auto_create_role = true
+  scope_id                 = boundary_scope.global.id
+  auto_create_admin_role   = true
+  auto_create_default_role = true
 }
 
 resource "boundary_user" "users" {
@@ -156,9 +157,9 @@ resource "boundary_role" "organization_admin" {
 
 // create a project for core infrastructure
 resource "boundary_scope" "core_infra" {
-  description      = "Core infrastrcture"
-  scope_id         = boundary_scope.corp.id
-  auto_create_role = true
+  description              = "Core infrastrcture"
+  scope_id                 = boundary_scope.corp.id
+  auto_create_admin_role   = true
 }
 
 resource "boundary_host_catalog" "backend_servers" {

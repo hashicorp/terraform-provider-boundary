@@ -1,4 +1,4 @@
-default: update-deps testacc 
+default: testacc 
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 INSTALL_PATH=~/.local/share/terraform/plugins/localhost/providers/boundary/0.0.1/linux_$(GOARCH)
@@ -11,8 +11,10 @@ ifeq ($(GOOS), "windows")
 	INSTALL_PATH=%APPDATA%/HashiCorp/Terraform/plugins/localhost/providers/boundary/0.0.1/windows_$(GOARCH)
 endif
 
+tools:
+	go generate -tags tools tools/tools.go
+
 # Run acceptance tests
-.PHONY: testacc
 testacc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
@@ -22,9 +24,6 @@ testacc-ci: install-go
 
 install-go:
 	./ci/goinstall.sh
-	
-update-deps:
-	GOPROXY=direct GOSUMDB=off go get -u
 
 dev:
 	mkdir -p $(INSTALL_PATH)	
@@ -38,3 +37,5 @@ all:
 
 rm-id-flag-from-docs:
 	find docs/ -name "*.md" -type f | xargs sed -i -e '/- \*\*id\*\*/d'
+
+.PHONY: testacc tools
