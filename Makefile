@@ -14,6 +14,9 @@ endif
 tools:
 	go generate -tags tools tools/tools.go
 
+fmtcheck:
+	echo "Placeholder"
+
 test:
 	echo "Placeholder"
 
