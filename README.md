@@ -3,6 +3,8 @@
 Terraform Provider Boundary
 ==================
 
+Available in the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/boundary/latest).
+
 Requirements
 ------------
 
