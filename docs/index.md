@@ -26,7 +26,7 @@ provider "boundary" {
 
 ### Required
 
-- **addr** (String, Required) The base url of the Boundary API, e.g. "http://127.0.0.1". If not set, it will be read from the "BOUNDARY_ADDR" env var.
+- **addr** (String, Required) The base url of the Boundary API, e.g. "http://127.0.0.1:9200". If not set, it will be read from the "BOUNDARY_ADDR" env var.
 
 ### Optional
 
