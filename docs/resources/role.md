@@ -132,6 +132,10 @@ resource "boundary_role" "readonly" {
 - **name** (String, Optional) The role name. Defaults to the resource name.
 - **principal_ids** (Set of String, Optional) A list of principal (user or group) IDs to add as principals on the role.
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the role.
+
 ## Import
 
 Import is supported using the following syntax:

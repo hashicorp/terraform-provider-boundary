@@ -30,6 +30,11 @@ func resourceAuthMethod() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the account.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			NameKey: {
 				Description: "The auth method name. Defaults to the resource name.",
 				Type:        schema.TypeString,

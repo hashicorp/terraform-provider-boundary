@@ -29,6 +29,11 @@ func resourceScope() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the scope.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			NameKey: {
 				Description: "The scope name. Defaults to the resource name.",
 				Type:        schema.TypeString,

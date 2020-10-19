@@ -90,6 +90,10 @@ resource "boundary_target" "foo" {
 - **session_connection_limit** (Number, Optional)
 - **session_max_seconds** (Number, Optional)
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the target.
+
 ## Import
 
 Import is supported using the following syntax:

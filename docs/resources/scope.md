@@ -74,6 +74,10 @@ resource "boundary_role" "org_admin" {
 - **global_scope** (Boolean, Optional) Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.
 - **name** (String, Optional) The scope name. Defaults to the resource name.
 
+### Read-only
+
+- **id** (String, Read-only) The ID of the scope.
+
 ## Import
 
 Import is supported using the following syntax:

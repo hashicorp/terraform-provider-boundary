@@ -30,6 +30,11 @@ func resourceHostset() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the hostset.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 			NameKey: {
 				Description: "The hostset name. Defaults to the resource name.",
 				Type:        schema.TypeString,
