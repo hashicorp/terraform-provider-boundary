@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -232,7 +232,7 @@ func testAccCheckUserResourceDestroy(t *testing.T, testProvider *schema.Provider
 				usrs := users.NewClient(md.client)
 
 				_, err := usrs.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Kind != codes.NotFound.String() {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed user %q: %v", id, err)
 				}
 

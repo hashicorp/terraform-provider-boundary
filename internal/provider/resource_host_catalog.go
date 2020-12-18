@@ -2,12 +2,12 @@ package provider
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -125,7 +125,7 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	hcrr, err := hcClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Kind == codes.NotFound.String() {
 			d.SetId("")
 			return nil
 		}

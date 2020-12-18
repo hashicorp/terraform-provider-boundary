@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -116,7 +116,7 @@ func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Pr
 				amClient := authmethods.NewClient(md.client)
 
 				_, err := amClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Kind != codes.NotFound.String() {
 					return fmt.Errorf("Didn't get a 404 when reading destroyed auth method %q: %v", id, err)
 				}
 
