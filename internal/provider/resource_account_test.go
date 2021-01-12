@@ -137,8 +137,8 @@ func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provi
 				amClient := accounts.NewClient(md.client)
 
 				_, err := amClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed account %q: %v", id, err)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed account %q: %v", id, err)
 				}
 
 			default:

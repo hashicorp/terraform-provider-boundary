@@ -166,11 +166,11 @@ func testAccCheckScopeResourceDestroy(t *testing.T, testProvider *schema.Provide
 					continue
 				}
 				_, err := scp.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed resource %q: %w", id, err)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed resource %q: %w", id, err)
 				}
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil
