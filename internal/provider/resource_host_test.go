@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/http"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -13,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -173,8 +173,8 @@ func testAccCheckHostResourceDestroy(t *testing.T, testProvider *schema.Provider
 				hostsClient := hosts.NewClient(md.client)
 
 				_, err := hostsClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed host %q: %v", id, apiErr)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Kind != codes.NotFound.String() {
+					return fmt.Errorf("didn't get a 404 when reading destroyed host %q: %v", id, apiErr)
 				}
 
 			default:
