@@ -5,7 +5,6 @@ go 1.15
 require (
 	cloud.google.com/go v0.68.0 // indirect
 	cloud.google.com/go/storage v1.11.0 // indirect
-	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/Azure/azure-sdk-for-go v46.4.0+incompatible // indirect
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.3 // indirect
 	github.com/Azure/go-autorest/autorest/to v0.4.0 // indirect
