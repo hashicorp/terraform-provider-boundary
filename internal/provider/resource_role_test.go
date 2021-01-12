@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -345,7 +345,7 @@ func testAccCheckRoleDestroyed(testProvider *schema.Provider, name string) resou
 		rolesClient := roles.NewClient(md.client)
 
 		_, err := rolesClient.Read(context.Background(), id)
-		if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Kind != codes.NotFound.String() {
+		if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
 			errs = append(errs, fmt.Sprintf("Role not destroyed %q: %v", id, apiErr))
 		}
 
@@ -546,7 +546,7 @@ func testAccCheckRoleResourceDestroy(t *testing.T, testProvider *schema.Provider
 				rolesClient := roles.NewClient(md.client)
 
 				_, err := rolesClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Kind != codes.NotFound.String() {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed role %q: %v", id, err)
 				}
 

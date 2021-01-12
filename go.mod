@@ -35,6 +35,5 @@ require (
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c // indirect
 	github.com/zclconf/go-cty v1.6.1 // indirect
-	google.golang.org/grpc v1.34.0
 	gopkg.in/ini.v1 v1.62.0 // indirect
 )

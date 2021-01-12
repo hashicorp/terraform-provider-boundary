@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -11,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -166,7 +166,7 @@ func testAccCheckScopeResourceDestroy(t *testing.T, testProvider *schema.Provide
 					continue
 				}
 				_, err := scp.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Kind != codes.NotFound.String() {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed resource %q: %w", id, err)
 				}
 			default:
