@@ -2,12 +2,12 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/groups"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -128,7 +128,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	g, err := grps.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr.Kind == codes.NotFound.String() {
+		if apiErr := api.AsServerError(err); apiErr.ResponseStatus() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}

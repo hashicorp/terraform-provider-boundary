@@ -2,12 +2,12 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/accounts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -163,7 +163,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	arr, err := aClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Kind == codes.NotFound.String() {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
