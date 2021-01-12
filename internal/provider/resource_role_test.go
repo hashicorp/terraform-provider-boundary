@@ -540,12 +540,6 @@ func testAccCheckRoleResourceDestroy(t *testing.T, testProvider *schema.Provider
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_scope":
-				continue
-			case "boundary_user":
-				continue
-			case "boundary_group":
-				continue
 			case "boundary_role":
 
 				id := rs.Primary.ID

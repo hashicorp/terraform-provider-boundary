@@ -102,8 +102,6 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.P
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_project":
-				continue
 			case "boundary_host_catalog":
 
 				id := rs.Primary.ID
@@ -115,7 +113,7 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.P
 				}
 
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil

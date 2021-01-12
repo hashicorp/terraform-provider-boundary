@@ -359,10 +359,6 @@ func testAccCheckGroupResourceDestroy(t *testing.T, testProvider *schema.Provide
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_scope":
-				continue
-			case "boundary_user":
-				continue
 			case "boundary_group":
 				grps := groups.NewClient(md.client)
 
@@ -374,7 +370,7 @@ func testAccCheckGroupResourceDestroy(t *testing.T, testProvider *schema.Provide
 				}
 
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil

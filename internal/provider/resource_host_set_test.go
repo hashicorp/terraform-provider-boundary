@@ -194,8 +194,6 @@ func testAccCheckHostsetResourceDestroy(t *testing.T, testProvider *schema.Provi
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_scope":
-				continue
 			case "boundary_host_set":
 
 				id := rs.Primary.ID

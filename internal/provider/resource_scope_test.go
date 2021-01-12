@@ -170,7 +170,7 @@ func testAccCheckScopeResourceDestroy(t *testing.T, testProvider *schema.Provide
 					return fmt.Errorf("didn't get a 404 when reading destroyed resource %q: %w", id, err)
 				}
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil

@@ -108,8 +108,6 @@ func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Pr
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_scope":
-				continue
 			case "boundary_auth_method":
 				id := rs.Primary.ID
 

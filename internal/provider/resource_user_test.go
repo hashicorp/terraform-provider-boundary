@@ -237,7 +237,7 @@ func testAccCheckUserResourceDestroy(t *testing.T, testProvider *schema.Provider
 				}
 
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil
