@@ -1,4 +1,4 @@
-## 0.1.4 (2021/01/12)
+## 0.1.4 (Unreleased)
 
 Boundary 0.1.4 release ([see boundary changelog](https://github.com/hashicorp/boundary/blob/main/CHANGELOG.md#014-20210105))
 
