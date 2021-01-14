@@ -25,7 +25,7 @@ func New() *schema.Provider {
 			"addr": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: `The base url of the Boundary API, e.g. "http://127.0.0.1". If not set, it will be read from the "BOUNDARY_ADDR" env var.`,
+				Description: `The base url of the Boundary API, e.g. "http://127.0.0.1:9200". If not set, it will be read from the "BOUNDARY_ADDR" env var.`,
 			},
 			"token": {
 				Type:        schema.TypeString,
