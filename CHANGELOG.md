@@ -1,4 +1,6 @@
-## Next (Unreleased)
+## 1.0.0 (Unreleased)
+
+We are bumping the version of the boundary terraform provider to 1.0.0 and will release new versions of the provider at its own cadence instead of keeping it in lockstep with Boundary.
 
 ### Bug Fixes
 
