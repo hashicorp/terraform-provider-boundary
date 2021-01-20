@@ -1,4 +1,4 @@
-## 1.0.0 (Unreleased)
+## 1.0.0 (January 20, 2021)
 
 We are bumping the version of the Boundary Terraform provider to v1.0.0 and will release new versions of the provider at its own cadence instead of keeping it in lockstep with Boundary.
 
