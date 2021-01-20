@@ -62,9 +62,16 @@ func resourceAccount() *schema.Resource {
 				Optional:    true,
 			},
 			accountPasswordKey: {
-				Description: "The account password.",
+				Description: "The account password. Only set on create, changes will not be reflected when updating account.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Id() == "" {
+						// This is a new resource do not suppress password diff
+						return false
+					}
+					return true
+				},
 			},
 		},
 	}
@@ -222,22 +229,6 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	var password *string
-	if d.HasChange(accountPasswordKey) {
-		switch d.Get(TypeKey).(string) {
-		case accountTypePassword:
-			opts = append(opts, accounts.DefaultPasswordAccountPassword())
-			keyVal, ok := d.GetOk(accountPasswordKey)
-			if ok {
-				keyStr := keyVal.(string)
-				password = &keyStr
-				opts = append(opts, accounts.WithPasswordAccountPassword(keyStr))
-			}
-		default:
-			return diag.Errorf(`"password" cannot be used with this type of account`)
-		}
-	}
-
 	if len(opts) > 0 {
 		opts = append(opts, accounts.WithAutomaticVersioning(true))
 		_, err := aClient.Update(ctx, d.Id(), 0, opts...)
@@ -254,9 +245,6 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	if d.HasChange(accountLoginNameKey) {
 		d.Set(accountLoginNameKey, loginName)
-	}
-	if d.HasChange(accountPasswordKey) {
-		d.Set(accountPasswordKey, password)
 	}
 
 	return nil
