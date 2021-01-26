@@ -17,14 +17,14 @@ require (
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.1.3
-	github.com/hashicorp/boundary/api v0.1.3
-	github.com/hashicorp/boundary/sdk v0.1.3
+	github.com/hashicorp/boundary v0.1.4
+	github.com/hashicorp/boundary/api v0.0.3
+	github.com/hashicorp/boundary/sdk v0.0.1
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.5.16
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
-	github.com/hashicorp/terraform-plugin-docs v0.2.0
+	github.com/hashicorp/terraform-plugin-docs v0.3.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.5-0.20201016174159-3a1c6c51f716
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/mitchellh/go-homedir v1.1.0

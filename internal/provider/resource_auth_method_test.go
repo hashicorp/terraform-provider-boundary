@@ -108,16 +108,14 @@ func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Pr
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_scope":
-				continue
 			case "boundary_auth_method":
 				id := rs.Primary.ID
 
 				amClient := authmethods.NewClient(md.client)
 
 				_, err := amClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed auth method %q: %v", id, err)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed auth method %q: %v", id, err)
 				}
 
 			default:

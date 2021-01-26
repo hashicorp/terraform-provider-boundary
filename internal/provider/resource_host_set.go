@@ -154,7 +154,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	hsrr, err := hsClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}

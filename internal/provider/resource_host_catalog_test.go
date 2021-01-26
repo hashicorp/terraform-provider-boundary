@@ -102,20 +102,18 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.P
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_project":
-				continue
 			case "boundary_host_catalog":
 
 				id := rs.Primary.ID
 				hcClient := hostcatalogs.NewClient(md.client)
 
 				_, err := hcClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed host catalog %q: %v", id, err)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed host catalog %q: %v", id, err)
 				}
 
 			default:
-				t.Logf("Got unknown resource type %q", rs.Type)
+				continue
 			}
 		}
 		return nil

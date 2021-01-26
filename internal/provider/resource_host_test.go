@@ -165,16 +165,14 @@ func testAccCheckHostResourceDestroy(t *testing.T, testProvider *schema.Provider
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_scope":
-				continue
 			case "boundary_host":
 				id := rs.Primary.ID
 
 				hostsClient := hosts.NewClient(md.client)
 
 				_, err := hostsClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Status != http.StatusNotFound {
-					return fmt.Errorf("Didn't get a 404 when reading destroyed host %q: %v", id, apiErr)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed host %q: %v", id, apiErr)
 				}
 
 			default:

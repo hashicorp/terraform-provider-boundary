@@ -128,7 +128,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	g, err := grps.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr.Status == int32(http.StatusNotFound) {
+		if apiErr := api.AsServerError(err); apiErr.ResponseStatus() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
