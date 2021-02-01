@@ -1,6 +1,6 @@
 ## 1.0.1 (Unreleased)
 
-Update to Boundary SDK V0.0.2
+Update to Boundary SDK V0.0.2 ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/75))
 
 
 ## 1.0.0 (January 20, 2021)
