@@ -66,6 +66,7 @@ resource "boundary_target" "foo" {
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 6000
 	session_connection_limit = 6
+	worker_filter = "type == \"foo\""
 }`, fooTargetDescription)
 
 	fooTargetUpdate = fmt.Sprintf(`
@@ -81,6 +82,7 @@ resource "boundary_target" "foo" {
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 7000
 	session_connection_limit = 7
+	worker_filter = "type == \"bar\""
 }`, fooTargetDescriptionUpdate)
 )
 
@@ -105,6 +107,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "6000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "foo"`),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -117,6 +120,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
 				),
 			},
 			importStep("boundary_target.foo"),

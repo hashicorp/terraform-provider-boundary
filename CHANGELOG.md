@@ -1,5 +1,9 @@
-## Next (Unreleased)
+## 1.0.1 (Unreleased)
 
+### New and Improved
+
+* Adds worker filter to target resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/76))
 
 ## 1.0.0 (January 20, 2021)
 

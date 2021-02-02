@@ -91,6 +91,7 @@ resource "boundary_target" "foo" {
 - **name** (String) The target name. Defaults to the resource name.
 - **session_connection_limit** (Number)
 - **session_max_seconds** (Number)
+- **worker_filter** (String) Boolean expression to filter the workers for this target
 
 ### Read-only
 

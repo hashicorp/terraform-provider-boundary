@@ -16,6 +16,7 @@ const (
 	targetDefaultPortKey            = "default_port"
 	targetSessionMaxSecondsKey      = "session_max_seconds"
 	targetSessionConnectionLimitKey = "session_connection_limit"
+	targetWorkerFilterKey           = "worker_filter"
 
 	targetTypeTcp = "tcp"
 )
@@ -81,6 +82,11 @@ func resourceTarget() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			targetWorkerFilterKey: {
+				Description: "Boolean expression to filter the workers for this target",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -93,6 +99,7 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
 	d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"])
 	d.Set(targetSessionConnectionLimitKey, raw["session_connection_limit"])
+	d.Set(targetWorkerFilterKey, raw["worker_filter"])
 
 	switch raw["type"].(string) {
 	case targetTypeTcp:
@@ -178,6 +185,12 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		for _, i := range list {
 			hostSetIds = append(hostSetIds, i.(string))
 		}
+	}
+
+	workerFilterVal, ok := d.GetOk(targetWorkerFilterKey)
+	if ok {
+		workerFilterStr := workerFilterVal.(string)
+		opts = append(opts, targets.WithWorkerFilter(workerFilterStr))
 	}
 
 	tc := targets.NewClient(md.client)
@@ -295,6 +308,17 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	var workerFilter *string
+	if d.HasChange(targetWorkerFilterKey) {
+		opts = append(opts, targets.DefaultWorkerFilter())
+		workerFilterVal, ok := d.GetOk(targetWorkerFilterKey)
+		if ok {
+			workerFilterStr := workerFilterVal.(string)
+			workerFilter = &workerFilterStr
+			opts = append(opts, targets.WithWorkerFilter(workerFilterStr))
+		}
+	}
+
 	if len(opts) > 0 {
 		opts = append(opts, targets.WithAutomaticVersioning(true))
 		_, err := tc.Update(ctx, d.Id(), 0, opts...)
@@ -317,6 +341,9 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange(targetSessionConnectionLimitKey) {
 		d.Set(targetSessionConnectionLimitKey, sessionConnectionLimit)
+	}
+	if d.HasChange(targetWorkerFilterKey) {
+		d.Set(targetWorkerFilterKey, workerFilter)
 	}
 
 	// The above call may not actually happen, so we use d.Id() and automatic
