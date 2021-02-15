@@ -18,8 +18,8 @@ require (
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/hashicorp/boundary v0.1.5
-	github.com/hashicorp/boundary/api v0.0.4
-	github.com/hashicorp/boundary/sdk v0.0.2
+	github.com/hashicorp/boundary/api v0.0.5
+	github.com/hashicorp/boundary/sdk v0.0.3
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.6.0
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
