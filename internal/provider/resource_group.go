@@ -99,7 +99,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if gcr == nil {
 		return diag.Errorf("group nil after create")
 	}
-	raw := gcr.GetResponseMap()
+	raw := gcr.GetResponse().Map
 
 	if val, ok := d.GetOk(groupMemberIdsKey); ok {
 		list := val.(*schema.Set).List()
@@ -114,7 +114,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		if gcsmr == nil {
 			return diag.Errorf("group nil after setting members")
 		}
-		raw = gcsmr.GetResponseMap()
+		raw = gcsmr.GetResponse().Map
 	}
 
 	setFromGroupResponseMap(d, raw)
@@ -128,7 +128,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	g, err := grps.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -138,7 +138,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("group nil after read")
 	}
 
-	setFromGroupResponseMap(d, g.GetResponseMap())
+	setFromGroupResponseMap(d, g.GetResponse().Map)
 
 	return nil
 }
