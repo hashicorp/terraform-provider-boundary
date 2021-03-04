@@ -6,7 +6,7 @@ description: |-
   The target resource allows you to configure a Boundary target.
 ---
 
-# Resource `boundary_target`
+# boundary_target (Resource)
 
 The target resource allows you to configure a Boundary target.
 
@@ -67,6 +67,7 @@ resource "boundary_host_set" "foo" {
 resource "boundary_target" "foo" {
   name         = "foo"
   description  = "Foo target"
+	type         = "tcp"
   default_port = "22"
   scope_id     = boundary_scope.project.id
   host_set_ids = [
@@ -93,7 +94,7 @@ resource "boundary_target" "foo" {
 - **session_max_seconds** (Number)
 - **worker_filter** (String) Boolean expression to filter the workers for this target
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the target.
 
