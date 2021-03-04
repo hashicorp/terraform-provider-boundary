@@ -114,7 +114,7 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("nil host catalog after create")
 	}
 
-	setFromHostCatalogResponseMap(d, hccr.GetResponseMap())
+	setFromHostCatalogResponseMap(d, hccr.GetResponse().Map)
 
 	return nil
 }
@@ -125,7 +125,7 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	hcrr, err := hcClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -135,7 +135,7 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	setFromHostCatalogResponseMap(d, hcrr.GetResponseMap())
+	setFromHostCatalogResponseMap(d, hcrr.GetResponse().Map)
 
 	return nil
 }

@@ -161,7 +161,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("nil auth method after create")
 	}
 
-	setFromAuthMethodResponseMap(d, amcr.GetResponseMap())
+	setFromAuthMethodResponseMap(d, amcr.GetResponse().Map)
 
 	return nil
 }
@@ -172,7 +172,7 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	amrr, err := amClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -182,7 +182,7 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("auth method nil after read")
 	}
 
-	setFromAuthMethodResponseMap(d, amrr.GetResponseMap())
+	setFromAuthMethodResponseMap(d, amrr.GetResponse().Map)
 
 	return nil
 }

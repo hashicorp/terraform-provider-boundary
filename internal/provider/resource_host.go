@@ -140,7 +140,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("host nil after create")
 	}
 
-	setFromHostResponseMap(d, hcr.GetResponseMap())
+	setFromHostResponseMap(d, hcr.GetResponse().Map)
 
 	return nil
 }
@@ -151,7 +151,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	hrr, err := hClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -161,7 +161,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("host nil after read")
 	}
 
-	setFromHostResponseMap(d, hrr.GetResponseMap())
+	setFromHostResponseMap(d, hrr.GetResponse().Map)
 
 	return nil
 }

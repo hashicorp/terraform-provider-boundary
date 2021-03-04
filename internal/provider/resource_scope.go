@@ -136,7 +136,7 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("scope nil after create")
 	}
 
-	setFromScopeResponseMap(d, scr.GetResponseMap())
+	setFromScopeResponseMap(d, scr.GetResponse().Map)
 
 	return nil
 }
@@ -147,7 +147,7 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	srr, err := scp.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -157,7 +157,7 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("scope nil after read")
 	}
 
-	setFromScopeResponseMap(d, srr.GetResponseMap())
+	setFromScopeResponseMap(d, srr.GetResponse().Map)
 
 	return nil
 }

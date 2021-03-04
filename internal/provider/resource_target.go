@@ -202,14 +202,14 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if tcr == nil {
 		return diag.Errorf("target nil after create")
 	}
-	raw := tcr.GetResponseMap()
+	raw := tcr.GetResponse().Map
 
 	if hostSetIds != nil {
 		tur, err := tc.SetHostSets(ctx, tcr.Item.Id, tcr.Item.Version, hostSetIds)
 		if err != nil {
 			return diag.Errorf("error setting host sets on target: %v", err)
 		}
-		raw = tur.GetResponseMap()
+		raw = tur.GetResponse().Map
 	}
 
 	setFromTargetResponseMap(d, raw)
@@ -223,7 +223,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	trr, err := tc.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -233,7 +233,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("target nil after read")
 	}
 
-	setFromTargetResponseMap(d, trr.GetResponseMap())
+	setFromTargetResponseMap(d, trr.GetResponse().Map)
 
 	return nil
 }

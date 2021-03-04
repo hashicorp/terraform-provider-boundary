@@ -201,7 +201,7 @@ func testAccCheckHostsetResourceDestroy(t *testing.T, testProvider *schema.Provi
 				hostsetsClient := hostsets.NewClient(md.client)
 
 				_, err := hostsetsClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed host set %q: %v", id, apiErr)
 				}
 

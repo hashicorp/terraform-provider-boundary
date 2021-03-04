@@ -69,7 +69,7 @@ func TestAccAccount(t *testing.T) {
 		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				//create
+				// create
 				Config: testConfig(url, fooOrg, fooAccount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDesc),
@@ -137,7 +137,7 @@ func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provi
 				amClient := accounts.NewClient(md.client)
 
 				_, err := amClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed account %q: %v", id, err)
 				}
 
