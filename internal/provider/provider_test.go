@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	tcLoginName = "user"
+	tcLoginName = "testuser"
 	tcPassword  = "passpass"
 	tcPAUM      = "ampw_0000000000"
 	tcConfig    = []controller.Option{
