@@ -50,7 +50,7 @@ func TestAccAuthMethod(t *testing.T) {
 		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				//create
+				// create
 				Config: testConfig(url, fooOrg, fooAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooAuthMethodDesc),
@@ -114,7 +114,7 @@ func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Pr
 				amClient := authmethods.NewClient(md.client)
 
 				_, err := amClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed auth method %q: %v", id, err)
 				}
 
