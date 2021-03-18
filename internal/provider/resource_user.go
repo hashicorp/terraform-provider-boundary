@@ -97,7 +97,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if ucr == nil {
 		return diag.Errorf("user nil after create")
 	}
-	raw := ucr.GetResponseMap()
+	raw := ucr.GetResponse().Map
 
 	if val, ok := d.GetOk(userAccountIDsKey); ok {
 		list := val.(*schema.Set).List()
@@ -112,7 +112,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		if usrac == nil {
 			return diag.Errorf("user nil after setting accounts")
 		}
-		raw = usrac.GetResponseMap()
+		raw = usrac.GetResponse().Map
 	}
 
 	setFromUserResponseMap(d, raw)
@@ -126,7 +126,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	urr, err := usrs.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound{
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -136,7 +136,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("user nil after read")
 	}
 
-	setFromUserResponseMap(d, urr.GetResponseMap())
+	setFromUserResponseMap(d, urr.GetResponse().Map)
 
 	return nil
 }

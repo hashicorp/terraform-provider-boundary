@@ -1,3 +1,10 @@
+## 1.0.1 (February 02, 2021)
+
+### New and Improved
+
+* Adds worker filter to target resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/76))
+
 ## 1.0.0 (January 20, 2021)
 
 We are bumping the version of the Boundary Terraform provider to v1.0.0 and will release new versions of the provider at its own cadence instead of keeping it in lockstep with Boundary.
@@ -12,7 +19,7 @@ We are bumping the version of the Boundary Terraform provider to v1.0.0 and will
 
 ### New and Improved
 
-Update to the Boundary Go SDK v0.0.3
+Update provider to handle new domain errors ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/63))
 
 ## 0.1.0 (October 14, 2020)
 

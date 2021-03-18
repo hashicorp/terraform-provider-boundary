@@ -159,7 +159,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("nil account after create")
 	}
 
-	setFromAccountResponseMap(d, acr.GetResponseMap())
+	setFromAccountResponseMap(d, acr.GetResponse().Map)
 
 	return nil
 }
@@ -170,7 +170,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	arr, err := aClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -180,7 +180,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("account nil after read")
 	}
 
-	setFromAccountResponseMap(d, arr.GetResponseMap())
+	setFromAccountResponseMap(d, arr.GetResponse().Map)
 
 	return nil
 }

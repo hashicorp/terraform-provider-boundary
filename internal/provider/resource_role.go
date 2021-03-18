@@ -149,7 +149,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if tcr == nil {
 		return diag.Errorf("nil role after create")
 	}
-	raw := tcr.GetResponseMap()
+	raw := tcr.GetResponse().Map
 
 	if principalIds != nil {
 		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
@@ -159,7 +159,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		if tspr == nil {
 			return diag.Errorf("nil role after setting principal IDs")
 		}
-		raw = tspr.GetResponseMap()
+		raw = tspr.GetResponse().Map
 	}
 
 	if grantStrings != nil {
@@ -170,7 +170,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		if tsgr == nil {
 			return diag.Errorf("nil role after setting grant strings")
 		}
-		raw = tsgr.GetResponseMap()
+		raw = tsgr.GetResponse().Map
 	}
 
 	setFromRoleResponseMap(d, raw)
@@ -184,7 +184,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	trr, err := rc.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -194,7 +194,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("role nil after read")
 	}
 
-	setFromRoleResponseMap(d, trr.GetResponseMap())
+	setFromRoleResponseMap(d, trr.GetResponse().Map)
 
 	return nil
 }

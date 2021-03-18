@@ -232,7 +232,7 @@ func testAccCheckUserResourceDestroy(t *testing.T, testProvider *schema.Provider
 				usrs := users.NewClient(md.client)
 
 				_, err := usrs.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed user %q: %v", id, err)
 				}
 

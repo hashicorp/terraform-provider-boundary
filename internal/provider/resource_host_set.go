@@ -130,7 +130,7 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if hscr == nil {
 		return diag.Errorf("nil host set after create")
 	}
-	raw := hscr.GetResponseMap()
+	raw := hscr.GetResponse().Map
 
 	if hostIds != nil {
 		hsshr, err := hsClient.SetHosts(ctx, hscr.Item.Id, hscr.Item.Version, hostIds)
@@ -140,7 +140,7 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if hsshr == nil {
 			return diag.Errorf("nil host set after setting hosts")
 		}
-		raw = hsshr.GetResponseMap()
+		raw = hsshr.GetResponse().Map
 	}
 
 	setFromHostSetResponseMap(d, raw)
@@ -154,7 +154,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	hsrr, err := hsClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.ResponseStatus() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -164,7 +164,7 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("host set nil after read")
 	}
 
-	setFromHostSetResponseMap(d, hsrr.GetResponseMap())
+	setFromHostSetResponseMap(d, hsrr.GetResponse().Map)
 
 	return nil
 }

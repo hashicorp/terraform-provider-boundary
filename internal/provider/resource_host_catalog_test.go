@@ -108,7 +108,7 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.P
 				hcClient := hostcatalogs.NewClient(md.client)
 
 				_, err := hcClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.ResponseStatus() != http.StatusNotFound {
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed host catalog %q: %v", id, err)
 				}
 
