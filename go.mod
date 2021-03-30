@@ -16,6 +16,7 @@ require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
+	github.com/go-swagger/go-swagger v0.26.1 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/hashicorp/boundary v0.2.0
 	github.com/hashicorp/boundary/api v0.0.9
