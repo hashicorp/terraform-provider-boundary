@@ -11,188 +11,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	// Password auth method keys
-	authmethodTypePassword          = "password"
-	authmethodMinLoginNameLengthKey = "min_login_name_length"
-	authmethodMinPasswordLengthKey  = "min_password_length"
-
-	// OIDC auth method keys
-	authmethodTypeOidc                              = "oidc"
-	authmethodOidcStateKey                          = "state"
-	authmethodOidcDiscoveryUrlKey                   = "discovery_url"
-	authmethodOidcClientIdKey                       = "client_id"
-	authmethodOidcClientSecretKey                   = "client_secret"
-	authmethodOidcClientSecretHmacKey               = "client_secret_hmac"
-	authmethodOidcMaxAgeKey                         = "max_age"
-	authmethodOidcSigningAlgorithmsKey              = "signing_algorithms"
-	authmethodOidcApiUrlPrefixKey                   = "api_url_prefix"
-	authmethodOidcCallbackUrlKey                    = "callback_url"
-	authmethodOidcCertificatesKey                   = "certificates"
-	authmethodOidcAllowedAudiencesKey               = "allowed_audiences"
-	authmethodOidcOverrideOidcDiscoveryUrlConfigKey = "override_oidc_discovery_url_config"
-)
-
-func resourceAuthMethod() *schema.Resource {
-	return &schema.Resource{
-		Description: "The auth method resource allows you to configure a Boundary auth_method.",
-
-		CreateContext: resourceAuthMethodCreate,
-		ReadContext:   resourceAuthMethodRead,
-		UpdateContext: resourceAuthMethodUpdate,
-		DeleteContext: resourceAuthMethodDelete,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			IDKey: {
-				Description: "The ID of the account.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			NameKey: {
-				Description: "The auth method name. Defaults to the resource name.",
-				Type:        schema.TypeString,
-				Optional:    true,
-			},
-			DescriptionKey: {
-				Description: "The auth method description.",
-				Type:        schema.TypeString,
-				Optional:    true,
-			},
-			ScopeIdKey: {
-				Description: "The scope ID.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-			},
-			TypeKey: {
-				Description: "The resource type.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-			},
-			authmethodTypePassword: {
-				Type: schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						authmethodMinLoginNameLengthKey: {
-							Description: "The minimum login name length.",
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodMinPasswordLengthKey: {
-							Description: "The minimum password length.",
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Computed:    true,
-						},
-					},
-				},
-			},
-			authmethodTypeOidc: {
-				Type: schema.TypeSet,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						authmethodOidcStateKey: {
-							Description: "OIDC state",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcDiscoveryUrlKey: {
-							Description: "OIDC discovery URL",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcClientIdKey: {
-							Description: "OIDC client ID",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcClientSecretKey: {
-							Description: "OIDC client secret",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcClientSecretHmacKey: {
-							Description: "OIDC client secret HMAC",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcMaxAgeKey: {
-							Description: "OIDC max age",
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcSigningAlgorithmsKey: {
-							Description: "OIDC signing algorithms",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcApiUrlPrefixKey: {
-							Description: "OIDC API URL prefix",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcCallbackUrlKey: {
-							Description: "OIDC callback URL",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcCertificatesKey: {
-							Description: "OIDC certificates",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcAllowedAudiencesKey: {
-							Description: "OIDC allowed audiences",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-						authmethodOidcOverrideOidcDiscoveryUrlConfigKey: {
-							Description: "OIDC discovery URL override configuration",
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
+	d.Set(NameKey, raw[NameKey])
+	d.Set(DescriptionKey, raw[DescriptionKey])
+	d.Set(ScopeIdKey, raw[ScopeIdKey])
+	d.Set(TypeKey, raw[TypeKey])
 
-	switch raw["type"].(string) {
+	switch raw[TypeKey].(string) {
 	case authmethodTypePassword:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
 
-			minLoginNameLength := attrs["min_login_name_length"].(json.Number)
+			minLoginNameLength := attrs[authmethodMinLoginNameLengthKey].(json.Number)
 			minLoginNameLengthInt, _ := minLoginNameLength.Int64()
 			d.Set(authmethodMinLoginNameLengthKey, int(minLoginNameLengthInt))
 
-			minPasswordLength := attrs["min_password_length"].(json.Number)
+			minPasswordLength := attrs[authmethodMinPasswordLengthKey].(json.Number)
 			minPasswordLengthInt, _ := minPasswordLength.Int64()
 			d.Set(authmethodMinPasswordLengthKey, int(minPasswordLengthInt))
+		}
+
+	case authmethodTypeOidc:
+		if attrsVal, ok := raw["attributes"]; ok {
+			attrs := attrsVal.(map[string]interface{})
+
+			authmethodOidcState := attrs[authmethodOidcStateKey]
+			d.Set(authmethodOidcStateKey, authmethodOidcState.(string))
 		}
 	}
 
