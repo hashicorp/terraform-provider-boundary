@@ -12,9 +12,25 @@ import (
 )
 
 const (
+	// Password auth method keys
 	authmethodTypePassword          = "password"
 	authmethodMinLoginNameLengthKey = "min_login_name_length"
 	authmethodMinPasswordLengthKey  = "min_password_length"
+
+	// OIDC auth method keys
+	authmethodTypeOidc                              = "oidc"
+	authmethodOidcStateKey                          = "state"
+	authmethodOidcDiscoveryUrlKey                   = "discovery_url"
+	authmethodOidcClientIdKey                       = "client_id"
+	authmethodOidcClientSecretKey                   = "client_secret"
+	authmethodOidcClientSecretHmacKey               = "client_secret_hmac"
+	authmethodOidcMaxAgeKey                         = "max_age"
+	authmethodOidcSigningAlgorithmsKey              = "signing_algorithms"
+	authmethodOidcApiUrlPrefixKey                   = "api_url_prefix"
+	authmethodOidcCallbackUrlKey                    = "callback_url"
+	authmethodOidcCertificatesKey                   = "certificates"
+	authmethodOidcAllowedAudiencesKey               = "allowed_audiences"
+	authmethodOidcOverrideOidcDiscoveryUrlConfigKey = "override_oidc_discovery_url_config"
 )
 
 func resourceAuthMethod() *schema.Resource {
@@ -57,17 +73,103 @@ func resourceAuthMethod() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			authmethodMinLoginNameLengthKey: {
-				Description: "The minimum login name length.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+			authmethodTypePassword: {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						authmethodMinLoginNameLengthKey: {
+							Description: "The minimum login name length.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodMinPasswordLengthKey: {
+							Description: "The minimum password length.",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+						},
+					},
+				},
 			},
-			authmethodMinPasswordLengthKey: {
-				Description: "The minimum password length.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+			authmethodTypeOidc: {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						authmethodOidcStateKey: {
+							Description: "OIDC state",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcDiscoveryUrlKey: {
+							Description: "OIDC discovery URL",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcClientIdKey: {
+							Description: "OIDC client ID",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcClientSecretKey: {
+							Description: "OIDC client secret",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcClientSecretHmacKey: {
+							Description: "OIDC client secret HMAC",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcMaxAgeKey: {
+							Description: "OIDC max age",
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcSigningAlgorithmsKey: {
+							Description: "OIDC signing algorithms",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcApiUrlPrefixKey: {
+							Description: "OIDC API URL prefix",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcCallbackUrlKey: {
+							Description: "OIDC callback URL",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcCertificatesKey: {
+							Description: "OIDC certificates",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcAllowedAudiencesKey: {
+							Description: "OIDC allowed audiences",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+						authmethodOidcOverrideOidcDiscoveryUrlConfigKey: {
+							Description: "OIDC discovery URL override configuration",
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+						},
+					},
+				},
 			},
 		},
 	}
