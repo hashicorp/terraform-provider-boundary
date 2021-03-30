@@ -189,22 +189,30 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 		return err
 	}
 
-	switch raw["type"].(string) {
+	switch raw[TypeKey].(string) {
 	case authmethodTypePassword:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
 
-			minLoginNameLength := attrs["min_login_name_length"].(json.Number)
+			minLoginNameLength := attrs[authmethodMinLoginNameLengthKey].(json.Number)
 			minLoginNameLengthInt, _ := minLoginNameLength.Int64()
 			if err := d.Set(authmethodMinLoginNameLengthKey, int(minLoginNameLengthInt)); err != nil {
 				return err
 			}
 
-			minPasswordLength := attrs["min_password_length"].(json.Number)
+			minPasswordLength := attrs[authmethodMinPasswordLengthKey].(json.Number)
 			minPasswordLengthInt, _ := minPasswordLength.Int64()
 			if err := d.Set(authmethodMinPasswordLengthKey, int(minPasswordLengthInt)); err != nil {
 				return err
 			}
+		}
+
+	case authmethodTypeOidc:
+		if attrsVal, ok := raw["attributes"]; ok {
+			attrs := attrsVal.(map[string]interface{})
+
+			authmethodOidcState := attrs[authmethodOidcStateKey]
+			d.Set(authmethodOidcStateKey, authmethodOidcState.(string))
 		}
 	}
 
