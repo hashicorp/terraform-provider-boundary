@@ -16,10 +16,9 @@ require (
 	github.com/cenkalti/backoff/v3 v3.2.2 // indirect
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
-	github.com/go-swagger/go-swagger v0.26.1 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.1.9-0.20210330192232-56bff0c31cba
-	github.com/hashicorp/boundary/api v0.0.8
+	github.com/hashicorp/boundary v0.1.9-0.20210330211737-458446a76f5e
+	github.com/hashicorp/boundary/api v0.0.9-0.20210330211737-458446a76f5e
 	github.com/hashicorp/boundary/sdk v0.0.4
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.6.1
@@ -36,4 +35,7 @@ require (
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c // indirect
 	github.com/zclconf/go-cty v1.6.1 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	gopkg.in/ini.v1 v1.62.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
