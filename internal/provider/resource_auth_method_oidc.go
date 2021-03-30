@@ -3,18 +3,20 @@ package provider
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 const (
-	authmethodTypeOidc                              = "oidc"
-	authmethodOidcStateKey                          = "state"
-	authmethodOidcDiscoveryUrlKey                   = "discovery_url"
-	authmethodOidcClientIdKey                       = "client_id"
-	authmethodOidcClientSecretKey                   = "client_secret"
-	authmethodOidcClientSecretHmacKey               = "client_secret_hmac"
-	authmethodOidcMaxAgeKey                         = "max_age"
-	authmethodOidcSigningAlgorithmsKey              = "signing_algorithms"
-	authmethodOidcApiUrlPrefixKey                   = "api_url_prefix"
-	authmethodOidcCallbackUrlKey                    = "callback_url"
-	authmethodOidcCertificatesKey                   = "certificates"
-	authmethodOidcAllowedAudiencesKey               = "allowed_audiences"
+	authmethodTypeOidc                 = "oidc"
+	authmethodOidcStateKey             = "state"
+	authmethodOidcIssuerKey            = "issuer"
+	authmethodOidcClientIdKey          = "client_id"
+	authmethodOidcClientSecretKey      = "client_secret"
+	authmethodOidcClientSecretHmacKey  = "client_secret_hmac"
+	authmethodOidcMaxAgeKey            = "max_age"
+	authmethodOidcSigningAlgorithmsKey = "signing_algorithms"
+	authmethodOidcApiUrlPrefixKey      = "api_url_prefix"
+	authmethodOidcCallbackUrlKey       = "callback_url"
+	authmethodOidcCertificatesKey      = "certificates"
+	authmethodOidcAllowedAudiencesKey  = "allowed_audiences"
+	// not sure if we should do this or set a bool on disable discovery
+	// there is no option to send this config, if we present it
 	authmethodOidcOverrideOidcDiscoveryUrlConfigKey = "override_oidc_discovery_url_config"
 )
 
@@ -66,7 +68,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
-			authmethodOidcDiscoveryUrlKey: {
+			authmethodOidcIssuerKey: {
 				Description: "OIDC discovery URL",
 				Type:        schema.TypeString,
 				Optional:    true,

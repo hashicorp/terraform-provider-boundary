@@ -211,8 +211,18 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
 
-			authmethodOidcState := attrs[authmethodOidcStateKey]
-			d.Set(authmethodOidcStateKey, authmethodOidcState.(string))
+			d.Set(authmethodOidcStateKey, attrs[authmethodOidcStateKey].(string))
+			d.Set(authmethodOidcDiscoveryUrlKey, attrs[authmethodOidcDiscoveryUrlKey].(string))
+			d.Set(authmethodOidcClientIdKey, attrs[authmethodOidcClientIdKey].(string))
+			d.Set(authmethodOidcClientSecretKey, attrs[authmethodOidcClientSecretKey].(string))
+			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
+			d.Set(authmethodOidcMaxAgeKey, attrs[authmethodOidcMaxAgeKey].(string))
+			d.Set(authmethodOidcSigningAlgorithmsKey, attrs[authmethodOidcSigningAlgorithmsKey].(string))
+			d.Set(authmethodOidcApiUrlPrefixKey, attrs[authmethodOidcApiUrlPrefixKey].(string))
+			d.Set(authmethodOidcCallbackUrlKey, attrs[authmethodOidcCallbackUrlKey].(string))
+			d.Set(authmethodOidcCertificatesKey, attrs[authmethodOidcCertificatesKey].(string))
+			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].(string))
+			d.Set(authmethodOidcOverrideOidcDiscoveryUrlConfigKey, attrs[authmethodOidcOverrideOidcDiscoveryUrlConfigKey].(string))
 		}
 	}
 
@@ -223,41 +233,54 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	var scopeId string
-	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
-		scopeId = scopeIdVal.(string)
-	} else {
-		return diag.Errorf("no scope ID provided")
-	}
-
-	var minLoginNameLength *int
-	if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
-		minLength := minLengthVal.(int)
-		minLoginNameLength = &minLength
-	}
-
-	var minPasswordLength *int
-	if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
-		minLength := minLengthVal.(int)
-		minPasswordLength = &minLength
-	}
-
-	opts := []authmethods.Option{}
-
 	var typeStr string
 	if typeVal, ok := d.GetOk(TypeKey); ok {
 		typeStr = typeVal.(string)
 	} else {
 		return diag.Errorf("no type provided")
 	}
+
+	opts := []authmethods.Option{}
 	switch typeStr {
 	case authmethodTypePassword:
+		var minLoginNameLength *int
+		if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+			minLength := minLengthVal.(int)
+			minLoginNameLength = &minLength
+		}
 		if minLoginNameLength != nil {
 			opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(*minLoginNameLength)))
+		}
+
+		var minPasswordLength *int
+		if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
+			minLength := minLengthVal.(int)
+			minPasswordLength = &minLength
 		}
 		if minPasswordLength != nil {
 			opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(*minPasswordLength)))
 		}
+
+	case authmethodTypeOidc:
+		if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
+		}
+		if clientId, ok := d.GetOk(authmethodOidcClientIdKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodClientId(clientId.(string)))
+		}
+		if clientSecret, ok := d.GetOk(authmethodOidcClientSecretKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(clientSecret.(string)))
+		}
+		if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(maxAge.(uint32)))
+		}
+		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.(string))))
+		}
+		if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
+		}
+
 	default:
 		return diag.Errorf("invalid type provided")
 	}
@@ -272,6 +295,13 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if ok {
 		descStr := descVal.(string)
 		opts = append(opts, authmethods.WithDescription(descStr))
+	}
+
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
 	}
 
 	amClient := authmethods.NewClient(md.client)
