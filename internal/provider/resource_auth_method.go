@@ -36,7 +36,7 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			attrs := attrsVal.(map[string]interface{})
 
 			d.Set(authmethodOidcStateKey, attrs[authmethodOidcStateKey].(string))
-			d.Set(authmethodOidcDiscoveryUrlKey, attrs[authmethodOidcDiscoveryUrlKey].(string))
+			d.Set(authmethodOidcIssuerKey, attrs[authmethodOidcIssuerKey].(string))
 			d.Set(authmethodOidcClientIdKey, attrs[authmethodOidcClientIdKey].(string))
 			d.Set(authmethodOidcClientSecretKey, attrs[authmethodOidcClientSecretKey].(string))
 			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
@@ -98,7 +98,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(maxAge.(uint32)))
 		}
 		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.(string))))
+			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
 		}
 		if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
@@ -191,10 +191,11 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	var minLoginNameLength *int
-	if d.HasChange(authmethodMinLoginNameLengthKey) {
-		switch d.Get(TypeKey).(string) {
-		case authmethodTypePassword:
+	typeStr := d.Get(TypeKey).(string)
+	switch typeStr {
+	case authmethodTypePassword:
+		var minLoginNameLength *int
+		if d.HasChange(authmethodMinLoginNameLengthKey) {
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
 			minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey)
 			if ok {
@@ -202,15 +203,10 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				minLoginNameLength = &minLengthInt
 				opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthInt)))
 			}
-		default:
-			return diag.Errorf(`"min_login_name_length" cannot be used with this type of auth method`)
 		}
-	}
 
-	var minPasswordLength *int
-	if d.HasChange(authmethodMinPasswordLengthKey) {
-		switch d.Get(TypeKey).(string) {
-		case authmethodTypePassword:
+		var minPasswordLength *int
+		if d.HasChange(authmethodMinPasswordLengthKey) {
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinPasswordLength())
 			minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey)
 			if ok {
@@ -218,9 +214,9 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				minPasswordLength = &minLengthInt
 				opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthInt)))
 			}
-		default:
-			return diag.Errorf(`"min_password_length" cannot be used with this type of auth method`)
 		}
+
+	case authmethodTypeOidc:
 	}
 
 	if len(opts) > 0 {
