@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var errorInvalidAuthMethodType = diag.Errorf("invalid auth method type, must be 'password' or 'oidc'")
+
 func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
 	d.Set(NameKey, raw[NameKey])
 	d.Set(DescriptionKey, raw[DescriptionKey])
@@ -48,6 +50,8 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].(string))
 			d.Set(authmethodOidcOverrideOidcDiscoveryUrlConfigKey, attrs[authmethodOidcOverrideOidcDiscoveryUrlConfigKey].(string))
 		}
+	default:
+		return errorInvalidAuthMethodType
 	}
 
 	d.SetId(raw["id"].(string))
@@ -105,7 +109,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 	default:
-		return diag.Errorf("invalid type provided")
+		return errorInvalidAuthMethodType
 	}
 
 	nameVal, ok := d.GetOk(NameKey)
@@ -169,7 +173,22 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	opts := []authmethods.Option{}
 
-	var name *string
+	var (
+		// password auth method values for updating
+		name               *string
+		desc               *string
+		minLoginNameLength *string
+		minPasswordLength  *string
+
+		// oidc auth method values for updating
+		oidcIssuer       *string
+		oidcClientId     *string
+		oidcClientSecret *string
+		oidcMaxAge       *string
+		oidcSigningAlgos *[]string
+		oidcUrlPrefix    *string
+	)
+
 	if d.HasChange(NameKey) {
 		opts = append(opts, authmethods.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
@@ -180,7 +199,6 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	var desc *string
 	if d.HasChange(DescriptionKey) {
 		opts = append(opts, authmethods.DefaultDescription())
 		descVal, ok := d.GetOk(DescriptionKey)
@@ -194,7 +212,6 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	typeStr := d.Get(TypeKey).(string)
 	switch typeStr {
 	case authmethodTypePassword:
-		var minLoginNameLength *int
 		if d.HasChange(authmethodMinLoginNameLengthKey) {
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
 			minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey)
@@ -205,7 +222,6 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 
-		var minPasswordLength *int
 		if d.HasChange(authmethodMinPasswordLengthKey) {
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinPasswordLength())
 			minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey)
@@ -217,6 +233,51 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 	case authmethodTypeOidc:
+		if d.HasChange(authmethodOidcIssuerKey) {
+			if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
+				issuerStr := issuer.(string)
+				oidcIssuer = &issuerStr
+				opts = append(opts, authmethods.WithOidcAuthMethodIssuer(*oidcIssuer))
+			}
+		}
+		if d.HasChange(authmethodOidcClientIdKey) {
+			if clientId, ok := d.GetOk(authmethodOidcClientIdKey); ok {
+				oidcClientIdStr := clientId.(string)
+				oidcClientId = &oidcClientIdStr
+				opts = append(opts, authmethods.WithOidcAuthMethodClientId(*oidcClientId))
+			}
+		}
+		if d.HasChange(authmethodOidcClientSecretKey) {
+			if clientSecret, ok := d.GetOk(authmethodOidcClientSecretKey); ok {
+				oidcClientSecretStr := clientSecret.(string)
+				oidcClientSecret = &oidcClientSecretStr
+				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(*oidcClientSecret))
+			}
+		}
+		if d.HasChange(authmethodOidcMaxAgeKey) {
+			if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
+				oidcMaxAgeStr := maxAge.(string)
+				oidcMaxAge = &oidcMaxAgeStr
+				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(*oidcMaxAge))
+			}
+		}
+		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
+			if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
+				oidcSigningAlgosAry := algos.([]string)
+				oidcSigningAlgos = &oidcSigningAlgosAry
+				opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(*oidcSigningAlgos))
+			}
+		}
+		if d.HasChange(authmethodOidcApiUrlPrefixKey) {
+			if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
+				oidcUrlPrefixStr := prefix.(string)
+				oidcUrlPrefix = &oidcUrlPrefixStr
+				opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(*oidcUrlPrefix))
+			}
+		}
+
+	default:
+		return errorInvalidAuthMethodType
 	}
 
 	if len(opts) > 0 {
@@ -233,11 +294,37 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange(DescriptionKey) {
 		d.Set(DescriptionKey, desc)
 	}
-	if d.HasChange(authmethodMinLoginNameLengthKey) {
-		d.Set(authmethodMinLoginNameLengthKey, minLoginNameLength)
-	}
-	if d.HasChange(authmethodMinPasswordLengthKey) {
-		d.Set(authmethodMinPasswordLengthKey, minPasswordLength)
+
+	switch typeStr {
+	case authmethodTypePassword:
+		if d.HasChange(authmethodMinLoginNameLengthKey) {
+			d.Set(authmethodMinLoginNameLengthKey, minLoginNameLength)
+		}
+		if d.HasChange(authmethodMinPasswordLengthKey) {
+			d.Set(authmethodMinPasswordLengthKey, minPasswordLength)
+		}
+	case authmethodTypeOidc:
+		if d.HasChange(authmethodOidcIssuerKey) {
+			d.Set(authmethodOidcIssuerKey, oidcIssuer)
+		}
+		if d.HasChange(authmethodOidcClientIdKey) {
+			d.Set(authmethodOidcClientIdKey, oidcClientId)
+		}
+		if d.HasChange(authmethodOidcClientSecretKey) {
+			d.Set(authmethodOidcClientSecretKey, oidcClientSecret)
+		}
+		if d.HasChange(authmethodOidcMaxAgeKey) {
+			d.Set(authmethodOidcMaxAgeKey, oidcMaxAge)
+		}
+		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
+			d.Set(authmethodOidcSigningAlgorithmsKey, oidcSigningAlgos)
+		}
+		if d.HasChange(authmethodOidcApiUrlPrefixKey) {
+			d.Set(authmethodOidcApiUrlPrefixKey, oidcUrlPrefix)
+		}
+
+	default:
+		return errorInvalidAuthMethodType
 	}
 
 	return nil
