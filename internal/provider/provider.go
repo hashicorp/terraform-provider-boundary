@@ -134,7 +134,7 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 		am := authmethods.NewClient(md.client)
 
-		at, err := am.Authenticate(ctx, authMethodId.(string), "login", credentials, authmethods.Option(nil))
+		at, err := am.Authenticate(ctx, authMethodId.(string), "login", credentials)
 		if err != nil {
 			return err
 		}

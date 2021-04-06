@@ -43,10 +43,10 @@ func resourceAuthMethodPassword() *schema.Resource {
 				ForceNew:    true,
 			},
 			TypeKey: {
-				Description: "The resource type.",
+				Description: "The resource type, hardcoded per resource",
 				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Default:     authmethodTypePassword,
+				Optional:    true,
 			},
 			authmethodMinLoginNameLengthKey: {
 				Description: "The minimum login name length.",

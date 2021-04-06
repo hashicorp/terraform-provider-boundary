@@ -136,6 +136,12 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+			TypeKey: {
+				Description: "The resource type, hardcoded per resource",
+				Type:        schema.TypeString,
+				Default:     authmethodTypeOidc,
+				Optional:    true,
+			},
 		},
 	}
 }
