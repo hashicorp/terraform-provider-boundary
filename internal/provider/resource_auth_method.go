@@ -274,22 +274,35 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 			opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(clientSecret.(string)))
 		}
 		if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(maxAge.(uint32)))
+			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(maxAge.(int))))
 		}
 		if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
 		}
 		if certs, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodCaCerts(certs.([]string)))
+			certList := []string{}
+			for _, c := range certs.([]interface{}) {
+				certList = append(certList, c.(string))
+			}
+
+			opts = append(opts, authmethods.WithOidcAuthMethodCaCerts(certList))
 		}
 		if aud, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(aud.([]string)))
+			audList := []string{}
+			for _, c := range aud.([]interface{}) {
+				audList = append(audList, c.(string))
+			}
+			opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(audList))
 		}
 		if dis, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(dis.(bool)))
 		}
 		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
+			algoList := []string{}
+			for _, c := range algos.([]interface{}) {
+				algoList = append(algoList, c.(string))
+			}
+			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algoList))
 		}
 
 	default:
