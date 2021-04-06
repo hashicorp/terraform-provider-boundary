@@ -356,14 +356,14 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		// password auth method values for updating
 		name               *string
 		desc               *string
-		minLoginNameLength *string
-		minPasswordLength  *string
+		minLoginNameLength *int
+		minPasswordLength  *int
 
 		// oidc auth method values for updating
 		oidcIssuer       *string
 		oidcClientId     *string
 		oidcClientSecret *string
-		oidcMaxAge       *string
+		oidcMaxAge       *int
 		oidcSigningAlgos *[]string
 		oidcUrlPrefix    *string
 	)
@@ -435,9 +435,9 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 		if d.HasChange(authmethodOidcMaxAgeKey) {
 			if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
-				oidcMaxAgeStr := maxAge.(string)
+				oidcMaxAgeStr := maxAge.(int)
 				oidcMaxAge = &oidcMaxAgeStr
-				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(*oidcMaxAge))
+				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(*oidcMaxAge)))
 			}
 		}
 		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
