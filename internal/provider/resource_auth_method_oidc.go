@@ -59,8 +59,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 			authmethodOidcAllowedAudiencesKey: {
 				Description: "OIDC allowed audiences",
 				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				Computed: true,
 			},
 			authmethodOidcApiUrlPrefixKey: {
 				Description: "OIDC API URL prefix",
@@ -71,8 +74,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 			authmethodOidcCaCertificatesKey: {
 				Description: "OIDC CA certificates",
 				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				Computed: true,
 			},
 			authmethodOidcClientIdKey: {
 				Description: "OIDC client ID",
