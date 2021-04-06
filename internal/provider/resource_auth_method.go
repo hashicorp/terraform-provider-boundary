@@ -13,7 +13,7 @@ import (
 
 var errorInvalidAuthMethodType = diag.Errorf("invalid auth method type, must be 'password' or 'oidc'")
 
-func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) diag.Diagnostics {
 	d.Set(NameKey, raw[NameKey])
 	d.Set(DescriptionKey, raw[DescriptionKey])
 	d.Set(ScopeIdKey, raw[ScopeIdKey])
@@ -55,6 +55,8 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	}
 
 	d.SetId(raw["id"].(string))
+
+	return nil
 }
 
 func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -141,9 +143,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("nil auth method after create")
 	}
 
-	setFromAuthMethodResponseMap(d, amcr.GetResponse().Map)
-
-	return nil
+	return setFromAuthMethodResponseMap(d, amcr.GetResponse().Map)
 }
 
 func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -162,9 +162,7 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("auth method nil after read")
 	}
 
-	setFromAuthMethodResponseMap(d, amrr.GetResponse().Map)
-
-	return nil
+	return setFromAuthMethodResponseMap(d, amrr.GetResponse().Map)
 }
 
 func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -177,14 +175,14 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		// password auth method values for updating
 		name               *string
 		desc               *string
-		minLoginNameLength *string
-		minPasswordLength  *string
+		minLoginNameLength *int
+		minPasswordLength  *int
 
 		// oidc auth method values for updating
 		oidcIssuer       *string
 		oidcClientId     *string
 		oidcClientSecret *string
-		oidcMaxAge       *string
+		oidcMaxAge       *int
 		oidcSigningAlgos *[]string
 		oidcUrlPrefix    *string
 	)
@@ -256,9 +254,9 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 		if d.HasChange(authmethodOidcMaxAgeKey) {
 			if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
-				oidcMaxAgeStr := maxAge.(string)
+				oidcMaxAgeStr := maxAge.(int)
 				oidcMaxAge = &oidcMaxAgeStr
-				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(*oidcMaxAge))
+				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(*oidcMaxAge)))
 			}
 		}
 		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {

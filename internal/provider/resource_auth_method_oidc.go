@@ -54,20 +54,9 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			TypeKey: {
-				Description: "The resource type.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-			},
 
 			// OIDC method specific parameters
-			authmethodOidcStateKey: {
-				Description: "OIDC state",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-			},
+
 			authmethodOidcIssuerKey: {
 				Description: "OIDC discovery URL",
 				Type:        schema.TypeString,
@@ -110,6 +99,14 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+
+			// computed but tracked for changes
+			authmethodOidcStateKey: {
+				Description: "OIDC state",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
 			authmethodOidcCallbackUrlKey: {
 				Description: "OIDC callback URL",
 				Type:        schema.TypeString,
@@ -128,7 +125,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
-			authmethodOidcOverrideOidcDiscoveryUrlConfigKey: {
+			authmethodOidcDisableDiscoveredConfigValidationKey: {
 				Description: "OIDC discovery URL override configuration",
 				Type:        schema.TypeString,
 				Optional:    true,
