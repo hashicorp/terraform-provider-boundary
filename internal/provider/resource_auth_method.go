@@ -220,9 +220,9 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			d.Set(authmethodOidcSigningAlgorithmsKey, attrs[authmethodOidcSigningAlgorithmsKey].(string))
 			d.Set(authmethodOidcApiUrlPrefixKey, attrs[authmethodOidcApiUrlPrefixKey].(string))
 			d.Set(authmethodOidcCallbackUrlKey, attrs[authmethodOidcCallbackUrlKey].(string))
-			d.Set(authmethodOidcCertificatesKey, attrs[authmethodOidcCertificatesKey].(string))
+			d.Set(authmethodOidcCaCertificatesKey, attrs[authmethodOidcCaCertificatesKey].(string))
 			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].(string))
-			d.Set(authmethodOidcOverrideOidcDiscoveryUrlConfigKey, attrs[authmethodOidcOverrideOidcDiscoveryUrlConfigKey].(string))
+			d.Set(authmethodOidcDisableDiscoveredConfigValidationKey, attrs[authmethodOidcDisableDiscoveredConfigValidationKey].(string))
 		}
 	default:
 		return errorInvalidAuthMethodType
@@ -276,11 +276,20 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(maxAge.(uint32)))
 		}
-		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
-		}
 		if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
+		}
+		if certs, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodCaCerts(certs.([]string)))
+		}
+		if aud, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(aud.([]string)))
+		}
+		if dis, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(dis.(bool)))
+		}
+		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
 		}
 
 	default:

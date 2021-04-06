@@ -3,21 +3,21 @@ package provider
 import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 const (
-	authmethodTypeOidc                 = "oidc"
-	authmethodOidcStateKey             = "state"
-	authmethodOidcIssuerKey            = "issuer"
-	authmethodOidcClientIdKey          = "client_id"
-	authmethodOidcClientSecretKey      = "client_secret"
-	authmethodOidcClientSecretHmacKey  = "client_secret_hmac"
-	authmethodOidcMaxAgeKey            = "max_age"
-	authmethodOidcSigningAlgorithmsKey = "signing_algorithms"
-	authmethodOidcApiUrlPrefixKey      = "api_url_prefix"
-	authmethodOidcCallbackUrlKey       = "callback_url"
-	authmethodOidcCertificatesKey      = "certificates"
-	authmethodOidcAllowedAudiencesKey  = "allowed_audiences"
-	// not sure if we should do this or set a bool on disable discovery
-	// there is no option to send this config, if we present it
-	authmethodOidcOverrideOidcDiscoveryUrlConfigKey = "override_oidc_discovery_url_config"
+	authmethodTypeOidc                                 = "oidc"
+	authmethodOidcIssuerKey                            = "issuer"
+	authmethodOidcClientIdKey                          = "client_id"
+	authmethodOidcClientSecretKey                      = "client_secret"
+	authmethodOidcMaxAgeKey                            = "max_age"
+	authmethodOidcApiUrlPrefixKey                      = "api_url_prefix"
+	authmethodOidcCaCertificatesKey                    = "ca_certificates"
+	authmethodOidcAllowedAudiencesKey                  = "allowed_audiences"
+	authmethodOidcDisableDiscoveredConfigValidationKey = "disable_discovered_config_validation"
+	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"
+
+	// computed-only parameters
+	authmethodOidcCallbackUrlKey      = "callback_url"
+	authmethodOidcClientSecretHmacKey = "client_secret_hmac"
+	authmethodOidcStateKey            = "state"
 )
 
 func resourceAuthMethodOidc() *schema.Resource {
@@ -55,11 +55,22 @@ func resourceAuthMethodOidc() *schema.Resource {
 				ForceNew:    true,
 			},
 
-			// OIDC method specific parameters
-
-			authmethodOidcIssuerKey: {
-				Description: "OIDC discovery URL",
+			// OIDC specific configurable parameters
+			authmethodOidcAllowedAudiencesKey: {
+				Description: "OIDC allowed audiences",
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+			},
+			authmethodOidcApiUrlPrefixKey: {
+				Description: "OIDC API URL prefix",
 				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
+			authmethodOidcCaCertificatesKey: {
+				Description: "OIDC CA certificates",
+				Type:        schema.TypeList,
 				Optional:    true,
 				Computed:    true,
 			},
@@ -75,8 +86,14 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
-			authmethodOidcClientSecretHmacKey: {
-				Description: "OIDC client secret HMAC",
+			authmethodOidcIssuerKey: {
+				Description: "OIDC discovery URL",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
+			authmethodOidcDisableDiscoveredConfigValidationKey: {
+				Description: "OIDC disable the discovered configuration validation",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
@@ -93,14 +110,14 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
-			authmethodOidcApiUrlPrefixKey: {
-				Description: "OIDC API URL prefix",
+
+			// OIDC specific immutable and computed parameters
+			authmethodOidcClientSecretHmacKey: {
+				Description: "OIDC client secret HMAC",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 			},
-
-			// computed but tracked for changes
 			authmethodOidcStateKey: {
 				Description: "OIDC state",
 				Type:        schema.TypeString,
@@ -109,24 +126,6 @@ func resourceAuthMethodOidc() *schema.Resource {
 			},
 			authmethodOidcCallbackUrlKey: {
 				Description: "OIDC callback URL",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-			},
-			authmethodOidcCertificatesKey: {
-				Description: "OIDC certificates",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-			},
-			authmethodOidcAllowedAudiencesKey: {
-				Description: "OIDC allowed audiences",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-			},
-			authmethodOidcDisableDiscoveredConfigValidationKey: {
-				Description: "OIDC discovery URL override configuration",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
