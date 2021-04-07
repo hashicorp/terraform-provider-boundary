@@ -9,7 +9,7 @@ const (
 	authmethodOidcClientSecretKey                      = "client_secret"
 	authmethodOidcMaxAgeKey                            = "max_age"
 	authmethodOidcApiUrlPrefixKey                      = "api_url_prefix"
-	authmethodOidcCaCertificatesKey                    = "ca_certificates"
+	authmethodOidcCaCertificatesKey                    = "ca_certs"
 	authmethodOidcAllowedAudiencesKey                  = "allowed_audiences"
 	authmethodOidcDisableDiscoveredConfigValidationKey = "disable_discovered_config_validation"
 	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"
@@ -91,6 +91,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+				//				Sensitive:   true,
 			},
 			authmethodOidcIssuerKey: {
 				Description: "OIDC discovery URL",

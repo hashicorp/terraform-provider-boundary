@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -210,20 +211,42 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	case authmethodTypeOidc:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
+			fmt.Printf("stuff: %s", attrs)
 
+			// these are always set
 			d.Set(authmethodOidcStateKey, attrs[authmethodOidcStateKey].(string))
 			d.Set(authmethodOidcIssuerKey, attrs[authmethodOidcIssuerKey].(string))
 			d.Set(authmethodOidcClientIdKey, attrs[authmethodOidcClientIdKey].(string))
-			d.Set(authmethodOidcClientSecretKey, attrs[authmethodOidcClientSecretKey].(string))
+			d.Set(authmethodOidcCaCertificatesKey, attrs[authmethodOidcCaCertificatesKey].([]interface{}))
+			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].([]interface{}))
 			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
-			d.Set(authmethodOidcMaxAgeKey, attrs[authmethodOidcMaxAgeKey].(string))
-			d.Set(authmethodOidcSigningAlgorithmsKey, attrs[authmethodOidcSigningAlgorithmsKey].(string))
-			d.Set(authmethodOidcApiUrlPrefixKey, attrs[authmethodOidcApiUrlPrefixKey].(string))
-			d.Set(authmethodOidcCallbackUrlKey, attrs[authmethodOidcCallbackUrlKey].(string))
-			d.Set(authmethodOidcCaCertificatesKey, attrs[authmethodOidcCaCertificatesKey].(string))
-			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].(string))
-			d.Set(authmethodOidcDisableDiscoveredConfigValidationKey, attrs[authmethodOidcDisableDiscoveredConfigValidationKey].(string))
+
+			// TODO(malnick): the key is never returned, so to avoid populating an empty value in state, we get the value from the
+			// catalog instead
+			d.Set(authmethodOidcClientSecretKey, d.Get(authmethodOidcClientSecretKey))
+
+			maxAge := attrs[authmethodOidcMaxAgeKey].(json.Number)
+			maxAgeInt, _ := maxAge.Int64()
+			d.Set(authmethodOidcMaxAgeKey, maxAgeInt)
+
+			// these are set sometimes
+			sometimesString := []string{
+				authmethodOidcSigningAlgorithmsKey,
+				authmethodOidcApiUrlPrefixKey,
+				authmethodOidcCallbackUrlKey,
+				authmethodOidcDisableDiscoveredConfigValidationKey}
+
+			for _, k := range sometimesString {
+				if val, ok := attrs[k]; ok {
+					d.Set(k, val.(string))
+				}
+			}
+
+			if val, ok := attrs[authmethodOidcSigningAlgorithmsKey]; ok {
+				d.Set(authmethodOidcSigningAlgorithmsKey, val.([]interface{}))
+			}
 		}
+
 	default:
 		return errorInvalidAuthMethodType
 	}
