@@ -405,12 +405,16 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		minPasswordLength  *int
 
 		// oidc auth method values for updating
-		oidcIssuer       *string
-		oidcClientId     *string
-		oidcClientSecret *string
-		oidcMaxAge       *int
-		oidcSigningAlgos *[]string
-		oidcUrlPrefix    *string
+		oidcIssuer                  *string
+		oidcClientId                *string
+		oidcClientSecret            *string
+		oidcClientSecretHmac        *string
+		oidcMaxAge                  *int
+		oidcAllowedAud              *[]string
+		oidcSigningAlgos            *[]string
+		oidcUrlPrefix               *string
+		oidcCallbackUrl             *string
+		oidcDisableDiscoveredConfig *bool
 	)
 
 	if d.HasChange(NameKey) {
