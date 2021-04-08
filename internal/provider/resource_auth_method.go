@@ -47,10 +47,6 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].([]interface{}))
 			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
 
-			// TODO(malnick): the key is never returned, so to avoid populating an empty value in state, we get the value from the
-			// catalog instead
-			//			d.Set(authmethodOidcClientSecretKey, d.Get(authmethodOidcClientSecretKey))
-
 			maxAge := attrs[authmethodOidcMaxAgeKey].(json.Number)
 			maxAgeInt, _ := maxAge.Int64()
 			d.Set(authmethodOidcMaxAgeKey, maxAgeInt)
@@ -216,32 +212,11 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	opts := []authmethods.Option{}
 
-	var (
-		// password auth method values for updating
-		name               *string
-		desc               *string
-		minLoginNameLength *int
-		minPasswordLength  *int
-
-		// oidc auth method values for updating
-		oidcIssuer                  *string
-		oidcClientId                *string
-		oidcClientSecret            *string
-		oidcClientSecretHmac        *string
-		oidcMaxAge                  *int
-		oidcAllowedAud              *[]string
-		oidcSigningAlgos            *[]string
-		oidcUrlPrefix               *string
-		oidcDisableDiscoveredConfig *bool
-	)
-
 	if d.HasChange(NameKey) {
 		opts = append(opts, authmethods.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
 		if ok {
-			nameStr := nameVal.(string)
-			name = &nameStr
-			opts = append(opts, authmethods.WithName(nameStr))
+			opts = append(opts, authmethods.WithName(nameVal.(string)))
 		}
 	}
 
@@ -249,9 +224,7 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		opts = append(opts, authmethods.DefaultDescription())
 		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
-			descStr := descVal.(string)
-			desc = &descStr
-			opts = append(opts, authmethods.WithDescription(descStr))
+			opts = append(opts, authmethods.WithDescription(descVal.(string)))
 		}
 	}
 
@@ -262,9 +235,7 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
 			minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey)
 			if ok {
-				minLengthInt := minLengthVal.(int)
-				minLoginNameLength = &minLengthInt
-				opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthInt)))
+				opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthVal.(int))))
 			}
 		}
 
@@ -272,74 +243,59 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinPasswordLength())
 			minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey)
 			if ok {
-				minLengthInt := minLengthVal.(int)
-				minPasswordLength = &minLengthInt
-				opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthInt)))
+				opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthVal.(int))))
 			}
 		}
 
 	case authmethodTypeOidc:
 		if d.HasChange(authmethodOidcIssuerKey) {
 			if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
-				issuerStr := issuer.(string)
-				oidcIssuer = &issuerStr
-				opts = append(opts, authmethods.WithOidcAuthMethodIssuer(*oidcIssuer))
+				opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
 			}
 		}
 		if d.HasChange(authmethodOidcClientIdKey) {
 			if clientId, ok := d.GetOk(authmethodOidcClientIdKey); ok {
-				oidcClientIdStr := clientId.(string)
-				oidcClientId = &oidcClientIdStr
-				opts = append(opts, authmethods.WithOidcAuthMethodClientId(*oidcClientId))
+				opts = append(opts, authmethods.WithOidcAuthMethodClientId(clientId.(string)))
 			}
 		}
 		if d.HasChange(authmethodOidcClientSecretKey) {
 			if clientSecret, ok := d.GetOk(authmethodOidcClientSecretKey); ok {
-				oidcClientSecretStr := clientSecret.(string)
-				oidcClientSecret = &oidcClientSecretStr
-				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(*oidcClientSecret))
+				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(clientSecret.(string)))
 			}
 		}
 		if d.HasChange(authmethodOidcMaxAgeKey) {
 			if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
-				oidcMaxAgeStr := maxAge.(int)
-				oidcMaxAge = &oidcMaxAgeStr
-				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(*oidcMaxAge)))
+				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(maxAge.(int))))
 			}
 		}
 		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
 			if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-				oidcSigningAlgosAry := algos.([]string)
-				oidcSigningAlgos = &oidcSigningAlgosAry
-				opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(*oidcSigningAlgos))
+				opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
 			}
 		}
 		if d.HasChange(authmethodOidcApiUrlPrefixKey) {
 			if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
-				oidcUrlPrefixStr := prefix.(string)
-				oidcUrlPrefix = &oidcUrlPrefixStr
-				opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(*oidcUrlPrefix))
+				opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
 			}
 		}
 		if d.HasChange(authmethodOidcClientSecretHmacKey) {
 			if sec, ok := d.GetOk(authmethodOidcClientSecretHmacKey); ok {
-				secStr := sec.(string)
-				oidcClientSecretHmac = &secStr
-				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(*oidcClientSecretHmac))
+				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(sec.(string)))
 			}
 		}
 		if d.HasChange(authmethodOidcAllowedAudiencesKey) {
 			if val, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
-				valStr := val.([]string)
-				oidcAllowedAud = &valStr
-				opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(*oidcAllowedAud))
+				opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(val.([]string)))
+			}
+		}
+		if d.HasChange(authmethodOidcCaCertificatesKey) {
+			if val, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
+				opts = append(opts, authmethods.WithOidcAuthMethodCaCerts(val.([]string)))
 			}
 		}
 		if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {
 			if val, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
-				valB := val.(bool)
-				oidcDisableDiscoveredConfig = &valB
-				opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(*oidcDisableDiscoveredConfig))
+				opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(val.(bool)))
 			}
 		}
 	default:
@@ -348,51 +304,13 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if len(opts) > 0 {
 		opts = append(opts, authmethods.WithAutomaticVersioning(true))
-		_, err := amClient.Update(ctx, d.Id(), 0, opts...)
+		amur, err := amClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating auth method: %v", err)
 		}
-	}
 
-	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		return setFromAuthMethodResponseMap(d, amur.GetResponse().Map)
 	}
-	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
-	}
-
-	switch typeStr {
-	case authmethodTypePassword:
-		if d.HasChange(authmethodMinLoginNameLengthKey) {
-			d.Set(authmethodMinLoginNameLengthKey, minLoginNameLength)
-		}
-		if d.HasChange(authmethodMinPasswordLengthKey) {
-			d.Set(authmethodMinPasswordLengthKey, minPasswordLength)
-		}
-	case authmethodTypeOidc:
-		if d.HasChange(authmethodOidcIssuerKey) {
-			d.Set(authmethodOidcIssuerKey, oidcIssuer)
-		}
-		if d.HasChange(authmethodOidcClientIdKey) {
-			d.Set(authmethodOidcClientIdKey, oidcClientId)
-		}
-		//		if d.HasChange(authmethodOidcClientSecretKey) {
-		//			d.Set(authmethodOidcClientSecretKey, d.Get(authmethodOidcClientSecretKey)) //oidcClientSecret)
-		//		}
-		if d.HasChange(authmethodOidcMaxAgeKey) {
-			d.Set(authmethodOidcMaxAgeKey, oidcMaxAge)
-		}
-		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
-			d.Set(authmethodOidcSigningAlgorithmsKey, oidcSigningAlgos)
-		}
-		if d.HasChange(authmethodOidcApiUrlPrefixKey) {
-			d.Set(authmethodOidcApiUrlPrefixKey, oidcUrlPrefix)
-		}
-
-	default:
-		return errorInvalidAuthMethodType
-	}
-
 	return nil
 }
 
