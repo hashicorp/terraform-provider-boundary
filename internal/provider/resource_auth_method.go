@@ -318,7 +318,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 				certList = append(certList, c.(string))
 			}
 
-			opts = append(opts, authmethods.WithOidcAuthMethodCaCerts(certList))
+			opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(certList))
 		}
 		if aud, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
 			audList := []string{}
@@ -485,7 +485,7 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 		if d.HasChange(authmethodOidcCaCertificatesKey) {
 			if val, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodCaCerts(val.([]string)))
+				opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(val.([]string)))
 			}
 		}
 		if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {

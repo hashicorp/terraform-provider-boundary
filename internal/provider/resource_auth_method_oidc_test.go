@@ -54,8 +54,8 @@ resource "boundary_auth_method_oidc" "foo" {
   client_id         = "foo_id"
   client_secret     = "foo_secret"
   max_age           = 10
-  #api_url_prefix    = "http://"
-  ca_certs   = [
+  api_url_prefix    = "http://localhost:9200"
+  idp_ca_certs   = [
 <<EOT
 %s
 EOT
@@ -74,7 +74,7 @@ resource "boundary_auth_method_oidc" "foo" {
   client_id         = "foo_id_update"
   client_secret     = "foo_secret_update"
   max_age           = 1
-  #api_url_prefix    = "http://"
+  api_url_prefix    = "http://localhost:9200"
   ca_certs   = [
 <<EOT
 %s
@@ -100,11 +100,11 @@ func TestAccAuthMethodOidc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "issuer", "https://test.com"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "client_id", "foo_id"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "ca_certs", fooAuthMethodOidcCaCerts),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "allowed_audiences", "foo_aud"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "max_age", "10"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test.com"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcCaCertificatesKey, fooAuthMethodOidcCaCerts),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, "foo_aud"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
@@ -115,11 +115,11 @@ func TestAccAuthMethodOidc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "issuer", "https://test-update.com"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "client_id", "foo_id_update"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "max_age", "1"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "ca_certs", fooAuthMethodOidcCaCerts),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "allowed_audiences", "foo_aud_update"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test-update.com"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id_update"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "1"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcCaCertificatesKey, fooAuthMethodOidcCaCerts),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, "foo_aud_update"),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
