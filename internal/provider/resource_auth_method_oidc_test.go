@@ -122,7 +122,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAuthMethodOidcUpdate),
@@ -132,7 +132,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret"),
 		},
 	})
 }

@@ -21,7 +21,7 @@ const (
 
 var (
 	fooAuthMethod = fmt.Sprintf(`
-resource "boundary_auth_method" "foo" {
+resource "boundary_auth_method_password" "foo" {
 	name        = "test"
 	description = "%s"
 	type        = "password"
@@ -30,7 +30,7 @@ resource "boundary_auth_method" "foo" {
 }`, fooAuthMethodDesc)
 
 	fooAuthMethodUpdate = fmt.Sprintf(`
-resource "boundary_auth_method" "foo" {
+resource "boundary_auth_method_password" "foo" {
 	name        = "test"
 	description = "%s"
 	type        = "password"
@@ -39,7 +39,7 @@ resource "boundary_auth_method" "foo" {
 }`, fooAuthMethodDescUpdate)
 )
 
-func TestAccAuthMethod(t *testing.T) {
+func TestAccAuthMethodPassword(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
@@ -53,24 +53,24 @@ func TestAccAuthMethod(t *testing.T) {
 				// create
 				Config: testConfig(url, fooOrg, fooAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooAuthMethodDesc),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "type", "password"),
-					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method.foo"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),
 				),
 			},
-			importStep("boundary_auth_method.foo"),
+			importStep("boundary_auth_method_password.foo"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAuthMethodUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooAuthMethodDescUpdate),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "type", "password"),
-					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method.foo"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDescUpdate),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),
 				),
 			},
-			importStep("boundary_auth_method.foo"),
+			importStep("boundary_auth_method_password.foo"),
 		},
 	})
 }
@@ -108,7 +108,7 @@ func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Pr
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_auth_method":
+			case "boundary_auth_method_password":
 				id := rs.Primary.ID
 
 				amClient := authmethods.NewClient(md.client)

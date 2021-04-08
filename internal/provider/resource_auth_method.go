@@ -223,7 +223,7 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 
 			// TODO(malnick): the key is never returned, so to avoid populating an empty value in state, we get the value from the
 			// catalog instead
-			d.Set(authmethodOidcClientSecretKey, d.Get(authmethodOidcClientSecretKey))
+			//			d.Set(authmethodOidcClientSecretKey, d.Get(authmethodOidcClientSecretKey))
 
 			maxAge := attrs[authmethodOidcMaxAgeKey].(json.Number)
 			maxAgeInt, _ := maxAge.Int64()
@@ -413,7 +413,6 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		oidcAllowedAud              *[]string
 		oidcSigningAlgos            *[]string
 		oidcUrlPrefix               *string
-		oidcCallbackUrl             *string
 		oidcDisableDiscoveredConfig *bool
 	)
 
@@ -503,7 +502,27 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(*oidcUrlPrefix))
 			}
 		}
-
+		if d.HasChange(authmethodOidcClientSecretHmacKey) {
+			if sec, ok := d.GetOk(authmethodOidcClientSecretHmacKey); ok {
+				secStr := sec.(string)
+				oidcClientSecretHmac = &secStr
+				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(*oidcClientSecretHmac))
+			}
+		}
+		if d.HasChange(authmethodOidcAllowedAudiencesKey) {
+			if val, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
+				valStr := val.([]string)
+				oidcAllowedAud = &valStr
+				opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(*oidcAllowedAud))
+			}
+		}
+		if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {
+			if val, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
+				valB := val.(bool)
+				oidcDisableDiscoveredConfig = &valB
+				opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(*oidcDisableDiscoveredConfig))
+			}
+		}
 	default:
 		return errorInvalidAuthMethodType
 	}
