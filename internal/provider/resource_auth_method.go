@@ -37,15 +37,30 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	case authmethodTypeOidc:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
-			fmt.Printf("stuff: %s", attrs)
 
 			// these are always set
 			d.Set(authmethodOidcStateKey, attrs[authmethodOidcStateKey].(string))
 			d.Set(authmethodOidcIssuerKey, attrs[authmethodOidcIssuerKey].(string))
 			d.Set(authmethodOidcClientIdKey, attrs[authmethodOidcClientIdKey].(string))
+			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
 			d.Set(authmethodOidcCaCertificatesKey, attrs[authmethodOidcCaCertificatesKey].([]interface{}))
 			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].([]interface{}))
-			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
+
+			fmt.Printf("ca certs: %s\n", d.Get(authmethodOidcCaCertificatesKey))
+
+			// TODO(malnick) remove after testing
+			/*
+				strArys := []string{authmethodOidcCaCertificatesKey, authmethodOidcAllowedAudiencesKey}
+
+				for _, k := range strArys {
+					kAry := []string{}
+					for _, val := range attrs[k].([]interface{}) {
+						kAry = append(kAry, val.(string))
+					}
+					d.Set(k, kAry)
+					fmt.Printf("%s: %s\n", k, d.Get(k))
+				}
+			*/
 
 			maxAge := attrs[authmethodOidcMaxAgeKey].(json.Number)
 			maxAgeInt, _ := maxAge.Int64()
@@ -53,7 +68,6 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 
 			// these are set sometimes
 			sometimesString := []string{
-				authmethodOidcSigningAlgorithmsKey,
 				authmethodOidcApiUrlPrefixKey,
 				authmethodOidcCallbackUrlKey,
 				authmethodOidcDisableDiscoveredConfigValidationKey}
