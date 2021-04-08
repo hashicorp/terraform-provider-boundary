@@ -9,7 +9,7 @@ const (
 	authmethodOidcClientSecretKey                      = "client_secret"
 	authmethodOidcMaxAgeKey                            = "max_age"
 	authmethodOidcApiUrlPrefixKey                      = "api_url_prefix"
-	authmethodOidcCaCertificatesKey                    = "ca_certs"
+	authmethodOidcCaCertificatesKey                    = "idp_ca_certs"
 	authmethodOidcAllowedAudiencesKey                  = "allowed_audiences"
 	authmethodOidcDisableDiscoveredConfigValidationKey = "disable_discovered_config_validation"
 	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"

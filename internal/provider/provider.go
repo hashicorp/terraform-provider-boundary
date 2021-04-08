@@ -138,7 +138,7 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 		if err != nil {
 			return err
 		}
-		md.client.SetToken(at.Item.Token)
+		md.client.SetToken(at.Attributes["token"].(string))
 
 	default:
 		return errors.New("no suitable auth method information found")
