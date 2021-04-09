@@ -482,12 +482,16 @@ github.com/hashicorp/boundary v0.1.9-0.20210330211737-458446a76f5e h1:4SgH/CXeKL
 github.com/hashicorp/boundary v0.1.9-0.20210330211737-458446a76f5e/go.mod h1:vcjOwFz14oR8GDU5jf4Wnkwj0c0YNLb0L9BhVM6gROY=
 github.com/hashicorp/boundary v0.1.9-0.20210408111234-843fab57ae2b h1:K9sJuNn0k7y/l5oQNeYdaBgY4B07CIx7d1vBePllZGc=
 github.com/hashicorp/boundary v0.1.9-0.20210408111234-843fab57ae2b/go.mod h1:pBggqgt2UZNGzVUXcD9I8zSU+u+c3Rd/0B3DuMHQjYI=
+github.com/hashicorp/boundary v0.1.9-0.20210409144154-26c0c4479d36 h1:ywPQs06ECn4GxfYlBZCxYEDo3I3PuF8SqQUi8oGUEPk=
+github.com/hashicorp/boundary v0.1.9-0.20210409144154-26c0c4479d36/go.mod h1:pBggqgt2UZNGzVUXcD9I8zSU+u+c3Rd/0B3DuMHQjYI=
 github.com/hashicorp/boundary/api v0.0.8 h1:HVRvr3hT1OIM6XHZdaCQ44GDV7IgPu+oScb15c+BGI4=
 github.com/hashicorp/boundary/api v0.0.8/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
 github.com/hashicorp/boundary/api v0.0.9-0.20210330211737-458446a76f5e h1:Zs54gSEt/bblhpmqXA/BJ2LYoYn7f2f7eda2fACSsuQ=
 github.com/hashicorp/boundary/api v0.0.9-0.20210330211737-458446a76f5e/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
 github.com/hashicorp/boundary/api v0.0.9-0.20210408111234-843fab57ae2b h1:ZzDqZcxLIilmU04YvogXBl6MBL//64FollW+vToA41U=
 github.com/hashicorp/boundary/api v0.0.9-0.20210408111234-843fab57ae2b/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
+github.com/hashicorp/boundary/api v0.0.9-0.20210409144154-26c0c4479d36 h1:0HEbBsfcAx9rslfxphkRBgCKvQQ0/dP/JzCaIiAJHSI=
+github.com/hashicorp/boundary/api v0.0.9-0.20210409144154-26c0c4479d36/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
 github.com/hashicorp/boundary/sdk v0.0.4 h1:l3uuXOL5ZQwYc63Bm8sLY36XGUlIN/4Q2r2SqkmGTyw=
 github.com/hashicorp/boundary/sdk v0.0.4/go.mod h1:MQ8FJhseJrKpwvFDTn+AUAcJ1vdk1NKUxk7DxQgH7oQ=
 github.com/hashicorp/cap v0.0.0-20210320125552-80a56e9e81a3 h1:NVjPsqGX5WWZnaKVZheYZJQ2F8OaeLskm8JV5Pp+/TY=
