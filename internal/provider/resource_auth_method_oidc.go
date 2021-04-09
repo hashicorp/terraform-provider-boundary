@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -178,8 +180,8 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		}
 		d.Set(authmethodOidcAllowedAudiencesKey, stripA)
 
-		fmt.Printf("ca certs: %s\n", d.Get(authmethodOidcIdpCaCertsKey))
-
+		certSum := sha256.Sum256([]byte(d.Get(authmethodOidcIdpCaCertsKey).([]interface{})[0].(string)))
+		fmt.Printf("outgoing ca certs: %s\n", hex.EncodeToString(certSum[:]))
 		// TODO(malnick) remove after testing
 		/*
 			strArys := []string{authmethodOidcIdpCaCertsKey, authmethodOidcAllowedAudiencesKey}
@@ -256,6 +258,8 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 
 		opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(certList))
 	}
+	certSum := sha256.Sum256([]byte(d.Get(authmethodOidcIdpCaCertsKey).([]interface{})[0].(string)))
+	fmt.Printf("ingoing ca certs: %s\n", hex.EncodeToString(certSum[:]))
 	if aud, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
 		audList := []string{}
 		for _, c := range aud.([]interface{}) {
