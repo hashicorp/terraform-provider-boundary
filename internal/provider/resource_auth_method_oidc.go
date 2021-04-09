@@ -2,12 +2,8 @@ package provider
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
@@ -170,18 +166,16 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		// is a workaround in tests when comparing API state
 		stripC := []string{}
 		for _, cert := range attrs[authmethodOidcIdpCaCertsKey].([]interface{}) {
-			stripC = append(stripC, strings.TrimSpace(cert.(string)))
+			stripC = append(stripC, cert.(string))
 		}
 		d.Set(authmethodOidcIdpCaCertsKey, stripC)
 
 		stripA := []string{}
 		for _, aud := range attrs[authmethodOidcAllowedAudiencesKey].([]interface{}) {
-			stripA = append(stripA, strings.TrimSpace(aud.(string)))
+			stripA = append(stripA, aud.(string))
 		}
 		d.Set(authmethodOidcAllowedAudiencesKey, stripA)
 
-		certSum := sha256.Sum256([]byte(d.Get(authmethodOidcIdpCaCertsKey).([]interface{})[0].(string)))
-		fmt.Printf("outgoing ca certs: %s\n", hex.EncodeToString(certSum[:]))
 		// TODO(malnick) remove after testing
 		/*
 			strArys := []string{authmethodOidcIdpCaCertsKey, authmethodOidcAllowedAudiencesKey}
@@ -253,13 +247,11 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 	if certs, ok := d.GetOk(authmethodOidcIdpCaCertsKey); ok {
 		certList := []string{}
 		for _, c := range certs.([]interface{}) {
-			certList = append(certList, strings.TrimSpace(c.(string)))
+			certList = append(certList, c.(string))
 		}
 
 		opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(certList))
 	}
-	certSum := sha256.Sum256([]byte(d.Get(authmethodOidcIdpCaCertsKey).([]interface{})[0].(string)))
-	fmt.Printf("ingoing ca certs: %s\n", hex.EncodeToString(certSum[:]))
 	if aud, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
 		audList := []string{}
 		for _, c := range aud.([]interface{}) {
@@ -388,16 +380,20 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 	if d.HasChange(authmethodOidcAllowedAudiencesKey) {
 		if val, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(val.([]string)))
+			var audiences []string
+			for _, aud := range val.([]interface{}) {
+				audiences = append(audiences, aud.(string))
+			}
+			opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(audiences))
 		}
 	}
 	if d.HasChange(authmethodOidcIdpCaCertsKey) {
 		if val, ok := d.GetOk(authmethodOidcIdpCaCertsKey); ok {
-			c := []string{}
-			for _, cert := range val.([]string) {
-				c = append(c, strings.TrimSpace(cert))
+			certs := []string{}
+			for _, cert := range val.([]interface{}) {
+				certs = append(certs, cert.(string))
 			}
-			opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(c))
+			opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(certs))
 		}
 	}
 	if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {

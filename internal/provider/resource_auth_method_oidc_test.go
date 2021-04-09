@@ -75,7 +75,7 @@ resource "boundary_auth_method_oidc" "foo" {
   client_secret     = "foo_secret_update"
   max_age           = 1
   api_url_prefix    = "http://localhost:9200"
-  ca_certs   = [
+  idp_ca_certs   = [
 <<EOT
 %s
 EOT
