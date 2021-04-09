@@ -49,10 +49,10 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			// of values that are in string arrays, this is the workaround. Simiarly, there
 			// is a workaround in tests when comparing API state
 			stripC := []string{}
-			for _, cert := range attrs[authmethodOidcCaCertificatesKey].([]interface{}) {
+			for _, cert := range attrs[authmethodOidcIdpCaCertsKey].([]interface{}) {
 				stripC = append(stripC, strings.TrimSpace(cert.(string)))
 			}
-			d.Set(authmethodOidcCaCertificatesKey, stripC)
+			d.Set(authmethodOidcIdpCaCertsKey, stripC)
 
 			stripA := []string{}
 			for _, aud := range attrs[authmethodOidcAllowedAudiencesKey].([]interface{}) {
@@ -60,11 +60,11 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			}
 			d.Set(authmethodOidcAllowedAudiencesKey, stripA)
 
-			fmt.Printf("ca certs: %s\n", d.Get(authmethodOidcCaCertificatesKey))
+			fmt.Printf("ca certs: %s\n", d.Get(authmethodOidcIdpCaCertsKey))
 
 			// TODO(malnick) remove after testing
 			/*
-				strArys := []string{authmethodOidcCaCertificatesKey, authmethodOidcAllowedAudiencesKey}
+				strArys := []string{authmethodOidcIdpCaCertsKey, authmethodOidcAllowedAudiencesKey}
 
 				for _, k := range strArys {
 					kAry := []string{}
@@ -84,7 +84,8 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			sometimesString := []string{
 				authmethodOidcApiUrlPrefixKey,
 				authmethodOidcCallbackUrlKey,
-				authmethodOidcDisableDiscoveredConfigValidationKey}
+				authmethodOidcDisableDiscoveredConfigValidationKey,
+			}
 
 			for _, k := range sometimesString {
 				if val, ok := attrs[k]; ok {
@@ -153,7 +154,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
 		}
-		if certs, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
+		if certs, ok := d.GetOk(authmethodOidcIdpCaCertsKey); ok {
 			certList := []string{}
 			for _, c := range certs.([]interface{}) {
 				certList = append(certList, strings.TrimSpace(c.(string)))
@@ -316,8 +317,8 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 				opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(val.([]string)))
 			}
 		}
-		if d.HasChange(authmethodOidcCaCertificatesKey) {
-			if val, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
+		if d.HasChange(authmethodOidcIdpCaCertsKey) {
+			if val, ok := d.GetOk(authmethodOidcIdpCaCertsKey); ok {
 				c := []string{}
 				for _, cert := range val.([]string) {
 					c = append(c, strings.TrimSpace(cert))

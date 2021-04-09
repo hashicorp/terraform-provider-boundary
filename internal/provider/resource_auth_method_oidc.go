@@ -9,7 +9,7 @@ const (
 	authmethodOidcClientSecretKey                      = "client_secret"
 	authmethodOidcMaxAgeKey                            = "max_age"
 	authmethodOidcApiUrlPrefixKey                      = "api_url_prefix"
-	authmethodOidcCaCertificatesKey                    = "idp_ca_certs"
+	authmethodOidcIdpCaCertsKey                        = "idp_ca_certs"
 	authmethodOidcAllowedAudiencesKey                  = "allowed_audiences"
 	authmethodOidcDisableDiscoveredConfigValidationKey = "disable_discovered_config_validation"
 	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"
@@ -57,88 +57,78 @@ func resourceAuthMethodOidc() *schema.Resource {
 
 			// OIDC specific configurable parameters
 			authmethodOidcAllowedAudiencesKey: {
-				Description: "OIDC allowed audiences",
+				Description: "Audiences for which the provider responses will be allowed",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
-				Computed: true,
 			},
 			authmethodOidcApiUrlPrefixKey: {
-				Description: "OIDC API URL prefix",
+				Description: "The API prefix to use when generating callback URLs for the provider. Should be set to an address at which the provider can reach back to the controller.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 			},
-			authmethodOidcCaCertificatesKey: {
-				Description: "OIDC CA certificates",
+			authmethodOidcIdpCaCertsKey: {
+				Description: "A list of CA certificates to trust when validating the IdP's token signatures.",
 				Type:        schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 				Optional: true,
-				Computed: true,
 			},
 			authmethodOidcClientIdKey: {
-				Description: "OIDC client ID",
+				Description: "The client ID assigned to this auth method from the provider.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 			},
 			authmethodOidcClientSecretKey: {
-				Description: "OIDC client secret",
+				Description: "The secret key assigned to this auth method from the provider. Once set, only the hash will be kept and the original value can be removed from configuration.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
-				//				Sensitive:   true,
 			},
 			authmethodOidcIssuerKey: {
-				Description: "OIDC discovery URL",
+				Description: "The issuer corresponding to the provider, which must match the issuer field in generated tokens.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 			},
 			authmethodOidcDisableDiscoveredConfigValidationKey: {
-				Description: "OIDC disable the discovered configuration validation",
+				Description: "Disables validation logic ensuring that the OIDC provider's information from its discovery endpoint matches the information here. The validation is only performed at create or update time.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 			},
 			authmethodOidcMaxAgeKey: {
-				Description: "OIDC max age",
+				Description: "The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again.",
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Computed:    true,
 			},
 			authmethodOidcSigningAlgorithmsKey: {
-				Description: "OIDC signing algorithms",
+				Description: "Allowed signing algorithms for the provider's issued tokens.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 			},
 
 			// OIDC specific immutable and computed parameters
 			authmethodOidcClientSecretHmacKey: {
-				Description: "OIDC client secret HMAC",
+				Description: "The HMAC of the client secret returned by the Boundary controller, which is used for comparison after initial setting of the value.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 			},
 			authmethodOidcStateKey: {
-				Description: "OIDC state",
+				Description: "The current state of the auth method.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 			},
 			authmethodOidcCallbackUrlKey: {
-				Description: "OIDC callback URL",
+				Description: "The URL that should be provided to the IdP for callbacks.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 			},
 			TypeKey: {
-				Description: "The resource type, hardcoded per resource",
+				Description: "The type of auth method; hardcoded.",
 				Type:        schema.TypeString,
 				Default:     authmethodTypeOidc,
 				Optional:    true,
