@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
@@ -43,8 +44,21 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			d.Set(authmethodOidcIssuerKey, attrs[authmethodOidcIssuerKey].(string))
 			d.Set(authmethodOidcClientIdKey, attrs[authmethodOidcClientIdKey].(string))
 			d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
-			d.Set(authmethodOidcCaCertificatesKey, attrs[authmethodOidcCaCertificatesKey].([]interface{}))
-			d.Set(authmethodOidcAllowedAudiencesKey, attrs[authmethodOidcAllowedAudiencesKey].([]interface{}))
+
+			// TODO(malnick) - the API can return a value with an extra newline to the top
+			// of values that are in string arrays, this is the workaround. Simiarly, there
+			// is a workaround in tests when comparing API state
+			stripC := []string{}
+			for _, cert := range attrs[authmethodOidcCaCertificatesKey].([]interface{}) {
+				stripC = append(stripC, strings.TrimSpace(cert.(string)))
+			}
+			d.Set(authmethodOidcCaCertificatesKey, stripC)
+
+			stripA := []string{}
+			for _, aud := range attrs[authmethodOidcAllowedAudiencesKey].([]interface{}) {
+				stripA = append(stripA, strings.TrimSpace(aud.(string)))
+			}
+			d.Set(authmethodOidcAllowedAudiencesKey, stripA)
 
 			fmt.Printf("ca certs: %s\n", d.Get(authmethodOidcCaCertificatesKey))
 
@@ -142,7 +156,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		if certs, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
 			certList := []string{}
 			for _, c := range certs.([]interface{}) {
-				certList = append(certList, c.(string))
+				certList = append(certList, strings.TrimSpace(c.(string)))
 			}
 
 			opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(certList))
@@ -304,7 +318,11 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 		if d.HasChange(authmethodOidcCaCertificatesKey) {
 			if val, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(val.([]string)))
+				c := []string{}
+				for _, cert := range val.([]string) {
+					c = append(c, strings.TrimSpace(cert))
+				}
+				opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(c))
 			}
 		}
 		if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -17,8 +18,7 @@ import (
 const (
 	fooAuthMethodOidcDesc       = "test auth method oidc"
 	fooAuthMethodOidcDescUpdate = "test auth method oidc update"
-	fooAuthMethodOidcCaCerts    = `
------BEGIN CERTIFICATE-----
+	fooAuthMethodOidcCaCerts    = `-----BEGIN CERTIFICATE-----
 MIIDsjCCApoCCQCslgm7fAu/VzANBgkqhkiG9w0BAQsFADCBmjELMAkGA1UEBhMC
 VVMxCzAJBgNVBAgMAldBMRMwEQYDVQQHDApCZWxsaW5naGFtMRIwEAYDVQQKDAlI
 YXNoaUNvcnAxETAPBgNVBAsMCEJvdW5kYXJ5MRswGQYDVQQDDBJib3VuZGFyeXBy
@@ -102,8 +102,8 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test.com"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcCaCertificatesKey, fooAuthMethodOidcCaCerts),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, "foo_aud"),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcCaCertificatesKey, []string{fooAuthMethodOidcCaCerts}),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
@@ -118,8 +118,8 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test-update.com"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id_update"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "1"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcCaCertificatesKey, fooAuthMethodOidcCaCerts),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, "foo_aud_update"),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcCaCertificatesKey, []string{fooAuthMethodOidcCaCerts}),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
@@ -181,7 +181,7 @@ func testAccCheckAuthMethodOidcResourceDestroy(t *testing.T, testProvider *schem
 	}
 }
 
-func testAccCheckAuthMethodOidcResourceCaCertsSet(testProvider *schema.Provider, name string, caCerts []string) resource.TestCheckFunc {
+func testAccCheckAuthMethodOidcAttrAryValueSet(testProvider *schema.Provider, name string, key string, strAry []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -201,15 +201,15 @@ func testAccCheckAuthMethodOidcResourceCaCertsSet(testProvider *schema.Provider,
 			return fmt.Errorf("Got an error when reading auth method %q: %v", id, err)
 		}
 
-		for _, got := range amr.Item.Attributes["ca_certs"].([]interface{}) {
+		for _, got := range amr.Item.Attributes[key].([]interface{}) {
 			ok := false
-			for _, expected := range caCerts {
-				if got.(string) == expected {
+			for _, expected := range strAry {
+				if strings.TrimSpace(got.(string)) == strings.TrimSpace(expected) {
 					ok = true
 				}
 			}
 			if !ok {
-				return fmt.Errorf("caCert in state not set in boundary: %s", got.(string))
+				return fmt.Errorf("value not found in boundary\n %s: %s\n", key, got.(string))
 			}
 		}
 
