@@ -94,48 +94,35 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("no scope ID provided")
 	}
 
-	var minLoginNameLength *int
-	if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
-		minLength := minLengthVal.(int)
-		minLoginNameLength = &minLength
-	}
-
-	var minPasswordLength *int
-	if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
-		minLength := minLengthVal.(int)
-		minPasswordLength = &minLength
-	}
-
-	opts := []authmethods.Option{}
-
 	var typeStr string
 	if typeVal, ok := d.GetOk(TypeKey); ok {
 		typeStr = typeVal.(string)
 	} else {
 		return diag.Errorf("no type provided")
 	}
-	switch typeStr {
-	case authmethodTypePassword:
-		if minLoginNameLength != nil {
-			opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(*minLoginNameLength)))
-		}
-		if minPasswordLength != nil {
-			opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(*minPasswordLength)))
-		}
-	default:
-		return diag.Errorf("invalid type provided")
+
+	opts := []authmethods.Option{}
+
+	if nameVal, ok := d.GetOk(NameKey); ok {
+		opts = append(opts, authmethods.WithName(nameVal.(string)))
 	}
 
-	nameVal, ok := d.GetOk(NameKey)
-	if ok {
-		nameStr := nameVal.(string)
-		opts = append(opts, authmethods.WithName(nameStr))
+	if descVal, ok := d.GetOk(DescriptionKey); ok {
+		opts = append(opts, authmethods.WithDescription(descVal.(string)))
 	}
 
-	descVal, ok := d.GetOk(DescriptionKey)
-	if ok {
-		descStr := descVal.(string)
-		opts = append(opts, authmethods.WithDescription(descStr))
+	if attrs, ok := d.GetOk(authmethodAttributesKey); ok {
+		opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
+	}
+
+	// TODO(malnick) - deprecate
+	if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+		opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthVal.(int))))
+	}
+
+	// TODO(malnick) - deprecate
+	if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
+		opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthVal.(int))))
 	}
 
 	amClient := authmethods.NewClient(md.client)
@@ -180,80 +167,48 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	opts := []authmethods.Option{}
 
-	var name *string
 	if d.HasChange(NameKey) {
 		opts = append(opts, authmethods.DefaultName())
-		nameVal, ok := d.GetOk(NameKey)
-		if ok {
-			nameStr := nameVal.(string)
-			name = &nameStr
-			opts = append(opts, authmethods.WithName(nameStr))
+		if nameVal, ok := d.GetOk(NameKey); ok {
+			opts = append(opts, authmethods.WithName(nameVal.(string)))
 		}
 	}
 
-	var desc *string
 	if d.HasChange(DescriptionKey) {
 		opts = append(opts, authmethods.DefaultDescription())
-		descVal, ok := d.GetOk(DescriptionKey)
-		if ok {
-			descStr := descVal.(string)
-			desc = &descStr
-			opts = append(opts, authmethods.WithDescription(descStr))
+		if descVal, ok := d.GetOk(DescriptionKey); ok {
+			opts = append(opts, authmethods.WithDescription(descVal.(string)))
 		}
 	}
 
-	var minLoginNameLength *int
 	if d.HasChange(authmethodMinLoginNameLengthKey) {
-		switch d.Get(TypeKey).(string) {
-		case authmethodTypePassword:
-			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
-			minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey)
-			if ok {
-				minLengthInt := minLengthVal.(int)
-				minLoginNameLength = &minLengthInt
-				opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthInt)))
-			}
-		default:
-			return diag.Errorf(`"min_login_name_length" cannot be used with this type of auth method`)
+		opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
+		if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+			opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthVal.(int))))
 		}
 	}
 
-	var minPasswordLength *int
+	if d.HasChange(authmethodAttributesKey) {
+		if attrs, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+			opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
+		}
+	}
+
+	// TODO(malnick) - deprecate
 	if d.HasChange(authmethodMinPasswordLengthKey) {
-		switch d.Get(TypeKey).(string) {
-		case authmethodTypePassword:
-			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinPasswordLength())
-			minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey)
-			if ok {
-				minLengthInt := minLengthVal.(int)
-				minPasswordLength = &minLengthInt
-				opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthInt)))
-			}
-		default:
-			return diag.Errorf(`"min_password_length" cannot be used with this type of auth method`)
+		opts = append(opts, authmethods.DefaultPasswordAuthMethodMinPasswordLength())
+		if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
+			opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthVal.(int))))
 		}
 	}
-
-	if len(opts) > 0 {
-		opts = append(opts, authmethods.WithAutomaticVersioning(true))
-		_, err := amClient.Update(ctx, d.Id(), 0, opts...)
-		if err != nil {
-			return diag.Errorf("error updating auth method: %v", err)
-		}
+	// TODO(malnick) - deprecate
+	opts = append(opts, authmethods.WithAutomaticVersioning(true))
+	amu, err := amClient.Update(ctx, d.Id(), 0, opts...)
+	if err != nil {
+		return diag.Errorf("error updating auth method: %v", err)
 	}
 
-	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
-	}
-	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
-	}
-	if d.HasChange(authmethodMinLoginNameLengthKey) {
-		d.Set(authmethodMinLoginNameLengthKey, minLoginNameLength)
-	}
-	if d.HasChange(authmethodMinPasswordLengthKey) {
-		d.Set(authmethodMinPasswordLengthKey, minPasswordLength)
-	}
+	setFromAuthMethodResponseMap(d, amu.GetResponse().Map)
 
 	return nil
 }
