@@ -55,6 +55,7 @@ func New() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"boundary_account":              resourceAccount(),
+			"boundary_auth_method":          resourceAuthMethod(),
 			"boundary_auth_method_password": resourceAuthMethodPassword(),
 			"boundary_auth_method_oidc":     resourceAuthMethodOidc(),
 			"boundary_group":                resourceGroup(),
