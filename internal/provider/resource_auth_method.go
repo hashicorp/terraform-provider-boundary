@@ -2,10 +2,7 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
@@ -271,10 +268,70 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 			}
 		}
 
-	default:
-		return errorInvalidAuthMethodType
-	}
+func resourceAuthMethod() *schema.Resource {
+	return &schema.Resource{
+		Description: "The auth method resource allows you to configure a Boundary auth_method.",
 
+		CreateContext: resourceAuthMethodCreate,
+		ReadContext:   resourceAuthMethodRead,
+		UpdateContext: resourceAuthMethodUpdate,
+		DeleteContext: resourceAuthMethodDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the account.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			NameKey: {
+				Description: "The auth method name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			DescriptionKey: {
+				Description: "The auth method description.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			ScopeIdKey: {
+				Description: "The scope ID.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			TypeKey: {
+				Description: "The resource type.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			authmethodMinLoginNameLengthKey: {
+				Description: "The minimum login name length.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Deprecated:  "Will be removed in favor of using attributes parameter",
+			},
+			authmethodMinPasswordLengthKey: {
+				Description: "The minimum password length.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Deprecated:  "Will be removed in favor of using attributes parameter",
+			},
+		},
+	}
+}
+
+func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(ScopeIdKey, raw["scope_id"])
+	d.Set(TypeKey, raw["type"])
+	d.Set(authmethodAttributesKey, raw["attributes"])
 	d.SetId(raw["id"].(string))
 	return nil
 }
@@ -282,78 +339,43 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
+	}
+
+	var minLoginNameLength *int
+	if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+		minLength := minLengthVal.(int)
+		minLoginNameLength = &minLength
+	}
+
+	var minPasswordLength *int
+	if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
+		minLength := minLengthVal.(int)
+		minPasswordLength = &minLength
+	}
+
+	opts := []authmethods.Option{}
+
 	var typeStr string
 	if typeVal, ok := d.GetOk(TypeKey); ok {
 		typeStr = typeVal.(string)
 	} else {
 		return diag.Errorf("no type provided")
 	}
-
-	opts := []authmethods.Option{}
 	switch typeStr {
 	case authmethodTypePassword:
-		var minLoginNameLength *int
-		if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
-			minLength := minLengthVal.(int)
-			minLoginNameLength = &minLength
-		}
 		if minLoginNameLength != nil {
 			opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(*minLoginNameLength)))
-		}
-
-		var minPasswordLength *int
-		if minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey); ok {
-			minLength := minLengthVal.(int)
-			minPasswordLength = &minLength
 		}
 		if minPasswordLength != nil {
 			opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(*minPasswordLength)))
 		}
-
-	case authmethodTypeOidc:
-		if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
-		}
-		if clientId, ok := d.GetOk(authmethodOidcClientIdKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodClientId(clientId.(string)))
-		}
-		if clientSecret, ok := d.GetOk(authmethodOidcClientSecretKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(clientSecret.(string)))
-		}
-		if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(maxAge.(int))))
-		}
-		if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
-		}
-		if certs, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
-			certList := []string{}
-			for _, c := range certs.([]interface{}) {
-				certList = append(certList, strings.TrimSpace(c.(string)))
-			}
-
-			opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(certList))
-		}
-		if aud, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
-			audList := []string{}
-			for _, c := range aud.([]interface{}) {
-				audList = append(audList, c.(string))
-			}
-			opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(audList))
-		}
-		if dis, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(dis.(bool)))
-		}
-		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-			algoList := []string{}
-			for _, c := range algos.([]interface{}) {
-				algoList = append(algoList, c.(string))
-			}
-			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algoList))
-		}
-
 	default:
-		return errorInvalidAuthMethodType
+		return diag.Errorf("invalid type provided")
 	}
 
 	nameVal, ok := d.GetOk(NameKey)
@@ -366,13 +388,6 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 	if ok {
 		descStr := descVal.(string)
 		opts = append(opts, authmethods.WithDescription(descStr))
-	}
-
-	var scopeId string
-	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
-		scopeId = scopeIdVal.(string)
-	} else {
-		return diag.Errorf("no scope ID provided")
 	}
 
 	amClient := authmethods.NewClient(md.client)
@@ -421,106 +436,67 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	opts := []authmethods.Option{}
 
+	var name *string
 	if d.HasChange(NameKey) {
 		opts = append(opts, authmethods.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
 		if ok {
-			opts = append(opts, authmethods.WithName(nameVal.(string)))
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, authmethods.WithName(nameStr))
 		}
 	}
 
+	var desc *string
 	if d.HasChange(DescriptionKey) {
 		opts = append(opts, authmethods.DefaultDescription())
 		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
-			opts = append(opts, authmethods.WithDescription(descVal.(string)))
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, authmethods.WithDescription(descStr))
 		}
 	}
 
-	typeStr := d.Get(TypeKey).(string)
-	switch typeStr {
-	case authmethodTypePassword:
-		if d.HasChange(authmethodMinLoginNameLengthKey) {
+	var minLoginNameLength *int
+	if d.HasChange(authmethodMinLoginNameLengthKey) {
+		switch d.Get(TypeKey).(string) {
+		case authmethodTypePassword:
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
 			minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey)
 			if ok {
-				opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthVal.(int))))
+				minLengthInt := minLengthVal.(int)
+				minLoginNameLength = &minLengthInt
+				opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthInt)))
 			}
+		default:
+			return diag.Errorf(`"min_login_name_length" cannot be used with this type of auth method`)
 		}
+	}
 
-		if d.HasChange(authmethodMinPasswordLengthKey) {
+	var minPasswordLength *int
+	if d.HasChange(authmethodMinPasswordLengthKey) {
+		switch d.Get(TypeKey).(string) {
+		case authmethodTypePassword:
 			opts = append(opts, authmethods.DefaultPasswordAuthMethodMinPasswordLength())
 			minLengthVal, ok := d.GetOk(authmethodMinPasswordLengthKey)
 			if ok {
-				opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthVal.(int))))
+				minLengthInt := minLengthVal.(int)
+				minPasswordLength = &minLengthInt
+				opts = append(opts, authmethods.WithPasswordAuthMethodMinPasswordLength(uint32(minLengthInt)))
 			}
+		default:
+			return diag.Errorf(`"min_password_length" cannot be used with this type of auth method`)
 		}
-
-	case authmethodTypeOidc:
-		if d.HasChange(authmethodOidcIssuerKey) {
-			if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
-			}
-		}
-		if d.HasChange(authmethodOidcClientIdKey) {
-			if clientId, ok := d.GetOk(authmethodOidcClientIdKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodClientId(clientId.(string)))
-			}
-		}
-		if d.HasChange(authmethodOidcClientSecretKey) {
-			if clientSecret, ok := d.GetOk(authmethodOidcClientSecretKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(clientSecret.(string)))
-			}
-		}
-		if d.HasChange(authmethodOidcMaxAgeKey) {
-			if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(maxAge.(int))))
-			}
-		}
-		if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
-			if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
-			}
-		}
-		if d.HasChange(authmethodOidcApiUrlPrefixKey) {
-			if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
-			}
-		}
-		if d.HasChange(authmethodOidcClientSecretHmacKey) {
-			if sec, ok := d.GetOk(authmethodOidcClientSecretHmacKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(sec.(string)))
-			}
-		}
-		if d.HasChange(authmethodOidcAllowedAudiencesKey) {
-			if val, ok := d.GetOk(authmethodOidcAllowedAudiencesKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodAllowedAudiences(val.([]string)))
-			}
-		}
-		if d.HasChange(authmethodOidcCaCertificatesKey) {
-			if val, ok := d.GetOk(authmethodOidcCaCertificatesKey); ok {
-				c := []string{}
-				for _, cert := range val.([]string) {
-					c = append(c, strings.TrimSpace(cert))
-				}
-				opts = append(opts, authmethods.WithOidcAuthMethodIdpCaCerts(c))
-			}
-		}
-		if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {
-			if val, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
-				opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(val.(bool)))
-			}
-		}
-	default:
-		return errorInvalidAuthMethodType
 	}
 
 	if len(opts) > 0 {
 		opts = append(opts, authmethods.WithAutomaticVersioning(true))
-		amur, err := amClient.Update(ctx, d.Id(), 0, opts...)
+		_, err := amClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating auth method: %v", err)
 		}
+	}
 
 	if d.HasChange(NameKey) {
 		if err := d.Set(NameKey, name); err != nil {
