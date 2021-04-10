@@ -11,10 +11,7 @@ import (
 )
 
 const (
-	authmethodTypePassword          = "password"
-	authmethodMinLoginNameLengthKey = "min_login_name_length"
-	authmethodMinPasswordLengthKey  = "min_password_length"
-	authmethodAttributesKey         = "attributes"
+	authmethodAttributesKey = "attributes"
 )
 
 func resourceAuthMethod() *schema.Resource {
