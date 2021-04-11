@@ -11,17 +11,19 @@ import (
 )
 
 const (
-	accountAttributesKey = "attributes"
+	accountTypePassword = "password"
+	accountLoginNameKey = "login_name"
+	accountPasswordKey  = "password"
 )
 
-func resourceAccount() *schema.Resource {
+func resourceAccountPassword() *schema.Resource {
 	return &schema.Resource{
 		Description: "The account resource allows you to configure a Boundary account.",
 
-		CreateContext: resourceAccountCreate,
-		ReadContext:   resourceAccountRead,
-		UpdateContext: resourceAccountUpdate,
-		DeleteContext: resourceAccountDelete,
+		CreateContext: resourceAccountPasswordCreate,
+		ReadContext:   resourceAccountPasswordRead,
+		UpdateContext: resourceAccountPasswordUpdate,
+		DeleteContext: resourceAccountPasswordDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -54,15 +56,6 @@ func resourceAccount() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			accountAttributesKey: {
-				Description: "Arbitrary attributes map for account configuration.",
-				Type:        schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Optional: true,
-				Computed: true,
-			},
 			accountLoginNameKey: {
 				Description: "The login name for this account.",
 				Type:        schema.TypeString,
@@ -87,40 +80,24 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func setFromAccountResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
-	if err := d.Set(NameKey, raw["name"]); err != nil {
-		return err
-	}
-	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
-		return err
-	}
-	if err := d.Set(AuthMethodIdKey, raw["auth_method_id"]); err != nil {
-		return err
-	}
-	if err := d.Set(TypeKey, raw["type"]); err != nil {
-		return err
-	}
+func setFromAccountPasswordResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
+	d.Set(NameKey, raw["name"])
+	d.Set(DescriptionKey, raw["description"])
+	d.Set(AuthMethodIdKey, raw["auth_method_id"])
+	d.Set(TypeKey, raw["type"])
 
-	if attrsVal, ok := raw["attributes"]; ok {
-		d.Set(accountAttributesKey, attrsVal.(map[string]interface{}))
-	}
-
-	// TODO(malnick) - remove after deprecation cycle in favor of attributes
 	switch raw["type"].(string) {
 	case accountTypePassword:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
-			if err := d.Set(accountLoginNameKey, attrs["login_name"]); err != nil {
-				return err
-			}
+			d.Set(accountLoginNameKey, attrs["login_name"])
 		}
 	}
 
 	d.SetId(raw["id"].(string))
-	return nil
 }
 
-func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
 	var authMethodId string
@@ -130,14 +107,25 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("no auth method ID provided")
 	}
 
-	opts := []accounts.Option{}
-
-	if attrs, ok := d.GetOk(accountAttributesKey); ok {
-		opts = append(opts, accounts.WithAttributes(attrs.(map[string]interface{})))
+	var loginName *string
+	if keyVal, ok := d.GetOk(accountLoginNameKey); ok {
+		key := keyVal.(string)
+		loginName = &key
 	}
 
-	if nameVal, ok := d.GetOk(NameKey); ok {
-		opts = append(opts, accounts.WithName(nameVal.(string)))
+	var password *string
+	if keyVal, ok := d.GetOk(accountPasswordKey); ok {
+		key := keyVal.(string)
+		password = &key
+	}
+
+	opts := []accounts.Option{}
+
+	var typeStr string
+	if typeVal, ok := d.GetOk(TypeKey); ok {
+		typeStr = typeVal.(string)
+	} else {
+		return diag.Errorf("no type provided")
 	}
 	switch typeStr {
 	case accountTypePassword:
@@ -146,22 +134,22 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		if password != nil {
 			opts = append(opts, accounts.WithPasswordAccountPassword(*password))
-			if err := d.Set(accountPasswordKey, *password); err != nil {
-				return diag.FromErr(err)
-			}
+			d.Set(accountPasswordKey, *password)
 		}
 	default:
 		return diag.Errorf("invalid type provided")
 	}
 
-	// TODO(malnick) - remove after deprecation cycle
-	if name, ok := d.GetOk(accountLoginNameKey); ok {
-		opts = append(opts, accounts.WithPasswordAccountLoginName(name.(string)))
+	nameVal, ok := d.GetOk(NameKey)
+	if ok {
+		nameStr := nameVal.(string)
+		opts = append(opts, accounts.WithName(nameStr))
 	}
 
-	// TODO(malnick) - remove after deprecation cycle
-	if pass, ok := d.GetOk(accountPasswordKey); ok {
-		opts = append(opts, accounts.WithPasswordAccountPassword(pass.(string)))
+	descVal, ok := d.GetOk(DescriptionKey)
+	if ok {
+		descStr := descVal.(string)
+		opts = append(opts, accounts.WithDescription(descStr))
 	}
 
 	aClient := accounts.NewClient(md.client)
@@ -174,14 +162,12 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("nil account after create")
 	}
 
-	if err := setFromAccountResponseMap(d, acr.GetResponse().Map); err != nil {
-		return diag.FromErr(err)
-	}
+	setFromAccountPasswordResponseMap(d, acr.GetResponse().Map)
 
 	return nil
 }
 
-func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	aClient := accounts.NewClient(md.client)
 
@@ -197,75 +183,77 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("account nil after read")
 	}
 
-	if err := setFromAccountResponseMap(d, arr.GetResponse().Map); err != nil {
-		return diag.FromErr(err)
-	}
+	setFromAccountPasswordResponseMap(d, arr.GetResponse().Map)
 
 	return nil
 }
 
-func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	aClient := accounts.NewClient(md.client)
 
 	opts := []accounts.Option{}
 
+	var name *string
 	if d.HasChange(NameKey) {
 		opts = append(opts, accounts.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
 		if ok {
-			opts = append(opts, accounts.WithName(nameVal.(string)))
+			nameStr := nameVal.(string)
+			name = &nameStr
+			opts = append(opts, accounts.WithName(nameStr))
 		}
 	}
 
+	var desc *string
 	if d.HasChange(DescriptionKey) {
 		opts = append(opts, accounts.DefaultDescription())
 		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
-			opts = append(opts, accounts.WithDescription(descVal.(string)))
-		}
-	}
-	if d.HasChange(authmethodAttributesKey) {
-		if attrs, ok := d.GetOk(accountAttributesKey); ok {
-			opts = append(opts, accounts.WithAttributes(attrs.(map[string]interface{})))
+			descStr := descVal.(string)
+			desc = &descStr
+			opts = append(opts, accounts.WithDescription(descStr))
 		}
 	}
 
-	// TODO(malnick) - remove after deprecation cycle
+	var loginName *string
 	if d.HasChange(accountLoginNameKey) {
-		opts = append(opts, accounts.DefaultPasswordAccountLoginName())
-		if keyVal, ok := d.GetOk(accountLoginNameKey); ok {
-			opts = append(opts, accounts.WithPasswordAccountLoginName(keyVal.(string)))
+		switch d.Get(TypeKey).(string) {
+		case accountTypePassword:
+			opts = append(opts, accounts.DefaultPasswordAccountLoginName())
+			keyVal, ok := d.GetOk(accountLoginNameKey)
+			if ok {
+				keyStr := keyVal.(string)
+				loginName = &keyStr
+				opts = append(opts, accounts.WithPasswordAccountLoginName(keyStr))
+			}
+		default:
+			return diag.Errorf(`"login_name" cannot be used with this type of account`)
 		}
 	}
 
 	if len(opts) > 0 {
 		opts = append(opts, accounts.WithAutomaticVersioning(true))
-		aur, err := aClient.Update(ctx, d.Id(), 0, opts...)
+		_, err := aClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating account: %v", err)
 		}
+	}
 
 	if d.HasChange(NameKey) {
-		if err := d.Set(NameKey, name); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(NameKey, name)
 	}
 	if d.HasChange(DescriptionKey) {
-		if err := d.Set(DescriptionKey, desc); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(DescriptionKey, desc)
 	}
 	if d.HasChange(accountLoginNameKey) {
-		if err := d.Set(accountLoginNameKey, loginName); err != nil {
-			return diag.FromErr(err)
-		}
+		d.Set(accountLoginNameKey, loginName)
 	}
 
 	return nil
 }
 
-func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountPasswordDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	aClient := accounts.NewClient(md.client)
 

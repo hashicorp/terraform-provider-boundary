@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -334,11 +333,8 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	d.Set(TypeKey, raw["type"])
 
 	if attrsVal, ok := raw["attributes"]; ok {
-		// need to switch on type and convert from strings when neccessary
 		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
 	}
-
-	fmt.Printf("after set %+v\n", d.Get(authmethodAttributesKey))
 
 	d.SetId(raw["id"].(string))
 	return nil
