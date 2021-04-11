@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -58,11 +57,9 @@ func resourceAuthMethod() *schema.Resource {
 			authmethodAttributesKey: {
 				Description: "Arbitrary attributes map for auth method configuration.",
 				Type:        schema.TypeMap,
-				// The elem isn't actually needed, and these values can be arbitrary so
-				// leaving this unset
-				//				Elem: &schema.Schema{
-				//					Type: schema.TypeString,
-				//				},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Optional: true,
 				Computed: true,
 			},
@@ -91,11 +88,8 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	d.Set(TypeKey, raw["type"])
 
 	if attrsVal, ok := raw["attributes"]; ok {
-		// need to switch on type and convert from strings when neccessary
 		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
 	}
-
-	fmt.Printf("after set %+v\n", d.Get(authmethodAttributesKey))
 
 	d.SetId(raw["id"].(string))
 }
@@ -197,13 +191,10 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	// TODO(malnick) - when polling the value in this block we get 0
-	// it does not appear that TF sees the changes to the map
 	if d.HasChange(authmethodAttributesKey) {
-		if attrs, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+		if attrs, ok := d.GetOk(authmethodAttributesKey); ok {
 			opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
 		}
-
 	}
 
 	// TODO(malnick) - deprecate
