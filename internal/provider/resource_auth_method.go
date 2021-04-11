@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -57,9 +58,9 @@ func resourceAuthMethod() *schema.Resource {
 			authmethodAttributesKey: {
 				Description: "Arbitrary attributes map for auth method configuration.",
 				Type:        schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				//				Elem: &schema.Schema{
+				//					Type: schema.TypeString,
+				//				},
 				Optional: true,
 				Computed: true,
 			},
@@ -90,6 +91,7 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	if attrsVal, ok := raw["attributes"]; ok {
 		// need to switch on type and convert from strings when neccessary
 		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
+		fmt.Printf("attrs: %+v\n\n", d.Get(authmethodAttributesKey))
 	}
 
 	d.SetId(raw["id"].(string))
@@ -123,6 +125,7 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if attrs, ok := d.GetOk(authmethodAttributesKey); ok {
+		fmt.Printf("attr create: %+v\n\n", attrs)
 		opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
 	}
 
