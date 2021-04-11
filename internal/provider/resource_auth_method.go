@@ -58,6 +58,8 @@ func resourceAuthMethod() *schema.Resource {
 			authmethodAttributesKey: {
 				Description: "Arbitrary attributes map for auth method configuration.",
 				Type:        schema.TypeMap,
+				// The elem isn't actually needed, and these values can be arbitrary so
+				// leaving this unset
 				//				Elem: &schema.Schema{
 				//					Type: schema.TypeString,
 				//				},
@@ -91,8 +93,9 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	if attrsVal, ok := raw["attributes"]; ok {
 		// need to switch on type and convert from strings when neccessary
 		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
-		fmt.Printf("attrs: %+v\n\n", d.Get(authmethodAttributesKey))
 	}
+
+	fmt.Printf("after set %+v\n", d.Get(authmethodAttributesKey))
 
 	d.SetId(raw["id"].(string))
 }
@@ -125,7 +128,6 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if attrs, ok := d.GetOk(authmethodAttributesKey); ok {
-		fmt.Printf("attr create: %+v\n\n", attrs)
 		opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
 	}
 
@@ -195,17 +197,13 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange(authmethodMinLoginNameLengthKey) {
-		opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
-		if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
-			opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthVal.(int))))
-		}
-	}
-
+	// TODO(malnick) - when polling the value in this block we get 0
+	// it does not appear that TF sees the changes to the map
 	if d.HasChange(authmethodAttributesKey) {
 		if attrs, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
 			opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
 		}
+
 	}
 
 	// TODO(malnick) - deprecate
@@ -216,6 +214,13 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 	// TODO(malnick) - deprecate
+	if d.HasChange(authmethodMinLoginNameLengthKey) {
+		opts = append(opts, authmethods.DefaultPasswordAuthMethodMinLoginNameLength())
+		if minLengthVal, ok := d.GetOk(authmethodMinLoginNameLengthKey); ok {
+			opts = append(opts, authmethods.WithPasswordAuthMethodMinLoginNameLength(uint32(minLengthVal.(int))))
+		}
+	}
+
 	opts = append(opts, authmethods.WithAutomaticVersioning(true))
 	amu, err := amClient.Update(ctx, d.Id(), 0, opts...)
 	if err != nil {
