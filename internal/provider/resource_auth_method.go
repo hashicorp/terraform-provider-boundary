@@ -336,8 +336,9 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	if attrsVal, ok := raw["attributes"]; ok {
 		// need to switch on type and convert from strings when neccessary
 		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
-		fmt.Printf("attrs: %+v\n\n", d.Get(authmethodAttributesKey))
 	}
+
+	fmt.Printf("after set %+v\n", d.Get(authmethodAttributesKey))
 
 	d.SetId(raw["id"].(string))
 	return nil
@@ -495,6 +496,7 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		default:
 			return diag.Errorf(`"min_password_length" cannot be used with this type of auth method`)
 		}
+
 	}
 
 	if len(opts) > 0 {

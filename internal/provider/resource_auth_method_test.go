@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -232,7 +231,7 @@ func testAccCheckAuthMethodAttrSet(testProvider *schema.Provider, resourceName s
 			return fmt.Errorf("Got an error when reading auth method %q: %v", id, err)
 		}
 
-		if equal := reflect.DeepEqual(amr.Item.Attributes, attrs); equal {
+		if fmt.Sprint(amr.Item.Attributes) == fmt.Sprint(attrs) {
 			return nil
 		}
 
