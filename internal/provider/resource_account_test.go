@@ -164,8 +164,7 @@ func TestAccAccountBaseAttr(t *testing.T) {
 						provider,
 						"boundary_account.foo",
 						map[string]interface{}{
-							"login_name": "foo",
-							"passwrod":   "foofoofoo"}),
+							"login_name": "foo"}),
 
 					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
 				),
@@ -182,8 +181,7 @@ func TestAccAccountBaseAttr(t *testing.T) {
 						provider,
 						"boundary_account.foo",
 						map[string]interface{}{
-							"login_name": "fooUpdate",
-							"passwrod":   "foofoofooUpdate"}),
+							"login_name": "fooUpdate"}),
 
 					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
 				),
