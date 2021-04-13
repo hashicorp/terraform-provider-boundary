@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
+	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -22,6 +23,7 @@ const (
 	authmethodOidcAllowedAudiencesKey                  = "allowed_audiences"
 	authmethodOidcDisableDiscoveredConfigValidationKey = "disable_discovered_config_validation"
 	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"
+	authmethodOidcIsPrimaryAuthMethodForScope          = "is_primary_for_scope"
 
 	// computed-only parameters
 	authmethodOidcCallbackUrlKey      = "callback_url"
@@ -136,6 +138,12 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+			authmethodOidcIsPrimaryAuthMethodForScope: {
+				Description: "When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the the user will be automatically created when they login using an OIDC account.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
+
 			TypeKey: {
 				Description: "The type of auth method; hardcoded.",
 				Type:        schema.TypeString,
@@ -280,7 +288,28 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("nil auth method after create")
 	}
 
+	if p, ok := d.GetOk(authmethodOidcIsPrimaryAuthMethodForScope); ok {
+		if p.(bool) {
+			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, authmethodId, meta); err != nil {
+				return diag.Errorf("%s", err)
+			}
+		}
+	}
+
 	return setFromOidcAuthMethodResponseMap(d, amcr.GetResponse().Map)
+}
+
+func updateScopeWithPrimaryAuthMethodId(ctx context.Context, scopeId, authmethodId string, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+	scp := scopes.NewClient(md.client)
+	opts := []scopes.Option{}
+	opts = append(opts, scopes.WithPrimaryAuthMethodId(authmethodId))
+	_, err := scp.Update(ctx, scopeId, 0, opts...)
+	if err != nil {
+		return diag.Errorf("error updating scope: %v", err)
+	}
+
+	return nil
 }
 
 func resourceAuthMethodOidcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
