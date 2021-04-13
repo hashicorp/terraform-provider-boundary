@@ -14,6 +14,7 @@ const (
 	scopeGlobalScopeKey        = "global_scope"
 	scopeAutoCreateAdminRole   = "auto_create_admin_role"
 	scopeAutoCreateDefaultRole = "auto_create_default_role"
+	scopePrimaryAuthMethodId   = "primary_auth_method_id"
 )
 
 func resourceScope() *schema.Resource {
@@ -65,6 +66,11 @@ func resourceScope() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
+			scopePrimaryAuthMethodId: {
+				Description: "The primary auth method ID to use in this scope. The primary auth method for the scope means the the user will be automatically created when they login using the oidc account.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -77,6 +83,11 @@ func setFromScopeResponseMap(d *schema.ResourceData, raw map[string]interface{})
 	} else {
 		d.Set(ScopeIdKey, raw["scope_id"])
 	}
+
+	if p, ok := raw[scopePrimaryAuthMethodId]; ok {
+		d.Set(scopePrimaryAuthMethodId, p.(string))
+	}
+
 	d.SetId(raw["id"].(string))
 }
 
@@ -107,6 +118,10 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if ok {
 		descStr := descVal.(string)
 		opts = append(opts, scopes.WithDescription(descStr))
+	}
+
+	if p, ok := d.GetOk(scopePrimaryAuthMethodId); ok {
+		opts = append(opts, scopes.WithPrimaryAuthMethodId(p.(string)))
 	}
 
 	// Always skip unless overridden, because if you're using TF to manage this
@@ -187,6 +202,13 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			descStr := descVal.(string)
 			desc = &descStr
 			opts = append(opts, scopes.WithDescription(descStr))
+		}
+	}
+
+	if d.HasChange(scopePrimaryAuthMethodId) {
+		opts = append(opts, scopes.DefaultPrimaryAuthMethodId())
+		if p, ok := d.GetOk(scopePrimaryAuthMethodId); ok {
+			opts = append(opts, scopes.WithPrimaryAuthMethodId(p.(string)))
 		}
 	}
 
