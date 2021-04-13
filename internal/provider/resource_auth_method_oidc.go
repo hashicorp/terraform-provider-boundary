@@ -161,38 +161,19 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		d.Set(authmethodOidcClientIdKey, attrs[authmethodOidcClientIdKey].(string))
 		d.Set(authmethodOidcClientSecretHmacKey, attrs[authmethodOidcClientSecretHmacKey].(string))
 
-		// TODO(malnick) - the API can return a value with an extra newline to the top
-		// of values that are in string arrays, this is the workaround. Simiarly, there
-		// is a workaround in tests when comparing API state
-		stripC := []string{}
-		for _, cert := range attrs[authmethodOidcIdpCaCertsKey].([]interface{}) {
-			stripC = append(stripC, cert.(string))
+		if certs, ok := attrs[authmethodOidcIdpCaCertsKey]; ok {
+			d.Set(authmethodOidcIdpCaCertsKey, certs.([]interface{}))
 		}
-		d.Set(authmethodOidcIdpCaCertsKey, stripC)
 
-		stripA := []string{}
-		for _, aud := range attrs[authmethodOidcAllowedAudiencesKey].([]interface{}) {
-			stripA = append(stripA, aud.(string))
+		if aud, ok := attrs[authmethodOidcAllowedAudiencesKey]; ok {
+			d.Set(authmethodOidcAllowedAudiencesKey, aud.([]interface{}))
 		}
-		d.Set(authmethodOidcAllowedAudiencesKey, stripA)
 
-		// TODO(malnick) remove after testing
-		/*
-			strArys := []string{authmethodOidcIdpCaCertsKey, authmethodOidcAllowedAudiencesKey}
-
-			for _, k := range strArys {
-				kAry := []string{}
-				for _, val := range attrs[k].([]interface{}) {
-					kAry = append(kAry, val.(string))
-				}
-				d.Set(k, kAry)
-				fmt.Printf("%s: %s\n", k, d.Get(k))
-			}
-		*/
-
-		maxAge := attrs[authmethodOidcMaxAgeKey].(json.Number)
-		maxAgeInt, _ := maxAge.Int64()
-		d.Set(authmethodOidcMaxAgeKey, maxAgeInt)
+		if m, ok := attrs[authmethodOidcMaxAgeKey]; ok {
+			maxAge := m.(json.Number)
+			maxAgeInt, _ := maxAge.Int64()
+			d.Set(authmethodOidcMaxAgeKey, maxAgeInt)
+		}
 
 		// these are set sometimes
 		sometimesString := []string{
