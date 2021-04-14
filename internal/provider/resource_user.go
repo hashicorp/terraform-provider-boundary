@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -61,6 +62,7 @@ func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(userAccountIDsKey, raw["account_ids"])
+	fmt.Printf("account IDs for user '%s': %+v", raw["name"], raw["account_ids"])
 	d.SetId(raw["id"].(string))
 }
 
