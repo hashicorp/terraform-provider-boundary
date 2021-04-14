@@ -491,6 +491,8 @@ github.com/hashicorp/boundary v0.1.9-0.20210414154721-5855930921ee h1:Bqu5GFR+B9
 github.com/hashicorp/boundary v0.1.9-0.20210414154721-5855930921ee/go.mod h1:QCDqPMjlJublu4Qf+SnJ4IcCJEtpuM5Bqq/tsMgWrPw=
 github.com/hashicorp/boundary v0.1.9-0.20210414183417-fad9f6d52580 h1:tjgTPHbuRoZ90Fodzc9v/6XZDkUyJxJ8HSYSDVnh4Ds=
 github.com/hashicorp/boundary v0.1.9-0.20210414183417-fad9f6d52580/go.mod h1:npQDhcJkEeMu1y6V8OMXVLFF6oSj0z6wpHpqdgN/6S0=
+github.com/hashicorp/boundary v0.1.9-0.20210414213507-59939e768cb0 h1:LLExYcBs3sbB6vxJYeNq6NmK0D/AuMJgwONO+ShyrrU=
+github.com/hashicorp/boundary v0.1.9-0.20210414213507-59939e768cb0/go.mod h1:4Q5vHhxNjQupCOKEvVMceQiag7aTpt+wnwx8CC3fR0s=
 github.com/hashicorp/boundary/api v0.0.8 h1:HVRvr3hT1OIM6XHZdaCQ44GDV7IgPu+oScb15c+BGI4=
 github.com/hashicorp/boundary/api v0.0.8/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
 github.com/hashicorp/boundary/api v0.0.9-0.20210409144154-26c0c4479d36 h1:0HEbBsfcAx9rslfxphkRBgCKvQQ0/dP/JzCaIiAJHSI=
@@ -500,6 +502,8 @@ github.com/hashicorp/boundary/api v0.0.10-0.20210414154721-5855930921ee h1:Ho4dv
 github.com/hashicorp/boundary/api v0.0.10-0.20210414154721-5855930921ee/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
 github.com/hashicorp/boundary/api v0.0.10-0.20210414183417-fad9f6d52580 h1:dLVJ5Go+mW1ZBBPWU45LZqV2wyDI3G0ZaMeW4VE8Pno=
 github.com/hashicorp/boundary/api v0.0.10-0.20210414183417-fad9f6d52580/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
+github.com/hashicorp/boundary/api v0.0.10-0.20210414213507-59939e768cb0 h1:lv1q+zJHfdoItlQL1sxsHtEVbGSUVzjcxMJQpTpwzjI=
+github.com/hashicorp/boundary/api v0.0.10-0.20210414213507-59939e768cb0/go.mod h1:+XltL0g2eo4C4BiFep/7w1wR6XDYqBBUoYMHDeVbijA=
 github.com/hashicorp/boundary/sdk v0.0.4 h1:l3uuXOL5ZQwYc63Bm8sLY36XGUlIN/4Q2r2SqkmGTyw=
 github.com/hashicorp/boundary/sdk v0.0.4/go.mod h1:MQ8FJhseJrKpwvFDTn+AUAcJ1vdk1NKUxk7DxQgH7oQ=
 github.com/hashicorp/cap v0.0.0-20210408110729-0dd65efe5473 h1:qEikB8/ychrgsll9feuGjVLt0qo5oktfyTWi7BLsUrg=
@@ -595,6 +599,8 @@ github.com/hashicorp/memberlist v0.1.3/go.mod h1:ajVTdAv/9Im8oMAAj5G31PhhMCZJV2p
 github.com/hashicorp/serf v0.8.2/go.mod h1:6hOLApaqBFA1NXqRQAsxw9QxuDEvNxSQRwA/JwenrHc=
 github.com/hashicorp/shared-secure-libs v0.0.4 h1:aRm7/wnJ70z5hSX8cLdyupwI8QNKklfViRstg/ZtUdw=
 github.com/hashicorp/shared-secure-libs v0.0.4/go.mod h1:xhtA0FH6AYYFOy0sir7u0O0zzdLi7ofU6oWxy+gjnuc=
+github.com/hashicorp/shared-secure-libs v0.0.5 h1:qHd+wxqgvW+INIMU0uzF/Sw3+iaqAOk5SrcXzsThlvY=
+github.com/hashicorp/shared-secure-libs v0.0.5/go.mod h1:xhtA0FH6AYYFOy0sir7u0O0zzdLi7ofU6oWxy+gjnuc=
 github.com/hashicorp/terraform-exec v0.12.0/go.mod h1:SGhto91bVRlgXQWcJ5znSz+29UZIa8kpBbkGwQ+g9E8=
 github.com/hashicorp/terraform-exec v0.13.0 h1:1Pth+pdWJAufJuWWjaVOVNEkoRTOjGn3hQpAqj4aPdg=
 github.com/hashicorp/terraform-exec v0.13.0/go.mod h1:SGhto91bVRlgXQWcJ5znSz+29UZIa8kpBbkGwQ+g9E8=
