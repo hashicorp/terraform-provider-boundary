@@ -13,7 +13,7 @@ import (
 const (
 	accountTypeOidc       = "password"
 	accountOidcIssuerKey  = "issuer"
-	accountOidcSubjectKey = "subjet"
+	accountOidcSubjectKey = "subject"
 )
 
 func resourceAccountOidc() *schema.Resource {
