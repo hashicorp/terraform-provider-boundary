@@ -54,6 +54,7 @@ func resourceAccountOidc() *schema.Resource {
 				Description: "The OIDC issuer.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 			},
 			accountOidcSubjectKey: {
 				Description: "The OIDC subject.",
