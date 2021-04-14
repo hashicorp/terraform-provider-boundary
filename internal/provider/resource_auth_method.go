@@ -331,11 +331,6 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(TypeKey, raw["type"])
-
-	if attrsVal, ok := raw["attributes"]; ok {
-		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
-	}
-
 	d.SetId(raw["id"].(string))
 	return nil
 }
