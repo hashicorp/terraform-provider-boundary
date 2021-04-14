@@ -199,6 +199,10 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		if val, ok := attrs[authmethodOidcSigningAlgorithmsKey]; ok {
 			d.Set(authmethodOidcSigningAlgorithmsKey, val.([]interface{}))
 		}
+
+		if p, ok := attrs[authmethodOidcIsPrimaryAuthMethodForScope]; ok {
+			d.Set(authmethodOidcIsPrimaryAuthMethodForScope, p.(bool))
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -290,9 +294,11 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if p, ok := d.GetOk(authmethodOidcIsPrimaryAuthMethodForScope); ok {
 		if p.(bool) {
-			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, authmethodId, meta); err != nil {
-				return diag.Errorf("%s", err)
+			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, amcr.GetResponse().Map["id"].(string), meta); err != nil {
+				return diag.Errorf("%v", err)
 			}
+
+			amcr.GetResponse().Map[authmethodOidcIsPrimaryAuthMethodForScope] = true
 		}
 	}
 
@@ -302,14 +308,35 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 func updateScopeWithPrimaryAuthMethodId(ctx context.Context, scopeId, authmethodId string, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	scp := scopes.NewClient(md.client)
+
 	opts := []scopes.Option{}
+	opts = append(opts, scopes.WithAutomaticVersioning(true))
 	opts = append(opts, scopes.WithPrimaryAuthMethodId(authmethodId))
+
 	_, err := scp.Update(ctx, scopeId, 0, opts...)
 	if err != nil {
 		return diag.Errorf("error updating scope: %v", err)
 	}
 
 	return nil
+}
+
+func readScopeIsPrimaryAuthMethodId(ctx context.Context, scopeId, authmethodId string, meta interface{}) (diag.Diagnostics, bool) {
+	md := meta.(*metaData)
+	scp := scopes.NewClient(md.client)
+
+	srr, err := scp.Read(ctx, scopeId)
+	if err != nil {
+		return diag.Errorf("%s", err), false
+	}
+
+	if p, ok := srr.GetResponse().Map["primary_auth_method_id"]; ok {
+		if p == authmethodId {
+			return nil, true
+		}
+	}
+
+	return nil, false
 }
 
 func resourceAuthMethodOidcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -326,6 +353,15 @@ func resourceAuthMethodOidcRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	if amrr == nil {
 		return diag.Errorf("auth method nil after read")
+	}
+
+	serr, isPrimary := readScopeIsPrimaryAuthMethodId(ctx, amrr.GetResponse().Map["scope_id"].(string), amrr.GetResponse().Map["id"].(string), meta)
+	if err != nil {
+		return diag.Errorf("%v", serr)
+	}
+
+	if isPrimary {
+		amrr.GetResponse().Map[authmethodOidcIsPrimaryAuthMethodForScope] = true
 	}
 
 	return setFromOidcAuthMethodResponseMap(d, amrr.GetResponse().Map)
@@ -417,6 +453,22 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 		amur, err := amClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating auth method: %v", err)
+		}
+
+		if d.HasChange(authmethodOidcIsPrimaryAuthMethodForScope) {
+			if p, ok := d.GetOk(authmethodOidcIsPrimaryAuthMethodForScope); ok {
+				if p.(bool) {
+					if err := updateScopeWithPrimaryAuthMethodId(
+						ctx,
+						amur.GetResponse().Map["scope_id"].(string),
+						amur.GetResponse().Map["id"].(string),
+						meta); err != nil {
+						return diag.Errorf("%v", err)
+					}
+
+					amur.GetResponse().Map[authmethodOidcIsPrimaryAuthMethodForScope] = true
+				}
+			}
 		}
 
 		return setFromOidcAuthMethodResponseMap(d, amur.GetResponse().Map)

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
+	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,10 +66,11 @@ EOT
 
 	fooAuthMethodOidcUpdate = fmt.Sprintf(`
 resource "boundary_auth_method_oidc" "foo" {
-	name        = "test"
-	description = "%s"
-	scope_id    = boundary_scope.org1.id
-	depends_on  = [boundary_role.org1_admin]
+	name                 = "test"
+	description          = "%s"
+	scope_id             = boundary_scope.org1.id
+	is_primary_for_scope = true
+	depends_on           = [boundary_role.org1_admin]
 
   issuer            = "https://test-update.com"
   client_id         = "foo_id_update"
@@ -106,6 +108,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
+					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
 				),
 			},
 			importStep("boundary_auth_method_oidc.foo", "client_secret"),
@@ -121,7 +124,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
 					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
-
+					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
@@ -210,6 +213,53 @@ func testAccCheckAuthMethodOidcAttrAryValueSet(testProvider *schema.Provider, na
 			}
 			if !ok {
 				return fmt.Errorf("value not found in boundary\n %s: %s\n", key, got.(string))
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccIsPrimaryForScope(tp *schema.Provider, name string, shouldBePrimary bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("auth method resource not found: %s", name)
+		}
+
+		amId := rs.Primary.ID
+		if amId == "" {
+			return fmt.Errorf("auth method resource ID is not set")
+		}
+
+		md := tp.Meta().(*metaData)
+		amClient := authmethods.NewClient(md.client)
+
+		amr, err := amClient.Read(context.Background(), amId)
+		if err != nil {
+			return fmt.Errorf("Got an error when reading auth method %q: %v", amId, err)
+		}
+
+		amScopeId, ok := amr.GetResponse().Map["scope_id"]
+		if !ok {
+			return fmt.Errorf("scope_id unset on auth method resource")
+		}
+
+		scp := scopes.NewClient(md.client)
+
+		srr, err := scp.Read(context.Background(), amScopeId.(string))
+		if err != nil {
+			return err
+		}
+
+		primaryScopeAuthMethodId, ok := srr.GetResponse().Map["primary_auth_method_id"]
+		if !ok && shouldBePrimary {
+			return fmt.Errorf("primary_auth_method_id is not set on scope resource response")
+		}
+
+		if shouldBePrimary {
+			if primaryScopeAuthMethodId != amId {
+				return fmt.Errorf("auth method ('%s') should be primary for scope but scope returned '%s' for primary_auth_method_id", amId, primaryScopeAuthMethodId)
 			}
 		}
 
