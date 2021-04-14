@@ -10,10 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	accountAttributesKey = "attributes"
-)
-
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		Description: "The account resource allows you to configure a Boundary account.",
@@ -54,15 +50,6 @@ func resourceAccount() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			accountAttributesKey: {
-				Description: "Arbitrary attributes map for account configuration.",
-				Type:        schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Optional: true,
-				Computed: true,
-			},
 			accountLoginNameKey: {
 				Description: "The login name for this account.",
 				Type:        schema.TypeString,
@@ -93,10 +80,6 @@ func setFromAccountResponseMap(d *schema.ResourceData, raw map[string]interface{
 	d.Set(AuthMethodIdKey, raw["auth_method_id"])
 	d.Set(TypeKey, raw["type"])
 
-	if attrsVal, ok := raw["attributes"]; ok {
-		d.Set(accountAttributesKey, attrsVal.(map[string]interface{}))
-	}
-
 	// TODO(malnick) - remove after deprecation cycle in favor of attributes
 	switch raw["type"].(string) {
 	case accountTypePassword:
@@ -120,10 +103,6 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	opts := []accounts.Option{}
-
-	if attrs, ok := d.GetOk(accountAttributesKey); ok {
-		opts = append(opts, accounts.WithAttributes(attrs.(map[string]interface{})))
-	}
 
 	if nameVal, ok := d.GetOk(NameKey); ok {
 		opts = append(opts, accounts.WithName(nameVal.(string)))
@@ -198,11 +177,6 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
 			opts = append(opts, accounts.WithDescription(descVal.(string)))
-		}
-	}
-	if d.HasChange(authmethodAttributesKey) {
-		if attrs, ok := d.GetOk(accountAttributesKey); ok {
-			opts = append(opts, accounts.WithAttributes(attrs.(map[string]interface{})))
 		}
 	}
 

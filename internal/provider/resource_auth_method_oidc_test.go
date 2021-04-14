@@ -111,7 +111,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAuthMethodOidcUpdate),
@@ -128,7 +128,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
 		},
 	})
 }

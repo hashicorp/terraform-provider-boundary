@@ -57,50 +57,6 @@ resource "boundary_account" "foo" {
 }`, fooAccountDescUpdate)
 )
 
-var (
-	fooAccountAttr = fmt.Sprintf(`
-resource "boundary_auth_method" "foo" {
-	name        = "test"
-	description = "test account"
-	type        = "password"
-	scope_id    = boundary_scope.org1.id
-	depends_on = [boundary_role.org1_admin]
-}
-
-resource "boundary_account" "foo" {
-	name           = "test"
-	description    = "%s"
-	type           = "password"
-	auth_method_id = boundary_auth_method.foo.id
-
-  attributes = {
-    "login_name" = "foo"
-    "password" = "foofoofoo"
-	}
-}`, fooAccountDesc)
-
-	fooAccountAttrUpdate = fmt.Sprintf(`
-resource "boundary_auth_method" "foo" {
-	name        = "test"
-	description = "test account"
-	type        = "password"
-	scope_id    = boundary_scope.org1.id
-	depends_on = [boundary_role.org1_admin]
-}
-
-resource "boundary_account" "foo" {
-	name           = "test"
-	description    = "%s"
-	type           = "password"
-	auth_method_id = boundary_auth_method.foo.id
-
-  attributes = {
-    "login_name" = "fooUpdate"
-    "password" = "foofoofooUpdate"
-	}
-}`, fooAccountDescUpdate)
-)
-
 func TestAccAccountBase(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
@@ -142,54 +98,6 @@ func TestAccAccountBase(t *testing.T) {
 	})
 }
 
-func TestAccAccountBaseAttr(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-
-	var provider *schema.Provider
-
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider),
-		Steps: []resource.TestStep{
-			{
-				// create
-				Config: testConfig(url, fooOrg, fooAccountAttr),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDesc),
-					resource.TestCheckResourceAttr("boundary_account.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "type", "password"),
-					testAccCheckAccountAttrSet(
-						provider,
-						"boundary_account.foo",
-						map[string]interface{}{
-							"login_name": "foo"}),
-
-					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
-				),
-			},
-			importStep("boundary_account.foo", "password"),
-			{
-				// update
-				Config: testConfig(url, fooOrg, fooAccountAttrUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDescUpdate),
-					resource.TestCheckResourceAttr("boundary_account.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "type", "password"),
-					testAccCheckAccountAttrSet(
-						provider,
-						"boundary_account.foo",
-						map[string]interface{}{
-							"login_name": "fooUpdate"}),
-
-					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
-				),
-			},
-			importStep("boundary_account.foo", "password"),
-		},
-	})
-}
 func testAccCheckAccountResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -238,33 +146,5 @@ func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provi
 			}
 		}
 		return nil
-	}
-}
-
-func testAccCheckAccountAttrSet(testProvider *schema.Provider, resourceName string, attrs map[string]interface{}) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("account resource not found: %s", resourceName)
-		}
-
-		id := rs.Primary.ID
-		if id == "" {
-			return fmt.Errorf("account resource ID is not set")
-		}
-
-		md := testProvider.Meta().(*metaData)
-		aClient := accounts.NewClient(md.client)
-
-		ar, err := aClient.Read(context.Background(), id)
-		if err != nil {
-			return fmt.Errorf("Got an error when reading account %q: %v", id, err)
-		}
-
-		if fmt.Sprint(ar.Item.Attributes) == fmt.Sprint(attrs) {
-			return nil
-		}
-
-		return fmt.Errorf("attrs not equal, got %+v, want %+v\n", ar.Item.Attributes, attrs)
 	}
 }

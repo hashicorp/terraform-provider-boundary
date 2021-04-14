@@ -10,10 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	authmethodAttributesKey = "attributes"
-)
-
 func resourceAuthMethod() *schema.Resource {
 	return &schema.Resource{
 		Description: "The auth method resource allows you to configure a Boundary auth_method.",
@@ -54,15 +50,6 @@ func resourceAuthMethod() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			authmethodAttributesKey: {
-				Description: "Arbitrary attributes map for auth method configuration.",
-				Type:        schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Optional: true,
-				Computed: true,
-			},
 			authmethodMinLoginNameLengthKey: {
 				Description: "The minimum login name length.",
 				Type:        schema.TypeInt,
@@ -86,11 +73,6 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(TypeKey, raw["type"])
-
-	if attrsVal, ok := raw["attributes"]; ok {
-		d.Set(authmethodAttributesKey, attrsVal.(map[string]interface{}))
-	}
-
 	d.SetId(raw["id"].(string))
 }
 
@@ -119,10 +101,6 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if descVal, ok := d.GetOk(DescriptionKey); ok {
 		opts = append(opts, authmethods.WithDescription(descVal.(string)))
-	}
-
-	if attrs, ok := d.GetOk(authmethodAttributesKey); ok {
-		opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
 	}
 
 	// TODO(malnick) - deprecate
@@ -188,12 +166,6 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		opts = append(opts, authmethods.DefaultDescription())
 		if descVal, ok := d.GetOk(DescriptionKey); ok {
 			opts = append(opts, authmethods.WithDescription(descVal.(string)))
-		}
-	}
-
-	if d.HasChange(authmethodAttributesKey) {
-		if attrs, ok := d.GetOk(authmethodAttributesKey); ok {
-			opts = append(opts, authmethods.WithAttributes(attrs.(map[string]interface{})))
 		}
 	}
 
