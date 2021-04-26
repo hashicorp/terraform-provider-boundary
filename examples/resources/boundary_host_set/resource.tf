@@ -35,6 +35,7 @@ resource "boundary_host" "2" {
 
 resource "boundary_host_set" "web" {
   host_catalog_id = boundary_host_catalog.static.id
+  type            = "static"
   host_ids = [
     boundary_host.1.id,
     boundary_host.2.id,

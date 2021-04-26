@@ -51,10 +51,10 @@ resource "boundary_user" "bar" {
 }
 
 resource "boundary_role" "example" {
-  name        = "My role"
-  description = "My first role!"
-  principals  = [boundary_user.foo.id, boundary_user.bar.id]
-  scope_id    = boundary_scope.org.id
+  name          = "My role"
+  description   = "My first role!"
+  principal_ids = [boundary_user.foo.id, boundary_user.bar.id]
+  scope_id      = boundary_scope.org.id
 }
 ```
 
@@ -76,11 +76,11 @@ resource "boundary_user" "readonly" {
 }
 
 resource "boundary_role" "readonly" {
-  name        = "readonly"
-  description = "A readonly role"
-  principals  = [boundary_user.readonly.id]
-  grants      = ["id=*;action=read"]
-  scope_id    = boundary_scope.org.id
+  name          = "readonly"
+  description   = "A readonly role"
+  principal_ids = [boundary_user.readonly.id]
+  grants        = ["id=*;type=*;actions=read"]
+  scope_id      = boundary_scope.org.id
 }
 ```
 
@@ -109,11 +109,11 @@ resource "boundary_user" "readonly" {
 }
 
 resource "boundary_role" "readonly" {
-  name        = "readonly"
-  description = "A readonly role"
-  principals  = [boundary_user.readonly.id]
-  grants      = ["id=*;action=read"]
-  scope_id    = boundary_scope.project.id
+  name          = "readonly"
+  description   = "A readonly role"
+  principal_ids = [boundary_user.readonly.id]
+  grants        = ["id=*;type=*;actions=read"]
+  scope_id      = boundary_scope.project.id
 }
 ```
 

@@ -13,9 +13,16 @@ resource "boundary_scope" "project" {
   auto_create_admin_role = true
 }
 
-resource "boundary_host" "example" {
-  name        = "example_host"
-  description = "My first host!"
-  address     = "10.0.0.1"
+resource "boundary_host_catalog" "static" {
+  name        = "My catalog"
+  description = "My first host catalog!"
+  type        = "static"
   scope_id    = boundary_scope.project.id
+}
+
+resource "boundary_host" "example" {
+  name            = "example_host"
+  description     = "My first host!"
+  address         = "10.0.0.1"
+  host_catalog_id = boundary_host_catalog.static.id
 }
