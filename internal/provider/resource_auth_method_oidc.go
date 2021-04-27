@@ -127,7 +127,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Computed:    true,
 			},
 			authmethodOidcStateKey: {
-				Description: "The current state of the auth method.",
+				Description: "Can be one of 'inactive', 'active-private', or 'active-public'. Currently automatically set to active-public.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
@@ -222,6 +222,8 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 
 	opts := []authmethods.Option{}
 
+	opts = append(opts, authmethods.WithAutomaticVersioning(true))
+
 	if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
 		opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
 	}
@@ -292,9 +294,20 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("nil auth method after create")
 	}
 
+	amid := amcr.GetResponse().Map["id"].(string)
+
+	// auto set to active-public state
+	amcsr, err = amClient.ChangeState(ctx, amid, 0, "active-public", opts...)
+	if err != nil {
+		return diag.Errorf("%v", err)
+	}
+
+	//amcr.GetResponse().Map["state"] = amcsr.GetResponse().Map["state"].(string)
+
+	// update scope when set to primary
 	if p, ok := d.GetOk(authmethodOidcIsPrimaryAuthMethodForScope); ok {
 		if p.(bool) {
-			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, amcr.GetResponse().Map["id"].(string), meta); err != nil {
+			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, amid, meta); err != nil {
 				return diag.Errorf("%v", err)
 			}
 
