@@ -25,8 +25,8 @@ require (
 	github.com/hashicorp/go-kms-wrapping v0.6.1
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
-	github.com/hashicorp/terraform-plugin-docs v0.4.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.5.0
+	github.com/hashicorp/terraform-plugin-docs v0.3.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.6.1
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
@@ -35,7 +35,4 @@ require (
 	github.com/prometheus/common v0.14.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c // indirect
-	google.golang.org/appengine v1.6.7 // indirect
-	gopkg.in/ini.v1 v1.62.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
