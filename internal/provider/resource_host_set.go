@@ -65,13 +65,24 @@ func resourceHostset() *schema.Resource {
 	}
 }
 
-func setFromHostSetResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
-	d.Set(TypeKey, raw["type"])
-	d.Set(hostsetHostIdsKey, raw["host_ids"])
+func setFromHostSetResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(HostCatalogIdKey, raw["host_catalog_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
+	if err := d.Set(hostsetHostIdsKey, raw["host_ids"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -143,7 +154,9 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		raw = hsshr.GetResponse().Map
 	}
 
-	setFromHostSetResponseMap(d, raw)
+	if err := setFromHostSetResponseMap(d, raw); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -164,7 +177,9 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("host set nil after read")
 	}
 
-	setFromHostSetResponseMap(d, hsrr.GetResponse().Map)
+	if err := setFromHostSetResponseMap(d, hsrr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -206,10 +221,14 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// The above call may not actually happen, so we use d.Id() and automatic
@@ -226,7 +245,9 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("error updating hosts in host set: %v", err)
 		}
-		d.Set(hostsetHostIdsKey, hostIds)
+		if err := d.Set(hostsetHostIdsKey, hostIds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

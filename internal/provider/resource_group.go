@@ -58,12 +58,21 @@ func resourceGroup() *schema.Resource {
 	}
 }
 
-func setFromGroupResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(groupMemberIdsKey, raw["member_ids"])
+func setFromGroupResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(groupMemberIdsKey, raw["member_ids"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -117,7 +126,9 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		raw = gcsmr.GetResponse().Map
 	}
 
-	setFromGroupResponseMap(d, raw)
+	if err := setFromGroupResponseMap(d, raw); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -138,7 +149,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("group nil after read")
 	}
 
-	setFromGroupResponseMap(d, g.GetResponse().Map)
+	if err := setFromGroupResponseMap(d, g.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -180,10 +193,16 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
+
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
+
 	}
 
 	// The above call may not actually happen, so we use d.Id() and automatic
@@ -201,7 +220,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.Errorf("error updating members in group: %v", err)
 		}
-		d.Set(groupMemberIdsKey, memberIds)
+		if err := d.Set(groupMemberIdsKey, memberIds); err != nil {
+			return diag.FromErr(err)
+		}
+
 	}
 
 	return nil

@@ -133,11 +133,11 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 		am := authmethods.NewClient(md.client)
 
-		at, err := am.Authenticate(ctx, authMethodId.(string), credentials)
+		at, err := am.Authenticate(ctx, authMethodId.(string), "login", credentials)
 		if err != nil {
 			return err
 		}
-		md.client.SetToken(at.Item.Token)
+		md.client.SetToken(at.Attributes["token"].(string))
 
 	default:
 		return errors.New("no suitable auth method information found")
@@ -154,7 +154,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		}
 
 		if url, ok := d.GetOk("addr"); ok {
-			client.SetAddr(url.(string))
+			if err := client.SetAddr(url.(string)); err != nil {
+				return nil, diag.FromErr(err)
+			}
 		}
 		if client.Addr() == "" {
 			return nil, diag.Errorf(`"no valid address could be determined from "addr" or "BOUNDARY_ADDR" env var`)

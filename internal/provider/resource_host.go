@@ -63,21 +63,32 @@ func resourceHost() *schema.Resource {
 	}
 }
 
-func setFromHostResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(HostCatalogIdKey, raw["host_catalog_id"])
-	d.Set(TypeKey, raw["type"])
+func setFromHostResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(HostCatalogIdKey, raw["host_catalog_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
 
 	switch raw["type"].(string) {
 	case hostTypeStatic:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
-			d.Set(hostAddressKey, attrs["address"])
+			if err := d.Set(hostAddressKey, attrs["address"]); err != nil {
+				return err
+			}
 		}
 	}
 
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -140,7 +151,9 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("host nil after create")
 	}
 
-	setFromHostResponseMap(d, hcr.GetResponse().Map)
+	if err := setFromHostResponseMap(d, hcr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -161,7 +174,9 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("host nil after read")
 	}
 
-	setFromHostResponseMap(d, hrr.GetResponse().Map)
+	if err := setFromHostResponseMap(d, hrr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -219,13 +234,19 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(hostAddressKey) {
-		d.Set(hostAddressKey, *address)
+		if err := d.Set(hostAddressKey, *address); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil
