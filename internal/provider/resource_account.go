@@ -66,7 +66,11 @@ func resourceAccount() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Id() == ""
+					if d.Id() == "" {
+						// This is a new resource do not suppress password diff
+						return false
+					}
+					return true
 				},
 			},
 		},
