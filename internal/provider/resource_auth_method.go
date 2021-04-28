@@ -73,11 +73,19 @@ func resourceAuthMethod() *schema.Resource {
 	}
 }
 
-func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
+func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
 
 	switch raw["type"].(string) {
 	case authmethodTypePassword:
@@ -86,15 +94,20 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 
 			minLoginNameLength := attrs["min_login_name_length"].(json.Number)
 			minLoginNameLengthInt, _ := minLoginNameLength.Int64()
-			d.Set(authmethodMinLoginNameLengthKey, int(minLoginNameLengthInt))
+			if err := d.Set(authmethodMinLoginNameLengthKey, int(minLoginNameLengthInt)); err != nil {
+				return err
+			}
 
 			minPasswordLength := attrs["min_password_length"].(json.Number)
 			minPasswordLengthInt, _ := minPasswordLength.Int64()
-			d.Set(authmethodMinPasswordLengthKey, int(minPasswordLengthInt))
+			if err := d.Set(authmethodMinPasswordLengthKey, int(minPasswordLengthInt)); err != nil {
+				return err
+			}
 		}
 	}
 
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -161,7 +174,9 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("nil auth method after create")
 	}
 
-	setFromAuthMethodResponseMap(d, amcr.GetResponse().Map)
+	if err := setFromAuthMethodResponseMap(d, amcr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -182,7 +197,9 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("auth method nil after read")
 	}
 
-	setFromAuthMethodResponseMap(d, amrr.GetResponse().Map)
+	if err := setFromAuthMethodResponseMap(d, amrr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -256,16 +273,24 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(authmethodMinLoginNameLengthKey) {
-		d.Set(authmethodMinLoginNameLengthKey, minLoginNameLength)
+		if err := d.Set(authmethodMinLoginNameLengthKey, minLoginNameLength); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(authmethodMinPasswordLengthKey) {
-		d.Set(authmethodMinPasswordLengthKey, minPasswordLength)
+		if err := d.Set(authmethodMinPasswordLengthKey, minPasswordLength); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

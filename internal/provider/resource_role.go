@@ -77,14 +77,27 @@ func resourceRole() *schema.Resource {
 	}
 }
 
-func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(rolePrincipalIdsKey, raw["principal_ids"])
-	d.Set(roleGrantStringsKey, raw["grant_strings"])
-	d.Set(roleGrantScopeIdKey, raw["grant_scope_id"])
+func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(rolePrincipalIdsKey, raw["principal_ids"]); err != nil {
+		return err
+	}
+	if err := d.Set(roleGrantStringsKey, raw["grant_strings"]); err != nil {
+		return err
+	}
+	if err := d.Set(roleGrantScopeIdKey, raw["grant_scope_id"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -173,7 +186,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		raw = tsgr.GetResponse().Map
 	}
 
-	setFromRoleResponseMap(d, raw)
+	if err := setFromRoleResponseMap(d, raw); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -194,7 +209,9 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("role nil after read")
 	}
 
-	setFromRoleResponseMap(d, trr.GetResponse().Map)
+	if err := setFromRoleResponseMap(d, trr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -247,13 +264,19 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(roleGrantScopeIdKey) {
-		d.Set(roleGrantScopeIdKey, grantScopeId)
+		if err := d.Set(roleGrantScopeIdKey, grantScopeId); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if d.HasChange(roleGrantStringsKey) {
@@ -268,7 +291,9 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if err != nil {
 			return diag.Errorf("error updating grant strings on role: %v", err)
 		}
-		d.Set(roleGrantStringsKey, grantStrings)
+		if err := d.Set(roleGrantStringsKey, grantStrings); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if d.HasChange(rolePrincipalIdsKey) {
@@ -283,7 +308,9 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if err != nil {
 			return diag.Errorf("error updating grant strings on role: %v", err)
 		}
-		d.Set(rolePrincipalIdsKey, principalIds)
+		if err := d.Set(rolePrincipalIdsKey, principalIds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

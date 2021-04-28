@@ -91,15 +91,31 @@ func resourceTarget() *schema.Resource {
 	}
 }
 
-func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
-	d.Set(targetHostSetIdsKey, raw["host_set_ids"])
-	d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"])
-	d.Set(targetSessionConnectionLimitKey, raw["session_connection_limit"])
-	d.Set(targetWorkerFilterKey, raw["worker_filter"])
+func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetHostSetIdsKey, raw["host_set_ids"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetSessionConnectionLimitKey, raw["session_connection_limit"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetWorkerFilterKey, raw["worker_filter"]); err != nil {
+		return err
+	}
 
 	switch raw["type"].(string) {
 	case targetTypeTcp:
@@ -107,12 +123,15 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 			attrs := attrsVal.(map[string]interface{})
 			if defPort, ok := attrs["default_port"].(json.Number); ok {
 				defPortInt, _ := defPort.Int64()
-				d.Set(targetDefaultPortKey, int(defPortInt))
+				if err := d.Set(targetDefaultPortKey, int(defPortInt)); err != nil {
+					return err
+				}
 			}
 		}
 	}
 
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -212,7 +231,9 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		raw = tur.GetResponse().Map
 	}
 
-	setFromTargetResponseMap(d, raw)
+	if err := setFromTargetResponseMap(d, raw); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -233,7 +254,9 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("target nil after read")
 	}
 
-	setFromTargetResponseMap(d, trr.GetResponse().Map)
+	if err := setFromTargetResponseMap(d, trr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -328,22 +351,34 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(targetDefaultPortKey) {
-		d.Set(targetDefaultPortKey, defaultPort)
+		if err := d.Set(targetDefaultPortKey, defaultPort); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(targetSessionMaxSecondsKey) {
-		d.Set(targetSessionMaxSecondsKey, sessionMaxSeconds)
+		if err := d.Set(targetSessionMaxSecondsKey, sessionMaxSeconds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(targetSessionConnectionLimitKey) {
-		d.Set(targetSessionConnectionLimitKey, sessionConnectionLimit)
+		if err := d.Set(targetSessionConnectionLimitKey, sessionConnectionLimit); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(targetWorkerFilterKey) {
-		d.Set(targetWorkerFilterKey, workerFilter)
+		if err := d.Set(targetWorkerFilterKey, workerFilter); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// The above call may not actually happen, so we use d.Id() and automatic
@@ -360,7 +395,9 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return diag.Errorf("error updating host sets in target: %v", err)
 		}
-		d.Set(targetHostSetIdsKey, hostSetIds)
+		if err := d.Set(targetHostSetIdsKey, hostSetIds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil
