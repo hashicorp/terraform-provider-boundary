@@ -20,6 +20,7 @@ require (
 	github.com/hashicorp/boundary v0.2.0
 	github.com/hashicorp/boundary/api v0.0.9
 	github.com/hashicorp/boundary/sdk v0.0.4
+	github.com/hashicorp/cap v0.0.0-20210408110729-0dd65efe5473
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.6.1
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
@@ -34,7 +35,4 @@ require (
 	github.com/prometheus/common v0.14.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c // indirect
-	google.golang.org/appengine v1.6.7 // indirect
-	gopkg.in/ini.v1 v1.62.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

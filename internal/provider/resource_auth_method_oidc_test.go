@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -44,14 +45,14 @@ tYIMds5s2lIqVwOoyzpBEOjWBhUThH+aZu1A5c7Cb7s1eLSRX70=
 )
 
 var (
-	fooAuthMethodOidc = fmt.Sprintf(`
+	fooAuthMethodOidc = `
 resource "boundary_auth_method_oidc" "foo" {
 	name        = "test"
 	description = "%s"
 	scope_id    = boundary_scope.org1.id
 	depends_on  = [boundary_role.org1_admin]
 
-  issuer            = "https://test.com"
+  issuer            = "%s"
   client_id         = "foo_id"
   client_secret     = "foo_secret"
   max_age           = 10
@@ -62,9 +63,10 @@ resource "boundary_auth_method_oidc" "foo" {
 EOT
   ]
 	allowed_audiences = ["foo_aud"]
-}`, fooAuthMethodOidcDesc, fooAuthMethodOidcCaCerts)
+	signing_algorithms = ["ES256"]
+}`
 
-	fooAuthMethodOidcUpdate = fmt.Sprintf(`
+	fooAuthMethodOidcUpdate = `
 resource "boundary_auth_method_oidc" "foo" {
 	name                 = "test"
 	description          = "%s"
@@ -83,13 +85,22 @@ resource "boundary_auth_method_oidc" "foo" {
 EOT
   ]
   allowed_audiences = ["foo_aud_update"]
-}`, fooAuthMethodOidcDescUpdate, fooAuthMethodOidcCaCerts)
+  signing_algorithms = ["RS256"]
+
+  // we need to disable this validatin, since the updated issuer isn't discoverable
+  disable_discovered_config_validation = true 
+}`
 )
 
 func TestAccAuthMethodOidc(t *testing.T) {
+	tp := oidc.StartTestProvider(t)
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
+
+	tpCert := strings.TrimSpace(tp.CACert())
+	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
+	updateConfig := fmt.Sprintf(fooAuthMethodOidcUpdate, fooAuthMethodOidcDescUpdate, fooAuthMethodOidcCaCerts)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -98,14 +109,15 @@ func TestAccAuthMethodOidc(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooAuthMethodOidc),
+				Config: testConfig(url, fooOrg, createConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test.com"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, tp.Addr()),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{tpCert}),
 					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
@@ -114,7 +126,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooAuthMethodOidcUpdate),
+				Config: testConfig(url, fooOrg, updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
