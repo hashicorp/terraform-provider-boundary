@@ -105,7 +105,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 			},
 			authmethodOidcDisableDiscoveredConfigValidationKey: {
 				Description: "Disables validation logic ensuring that the OIDC provider's information from its discovery endpoint matches the information here. The validation is only performed at create or update time.",
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Optional:    true,
 			},
 			authmethodOidcMaxAgeKey: {
@@ -115,8 +115,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 			},
 			authmethodOidcSigningAlgorithmsKey: {
 				Description: "Allowed signing algorithms for the provider's issued tokens.",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
 			},
 
 			// OIDC specific immutable and computed parameters
@@ -187,7 +190,6 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		sometimesString := []string{
 			authmethodOidcApiUrlPrefixKey,
 			authmethodOidcCallbackUrlKey,
-			authmethodOidcDisableDiscoveredConfigValidationKey,
 		}
 
 		for _, k := range sometimesString {
@@ -202,6 +204,10 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 
 		if p, ok := attrs[authmethodOidcIsPrimaryAuthMethodForScope]; ok {
 			d.Set(authmethodOidcIsPrimaryAuthMethodForScope, p.(bool))
+		}
+
+		if p, ok := attrs[authmethodOidcDisableDiscoveredConfigValidationKey]; ok {
+			d.Set(authmethodOidcDisableDiscoveredConfigValidationKey, p.(bool))
 		}
 	}
 
@@ -297,12 +303,10 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 	amid := amcr.GetResponse().Map["id"].(string)
 
 	// auto set to active-public state
-	amcsr, err = amClient.ChangeState(ctx, amid, 0, "active-public", opts...)
+	_, err = amClient.ChangeState(ctx, amid, 0, "active-public", authmethods.WithAutomaticVersioning(true))
 	if err != nil {
 		return diag.Errorf("%v", err)
 	}
-
-	//amcr.GetResponse().Map["state"] = amcsr.GetResponse().Map["state"].(string)
 
 	// update scope when set to primary
 	if p, ok := d.GetOk(authmethodOidcIsPrimaryAuthMethodForScope); ok {
@@ -424,7 +428,11 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 	if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
 		if algos, ok := d.GetOk(authmethodOidcSigningAlgorithmsKey); ok {
-			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algos.([]string)))
+			var signingAlgs []string
+			for _, alg := range algos.([]interface{}) {
+				signingAlgs = append(signingAlgs, alg.(string))
+			}
+			opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(signingAlgs))
 		}
 	}
 	if d.HasChange(authmethodOidcApiUrlPrefixKey) {
