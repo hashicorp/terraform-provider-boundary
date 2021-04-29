@@ -299,6 +299,11 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 	if amcr == nil {
 		return diag.Errorf("nil auth method after create")
 	}
+	// need to update state is create was successful to avoid loosing state if the change state or update
+	// scope step that follows errors out
+	if err := setFromOidcAuthMethodResponseMap(d, amcr.GetResponse().Map); err != nil {
+		return diag.Errorf("%v", err)
+	}
 
 	amid := amcr.GetResponse().Map["id"].(string)
 
