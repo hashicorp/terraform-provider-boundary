@@ -326,11 +326,19 @@ func resourceAuthMethod() *schema.Resource {
 	}
 }
 
-func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
+func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
 	return nil
 }
