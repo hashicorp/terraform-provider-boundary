@@ -69,16 +69,25 @@ func resourceScope() *schema.Resource {
 	}
 }
 
-func setFromScopeResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
+func setFromScopeResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
 	if d.Id() == "global" {
-		d.Set(ScopeIdKey, "global")
+		if err := d.Set(ScopeIdKey, "global"); err != nil {
+			return err
+		}
 	} else {
-		d.Set(ScopeIdKey, raw["scope_id"])
+		if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+			return err
+		}
 	}
 
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -137,7 +146,9 @@ func resourceScopeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("scope nil after create")
 	}
 
-	setFromScopeResponseMap(d, scr.GetResponse().Map)
+	if err := setFromScopeResponseMap(d, scr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -158,7 +169,9 @@ func resourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("scope nil after read")
 	}
 
-	setFromScopeResponseMap(d, srr.GetResponse().Map)
+	if err := setFromScopeResponseMap(d, srr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -200,10 +213,14 @@ func resourceScopeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

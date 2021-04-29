@@ -158,7 +158,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		}
 
 		if url, ok := d.GetOk("addr"); ok {
-			client.SetAddr(url.(string))
+			if err := client.SetAddr(url.(string)); err != nil {
+				return nil, diag.FromErr(err)
+			}
 		}
 		if client.Addr() == "" {
 			return nil, diag.Errorf(`"no valid address could be determined from "addr" or "BOUNDARY_ADDR" env var`)

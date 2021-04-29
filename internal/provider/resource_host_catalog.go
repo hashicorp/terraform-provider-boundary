@@ -60,12 +60,21 @@ func resourceHostCatalog() *schema.Resource {
 	}
 }
 
-func setFromHostCatalogResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
+func setFromHostCatalogResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -114,7 +123,9 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("nil host catalog after create")
 	}
 
-	setFromHostCatalogResponseMap(d, hccr.GetResponse().Map)
+	if err := setFromHostCatalogResponseMap(d, hccr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -135,7 +146,9 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	setFromHostCatalogResponseMap(d, hcrr.GetResponse().Map)
+	if err := setFromHostCatalogResponseMap(d, hcrr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -177,10 +190,14 @@ func resourceHostCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

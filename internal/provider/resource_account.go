@@ -74,22 +74,33 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func setFromAccountResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(AuthMethodIdKey, raw["auth_method_id"])
-	d.Set(TypeKey, raw["type"])
+func setFromAccountResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(AuthMethodIdKey, raw["auth_method_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
 
 	// TODO(malnick) - remove after deprecation cycle in favor of attributes
 	switch raw["type"].(string) {
 	case accountTypePassword:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
-			d.Set(accountLoginNameKey, attrs["login_name"])
+			if err := d.Set(accountLoginNameKey, attrs["login_name"]); err != nil {
+				return err
+			}
 		}
 	}
 
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -132,7 +143,9 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("nil account after create")
 	}
 
-	setFromAccountResponseMap(d, acr.GetResponse().Map)
+	if err := setFromAccountResponseMap(d, acr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -153,7 +166,9 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("account nil after read")
 	}
 
-	setFromAccountResponseMap(d, arr.GetResponse().Map)
+	if err := setFromAccountResponseMap(d, arr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }

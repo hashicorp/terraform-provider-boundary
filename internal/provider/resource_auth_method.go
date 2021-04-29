@@ -68,12 +68,21 @@ func resourceAuthMethod() *schema.Resource {
 	}
 }
 
-func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(TypeKey, raw["type"])
+func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(TypeKey, raw["type"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -123,7 +132,9 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("nil auth method after create")
 	}
 
-	setFromAuthMethodResponseMap(d, amcr.GetResponse().Map)
+	if err := setFromAuthMethodResponseMap(d, amcr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -144,7 +155,9 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("auth method nil after read")
 	}
 
-	setFromAuthMethodResponseMap(d, amrr.GetResponse().Map)
+	if err := setFromAuthMethodResponseMap(d, amrr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
