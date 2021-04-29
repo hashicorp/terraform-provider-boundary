@@ -56,12 +56,21 @@ func resourceUser() *schema.Resource {
 	}
 }
 
-func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) {
-	d.Set(NameKey, raw["name"])
-	d.Set(DescriptionKey, raw["description"])
-	d.Set(ScopeIdKey, raw["scope_id"])
-	d.Set(userAccountIDsKey, raw["account_ids"])
+func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+		return err
+	}
+	if err := d.Set(userAccountIDsKey, raw["account_ids"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
+	return nil
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -115,7 +124,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		raw = usrac.GetResponse().Map
 	}
 
-	setFromUserResponseMap(d, raw)
+	if err := setFromUserResponseMap(d, raw); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -136,7 +147,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("user nil after read")
 	}
 
-	setFromUserResponseMap(d, urr.GetResponse().Map)
+	if err := setFromUserResponseMap(d, urr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -178,10 +191,14 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange(NameKey) {
-		d.Set(NameKey, name)
+		if err := d.Set(NameKey, name); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if d.HasChange(DescriptionKey) {
-		d.Set(DescriptionKey, desc)
+		if err := d.Set(DescriptionKey, desc); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if d.HasChange(userAccountIDsKey) {
@@ -197,7 +214,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if err != nil {
 			return diag.Errorf("error updating accounts on user: %v", err)
 		}
-		d.Set(userAccountIDsKey, accountIds)
+		if err := d.Set(userAccountIDsKey, accountIds); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return nil

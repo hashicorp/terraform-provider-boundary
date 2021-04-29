@@ -7,8 +7,8 @@ jobs:
     steps:
     - add_ssh_keys:
         fingerprints:
-        # hashicorp-ci github "machine" user, for private modules
-          - "c6:96:98:82:dc:04:6c:39:dd:ac:83:05:e3:15:1c:98"
+        # hc-github-team-secure-boundary github user,TF_ACC=1 ~/.go/bin/go test ./... -v $(TESTARGS) -timeout 120m to read private modules
+          - "d4:7f:b2:f7:6f:4d:e7:21:cc:d2:b7:6a:8b:68:e6:d4"
     - checkout
     - run:
         name: "Run Acceptance Tests"
