@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-boundary
 
-go 1.15
+go 1.16
 
 require (
 	cloud.google.com/go v0.68.0 // indirect
