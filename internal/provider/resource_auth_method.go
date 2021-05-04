@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -80,6 +81,25 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 	}
 	if err := d.Set(TypeKey, raw["type"]); err != nil {
 		return err
+	}
+
+	switch raw["type"].(string) {
+	case authmethodTypePassword:
+		if attrsVal, ok := raw["attributes"]; ok {
+			attrs := attrsVal.(map[string]interface{})
+
+			minLoginNameLength := attrs["min_login_name_length"].(json.Number)
+			minLoginNameLengthInt, _ := minLoginNameLength.Int64()
+			if err := d.Set(authmethodMinLoginNameLengthKey, int(minLoginNameLengthInt)); err != nil {
+				return err
+			}
+
+			minPasswordLength := attrs["min_password_length"].(json.Number)
+			minPasswordLengthInt, _ := minPasswordLength.Int64()
+			if err := d.Set(authmethodMinPasswordLengthKey, int(minPasswordLengthInt)); err != nil {
+				return err
+			}
+		}
 	}
 	d.SetId(raw["id"].(string))
 	return nil
