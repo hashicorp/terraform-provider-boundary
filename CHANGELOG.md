@@ -1,3 +1,10 @@
+## 1.0.2 (May 05, 2021)
+
+* Adds OIDC account resource
+([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/105))
+* Adds OIDC auth method resource
+([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/105))
+
 ## 1.0.1 (February 02, 2021)
 
 ### New and Improved
