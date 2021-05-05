@@ -85,6 +85,7 @@ func setFromScopeResponseMap(d *schema.ResourceData, raw map[string]interface{})
 			return err
 		}
 	}
+
 	d.SetId(raw["id"].(string))
 	return nil
 }

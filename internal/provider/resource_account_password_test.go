@@ -15,12 +15,12 @@ import (
 )
 
 const (
-	fooAccountDesc       = "test account"
-	fooAccountDescUpdate = "test account update"
+	fooAccountPasswordDesc       = "test account"
+	fooAccountPasswordDescUpdate = "test account update"
 )
 
 var (
-	fooAccount = fmt.Sprintf(`
+	fooAccountPassword = fmt.Sprintf(`
 resource "boundary_auth_method" "foo" {
 	name        = "test"
 	description = "test account"
@@ -29,16 +29,16 @@ resource "boundary_auth_method" "foo" {
 	depends_on = [boundary_role.org1_admin]
 }
 
-resource "boundary_account" "foo" {
+resource "boundary_account_password" "foo" {
 	name           = "test"
 	description    = "%s"
 	type           = "password"
 	login_name     = "foo"
 	password       = "foofoofoo"
 	auth_method_id = boundary_auth_method.foo.id
-}`, fooAccountDesc)
+}`, fooAccountPasswordDesc)
 
-	fooAccountUpdate = fmt.Sprintf(`
+	fooAccountPasswordUpdate = fmt.Sprintf(`
 resource "boundary_auth_method" "foo" {
 	name        = "test"
 	description = "test account"
@@ -47,17 +47,17 @@ resource "boundary_auth_method" "foo" {
 	depends_on = [boundary_role.org1_admin]
 }
 
-resource "boundary_account" "foo" {
+resource "boundary_account_password" "foo" {
 	name           = "test"
 	description    = "%s"
 	type           = "password"
 	login_name     = "foo"
 	password       = "foofoofoo"
 	auth_method_id = boundary_auth_method.foo.id
-}`, fooAccountDescUpdate)
+}`, fooAccountPasswordDescUpdate)
 )
 
-func TestAccAccountBase(t *testing.T) {
+func TestAccAccount(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
@@ -66,39 +66,39 @@ func TestAccAccountBase(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckAccountPasswordResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooAccount),
+				Config: testConfig(url, fooOrg, fooAccountPassword),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDesc),
-					resource.TestCheckResourceAttr("boundary_account.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "type", "password"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "login_name", "foo"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "password", "foofoofoo"),
-					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDesc),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "type", "password"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "login_name", "foo"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "password", "foofoofoo"),
+					testAccCheckAccountPasswordResourceExists(provider, "boundary_account_password.foo"),
 				),
 			},
-			importStep("boundary_account.foo", "password"),
+			importStep("boundary_account_password.foo", "password"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooAccountUpdate),
+				Config: testConfig(url, fooOrg, fooAccountPasswordUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDescUpdate),
-					resource.TestCheckResourceAttr("boundary_account.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "type", "password"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "login_name", "foo"),
-					resource.TestCheckResourceAttr("boundary_account.foo", "password", "foofoofoo"),
-					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDescUpdate),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "type", "password"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "login_name", "foo"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "password", "foofoofoo"),
+					testAccCheckAccountPasswordResourceExists(provider, "boundary_account_password.foo"),
 				),
 			},
-			importStep("boundary_account.foo", "password"),
+			importStep("boundary_account_password.foo", "password"),
 		},
 	})
 }
 
-func testAccCheckAccountResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckAccountPasswordResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -122,7 +122,7 @@ func testAccCheckAccountResourceExists(testProvider *schema.Provider, name strin
 	}
 }
 
-func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckAccountPasswordResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -131,7 +131,7 @@ func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provi
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_account":
+			case "boundary_account_password":
 				id := rs.Primary.ID
 
 				amClient := accounts.NewClient(md.client)

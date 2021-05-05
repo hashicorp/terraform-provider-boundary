@@ -15,33 +15,31 @@ import (
 )
 
 const (
-	fooBaseAuthMethodDesc       = "test auth method"
-	fooBaseAuthMethodDescUpdate = "test auth method update"
+	fooAuthMethodDesc       = "test auth method"
+	fooAuthMethodDescUpdate = "test auth method update"
 )
 
-// TODO(malnick) - remove these tests after deprecating use of password params in
-// favor of attributes map
 var (
-	fooBaseAuthMethod = fmt.Sprintf(`
-resource "boundary_auth_method" "foo" {
+	fooAuthMethod = fmt.Sprintf(`
+resource "boundary_auth_method_password" "foo" {
 	name        = "test"
 	description = "%s"
 	type        = "password"
 	scope_id    = boundary_scope.org1.id
 	depends_on  = [boundary_role.org1_admin]
-}`, fooBaseAuthMethodDesc)
+}`, fooAuthMethodDesc)
 
-	fooBaseAuthMethodUpdate = fmt.Sprintf(`
-resource "boundary_auth_method" "foo" {
+	fooAuthMethodUpdate = fmt.Sprintf(`
+resource "boundary_auth_method_password" "foo" {
 	name        = "test"
 	description = "%s"
 	type        = "password"
 	scope_id    = boundary_scope.org1.id
 	depends_on  = [boundary_role.org1_admin]
-}`, fooBaseAuthMethodDescUpdate)
+}`, fooAuthMethodDescUpdate)
 )
 
-func TestAccBaseAuthMethodPassword(t *testing.T) {
+func TestAccAuthMethodPassword(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
@@ -53,32 +51,31 @@ func TestAccBaseAuthMethodPassword(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooBaseAuthMethod),
+				Config: testConfig(url, fooOrg, fooAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooBaseAuthMethodDesc),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "type", "password"),
-					testAccCheckBaseAuthMethodResourceExists(provider, "boundary_auth_method.foo"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),
 				),
 			},
-			importStep("boundary_auth_method.foo"),
-
+			importStep("boundary_auth_method_password.foo"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooBaseAuthMethodUpdate),
+				Config: testConfig(url, fooOrg, fooAuthMethodUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooBaseAuthMethodDescUpdate),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method.foo", "type", "password"),
-					testAccCheckBaseAuthMethodResourceExists(provider, "boundary_auth_method.foo"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDescUpdate),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),
 				),
 			},
-			importStep("boundary_auth_method.foo"),
+			importStep("boundary_auth_method_password.foo"),
 		},
 	})
 }
 
-func testAccCheckBaseAuthMethodResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckAuthMethodResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -102,7 +99,7 @@ func testAccCheckBaseAuthMethodResourceExists(testProvider *schema.Provider, nam
 	}
 }
 
-func testAccCheckBaseAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -111,7 +108,7 @@ func testAccCheckBaseAuthMethodResourceDestroy(t *testing.T, testProvider *schem
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_auth_method":
+			case "boundary_auth_method_password":
 				id := rs.Primary.ID
 
 				amClient := authmethods.NewClient(md.client)
