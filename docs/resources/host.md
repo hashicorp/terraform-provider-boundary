@@ -6,7 +6,7 @@ description: |-
   The host resource allows you to configure a Boundary static host. Hosts are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host.
 ---
 
-# Resource `boundary_host`
+# boundary_host (Resource)
 
 The host resource allows you to configure a Boundary static host. Hosts are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host.
 
@@ -50,7 +50,7 @@ resource "boundary_host" "example" {
 - **description** (String) The host description.
 - **name** (String) The host name. Defaults to the resource name.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the host.
 
