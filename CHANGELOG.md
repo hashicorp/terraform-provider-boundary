@@ -1,4 +1,4 @@
-## 1.0.2 (May 05, 2021)
+## 1.0.2 (Unreleased)
 
 * Adds OIDC account resource
 ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/105))
