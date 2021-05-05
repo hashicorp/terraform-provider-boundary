@@ -45,7 +45,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			IDKey: {
-				Description: "The ID of the account.",
+				Description: "The ID of the auth method.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -186,16 +186,12 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 			d.Set(authmethodOidcMaxAgeKey, maxAgeInt)
 		}
 
-		// these are set sometimes
-		sometimesString := []string{
-			authmethodOidcApiUrlPrefixKey,
-			authmethodOidcCallbackUrlKey,
+		if val, ok := attrs[authmethodOidcApiUrlPrefixKey]; ok {
+			d.Set(authmethodOidcApiUrlPrefixKey, val.(string))
 		}
 
-		for _, k := range sometimesString {
-			if val, ok := attrs[k]; ok {
-				d.Set(k, val.(string))
-			}
+		if val, ok := attrs[authmethodOidcCallbackUrlKey]; ok {
+			d.Set(authmethodOidcCallbackUrlKey, val.(string))
 		}
 
 		if val, ok := attrs[authmethodOidcSigningAlgorithmsKey]; ok {
