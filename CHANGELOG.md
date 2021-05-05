@@ -1,3 +1,11 @@
+## 1.0.2 (Unreleased)
+
+* Adds OIDC account resource
+([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/105))
+* Adds OIDC auth method resource
+([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/105))
+* Deprecates fields on `resource_auth_method` that will be replaced in the future with generic `attributes` attribute.
+
 ## 1.0.1 (February 02, 2021)
 
 ### New and Improved

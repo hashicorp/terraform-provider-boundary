@@ -6,7 +6,7 @@ description: |-
   The auth method resource allows you to configure a Boundary auth_method.
 ---
 
-# Resource `boundary_auth_method`
+# boundary_auth_method (Resource)
 
 The auth method resource allows you to configure a Boundary auth_method.
 
@@ -38,11 +38,11 @@ resource "boundary_auth_method" "password" {
 ### Optional
 
 - **description** (String) The auth method description.
-- **min_login_name_length** (Number) The minimum login name length.
-- **min_password_length** (Number) The minimum password length.
+- **min_login_name_length** (Number, Deprecated) The minimum login name length.
+- **min_password_length** (Number, Deprecated) The minimum password length.
 - **name** (String) The auth method name. Defaults to the resource name.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the account.
 

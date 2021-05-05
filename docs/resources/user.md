@@ -6,7 +6,7 @@ description: |-
   The user resource allows you to configure a Boundary user.
 ---
 
-# Resource `boundary_user`
+# boundary_user (Resource)
 
 The user resource allows you to configure a Boundary user.
 
@@ -54,7 +54,7 @@ resource "boundary_user" "jeff" {
 - **description** (String) The user description.
 - **name** (String) The username. Defaults to the resource name.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the user.
 
