@@ -17,7 +17,7 @@ require (
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.2.0
+	github.com/hashicorp/boundary v0.2.1
 	github.com/hashicorp/boundary/api v0.0.10
 	github.com/hashicorp/boundary/sdk v0.0.4
 	github.com/hashicorp/cap v0.0.0-20210408110729-0dd65efe5473
