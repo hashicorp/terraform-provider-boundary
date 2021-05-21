@@ -24,6 +24,7 @@ const (
 	authmethodOidcDisableDiscoveredConfigValidationKey = "disable_discovered_config_validation"
 	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"
 	authmethodOidcIsPrimaryAuthMethodForScope          = "is_primary_for_scope"
+	authmethodOidcAccountClaimMapsKey                  = "account_claim_maps"
 
 	// computed-only parameters
 	authmethodOidcCallbackUrlKey      = "callback_url"
@@ -121,6 +122,16 @@ func resourceAuthMethodOidc() *schema.Resource {
 				},
 				Optional: true,
 			},
+			authmethodOidcAccountClaimMapsKey: {
+				Description: "Account claim maps for the to_claim of sub.",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				// per comment in https://github.com/hashicorp/boundary/pull/1186
+				ForceNew: true,
+			},
 
 			// OIDC specific immutable and computed parameters
 			authmethodOidcClientSecretHmacKey: {
@@ -205,6 +216,10 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		if p, ok := attrs[authmethodOidcDisableDiscoveredConfigValidationKey]; ok {
 			d.Set(authmethodOidcDisableDiscoveredConfigValidationKey, p.(bool))
 		}
+
+		if p, ok := attrs[authmethodOidcAccountClaimMapsKey]; ok {
+			d.Set(authmethodOidcAccountClaimMapsKey, p.([]interface{}))
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -265,6 +280,14 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 			algoList = append(algoList, c.(string))
 		}
 		opts = append(opts, authmethods.WithOidcAuthMethodSigningAlgorithms(algoList))
+	}
+
+	if claims, ok := d.GetOk(authmethodOidcAccountClaimMapsKey); ok {
+		cList := []string{}
+		for _, c := range claims.([]interface{}) {
+			cList = append(cList, c.(string))
+		}
+		opts = append(opts, authmethods.WithOidcAuthMethodAccountClaimMaps(cList))
 	}
 
 	nameVal, ok := d.GetOk(NameKey)
