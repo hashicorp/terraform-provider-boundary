@@ -63,7 +63,8 @@ resource "boundary_auth_method_oidc" "foo" {
 EOT
   ]
 	allowed_audiences = ["foo_aud"]
-	signing_algorithms = ["ES256"]
+	signing_algorithms = ["RS256"]
+	account_claim_maps = ["oid=sub", "display_name=name"]
 }`
 
 	fooAuthMethodOidcUpdate = `
@@ -86,6 +87,7 @@ EOT
   ]
   allowed_audiences = ["foo_aud_update"]
   signing_algorithms = ["RS256"]
+  account_claim_maps = ["oid=sub", "display_name=name"]
 
   // we need to disable this validatin, since the updated issuer isn't discoverable
   disable_discovered_config_validation = true 
@@ -117,7 +119,8 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
 					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{tpCert}),
 					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"RS256"}),
+					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAccountClaimMapsKey, []string{"oid=sub", "display_name=name"}),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
 					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
