@@ -25,6 +25,7 @@ const (
 	authmethodOidcSigningAlgorithmsKey                 = "signing_algorithms"
 	authmethodOidcIsPrimaryAuthMethodForScope          = "is_primary_for_scope"
 	authmethodOidcAccountClaimMapsKey                  = "account_claim_maps"
+	authmethodOidcClaimsScopesKey                      = "claims_scopes"
 
 	// computed-only parameters
 	authmethodOidcCallbackUrlKey      = "callback_url"
@@ -132,6 +133,14 @@ func resourceAuthMethodOidc() *schema.Resource {
 				// per comment in https://github.com/hashicorp/boundary/pull/1186
 				ForceNew: true,
 			},
+			authmethodOidcClaimsScopesKey: {
+				Description: "Claims scopes.",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
 
 			// OIDC specific immutable and computed parameters
 			authmethodOidcClientSecretHmacKey: {
@@ -220,6 +229,10 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		if p, ok := attrs[authmethodOidcAccountClaimMapsKey]; ok {
 			d.Set(authmethodOidcAccountClaimMapsKey, p.([]interface{}))
 		}
+
+		if p, ok := attrs[authmethodOidcClaimsScopesKey]; ok {
+			d.Set(authmethodOidcClaimsScopesKey, p.([]interface{}))
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -288,6 +301,14 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 			cList = append(cList, c.(string))
 		}
 		opts = append(opts, authmethods.WithOidcAuthMethodAccountClaimMaps(cList))
+	}
+
+	if claimsScopes, ok := d.GetOk(authmethodOidcClaimsScopesKey); ok {
+		cList := []string{}
+		for _, c := range claimsScopes.([]interface{}) {
+			cList = append(cList, c.(string))
+		}
+		opts = append(opts, authmethods.WithOidcAuthMethodClaimsScopes(cList))
 	}
 
 	nameVal, ok := d.GetOk(NameKey)
@@ -490,6 +511,15 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange(authmethodOidcDisableDiscoveredConfigValidationKey) {
 		if val, ok := d.GetOk(authmethodOidcDisableDiscoveredConfigValidationKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodDisableDiscoveredConfigValidation(val.(bool)))
+		}
+	}
+	if d.HasChange(authmethodOidcClaimsScopesKey) {
+		if val, ok := d.GetOk(authmethodOidcClaimsScopesKey); ok {
+			claimsScopes := []string{}
+			for _, c := range val.([]interface{}) {
+				claimsScopes = append(claimsScopes, c.(string))
+			}
+			opts = append(opts, authmethods.WithOidcAuthMethodClaimsScopes(claimsScopes))
 		}
 	}
 
