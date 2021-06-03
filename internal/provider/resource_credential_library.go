@@ -11,7 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const credentialStoreIdKey = "credential_store_id"
+const (
+	credentialStoreIdKey                     = "credential_store_id"
+	credentialLibraryVaultHttpMethodKey      = "credential_library_vault_http_method"
+	credentialLibraryVaultHttpRequestBodyKey = "credential_library_vault_http_request_body"
+	credentialLibraryVaultPathKey            = "credential_library_vault_path"
+)
 
 func resourceCredentialLibrary() *schema.Resource {
 	return &schema.Resource{
@@ -59,6 +64,21 @@ func resourceCredentialLibrary() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			credentialLibraryVaultHttpMethodKey: {
+				Description: "The HTTP method to use when contacting Vault",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			credentialLibraryVaultHttpRequestBodyKey: {
+				Description: "The raw string to use in HTTP request to Vault",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			credentialLibraryVaultPathKey: {
+				Description: "The Vault path to query when using Vault as the credential library.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -77,6 +97,15 @@ func setFromCredentialLibraryResponseMap(d *schema.ResourceData, raw map[string]
 		return err
 	}
 	if err := d.Set(credentialStoreIdKey, raw[credentialStoreIdKey]); err != nil {
+		return err
+	}
+	if err := d.Set(credentialLibraryVaultHttpMethodKey, raw[credentialLibraryVaultHttpMethodKey]); err != nil {
+		return err
+	}
+	if err := d.Set(credentialLibraryVaultHttpRequestBodyKey, raw[credentialLibraryVaultHttpRequestBodyKey]); err != nil {
+		return err
+	}
+	if err := d.Set(credentialLibraryVaultPathKey, raw[credentialLibraryVaultPathKey]); err != nil {
 		return err
 	}
 
@@ -100,6 +129,18 @@ func resourceCredentialLibraryCreate(ctx context.Context, d *schema.ResourceData
 
 	if v, ok := d.GetOk(ScopeIdKey); ok {
 		opts = append(opts, credentiallibraries.WithScope(v.(string)))
+	}
+
+	if v, ok := d.GetOk(credentialLibraryVaultHttpMethodKey); ok {
+		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpMethod(v.(string)))
+	}
+
+	if v, ok := d.GetOk(credentialLibraryVaultHttpRequestBodyKey); ok {
+		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpRequestBody(v.(string)))
+	}
+
+	if v, ok := d.GetOk(credentialLibraryVaultPathKey); ok {
+		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryVaultPath(v.(string)))
 	}
 
 	var credentialstoreid string
@@ -171,6 +212,8 @@ func resourceCredentialLibraryUpdate(ctx context.Context, d *schema.ResourceData
 			opts = append(opts, credentiallibraries.WithDescription(descVal.(string)))
 		}
 	}
+
+	// TODO (malnick) set vault cred library settings here
 
 	// TODO (malnick) If credential store ID does not force new, add update logic here...
 
