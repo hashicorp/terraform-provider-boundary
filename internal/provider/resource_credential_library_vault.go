@@ -13,9 +13,9 @@ import (
 
 const (
 	credentialStoreIdKey                     = "credential_store_id"
-	credentialLibraryVaultHttpMethodKey      = "credential_library_vault_http_method"
-	credentialLibraryVaultHttpRequestBodyKey = "credential_library_vault_http_request_body"
-	credentialLibraryVaultPathKey            = "credential_library_vault_path"
+	credentialLibraryVaultHttpMethodKey      = "vault_http_method"
+	credentialLibraryVaultHttpRequestBodyKey = "vault_http_request_body"
+	credentialLibraryVaultPathKey            = "vault_path"
 )
 
 func resourceCredentialLibraryVault() *schema.Resource {
@@ -46,6 +46,7 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			//TODO (malnick) do we need type here? if so what value?
 			TypeKey: {
 				Description: "The resource type.",
 				Type:        schema.TypeString,

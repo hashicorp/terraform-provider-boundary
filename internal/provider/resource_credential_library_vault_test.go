@@ -18,7 +18,6 @@ const (
 	vaultCredResc            = "boundary_credential_library_vault.example"
 	vaultCredLibName         = "foo"
 	vaultCredLibDesc         = "the foo"
-	vaultCredLibScope        = "boundary_scope.org1.id"
 	vaultCredLibStoreId      = ""
 	vaultCredLibPath         = "/foo/bar"
 	vaultCredLibMethod       = "POST"
@@ -30,15 +29,12 @@ var vaultCredLibResource = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
   name  = "%s"
 	description = "%s"
-	scope_id = "%s"
 	credential_store_id = "%s"
-
   vault_path = "%s"
   vault_http_method = "%s"
-  vault_request_body = "%s"
+  vault_http_request_body = "%s"
 }`, vaultCredLibName,
 	vaultCredLibDesc,
-	vaultCredLibScope,
 	vaultCredLibStoreId,
 	vaultCredLibPath,
 	vaultCredLibMethod,
@@ -48,15 +44,12 @@ var vaultCredLibResourceUpdate = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
   name  = "%s"
 	description = "%s"
-	scope_id = "%s"
 	credential_store_id = "%s"
-
   vault_path = "%s"
   vault_http_method = "%s"
-  vault_request_body = "%s"
+  vault_http_request_body = "%s"
 }`, vaultCredLibName+vaultCredLibStringUpdate,
 	vaultCredLibDesc+vaultCredLibStringUpdate,
-	vaultCredLibScope,
 	vaultCredLibStoreId,
 	vaultCredLibPath,
 	vaultCredLibMethod,
