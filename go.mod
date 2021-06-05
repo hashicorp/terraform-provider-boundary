@@ -19,8 +19,8 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/go-bindata/go-bindata/v3 v3.1.3 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.2.4-0.20210603144421-3cd1a7601894
-	github.com/hashicorp/boundary/api v0.0.11-0.20210603144421-3cd1a7601894
+	github.com/hashicorp/boundary v0.2.4-0.20210604204856-ae32c058ce91
+	github.com/hashicorp/boundary/api v0.0.11-0.20210604204856-ae32c058ce91
 	github.com/hashicorp/boundary/sdk v0.0.4
 	github.com/hashicorp/cap v0.0.0-20210518163718-e72205e8eaae
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
