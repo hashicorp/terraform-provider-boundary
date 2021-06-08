@@ -46,13 +46,6 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			//TODO (malnick) do we need type here? if so what value?
-			TypeKey: {
-				Description: "The resource type.",
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-			},
 			credentialStoreIdKey: {
 				Description: "The ID of the credential store that this library belongs to.",
 				Type:        schema.TypeString,
@@ -83,9 +76,6 @@ func setFromVaultCredentialLibraryResponseMap(d *schema.ResourceData, raw map[st
 		return err
 	}
 	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
-		return err
-	}
-	if err := d.Set(TypeKey, raw[TypeKey]); err != nil {
 		return err
 	}
 	if err := d.Set(credentialStoreIdKey, raw[credentialStoreIdKey]); err != nil {
