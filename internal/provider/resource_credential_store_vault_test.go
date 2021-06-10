@@ -33,6 +33,7 @@ var vaultCredStoreResource = fmt.Sprintf(`
 resource "boundary_credential_store_vault" "example" {
   name  = "%s"
 	description = "%s"
+	scope = boundary_scope.global.id
 	address = "%s"
 	namespace = "%s"
 	vault_ca_cert = "%s"
@@ -56,6 +57,7 @@ var vaultCredStoreResourceUpdate = fmt.Sprintf(`
 resource "boundary_credential_store_vault" "example" {
   name  = "%s"
 	description = "%s"
+	scope = boundary_scope.global.id
 	address = "%s"
 	namespace = "%s"
 	vault_ca_cert = "%s"
@@ -89,11 +91,16 @@ func TestAccCredentialStoreVault(t *testing.T) {
 				// create
 				Config: testConfig(url, fooOrg, vaultCredStoreResource),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(vaultCredResc, "name", vaultCredStoreName),
-					resource.TestCheckResourceAttr(vaultCredResc, "description", vaultCredStoreDesc),
-					resource.TestCheckResourceAttr(vaultCredResc, "vault_path", vaultCredStorePath),
-					resource.TestCheckResourceAttr(vaultCredResc, "vault_http_method", vaultCredStoreMethod),
-					resource.TestCheckResourceAttr(vaultCredResc, "vault_http_request_body", vaultCredStoreRequestBody),
+					resource.TestCheckResourceAttr(vaultCredResc, NameKey, vaultCredStoreName),
+					resource.TestCheckResourceAttr(vaultCredResc, DescriptionKey, vaultCredStoreDesc),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultAddress, vaultCredStoreAddr),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultNamespace, vaultCredStoreNamespace),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultCaCert, vaultCredStoreCaCert),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultTlsServerName, vaultCredStoreTlsServerName),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultTlsSkipVerify, vaultCredStoreTlsSkipVerify),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultToken, vaultCredStoreToken),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificate, vaultCredStoreClientCert),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificateKey, vaultCredStoreClientCertKey),
 
 					testAccCheckCredentialStoreVaultResourceExists(provider, vaultCredResc),
 				),

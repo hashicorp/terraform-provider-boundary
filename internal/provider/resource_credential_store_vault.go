@@ -22,9 +22,12 @@ const (
 	credentialStoreVaultClientCertificate        = "client_certificate"
 	credentialStoreVaultClientCertificateKey     = "client_certificate_key"
 	credentialStoreVaultClientCertificateKeyHmac = "client_certificate_key_hmac"
+	credentialStoreVaultScope                    = "scope"
+	credentialStoreType                          = "vault"
 )
 
 var storeVaultAttrs = []string{
+	credentialStoreVaultScope,
 	credentialStoreVaultAddress,
 	credentialStoreVaultNamespace,
 	credentialStoreVaultCaCert,
@@ -63,6 +66,11 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Description: "The Vault credential store description.",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			credentialStoreVaultScope: {
+				Description: "The scope for this credential store",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
 			credentialStoreVaultAddress: {
 				Description: "The address to Vault server",
@@ -173,17 +181,17 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 		opts = append(opts, credentialstores.WithVaultCredentialStoreVaultToken(v.(string)))
 	}
 
-	var credentialstoreid string
-	cid, ok := d.GetOk(credentialStoreIdKey)
+	var scope string
+	gotScope, ok := d.GetOk(credentialStoreIdKey)
 	if ok {
-		credentialstoreid = cid.(string)
+		scope = gotScope.(string)
 	} else {
-		return diag.Errorf("no credential store ID is set")
+		return diag.Errorf("no scope is set")
 	}
 
 	client := credentialstores.NewClient(md.client)
 
-	cr, err := client.Create(ctx, credentialstoreid, opts...)
+	cr, err := client.Create(ctx, credentialStoreType, scope, opts...)
 	if err != nil {
 		return diag.Errorf("error creating credential store: %v", err)
 	}
