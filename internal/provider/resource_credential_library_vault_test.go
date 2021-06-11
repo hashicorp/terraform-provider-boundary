@@ -29,7 +29,7 @@ var vaultCredLibResource = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
   name  = "%s"
 	description = "%s"
-	credential_store_id = "%s"
+	credential_store_id = boundary_credential_store_vault.example.id 
   vault_path = "%s"
   vault_http_method = "%s"
   vault_http_request_body = "%s"
@@ -44,7 +44,7 @@ var vaultCredLibResourceUpdate = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
   name  = "%s"
 	description = "%s"
-	credential_store_id = "%s"
+  credential_store_id = boundary_credential_store_vault.example.id
   vault_path = "%s"
   vault_http_method = "%s"
   vault_http_request_body = "%s"
@@ -67,7 +67,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, vaultCredLibResource),
+				Config: testConfig(url, fooOrg, firstProjectFoo, vaultCredStoreResource, vaultCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredResc, "name", vaultCredLibName),
 					resource.TestCheckResourceAttr(vaultCredResc, "description", vaultCredLibDesc),
@@ -82,7 +82,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 
 			{
 				// update
-				Config: testConfig(url, fooOrg, vaultCredLibResource),
+				Config: testConfig(url, fooOrg, firstProjectFoo, vaultCredStoreResource, vaultCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredResc, "name", vaultCredLibName+vaultCredLibStringUpdate),
 					resource.TestCheckResourceAttr(vaultCredResc, "description", vaultCredLibDesc+vaultCredLibStringUpdate),
