@@ -22,12 +22,12 @@ const (
 	credentialStoreVaultClientCertificate        = "client_certificate"
 	credentialStoreVaultClientCertificateKey     = "client_certificate_key"
 	credentialStoreVaultClientCertificateKeyHmac = "client_certificate_key_hmac"
-	credentialStoreVaultScope                    = "scope"
+	credentialStoreVaultScopeId                  = "scope_id"
 	credentialStoreType                          = "vault"
 )
 
 var storeVaultAttrs = []string{
-	credentialStoreVaultScope,
+	credentialStoreVaultScopeId,
 	credentialStoreVaultAddress,
 	credentialStoreVaultNamespace,
 	credentialStoreVaultCaCert,
@@ -67,7 +67,7 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultScope: {
+			credentialStoreVaultScopeId: {
 				Description: "The scope for this credential store",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -182,7 +182,7 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	var scope string
-	gotScope, ok := d.GetOk(credentialStoreIdKey)
+	gotScope, ok := d.GetOk(credentialStoreVaultScopeId)
 	if ok {
 		scope = gotScope.(string)
 	} else {
@@ -256,6 +256,62 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 		v, ok := d.GetOk(credentialStoreVaultAddress)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreAddress(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultNamespace) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreNamespace())
+		v, ok := d.GetOk(credentialStoreVaultNamespace)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreNamespace(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultCaCert) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreCaCert())
+		v, ok := d.GetOk(credentialStoreVaultCaCert)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreCaCert(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultTlsServerName) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreTlsServerName())
+		v, ok := d.GetOk(credentialStoreVaultTlsServerName)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreTlsServerName(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultTlsSkipVerify) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreTlsSkipVerify())
+		v, ok := d.GetOk(credentialStoreVaultTlsSkipVerify)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreTlsSkipVerify(v.(bool)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultToken) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreToken())
+		v, ok := d.GetOk(credentialStoreVaultToken)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreToken(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultClientCertificate) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreClientCertificate())
+		v, ok := d.GetOk(credentialStoreVaultClientCertificate)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificate(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultClientCertificateKey) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreClientCertificateKey())
+		v, ok := d.GetOk(credentialStoreVaultClientCertificateKey)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(v.(string)))
 		}
 	}
 

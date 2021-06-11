@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/credentiallibraries"
+	"github.com/hashicorp/boundary/api/credentialstores"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -33,12 +33,12 @@ var vaultCredStoreResource = fmt.Sprintf(`
 resource "boundary_credential_store_vault" "example" {
   name  = "%s"
 	description = "%s"
-	scope = boundary_scope.global.id
+	scope_id = boundary_scope.proj1.id
 	address = "%s"
 	namespace = "%s"
 	vault_ca_cert = "%s"
 	tls_server_name = "%s"
-	tls_skip_verify = "%s"
+	tls_skip_verify = "%v"
 	vault_token = "%s"
 	client_certificate = "%s"
 	client_certificate_key = "%s"
@@ -57,12 +57,12 @@ var vaultCredStoreResourceUpdate = fmt.Sprintf(`
 resource "boundary_credential_store_vault" "example" {
   name  = "%s"
 	description = "%s"
-	scope = boundary_scope.global.id
+  scope_id = boundary_scope.proj1.id
 	address = "%s"
 	namespace = "%s"
 	vault_ca_cert = "%s"
 	tls_server_name = "%s"
-	tls_skip_verify = "%s"
+	tls_skip_verify = "%v"
 	vault_token = "%s"
 	client_certificate = "%s"
 	client_certificate_key = "%s"
@@ -89,7 +89,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, vaultCredStoreResource),
+				Config: testConfig(url, fooOrg, firstProjectFoo, vaultCredStoreResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredResc, NameKey, vaultCredStoreName),
 					resource.TestCheckResourceAttr(vaultCredResc, DescriptionKey, vaultCredStoreDesc),
@@ -97,10 +97,9 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultNamespace, vaultCredStoreNamespace),
 					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultCaCert, vaultCredStoreCaCert),
 					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultTlsServerName, vaultCredStoreTlsServerName),
-					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultTlsSkipVerify, vaultCredStoreTlsSkipVerify),
 					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultToken, vaultCredStoreToken),
 					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificate, vaultCredStoreClientCert),
-					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificateKey, vaultCredStoreClientCertKey),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificateKey, vaultCredStoreClientKey),
 
 					testAccCheckCredentialStoreVaultResourceExists(provider, vaultCredResc),
 				),
@@ -109,14 +108,17 @@ func TestAccCredentialStoreVault(t *testing.T) {
 
 			{
 				// update
-				Config: testConfig(url, fooOrg, vaultCredStoreResource),
+				Config: testConfig(url, fooOrg, firstProjectFoo, vaultCredStoreResource),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(vaultCredResc, "name", vaultCredStoreName+vaultCredLibStringUpdate),
-					resource.TestCheckResourceAttr(vaultCredResc, "description", vaultCredStoreDesc+vaultCredLibStringUpdate),
-					resource.TestCheckResourceAttr(vaultCredResc, "vault_path", vaultCredStorePath),
-					resource.TestCheckResourceAttr(vaultCredResc, "vault_http_method", vaultCredStoreMethod),
-					resource.TestCheckResourceAttr(vaultCredResc, "vault_http_request_body", vaultCredStoreRequestBody),
-
+					resource.TestCheckResourceAttr(vaultCredResc, NameKey, vaultCredStoreName),
+					resource.TestCheckResourceAttr(vaultCredResc, DescriptionKey, vaultCredStoreDesc),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultAddress, vaultCredStoreAddr),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultNamespace, vaultCredStoreNamespace),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultCaCert, vaultCredStoreCaCert),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultTlsServerName, vaultCredStoreTlsServerName),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultToken, vaultCredStoreToken),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificate, vaultCredStoreClientCert),
+					resource.TestCheckResourceAttr(vaultCredResc, credentialStoreVaultClientCertificateKey, vaultCredStoreClientKey),
 					testAccCheckCredentialStoreVaultResourceExists(provider, vaultCredResc),
 				),
 			},
@@ -139,7 +141,7 @@ func testAccCheckCredentialStoreVaultResourceExists(testProvider *schema.Provide
 
 		md := testProvider.Meta().(*metaData)
 
-		c := credentiallibraries.NewClient(md.client)
+		c := credentialstores.NewClient(md.client)
 
 		if _, err := c.Read(context.Background(), id); err != nil {
 			return fmt.Errorf("Got an error reading %q: %w", id, err)
@@ -161,7 +163,7 @@ func testAccCheckCredentialStoreVaultResourceDestroy(t *testing.T, testProvider 
 			case "boundary_credential_library_vault":
 				id := rs.Primary.ID
 
-				c := credentiallibraries.NewClient(md.client)
+				c := credentialstores.NewClient(md.client)
 
 				_, err := c.Read(context.Background(), id)
 				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
