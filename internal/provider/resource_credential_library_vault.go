@@ -13,10 +13,16 @@ import (
 
 const (
 	credentialStoreIdKey                     = "credential_store_id"
-	credentialLibraryVaultHttpMethodKey      = "vault_http_method"
-	credentialLibraryVaultHttpRequestBodyKey = "vault_http_request_body"
+	credentialLibraryVaultHttpMethodKey      = "http_method"
+	credentialLibraryVaultHttpRequestBodyKey = "http_request_body"
 	credentialLibraryVaultPathKey            = "vault_path"
 )
+
+var libraryVaultAttrs = []string{
+	credentialLibraryVaultHttpMethodKey,
+	credentialLibraryVaultHttpRequestBodyKey,
+	credentialLibraryVaultPathKey,
+}
 
 func resourceCredentialLibraryVault() *schema.Resource {
 	return &schema.Resource{
@@ -65,7 +71,7 @@ func resourceCredentialLibraryVault() *schema.Resource {
 			credentialLibraryVaultPathKey: {
 				Description: "The Vault path to query",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 		},
 	}
@@ -81,14 +87,14 @@ func setFromVaultCredentialLibraryResponseMap(d *schema.ResourceData, raw map[st
 	if err := d.Set(credentialStoreIdKey, raw[credentialStoreIdKey]); err != nil {
 		return err
 	}
-	if err := d.Set(credentialLibraryVaultHttpMethodKey, raw[credentialLibraryVaultHttpMethodKey]); err != nil {
-		return err
-	}
-	if err := d.Set(credentialLibraryVaultHttpRequestBodyKey, raw[credentialLibraryVaultHttpRequestBodyKey]); err != nil {
-		return err
-	}
-	if err := d.Set(credentialLibraryVaultPathKey, raw[credentialLibraryVaultPathKey]); err != nil {
-		return err
+
+	if attrsVal, ok := raw["attributes"]; ok {
+		attrs := attrsVal.(map[string]interface{})
+		for _, v := range libraryVaultAttrs {
+			if err := d.Set(v, attrs[v]); err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -99,39 +105,33 @@ func setFromVaultCredentialLibraryResponseMap(d *schema.ResourceData, raw map[st
 func resourceCredentialLibraryCreateVault(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	opts := []credentiallibraries.Option{}
-
+	var opts []credentiallibraries.Option
 	if v, ok := d.GetOk(NameKey); ok {
 		opts = append(opts, credentiallibraries.WithName(v.(string)))
 	}
-
 	if v, ok := d.GetOk(DescriptionKey); ok {
 		opts = append(opts, credentiallibraries.WithDescription(v.(string)))
 	}
-
 	if v, ok := d.GetOk(credentialLibraryVaultHttpMethodKey); ok {
 		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpMethod(v.(string)))
 	}
-
 	if v, ok := d.GetOk(credentialLibraryVaultHttpRequestBodyKey); ok {
 		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpRequestBody(v.(string)))
 	}
-
 	if v, ok := d.GetOk(credentialLibraryVaultPathKey); ok {
 		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryVaultPath(v.(string)))
 	}
 
-	var credentialstoreid string
+	var credentialStoreId string
 	cid, ok := d.GetOk(credentialStoreIdKey)
 	if ok {
-		credentialstoreid = cid.(string)
+		credentialStoreId = cid.(string)
 	} else {
 		return diag.Errorf("no credential store ID is set")
 	}
 
 	client := credentiallibraries.NewClient(md.client)
-
-	cr, err := client.Create(ctx, credentialstoreid, opts...)
+	cr, err := client.Create(ctx, credentialStoreId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating credential library: %v", err)
 	}
@@ -173,8 +173,7 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 	md := meta.(*metaData)
 	client := credentiallibraries.NewClient(md.client)
 
-	opts := []credentiallibraries.Option{}
-
+	var opts []credentiallibraries.Option
 	if d.HasChange(NameKey) {
 		opts = append(opts, credentiallibraries.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
@@ -182,7 +181,6 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 			opts = append(opts, credentiallibraries.WithName(nameVal.(string)))
 		}
 	}
-
 	if d.HasChange(DescriptionKey) {
 		opts = append(opts, credentiallibraries.DefaultDescription())
 		descVal, ok := d.GetOk(DescriptionKey)
@@ -190,7 +188,6 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 			opts = append(opts, credentiallibraries.WithDescription(descVal.(string)))
 		}
 	}
-
 	if d.HasChange(credentialLibraryVaultHttpMethodKey) {
 		opts = append(opts, credentiallibraries.DefaultVaultCredentialLibraryHttpMethod())
 		v, ok := d.GetOk(credentialLibraryVaultHttpMethodKey)
@@ -198,7 +195,6 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 			opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpMethod(v.(string)))
 		}
 	}
-
 	if d.HasChange(credentialLibraryVaultHttpRequestBodyKey) {
 		opts = append(opts, credentiallibraries.DefaultVaultCredentialLibraryHttpRequestBody())
 		v, ok := d.GetOk(credentialLibraryVaultHttpRequestBodyKey)
@@ -206,7 +202,6 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 			opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpRequestBody(v.(string)))
 		}
 	}
-
 	if d.HasChange(credentialLibraryVaultPathKey) {
 		opts = append(opts, credentiallibraries.DefaultVaultCredentialLibraryVaultPath())
 		v, ok := d.GetOk(credentialLibraryVaultPathKey)
@@ -222,7 +217,9 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 			return diag.Errorf("error updating credential library: %v", err)
 		}
 
-		setFromVaultCredentialLibraryResponseMap(d, aur.GetResponse().Map)
+		if err := setFromVaultCredentialLibraryResponseMap(d, aur.GetResponse().Map); err != nil {
+			return diag.Errorf("error setting credential library from response: %v", err)
+		}
 	}
 
 	return nil

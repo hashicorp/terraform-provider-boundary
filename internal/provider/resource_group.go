@@ -196,13 +196,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err := d.Set(NameKey, name); err != nil {
 			return diag.FromErr(err)
 		}
-
 	}
 	if d.HasChange(DescriptionKey) {
 		if err := d.Set(DescriptionKey, desc); err != nil {
 			return diag.FromErr(err)
 		}
-
 	}
 
 	// The above call may not actually happen, so we use d.Id() and automatic

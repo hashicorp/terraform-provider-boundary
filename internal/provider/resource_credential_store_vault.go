@@ -6,42 +6,38 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentialstores"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
-	credentialStoreVaultAddress                  = "address"
-	credentialStoreVaultNamespace                = "namespace"
-	credentialStoreVaultCaCert                   = "vault_ca_cert"
-	credentialStoreVaultTlsServerName            = "tls_server_name"
-	credentialStoreVaultTlsSkipVerify            = "tls_skip_verify"
-	credentialStoreVaultToken                    = "vault_token"
-	credentialStoreVaultTokenHmac                = "vault_token_hmac"
-	credentialStoreVaultClientCertificate        = "client_certificate"
-	credentialStoreVaultClientCertificateKey     = "client_certificate_key"
-	credentialStoreVaultClientCertificateKeyHmac = "client_certificate_key_hmac"
-	credentialStoreVaultScopeId                  = "scope_id"
-	credentialStoreType                          = "vault"
+	credentialStoreVaultAddressKey                  = "address"
+	credentialStoreVaultNamespaceKey                = "namespace"
+	credentialStoreVaultCaCertKey                   = "ca_cert"
+	credentialStoreVaultTlsServerNameKey            = "tls_server_name"
+	credentialStoreVaultTlsSkipVerifyKey            = "tls_skip_verify"
+	credentialStoreVaultTokenKey                    = "token"
+	credentialStoreVaultTokenHmacKey                = "token_hmac"
+	credentialStoreVaultClientCertificateKey        = "client_certificate"
+	credentialStoreVaultClientCertificateKeyKey     = "client_certificate_key"
+	credentialStoreVaultClientCertificateKeyHmacKey = "client_certificate_key_hmac"
+	credentialStoreType                             = "vault"
 )
 
 var storeVaultAttrs = []string{
-	credentialStoreVaultScopeId,
-	credentialStoreVaultAddress,
-	credentialStoreVaultNamespace,
-	credentialStoreVaultCaCert,
-	credentialStoreVaultTlsServerName,
-	credentialStoreVaultTlsSkipVerify,
-	credentialStoreVaultToken,
-	credentialStoreVaultTokenHmac,
-	credentialStoreVaultClientCertificate,
+	credentialStoreVaultAddressKey,
+	credentialStoreVaultNamespaceKey,
+	credentialStoreVaultCaCertKey,
+	credentialStoreVaultTlsServerNameKey,
+	credentialStoreVaultTlsSkipVerifyKey,
+	credentialStoreVaultTokenHmacKey,
 	credentialStoreVaultClientCertificateKey,
-	credentialStoreVaultClientCertificateKeyHmac}
+	credentialStoreVaultClientCertificateKeyHmacKey,
+}
 
 func resourceCredentialStoreVault() *schema.Resource {
 	return &schema.Resource{
-		Description: "The credential store for Vault resource allows you to configure a Boundary credential library for Vault.",
+		Description: "The credential store for Vault resource allows you to configure a Boundary credential store for Vault.",
 
 		CreateContext: resourceCredentialStoreVaultCreate,
 		ReadContext:   resourceCredentialStoreVaultRead,
@@ -67,60 +63,60 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultScopeId: {
+			ScopeIdKey: {
 				Description: "The scope for this credential store",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
-			credentialStoreVaultAddress: {
+			credentialStoreVaultAddressKey: {
 				Description: "The address to Vault server",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
-			credentialStoreVaultNamespace: {
+			credentialStoreVaultNamespaceKey: {
 				Description: "The namespace within Vault to use",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultCaCert: {
+			credentialStoreVaultCaCertKey: {
 				Description: "The Vault CA certificate to use",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultTlsServerName: {
+			credentialStoreVaultTlsServerNameKey: {
 				Description: "The Vault TLS server name",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultTlsSkipVerify: {
+			credentialStoreVaultTlsSkipVerifyKey: {
 				Description: "Whether or not to skip TLS verification",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
-			credentialStoreVaultToken: {
+			credentialStoreVaultTokenKey: {
 				Description: "The Vault token",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
-			credentialStoreVaultTokenHmac: {
-				Description: "The Vault token HMAC",
+			credentialStoreVaultTokenHmacKey: {
+				Description: "The Vault token hmac",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 			},
-			credentialStoreVaultClientCertificate: {
+			credentialStoreVaultClientCertificateKey: {
 				Description: "The Vault client certificate",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultClientCertificateKey: {
+			credentialStoreVaultClientCertificateKeyKey: {
 				Description: "The Vault client certificate key",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			credentialStoreVaultClientCertificateKeyHmac: {
-				Description: "The Vault client certificate key HMAC",
+			credentialStoreVaultClientCertificateKeyHmacKey: {
+				Description: "The Vault client certificate key hmac",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}
@@ -133,10 +129,16 @@ func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[stri
 	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
 		return err
 	}
+	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
+		return err
+	}
 
-	for _, v := range storeVaultAttrs {
-		if err := d.Set(v, raw[v]); err != nil {
-			return err
+	if attrsVal, ok := raw["attributes"]; ok {
+		attrs := attrsVal.(map[string]interface{})
+		for _, v := range storeVaultAttrs {
+			if err := d.Set(v, attrs[v]); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -148,41 +150,40 @@ func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[stri
 func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	opts := []credentialstores.Option{}
-
+	var opts []credentialstores.Option
 	if v, ok := d.GetOk(NameKey); ok {
 		opts = append(opts, credentialstores.WithName(v.(string)))
 	}
 	if v, ok := d.GetOk(DescriptionKey); ok {
 		opts = append(opts, credentialstores.WithDescription(v.(string)))
 	}
-	if v, ok := d.GetOk(credentialStoreVaultAddress); ok {
+	if v, ok := d.GetOk(credentialStoreVaultAddressKey); ok {
 		opts = append(opts, credentialstores.WithVaultCredentialStoreAddress(v.(string)))
 	}
-	if v, ok := d.GetOk(credentialStoreVaultClientCertificate); ok {
-		opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificate(v.(string)))
-	}
-	if v, ok := d.GetOk(credentialStoreVaultClientCertificateKey); ok {
-		opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(v.(string)))
-	}
-	if v, ok := d.GetOk(credentialStoreVaultNamespace); ok {
+	if v, ok := d.GetOk(credentialStoreVaultNamespaceKey); ok {
 		opts = append(opts, credentialstores.WithVaultCredentialStoreNamespace(v.(string)))
 	}
-	if v, ok := d.GetOk(credentialStoreVaultTlsServerName); ok {
+	if v, ok := d.GetOk(credentialStoreVaultCaCertKey); ok {
+		opts = append(opts, credentialstores.WithVaultCredentialStoreCaCert(v.(string)))
+	}
+	if v, ok := d.GetOk(credentialStoreVaultTlsServerNameKey); ok {
 		opts = append(opts, credentialstores.WithVaultCredentialStoreTlsServerName(v.(string)))
 	}
-	if v, ok := d.GetOk(credentialStoreVaultTlsSkipVerify); ok {
+	if v, ok := d.GetOk(credentialStoreVaultTlsSkipVerifyKey); ok {
 		opts = append(opts, credentialstores.WithVaultCredentialStoreTlsSkipVerify(v.(bool)))
 	}
-	if v, ok := d.GetOk(credentialStoreVaultCaCert); ok {
-		opts = append(opts, credentialstores.WithVaultCredentialStoreVaultCaCert(v.(string)))
+	if v, ok := d.GetOk(credentialStoreVaultClientCertificateKey); ok {
+		opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificate(v.(string)))
 	}
-	if v, ok := d.GetOk(credentialStoreVaultToken); ok {
-		opts = append(opts, credentialstores.WithVaultCredentialStoreVaultToken(v.(string)))
+	if v, ok := d.GetOk(credentialStoreVaultClientCertificateKeyKey); ok {
+		opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(v.(string)))
+	}
+	if v, ok := d.GetOk(credentialStoreVaultTokenKey); ok {
+		opts = append(opts, credentialstores.WithVaultCredentialStoreToken(v.(string)))
 	}
 
 	var scope string
-	gotScope, ok := d.GetOk(credentialStoreVaultScopeId)
+	gotScope, ok := d.GetOk(ScopeIdKey)
 	if ok {
 		scope = gotScope.(string)
 	} else {
@@ -190,7 +191,6 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	client := credentialstores.NewClient(md.client)
-
 	cr, err := client.Create(ctx, credentialStoreType, scope, opts...)
 	if err != nil {
 		return diag.Errorf("error creating credential store: %v", err)
@@ -200,7 +200,7 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map); err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error generating credential store from response map: %v", err)
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func resourceCredentialStoreVaultRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map); err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("error generating credential store from response map: %v", err)
 	}
 
 	return nil
@@ -233,8 +233,7 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 	md := meta.(*metaData)
 	client := credentialstores.NewClient(md.client)
 
-	opts := []credentialstores.Option{}
-
+	var opts []credentialstores.Option
 	if d.HasChange(NameKey) {
 		opts = append(opts, credentialstores.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
@@ -251,65 +250,65 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultAddress) {
+	if d.HasChange(credentialStoreVaultAddressKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreAddress())
-		v, ok := d.GetOk(credentialStoreVaultAddress)
+		v, ok := d.GetOk(credentialStoreVaultAddressKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreAddress(v.(string)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultNamespace) {
+	if d.HasChange(credentialStoreVaultNamespaceKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreNamespace())
-		v, ok := d.GetOk(credentialStoreVaultNamespace)
+		v, ok := d.GetOk(credentialStoreVaultNamespaceKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreNamespace(v.(string)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultCaCert) {
+	if d.HasChange(credentialStoreVaultCaCertKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreCaCert())
-		v, ok := d.GetOk(credentialStoreVaultCaCert)
+		v, ok := d.GetOk(credentialStoreVaultCaCertKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreCaCert(v.(string)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultTlsServerName) {
+	if d.HasChange(credentialStoreVaultTlsServerNameKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreTlsServerName())
-		v, ok := d.GetOk(credentialStoreVaultTlsServerName)
+		v, ok := d.GetOk(credentialStoreVaultTlsServerNameKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreTlsServerName(v.(string)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultTlsSkipVerify) {
+	if d.HasChange(credentialStoreVaultTlsSkipVerifyKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreTlsSkipVerify())
-		v, ok := d.GetOk(credentialStoreVaultTlsSkipVerify)
+		v, ok := d.GetOk(credentialStoreVaultTlsSkipVerifyKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreTlsSkipVerify(v.(bool)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultToken) {
+	if d.HasChange(credentialStoreVaultTokenKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreToken())
-		v, ok := d.GetOk(credentialStoreVaultToken)
+		v, ok := d.GetOk(credentialStoreVaultTokenKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreToken(v.(string)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultClientCertificate) {
+	if d.HasChange(credentialStoreVaultClientCertificateKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreClientCertificate())
-		v, ok := d.GetOk(credentialStoreVaultClientCertificate)
+		v, ok := d.GetOk(credentialStoreVaultClientCertificateKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificate(v.(string)))
 		}
 	}
 
-	if d.HasChange(credentialStoreVaultClientCertificateKey) {
+	if d.HasChange(credentialStoreVaultClientCertificateKeyKey) {
 		opts = append(opts, credentialstores.DefaultVaultCredentialStoreClientCertificateKey())
-		v, ok := d.GetOk(credentialStoreVaultClientCertificateKey)
+		v, ok := d.GetOk(credentialStoreVaultClientCertificateKeyKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(v.(string)))
 		}
@@ -321,8 +320,13 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.Errorf("error updating credential store: %v", err)
 		}
+		if aur == nil {
+			return diag.Errorf("credential store nil after update")
+		}
 
-		setFromVaultCredentialStoreResponseMap(d, aur.GetResponse().Map)
+		if err = setFromVaultCredentialStoreResponseMap(d, aur.GetResponse().Map); err != nil {
+			return diag.Errorf("error generating credential store from response map: %v", err)
+		}
 	}
 
 	return nil
