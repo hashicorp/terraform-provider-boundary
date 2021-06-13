@@ -242,16 +242,18 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	raw := tcr.GetResponse().Map
 
+	version := tcr.Item.Version
 	if hostSetIds != nil {
-		tur, err := tc.SetHostSets(ctx, tcr.Item.Id, tcr.Item.Version, hostSetIds)
+		tur, err := tc.SetHostSets(ctx, tcr.Item.Id, version, hostSetIds)
 		if err != nil {
 			return diag.Errorf("error setting host sets on target: %v", err)
 		}
 		raw = tur.GetResponse().Map
+		version = tur.Item.Version
 	}
 
 	if credentialLibraryIds != nil {
-		tur, err := tc.SetCredentialLibraries(ctx, tcr.Item.Id, tcr.Item.Version, credentialLibraryIds)
+		tur, err := tc.SetCredentialLibraries(ctx, tcr.Item.Id, version, credentialLibraryIds)
 		if err != nil {
 			return diag.Errorf("error setting credential libraries on target: %v", err)
 		}
