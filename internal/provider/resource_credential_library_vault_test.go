@@ -38,18 +38,6 @@ resource "boundary_credential_library_vault" "example" {
 	vaultCredLibPath,
 	vaultCredLibMethodGet)
 
-var vaultCredLibResourceBar = fmt.Sprintf(`
-resource "boundary_credential_library_vault" "bar" {
-	name  = "%s"
-	description = "%s"
-	credential_store_id = boundary_credential_store_vault.example.id
-  	vault_path = "%s"
-  	http_method = "%s"
-}`, vaultCredLibName+vaultCredLibStringUpdate,
-	vaultCredLibDesc+vaultCredLibStringUpdate,
-	vaultCredLibPath+vaultCredLibStringUpdate,
-	vaultCredLibMethodGet)
-
 var vaultCredLibResourceUpdate = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
   	name  = "%s"

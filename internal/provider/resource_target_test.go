@@ -22,7 +22,7 @@ const (
 )
 
 var (
-	fooHostSet = `
+	fooBarHostSet = `
 resource "boundary_host_catalog" "foo" {
 	type        = "static"
 	name        = "test"
@@ -63,6 +63,24 @@ resource "boundary_host_set" "bar" {
 	]
 }`
 
+	fooBarCredLibs = `
+resource "boundary_credential_library_vault" "foo" {
+	name  = "foo"
+	description = "foo library"
+	credential_store_id = boundary_credential_store_vault.example.id
+  	vault_path = "foo/bar"
+  	http_method = "GET"
+}
+
+resource "boundary_credential_library_vault" "bar" {
+	name  = "bar"
+	description = "bar library"
+	credential_store_id = boundary_credential_store_vault.example.id
+  	vault_path = "bar/foo"
+  	http_method = "GET"
+}
+`
+
 	fooTarget = fmt.Sprintf(`
 resource "boundary_target" "foo" {
 	name         = "test"
@@ -73,7 +91,7 @@ resource "boundary_target" "foo" {
 		boundary_host_set.foo.id
 	]
 	credential_library_ids = [
-		boundary_credential_library_vault.example.id
+		boundary_credential_library_vault.foo.id
 	]
 	default_port = 22
 	depends_on  = [boundary_role.proj1_admin]
@@ -125,7 +143,7 @@ func TestAccTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResource, vaultCredLibResourceBar, fooHostSet, fooTarget),
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
@@ -135,13 +153,13 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "foo"`),
 					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
-					testAccCheckTargetResourceCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.example"}),
+					testAccCheckTargetResourceCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
 				),
 			},
 			importStep("boundary_target.foo"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResource, vaultCredLibResourceBar, fooHostSet, fooTargetUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
