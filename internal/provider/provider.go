@@ -61,6 +61,7 @@ func New() *schema.Provider {
 			"boundary_auth_method_password": resourceAuthMethodPassword(),
 			"boundary_auth_method_oidc":     resourceAuthMethodOidc(),
 			"boundary_group":                resourceGroup(),
+			"boundary_managed_group":        resourceManagedGroup(),
 			"boundary_host":                 resourceHost(),
 			"boundary_host_catalog":         resourceHostCatalog(),
 			"boundary_host_set":             resourceHostset(),
