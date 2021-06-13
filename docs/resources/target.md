@@ -85,6 +85,7 @@ resource "boundary_target" "foo" {
 
 ### Optional
 
+- **credential_library_ids** (Set of String) A list of credential library ID's.
 - **default_port** (Number) The default port for this target.
 - **description** (String) The target description.
 - **host_set_ids** (Set of String) A list of host set ID's.
