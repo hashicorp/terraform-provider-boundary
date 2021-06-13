@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	orgGroup = fmt.Sprintf(`
+	orgManagedGroup = fmt.Sprintf(`
 resource "boundary_managed_group" "org1" {
 	name        = "test"
 	description = "%s"
@@ -24,7 +24,7 @@ resource "boundary_managed_group" "org1" {
 	depends_on = [boundary_role.org1_admin]
 }`, fooGroupDescription)
 
-	orgGroupUpdate = fmt.Sprintf(`
+	orgManagedGroupUpdate = fmt.Sprintf(`
 resource "boundary_managed_group" "org1" {
 	name        = "test"
 	description = "%s"
@@ -32,7 +32,7 @@ resource "boundary_managed_group" "org1" {
 	depends_on  = [boundary_role.org1_admin]
 }`, fooGroupDescriptionUpdate)
 
-	orgGroupWithMembers = `
+	orgManagedGroupWithMembers = `
 resource "boundary_user" "org1" {
 	description = "org1"
 	scope_id    = boundary_scope.org1.id
@@ -46,7 +46,7 @@ resource "boundary_managed_group" "with_members" {
 	depends_on  = [boundary_role.org1_admin]
 }`
 
-	orgGroupWithMembersUpdate = `
+	orgManagedGroupWithMembersUpdate = `
 resource "boundary_user" "org1" {
 	description = "org1"
 	scope_id    = boundary_scope.org1.id
@@ -66,7 +66,7 @@ resource "boundary_managed_group" "with_members" {
 	depends_on  = [boundary_role.org1_admin]
 }`
 
-	orgToProjectGroupUpdate = `
+	orgToProjectManagedGroupUpdate = `
 resource "boundary_managed_group" "org1" {
 	name = "test-to-proj"
 	description = "org1-test-to-proj"
@@ -74,7 +74,7 @@ resource "boundary_managed_group" "org1" {
 	depends_on = [boundary_role.org1_admin]
 }`
 
-	projGroup = `
+	projManagedGroup = `
 resource "boundary_managed_group" "proj1" {
 	name = "test-proj"
 	description = "desc-test-proj"
@@ -82,7 +82,7 @@ resource "boundary_managed_group" "proj1" {
 	depends_on = [boundary_role.org1_admin]
 }`
 
-	projGroupUpdate = `
+	projManagedGroupUpdate = `
 resource "boundary_managed_group" "proj1" {
 	name = "test-proj-up"
 	description = "desc-test-proj-up"
@@ -98,7 +98,7 @@ resource "boundary_managed_group" "proj1" {
 	depends_on = [boundary_role.org1_admin]
 }`
 
-	projToOrgGroupUpdate = `
+	projToOrgManagedGroupUpdate = `
 resource "boundary_managed_group" "proj1" {
 	name = "test-back"
 	description = "desc-back"
@@ -118,13 +118,13 @@ func TestAccManagedGroup(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckGroupResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfigWithRecovery(url, fooOrg, orgGroup),
+				Config: testConfigWithRecovery(url, fooOrg, orgManagedGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.org1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.org1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.org1", DescriptionKey, fooGroupDescription),
 					resource.TestCheckResourceAttr("boundary_managed_group.org1", NameKey, "test"),
 				),
@@ -132,20 +132,20 @@ func TestAccManagedGroup(t *testing.T) {
 			importStep("boundary_managed_group.org1"),
 			{
 				// test update
-				Config: testConfigWithRecovery(url, fooOrg, orgGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, orgManagedGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.org1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.org1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.org1", DescriptionKey, fooGroupDescriptionUpdate),
 				),
 			},
 			importStep("boundary_managed_group.org1"),
 			{
 				// test update to project scope
-				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, orgToProjectManagedGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.org1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.org1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.org1", DescriptionKey, "org1-test-to-proj"),
-					testAccCheckGroupScope(provider, "boundary_managed_group.org1", "p_"),
+					testAccCheckManagedGroupScope(provider, "boundary_managed_group.org1", "p_"),
 				),
 			},
 			importStep("boundary_managed_group.org1"),
@@ -153,20 +153,20 @@ func TestAccManagedGroup(t *testing.T) {
 				// test create
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.proj1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.proj1", DescriptionKey, "desc-test-proj"),
 					resource.TestCheckResourceAttr("boundary_managed_group.proj1", NameKey, "test-proj"),
-					testAccCheckGroupScope(provider, "boundary_managed_group.proj1", "p_"),
+					testAccCheckManagedGroupScope(provider, "boundary_managed_group.proj1", "p_"),
 				),
 			},
 			importStep("boundary_managed_group.proj1"),
 			{
 				// test update
-				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projManagedGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.proj1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.proj1", DescriptionKey, "desc-test-proj-up"),
-					testAccCheckGroupScope(provider, "boundary_managed_group.proj1", "p_"),
+					testAccCheckManagedGroupScope(provider, "boundary_managed_group.proj1", "p_"),
 				),
 			},
 			importStep("boundary_managed_group.proj1"),
@@ -174,19 +174,19 @@ func TestAccManagedGroup(t *testing.T) {
 				// test name removal
 				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projNameRemoval),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.proj1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.proj1", NameKey, ""),
-					testAccCheckGroupScope(provider, "boundary_managed_group.proj1", "p_"),
+					testAccCheckManagedGroupScope(provider, "boundary_managed_group.proj1", "p_"),
 				),
 			},
 			importStep("boundary_managed_group.proj1"),
 			{
 				// test update to org scope
-				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
+				Config: testConfigWithRecovery(url, fooOrg, firstProjectFoo, projToOrgManagedGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.proj1"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.proj1", DescriptionKey, "desc-back"),
-					testAccCheckGroupScope(provider, "boundary_managed_group.proj1", "o_"),
+					testAccCheckManagedGroupScope(provider, "boundary_managed_group.proj1", "o_"),
 				),
 			},
 			importStep("boundary_managed_group.proj1"),
@@ -194,7 +194,7 @@ func TestAccManagedGroup(t *testing.T) {
 	})
 }
 
-func TestAccGroupWithMembers(t *testing.T) {
+func TestAccManagedGroupWithMembers(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 
 	defer tc.Shutdown()
@@ -204,27 +204,27 @@ func TestAccGroupWithMembers(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
 
-		CheckDestroy: testAccCheckGroupResourceDestroy(t, provider),
+		CheckDestroy: testAccCheckManagedGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, orgGroupWithMembers),
+				Config: testConfig(url, fooOrg, orgManagedGroupWithMembers),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.with_members"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.with_members"),
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.with_members", DescriptionKey, "with members"),
-					testAccCheckGroupResourceMembersSet(provider, "boundary_managed_group.with_members", []string{"boundary_user.org1"}),
+					testAccCheckManagedGroupResourceMembersSet(provider, "boundary_managed_group.with_members", []string{"boundary_user.org1"}),
 				),
 			},
 			importStep("boundary_managed_group.with_members"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, orgGroupWithMembersUpdate),
+				Config: testConfig(url, fooOrg, orgManagedGroupWithMembersUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupResourceExists(provider, "boundary_managed_group.with_members"),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.with_members"),
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_managed_group.with_members", DescriptionKey, "with members"),
-					testAccCheckGroupResourceMembersSet(provider, "boundary_managed_group.with_members", []string{"boundary_user.org1", "boundary_user.bar"}),
+					testAccCheckManagedGroupResourceMembersSet(provider, "boundary_managed_group.with_members", []string{"boundary_user.org1", "boundary_user.bar"}),
 				),
 			},
 			importStep("boundary_managed_group.with_members"),
@@ -233,7 +233,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupResourceMembersSet(testProvider *schema.Provider, name string, members []string) resource.TestCheckFunc {
+func testAccCheckManagedGroupResourceMembersSet(testProvider *schema.Provider, name string, members []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -292,7 +292,7 @@ func testAccCheckGroupResourceMembersSet(testProvider *schema.Provider, name str
 	}
 }
 
-func testAccCheckGroupScope(testProvider *schema.Provider, name, prefix string) resource.TestCheckFunc {
+func testAccCheckManagedGroupScope(testProvider *schema.Provider, name, prefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -320,7 +320,7 @@ func testAccCheckGroupScope(testProvider *schema.Provider, name, prefix string) 
 	}
 }
 
-func testAccCheckGroupResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckManagedGroupResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -344,7 +344,7 @@ func testAccCheckGroupResourceExists(testProvider *schema.Provider, name string)
 	}
 }
 
-func testAccCheckGroupResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckManagedGroupResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
