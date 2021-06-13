@@ -18,8 +18,8 @@ require (
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.2.2
-	github.com/hashicorp/boundary/api v0.0.10
+	github.com/hashicorp/boundary v0.3.1-0.20210611184336-3175996e2927
+	github.com/hashicorp/boundary/api v0.0.12-0.20210611184336-3175996e2927
 	github.com/hashicorp/boundary/sdk v0.0.4
 	github.com/hashicorp/cap v0.0.0-20210518163718-e72205e8eaae
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect

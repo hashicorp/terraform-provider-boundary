@@ -366,6 +366,7 @@ github.com/go-test/deep v1.0.2-0.20181118220953-042da051cf31/go.mod h1:wGDj63lr6
 github.com/go-test/deep v1.0.2/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
 github.com/go-test/deep v1.0.3 h1:ZrJSEWsXzPOxaZnFteGEfooLba+ju3FYIbOrS+rQd68=
 github.com/go-test/deep v1.0.3/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
+github.com/go-test/deep v1.0.4/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
 github.com/gobuffalo/here v0.6.0/go.mod h1:wAG085dHOYqUpf+Ap+WOdrPTp5IYcDAs/x7PLa8Y5fM=
 github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee/go.mod h1:L0fX3K22YWvt/FAX9NnzrNzcI4wNYi9Yku4O0LKYflo=
 github.com/gobwas/pool v0.2.0/go.mod h1:q8bcK0KcYlCgd9e7WYLm9LpyS+YeLd8JVDW6WezmKEw=
@@ -494,8 +495,12 @@ github.com/hashicorp/boundary v0.2.1 h1:I4O1BrqR1R6O449k1b7FGCOFXwgRKxhZoK8Cltvs
 github.com/hashicorp/boundary v0.2.1/go.mod h1:FwX0UmYaj3OFlKrhhaMcT8FvEZk/y/1AnZgxsk4xQQM=
 github.com/hashicorp/boundary v0.2.2 h1:Gel7cjlcild1AZGVfR+4d28MmqnTQ6F/CTOAyEAFyis=
 github.com/hashicorp/boundary v0.2.2/go.mod h1:Gd+jRjPuPqFHZLlA7+llzK4BlHxilp37cJDp7xswAGU=
+github.com/hashicorp/boundary v0.3.1-0.20210611184336-3175996e2927 h1:xlLGjfk0qwObt2U9r73eCZeCDKqRYUdwVzd1mjyNOK4=
+github.com/hashicorp/boundary v0.3.1-0.20210611184336-3175996e2927/go.mod h1:W/ZB2y3X21zQPR/JLTBn0JjI2EY9xbanVJ+2HupQrUU=
 github.com/hashicorp/boundary/api v0.0.10 h1:WdKR5dZ7FvAW0QG05jyKWt9ESu1vT/4E2LIDiSVJ1ZI=
 github.com/hashicorp/boundary/api v0.0.10/go.mod h1:mZfLjpD0hU2YMopuobjh+ZmWMRLl9sooiPr46gi64i4=
+github.com/hashicorp/boundary/api v0.0.12-0.20210611184336-3175996e2927 h1:FuOLii5n8+P+loB7rLcPGkpGHjn+Gm1evtFN46PR3Sw=
+github.com/hashicorp/boundary/api v0.0.12-0.20210611184336-3175996e2927/go.mod h1:mZfLjpD0hU2YMopuobjh+ZmWMRLl9sooiPr46gi64i4=
 github.com/hashicorp/boundary/sdk v0.0.4 h1:l3uuXOL5ZQwYc63Bm8sLY36XGUlIN/4Q2r2SqkmGTyw=
 github.com/hashicorp/boundary/sdk v0.0.4/go.mod h1:MQ8FJhseJrKpwvFDTn+AUAcJ1vdk1NKUxk7DxQgH7oQ=
 github.com/hashicorp/cap v0.0.0-20210408110729-0dd65efe5473 h1:qEikB8/ychrgsll9feuGjVLt0qo5oktfyTWi7BLsUrg=
@@ -511,8 +516,10 @@ github.com/hashicorp/dbassert v0.0.0-20200930125617-6218396928df/go.mod h1:+B5eZ
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
+github.com/hashicorp/eventlogger v0.0.0-20210523164657-c216620e1746/go.mod h1:LG0lqGlYKC9FD5m5Umh7FW8SeJlciNUZv400J4+j094=
 github.com/hashicorp/go-bexpr v0.1.7 h1:z48qzCgJkvdnMO/LDy3XHNyCyxnHiFGx9uTKLv0jW2Y=
 github.com/hashicorp/go-bexpr v0.1.7/go.mod h1:oxlubA2vC/gFVfX1A6JGp7ls7uCDlfJn732ehYYg+g0=
+github.com/hashicorp/go-bexpr v0.1.8/go.mod h1:oxlubA2vC/gFVfX1A6JGp7ls7uCDlfJn732ehYYg+g0=
 github.com/hashicorp/go-checkpoint v0.5.0 h1:MFYpPZCnQqQTE18jFwSII6eUQrD/oxMFp3mlgcqk5mU=
 github.com/hashicorp/go-checkpoint v0.5.0/go.mod h1:7nfLNL10NsxqO4iWuW6tWW0HjZuDrwkBuEQsVcpCOgg=
 github.com/hashicorp/go-cleanhttp v0.5.0/go.mod h1:JpRdi6/HCYpAwUzNwuwqhbovhLtngrth3wmdIIUrZ80=
@@ -1023,6 +1030,7 @@ github.com/spf13/cast v1.3.0/go.mod h1:Qx5cxh0v+4UWYiBimWS+eyWzqEqokIECu5etghLkU
 github.com/spf13/cobra v0.0.2-0.20171109065643-2da4a54c5cee/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
 github.com/spf13/cobra v0.0.3/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
 github.com/spf13/cobra v1.0.1-0.20201006035406-b97b5ead31f7/go.mod h1:yk5b0mALVusDL5fMM6Rd1wgnoO5jUPhwsQ6LQAJTidQ=
+github.com/spf13/cobra v1.1.1/go.mod h1:WnodtKOvamDL/PwE2M4iKs8aMDBZ5Q5klgD3qfVJQMI=
 github.com/spf13/jwalterweatherman v1.0.0/go.mod h1:cQK4TGJAtQXfYWX+Ddv3mKDzgVb68N+wFjFa4jdeBTo=
 github.com/spf13/pflag v1.0.1-0.20171106142849-4c012f6dcd95/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/spf13/pflag v1.0.1/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
@@ -1120,6 +1128,7 @@ go.uber.org/atomic v1.5.0/go.mod h1:sABNBOSYdrvTF6hTgEIbc7YasKWGhgEQZyfxyTvoXHQ=
 go.uber.org/atomic v1.6.0/go.mod h1:sABNBOSYdrvTF6hTgEIbc7YasKWGhgEQZyfxyTvoXHQ=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
+go.uber.org/goleak v1.0.0/go.mod h1:8a7PlsEVH3e/a/GLqe5IIrQx6GzcnRmZEufDUTk4A7A=
 go.uber.org/multierr v1.1.0/go.mod h1:wR5kodmAFQ0UK8QlbwjlSNy0Z68gJhDJUG5sjR94q/0=
 go.uber.org/multierr v1.3.0/go.mod h1:VgVr7evmIr6uPjLBxg28wmKNXyqE9akIJ5XnfpiKl+4=
 go.uber.org/multierr v1.5.0/go.mod h1:FeouvMocqHpRaaGuG9EjoKcStLC43Zu/fmqdUMPcKYU=
@@ -1386,6 +1395,7 @@ golang.org/x/tools v0.0.0-20190911174233-4f2ddba30aff/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20191012152004-8de300cfc20a/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191029041327-9cc4af7d6b2c/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191029190741-b9c20aec41a5/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+golang.org/x/tools v0.0.0-20191108193012-7d206e10da11/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191112195655-aa38f8e97acc/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191113191852-77e3bb0ad9e7/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191115202509-3a792d9c32b2/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
