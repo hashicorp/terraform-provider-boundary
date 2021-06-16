@@ -66,6 +66,7 @@ func resourceCredentialStoreVault() *schema.Resource {
 			ScopeIdKey: {
 				Description: "The scope for this credential store",
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Required:    true,
 			},
 			credentialStoreVaultAddressKey: {
