@@ -78,10 +78,6 @@ resource "boundary_host_set" "foo" {
     boundary_host.foo.id,
     boundary_host.bar.id,
   ]
-
-  credential_library_ids = [
-    boundary_credential_library_vault.foo.id
-  ]
 }
 
 resource "boundary_target" "foo" {
@@ -91,6 +87,9 @@ resource "boundary_target" "foo" {
   scope_id     = boundary_scope.project.id
   host_set_ids = [
     boundary_host_set.foo.id
+  ]
+  credential_library_ids = [
+    boundary_credential_library_vault.foo.id
   ]
 }
 ```

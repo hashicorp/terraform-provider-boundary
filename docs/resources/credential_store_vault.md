@@ -29,9 +29,9 @@ resource "boundary_scope" "project" {
 }
 
 resource "boundary_credential_store_vault" "example" {
-  name        = "vault_store"
+  name        = "foo"
   description = "My first Vault credential store!"
-  address     = "http://localhost:55001"
+  address     = "127.0.0.1"
   token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5"
   scope_id    = boundary_scope.project.id
 }
