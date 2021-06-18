@@ -98,6 +98,7 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Description: "The Vault token",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 			},
 			credentialStoreVaultTokenHmacKey: {
 				Description: "The Vault token hmac",
@@ -113,6 +114,7 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Description: "The Vault client certificate key",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 			},
 			credentialStoreVaultClientCertificateKeyHmacKey: {
 				Description: "The Vault client certificate key hmac",
@@ -317,15 +319,15 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 
 	if len(opts) > 0 {
 		opts = append(opts, credentialstores.WithAutomaticVersioning(true))
-		aur, err := client.Update(ctx, d.Id(), 0, opts...)
+		crUpdate, err := client.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating credential store: %v", err)
 		}
-		if aur == nil {
+		if crUpdate == nil {
 			return diag.Errorf("credential store nil after update")
 		}
 
-		if err = setFromVaultCredentialStoreResponseMap(d, aur.GetResponse().Map); err != nil {
+		if err = setFromVaultCredentialStoreResponseMap(d, crUpdate.GetResponse().Map); err != nil {
 			return diag.Errorf("error generating credential store from response map: %v", err)
 		}
 	}
