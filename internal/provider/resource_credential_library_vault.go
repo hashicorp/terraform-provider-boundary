@@ -15,7 +15,7 @@ const (
 	credentialStoreIdKey                     = "credential_store_id"
 	credentialLibraryVaultHttpMethodKey      = "http_method"
 	credentialLibraryVaultHttpRequestBodyKey = "http_request_body"
-	credentialLibraryVaultPathKey            = "vault_path"
+	credentialLibraryVaultPathKey            = "path"
 )
 
 var libraryVaultAttrs = []string{
@@ -119,7 +119,7 @@ func resourceCredentialLibraryCreateVault(ctx context.Context, d *schema.Resourc
 		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryHttpRequestBody(v.(string)))
 	}
 	if v, ok := d.GetOk(credentialLibraryVaultPathKey); ok {
-		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryVaultPath(v.(string)))
+		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryPath(v.(string)))
 	}
 
 	var credentialStoreId string
@@ -203,10 +203,9 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 		}
 	}
 	if d.HasChange(credentialLibraryVaultPathKey) {
-		opts = append(opts, credentiallibraries.DefaultVaultCredentialLibraryVaultPath())
 		v, ok := d.GetOk(credentialLibraryVaultPathKey)
 		if ok {
-			opts = append(opts, credentiallibraries.WithVaultCredentialLibraryVaultPath(v.(string)))
+			opts = append(opts, credentiallibraries.WithVaultCredentialLibraryPath(v.(string)))
 		}
 	}
 

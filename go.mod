@@ -16,12 +16,12 @@ require (
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.3.1-0.20210612223955-f1a3b414a8ef
-	github.com/hashicorp/boundary/api v0.0.12-0.20210612223955-f1a3b414a8ef
-	github.com/hashicorp/boundary/sdk v0.0.4
-	github.com/hashicorp/cap v0.0.0-20210518163718-e72205e8eaae
+	github.com/hashicorp/boundary v0.3.1-0.20210618234754-596dbadf7f08
+	github.com/hashicorp/boundary/api v0.0.12-0.20210618234754-596dbadf7f08
+	github.com/hashicorp/boundary/sdk v0.0.5-0.20210618234754-596dbadf7f08
+	github.com/hashicorp/cap v0.1.0
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
-	github.com/hashicorp/go-kms-wrapping v0.6.1
+	github.com/hashicorp/go-kms-wrapping v0.6.2
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-docs v0.4.0

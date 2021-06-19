@@ -31,7 +31,7 @@ resource "boundary_credential_library_vault" "example" {
 	name  = "%s"
 	description = "%s"
 	credential_store_id = boundary_credential_store_vault.example.id
-  	vault_path = "%s"
+  	path = "%s"
   	http_method = "%s"
 }`, vaultCredLibName,
 	vaultCredLibDesc,
@@ -43,7 +43,7 @@ resource "boundary_credential_library_vault" "example" {
   	name  = "%s"
 	description = "%s"
   	credential_store_id = boundary_credential_store_vault.example.id
-  	vault_path = "%s"
+  	path = "%s"
   	http_method = "%s"
   	http_request_body = "%s"
 }`, vaultCredLibName+vaultCredLibStringUpdate,

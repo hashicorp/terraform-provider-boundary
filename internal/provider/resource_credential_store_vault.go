@@ -254,7 +254,6 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange(credentialStoreVaultAddressKey) {
-		opts = append(opts, credentialstores.DefaultVaultCredentialStoreAddress())
 		v, ok := d.GetOk(credentialStoreVaultAddressKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreAddress(v.(string)))
@@ -294,7 +293,6 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange(credentialStoreVaultTokenKey) {
-		opts = append(opts, credentialstores.DefaultVaultCredentialStoreToken())
 		v, ok := d.GetOk(credentialStoreVaultTokenKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreToken(v.(string)))

@@ -68,7 +68,7 @@ resource "boundary_credential_library_vault" "foo" {
 	name  = "foo"
 	description = "foo library"
 	credential_store_id = boundary_credential_store_vault.example.id
-  	vault_path = "foo/bar"
+  	path = "foo/bar"
   	http_method = "GET"
 }
 
@@ -76,7 +76,7 @@ resource "boundary_credential_library_vault" "bar" {
 	name  = "bar"
 	description = "bar library"
 	credential_store_id = boundary_credential_store_vault.example.id
-  	vault_path = "bar/foo"
+  	path = "bar/foo"
   	http_method = "GET"
 }
 `

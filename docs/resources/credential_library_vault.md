@@ -40,7 +40,7 @@ resource "boundary_credential_library_vault" "foo" {
   name                = "foo"
   description         = "My first Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  vault_path          = "my/secret/foo"
+  path          = "my/secret/foo"
   http_method         = "GET"
 }
 
@@ -48,7 +48,7 @@ resource "boundary_credential_library_vault" "bar" {
   name                = "bar"
   description         = "My second Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  vault_path          = "my/secret/bar"
+  path          = "my/secret/bar"
   http_method         = "POST"
   request_body        = <<EOT
 {
@@ -64,7 +64,7 @@ EOT
 ### Required
 
 - **credential_store_id** (String) The ID of the credential store that this library belongs to.
-- **vault_path** (String) The Vault path to query
+- **path** (String) The Vault path to query
 
 ### Optional
 

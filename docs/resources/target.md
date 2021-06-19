@@ -45,7 +45,7 @@ resource "boundary_credential_library_vault" "foo" {
   name                = "vault_library"
   description         = "My first Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  vault_path          = "database/creds/opened"
+  path          = "database/creds/opened"
   http_method         = "GET"
 }
 
