@@ -6,7 +6,7 @@ description: |-
   The host catalog resource allows you to configure a Boundary host catalog. Host catalogs are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host catalog.
 ---
 
-# Resource `boundary_host_catalog`
+# boundary_host_catalog (Resource)
 
 The host catalog resource allows you to configure a Boundary host catalog. Host catalogs are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host catalog.
 
@@ -42,14 +42,14 @@ resource "boundary_host_catalog" "example" {
 ### Required
 
 - **scope_id** (String) The scope ID in which the resource is created.
-- **type** (String) The host catalog type. Only `Static` (yes, title case) is supported.
+- **type** (String) The host catalog type. Only `static` is supported.
 
 ### Optional
 
 - **description** (String) The host catalog description.
 - **name** (String) The host catalog name. Defaults to the resource name.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the host catalog.
 
