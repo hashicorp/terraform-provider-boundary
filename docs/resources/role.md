@@ -133,7 +133,7 @@ resource "boundary_role" "readonly" {
 - **name** (String) The role name. Defaults to the resource name.
 - **principal_ids** (Set of String) A list of principal (user or group) IDs to add as principals on the role.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the role.
 

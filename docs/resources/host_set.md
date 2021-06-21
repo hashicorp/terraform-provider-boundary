@@ -6,7 +6,7 @@ description: |-
   The host_set resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
 ---
 
-# Resource `boundary_host_set`
+# boundary_host_set (Resource)
 
 The host_set resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
 
@@ -71,7 +71,7 @@ resource "boundary_host_set" "web" {
 - **host_ids** (Set of String) The list of host IDs contained in this set.
 - **name** (String) The hostset name. Defaults to the resource name.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the hostset.
 

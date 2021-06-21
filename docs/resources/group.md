@@ -77,7 +77,7 @@ resource "boundary_group" "example" {
 - **member_ids** (Set of String) Resource IDs for group members, these are most likely boundary users.
 - **name** (String) The group name. Defaults to the resource name.
 
-### Read-only
+### Read-Only
 
 - **id** (String) The ID of the group.
 
