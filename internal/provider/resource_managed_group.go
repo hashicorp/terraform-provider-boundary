@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	managedGroupMemberIdsKey = "member_ids"
-	managedGroupFilterKey    = "filter"
+	managedGroupFilterKey = "filter"
 )
 
 func resourceManagedGroup() *schema.Resource {
@@ -49,12 +48,6 @@ func resourceManagedGroup() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			managedGroupMemberIdsKey: {
-				Description: "Resource IDs for managed group members, these are most likely boundary users.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 			managedGroupFilterKey: {
 				Description: "Filters...",
 				Type:        schema.TypeString,
@@ -64,23 +57,22 @@ func resourceManagedGroup() *schema.Resource {
 	}
 }
 
-func setFromGroupResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
-	if err := d.Set(NameKey, raw["name"]); err != nil {
+func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw[NameKey]); err != nil {
 		return err
 	}
-	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
 		return err
 	}
-	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
-		return err
-	}
-	if err := d.Set(managedGroupMemberIdsKey, raw[managedGroupMemberIdsKey]); err != nil {
+	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
 		return err
 	}
 	if err := d.Set(managedGroupFilterKey, raw[managedGroupFilterKey]); err != nil {
 		return err
 	}
-	d.SetId(raw["id"].(string))
+
+	d.SetId(raw[IDKey].(string))
+
 	return nil
 }
 
@@ -125,23 +117,7 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 	raw := gcr.GetResponse().Map
 
-	if val, ok := d.GetOk(managedGroupMemberIdsKey); ok {
-		list := val.(*schema.Set).List()
-		memberIds := make([]string, 0, len(list))
-		for _, i := range list {
-			memberIds = append(memberIds, i.(string))
-		}
-		gcsmr, err := grps.SetMembers(ctx, gcr.Item.Id, gcr.Item.Version, memberIds)
-		if err != nil {
-			return diag.Errorf("error setting principals on role: %v", err)
-		}
-		if gcsmr == nil {
-			return diag.Errorf("managed group nil after setting members")
-		}
-		raw = gcsmr.GetResponse().Map
-	}
-
-	if err := setFromGroupResponseMap(d, raw); err != nil {
+	if err := setFromManagedGroupResponseMap(d, raw); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -164,7 +140,7 @@ func resourceManagedGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("managed group nil after read")
 	}
 
-	if err := setFromGroupResponseMap(d, g.GetResponse().Map); err != nil {
+	if err := setFromManagedGroupResponseMap(d, g.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -230,27 +206,6 @@ func resourceManagedGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 		if err := d.Set(managedGroupFilterKey, filter); err != nil {
 			return diag.FromErr(err)
 		}
-	}
-
-	// The above call may not actually happen, so we use d.Id() and automatic
-	// versioning here
-	if d.HasChange(managedGroupMemberIdsKey) {
-		var memberIds []string
-		if membersVal, ok := d.GetOk(managedGroupMemberIdsKey); ok {
-			members := membersVal.(*schema.Set).List()
-			for _, member := range members {
-				memberIds = append(memberIds, member.(string))
-			}
-
-		}
-		_, err := grps.SetMembers(ctx, d.Id(), 0, memberIds, managedgroups.WithAutomaticVersioning(true))
-		if err != nil {
-			return diag.Errorf("error updating members in managed group: %v", err)
-		}
-		if err := d.Set(managedGroupMemberIdsKey, memberIds); err != nil {
-			return diag.FromErr(err)
-		}
-
 	}
 
 	return nil
