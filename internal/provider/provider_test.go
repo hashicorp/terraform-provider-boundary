@@ -19,7 +19,7 @@ var (
 	tcPassword  = "passpass"
 	tcPAUM      = "ampw_0000000000"
 	tcConfig    = []controller.Option{
-		controller.WithDefaultAuthMethodId(tcPAUM),
+		controller.WithDefaultPasswordAuthMethodId(tcPAUM),
 		controller.WithDefaultLoginName(tcLoginName),
 		controller.WithDefaultPassword(tcPassword),
 	}
