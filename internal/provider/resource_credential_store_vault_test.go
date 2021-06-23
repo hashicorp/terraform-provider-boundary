@@ -139,8 +139,52 @@ func TestAccCredentialStoreVault(t *testing.T) {
 				),
 			},
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
+			{
+				// Run a plan only update and verify no changes
+				PlanOnly: true,
+				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+			},
+			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
+			{
+				// update again but apply a preConfig to externally update resource
+				// TODO: Boundary currently causes an error on moving back to a previous token,
+				// for now verify the plan only mode had changes
+				PreConfig:          func() { externalUpdate(t, provider) },
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				Config:             testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+			},
+			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 		},
 	})
+}
+
+// externalUpdate does not have access to the st
+var storeId string
+
+func externalUpdate(t *testing.T, testProvider *schema.Provider) {
+	vs := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
+	_, token := vs.CreateToken(t)
+
+	md := testProvider.Meta().(*metaData)
+	c := credentialstores.NewClient(md.client)
+	cr, err := c.Read(context.Background(), storeId)
+	if err != nil {
+		t.Fatal(fmt.Errorf("got an error reading %q: %w", storeId, err))
+	}
+
+	// update Vault server to existing store
+	var opts []credentialstores.Option
+	opts = append(opts, credentialstores.WithVaultCredentialStoreToken(token))
+	opts = append(opts, credentialstores.WithVaultCredentialStoreAddress(vs.Addr))
+	opts = append(opts, credentialstores.WithVaultCredentialStoreCaCert(string(vs.CaCert)))
+	opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificate(string(vs.ClientCert)))
+	opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(string(vs.ClientKey)))
+
+	_, err = c.Update(context.Background(), cr.Item.Id, cr.Item.Version, opts...)
+	if err != nil {
+		t.Fatal(fmt.Errorf("got an error updating %q: %w", cr.Item.Id, err))
+	}
 }
 
 func testAccCheckCredentialStoreVaultResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
@@ -154,6 +198,7 @@ func testAccCheckCredentialStoreVaultResourceExists(testProvider *schema.Provide
 		if id == "" {
 			return fmt.Errorf("no ID is set")
 		}
+		storeId = id
 
 		md := testProvider.Meta().(*metaData)
 		c := credentialstores.NewClient(md.client)
