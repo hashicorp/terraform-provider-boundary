@@ -73,7 +73,7 @@ resource "boundary_target" "foo" {
   host_set_ids = [
     boundary_host_set.foo.id
   ]
-  credential_library_ids = [
+  application_credential_library_ids = [
     boundary_credential_library_vault.foo.id
   ]
 }

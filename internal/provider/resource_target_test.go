@@ -90,7 +90,7 @@ resource "boundary_target" "foo" {
 	host_set_ids = [
 		boundary_host_set.foo.id
 	]
-	credential_library_ids = [
+	application_credential_library_ids = [
 		boundary_credential_library_vault.foo.id
 	]
 	default_port = 22
@@ -109,9 +109,22 @@ resource "boundary_target" "foo" {
 	host_set_ids = [
 		boundary_host_set.bar.id
 	]
-	credential_library_ids = [
+	application_credential_library_ids = [
 		boundary_credential_library_vault.bar.id
 	]
+	default_port = 80
+	depends_on  = [boundary_role.proj1_admin]
+	session_max_seconds = 7000
+	session_connection_limit = 7
+	worker_filter = "type == \"bar\""
+}`, fooTargetDescriptionUpdate)
+
+	fooTargetUpdateUnsetHostAndCredLibs = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name         = "test"
+	description  = "%s"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
 	default_port = 80
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 7000
@@ -153,7 +166,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "foo"`),
 					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
-					testAccCheckTargetResourceCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
+					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -168,7 +181,22 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
 					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
-					testAccCheckTargetResourceCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
+					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
+				),
+			},
+			importStep("boundary_target.foo"),
+			{
+				// test unset hosts and cred libs
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdateUnsetHostAndCredLibs),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", nil),
+					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", nil),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -213,10 +241,6 @@ func testAccCheckTargetResourceHostSet(testProvider *schema.Provider, name strin
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
 
-		if len(t.Item.HostSetIds) == 0 {
-			return fmt.Errorf("no hostSets found on target")
-		}
-
 		if len(t.Item.HostSetIds) != len(hostSetIDs) {
 			return fmt.Errorf("tf state and boundary have different number of host sets")
 		}
@@ -237,7 +261,7 @@ func testAccCheckTargetResourceHostSet(testProvider *schema.Provider, name strin
 	}
 }
 
-func testAccCheckTargetResourceCredLibs(testProvider *schema.Provider, name string, credLibs []string) resource.TestCheckFunc {
+func testAccCheckTargetResourceAppCredLibs(testProvider *schema.Provider, name string, credLibs []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -274,15 +298,11 @@ func testAccCheckTargetResourceCredLibs(testProvider *schema.Provider, name stri
 			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
 		}
 
-		if len(t.Item.CredentialLibraries) == 0 {
-			return fmt.Errorf("no credential libraries found on target")
+		if len(t.Item.ApplicationCredentialLibraryIds) != len(credLibIDs) {
+			return fmt.Errorf("tf state and boundary have different number of application credential libraries")
 		}
 
-		if len(t.Item.CredentialLibraries) != len(credLibIDs) {
-			return fmt.Errorf("tf state and boundary have different number of credential libraries")
-		}
-
-		for _, stateCredLibId := range t.Item.CredentialLibraryIds {
+		for _, stateCredLibId := range t.Item.ApplicationCredentialLibraryIds {
 			ok := false
 			for _, gotCredLibID := range credLibIDs {
 				if gotCredLibID == stateCredLibId {
@@ -290,7 +310,7 @@ func testAccCheckTargetResourceCredLibs(testProvider *schema.Provider, name stri
 				}
 			}
 			if !ok {
-				return fmt.Errorf("credential library id in state not set in boundary: %s", stateCredLibId)
+				return fmt.Errorf("application credential library id in state not set in boundary: %s", stateCredLibId)
 			}
 		}
 
