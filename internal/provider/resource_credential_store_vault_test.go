@@ -147,8 +147,8 @@ func TestAccCredentialStoreVault(t *testing.T) {
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 			{
 				// update again but apply a preConfig to externally update resource
-				// TODO: Boundary currently causes an error on moving back to a previous token,
-				// for now verify the plan only mode had changes
+				// TODO: Boundary currently causes an error on moving back to a previously
+				// used token, for now verify that a plan only step had changes
 				PreConfig:          func() { externalUpdate(t, provider) },
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
@@ -159,10 +159,14 @@ func TestAccCredentialStoreVault(t *testing.T) {
 	})
 }
 
-// externalUpdate does not have access to the st
 var storeId string
 
+// externalUpdate uses the global storeId, therefore this function cannot be called until
+// a previous test step that calls testAccCheckCredentialStoreVaultResourceExists has completed.
 func externalUpdate(t *testing.T, testProvider *schema.Provider) {
+	if storeId == "" {
+		t.Fatal("storeId must be set before testing an external update")
+	}
 	vs := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
 	_, token := vs.CreateToken(t)
 
