@@ -44,13 +44,13 @@ resource "boundary_credential_store_vault" "example" {
 
 - **address** (String) The address to Vault server
 - **scope_id** (String) The scope for this credential store
-- **token** (String) The Vault token
+- **token** (String, Sensitive) The Vault token
 
 ### Optional
 
 - **ca_cert** (String) The Vault CA certificate to use
 - **client_certificate** (String) The Vault client certificate
-- **client_certificate_key** (String) The Vault client certificate key
+- **client_certificate_key** (String, Sensitive) The Vault client certificate key
 - **description** (String) The Vault credential store description.
 - **name** (String) The Vault credential store name. Defaults to the resource name.
 - **namespace** (String) The namespace within Vault to use
