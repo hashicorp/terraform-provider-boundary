@@ -36,16 +36,16 @@ resource "boundary_scope" "project" {
 resource "boundary_credential_store_vault" "foo" {
   name        = "vault_store"
   description = "My first Vault credential store!"
-  address     = "http://localhost:55001"
-  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5"
+  address     = "http://127.0.0.1:8200"       # change to Vault address
+  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5"  # change to valid Vault token
   scope_id    = boundary_scope.project.id
 }
 
 resource "boundary_credential_library_vault" "foo" {
-  name                = "vault_library"
+  name                = "foo"
   description         = "My first Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  path          = "database/creds/opened"
+  path                = "my/secret/foo" # change to Vault backend path
   http_method         = "GET"
 }
 

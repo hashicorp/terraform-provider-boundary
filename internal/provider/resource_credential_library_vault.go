@@ -59,17 +59,17 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				ForceNew:    true,
 			},
 			credentialLibraryVaultHttpMethodKey: {
-				Description: "The HTTP method to use when contacting Vault",
+				Description: "The HTTP method the library uses when requesting credentials from Vault. Defaults to 'GET'",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialLibraryVaultHttpRequestBodyKey: {
-				Description: "The raw string to use in HTTP request to Vault",
+				Description: "The body of the HTTP request the library sends to Vault when requesting credentials. Only valid if `http_method` is set to `POST`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialLibraryVaultPathKey: {
-				Description: "The Vault path to query",
+				Description: "The path in Vault to request credentials from.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
