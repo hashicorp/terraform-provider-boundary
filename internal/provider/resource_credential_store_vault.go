@@ -30,9 +30,7 @@ var storeVaultAttrs = []string{
 	credentialStoreVaultCaCertKey,
 	credentialStoreVaultTlsServerNameKey,
 	credentialStoreVaultTlsSkipVerifyKey,
-	credentialStoreVaultTokenHmacKey,
 	credentialStoreVaultClientCertificateKey,
-	credentialStoreVaultClientCertificateKeyHmacKey,
 }
 
 func resourceCredentialStoreVault() *schema.Resource {
@@ -64,60 +62,60 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Optional:    true,
 			},
 			ScopeIdKey: {
-				Description: "The scope for this credential store",
+				Description: "The scope for this credential store.",
 				Type:        schema.TypeString,
 				ForceNew:    true,
 				Required:    true,
 			},
 			credentialStoreVaultAddressKey: {
-				Description: "The address to Vault server",
+				Description: "The address to Vault server. This should be a complete URL such as 'https://127.0.0.1:8200'",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			credentialStoreVaultNamespaceKey: {
-				Description: "The namespace within Vault to use",
+				Description: "The namespace within Vault to use.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialStoreVaultCaCertKey: {
-				Description: "The Vault CA certificate to use",
+				Description: "A PEM-encoded CA certificate to verify the Vault server's TLS certificate.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialStoreVaultTlsServerNameKey: {
-				Description: "The Vault TLS server name",
+				Description: "Name to use as the SNI host when connecting to Vault via TLS.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialStoreVaultTlsSkipVerifyKey: {
-				Description: "Whether or not to skip TLS verification",
+				Description: "Whether or not to skip TLS verification.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
 			credentialStoreVaultTokenKey: {
-				Description: "The Vault token",
+				Description: "A token used for accessing Vault.",
 				Type:        schema.TypeString,
 				Required:    true,
 				Sensitive:   true,
 			},
 			credentialStoreVaultTokenHmacKey: {
-				Description: "The Vault token hmac",
+				Description: "The Vault token hmac.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			credentialStoreVaultClientCertificateKey: {
-				Description: "The Vault client certificate",
+				Description: "A PEM-encoded client certificate to use for TLS authentication to the Vault server.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialStoreVaultClientCertificateKeyKey: {
-				Description: "The Vault client certificate key",
+				Description: "A PEM-encoded private key matching the client certificate from 'client_certificate'.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
 			},
 			credentialStoreVaultClientCertificateKeyHmacKey: {
-				Description: "The Vault client certificate key hmac",
+				Description: "The Vault client certificate key hmac.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -125,7 +123,7 @@ func resourceCredentialStoreVault() *schema.Resource {
 	}
 }
 
-func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[string]interface{}, fromRead bool) error {
 	if err := d.Set(NameKey, raw[NameKey]); err != nil {
 		return err
 	}
@@ -142,6 +140,35 @@ func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[stri
 			if err := d.Set(v, attrs[v]); err != nil {
 				return err
 			}
+		}
+
+		stateTokenHmac := d.Get(credentialStoreVaultTokenHmacKey)
+		boundaryTokenHmac := attrs[credentialStoreVaultTokenHmacKey].(string)
+		if stateTokenHmac.(string) != boundaryTokenHmac && fromRead {
+			// TokenHmac has changed in Boundary, therefore the token has changed.
+			// Update token value to force tf to attempt update.
+			if err := d.Set(credentialStoreVaultTokenKey, "(changed in Boundary)"); err != nil {
+				return err
+			}
+		}
+		if err := d.Set(credentialStoreVaultTokenHmacKey, boundaryTokenHmac); err != nil {
+			return err
+		}
+
+		stateClientKeyHmac := d.Get(credentialStoreVaultClientCertificateKeyHmacKey)
+		var boundaryClientKeyHmac string
+		if v, ok := attrs[credentialStoreVaultClientCertificateKeyHmacKey]; ok {
+			boundaryClientKeyHmac = v.(string)
+		}
+		if stateClientKeyHmac.(string) != boundaryClientKeyHmac && fromRead {
+			// ClientKeyHmac has changed in Boundary, therefore the ClientKey has changed.
+			// Update ClientKey value to force tf to attempt update.
+			if err := d.Set(credentialStoreVaultClientCertificateKeyKey, "(changed in Boundary)"); err != nil {
+				return err
+			}
+		}
+		if err := d.Set(credentialStoreVaultClientCertificateKeyHmacKey, boundaryClientKeyHmac); err != nil {
+			return err
 		}
 	}
 
@@ -202,7 +229,7 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("nil credential store after create")
 	}
 
-	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map); err != nil {
+	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map, false); err != nil {
 		return diag.Errorf("error generating credential store from response map: %v", err)
 	}
 
@@ -225,7 +252,7 @@ func resourceCredentialStoreVaultRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("credential store nil after read")
 	}
 
-	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map); err != nil {
+	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map, true); err != nil {
 		return diag.Errorf("error generating credential store from response map: %v", err)
 	}
 
@@ -325,7 +352,7 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.Errorf("credential store nil after update")
 		}
 
-		if err = setFromVaultCredentialStoreResponseMap(d, crUpdate.GetResponse().Map); err != nil {
+		if err = setFromVaultCredentialStoreResponseMap(d, crUpdate.GetResponse().Map, false); err != nil {
 			return diag.Errorf("error generating credential store from response map: %v", err)
 		}
 	}

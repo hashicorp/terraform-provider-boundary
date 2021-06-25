@@ -31,8 +31,8 @@ resource "boundary_scope" "project" {
 resource "boundary_credential_store_vault" "foo" {
   name        = "foo"
   description = "My first Vault credential store!"
-  address     = "127.0.0.1"
-  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5"
+  address     = "http://127.0.0.1:8200"      # change to Vault address
+  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5" # change to valid Vault token
   scope_id    = boundary_scope.project.id
 }
 
@@ -40,7 +40,7 @@ resource "boundary_credential_library_vault" "foo" {
   name                = "foo"
   description         = "My first Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  path          = "my/secret/foo"
+  path                = "my/secret/foo" # change to Vault backend path
   http_method         = "GET"
 }
 
@@ -48,7 +48,7 @@ resource "boundary_credential_library_vault" "bar" {
   name                = "bar"
   description         = "My second Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  path          = "my/secret/bar"
+  path                = "my/secret/bar"  # change to Vault backend path
   http_method         = "POST"
   request_body        = <<EOT
 {
@@ -64,13 +64,13 @@ EOT
 ### Required
 
 - **credential_store_id** (String) The ID of the credential store that this library belongs to.
-- **path** (String) The Vault path to query
+- **path** (String) The path in Vault to request credentials from.
 
 ### Optional
 
 - **description** (String) The Vault credential library description.
-- **http_method** (String) The HTTP method to use when contacting Vault
-- **http_request_body** (String) The raw string to use in HTTP request to Vault
+- **http_method** (String) The HTTP method the library uses when requesting credentials from Vault. Defaults to 'GET'
+- **http_request_body** (String) The body of the HTTP request the library sends to Vault when requesting credentials. Only valid if `http_method` is set to `POST`.
 - **name** (String) The Vault credential library name. Defaults to the resource name.
 
 ### Read-Only
