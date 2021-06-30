@@ -33,7 +33,7 @@ resource "boundary_credential_library_vault" "bar" {
   name                = "bar"
   description         = "My second Vault credential library!"
   credential_store_id = boundary_credential_store_vault.foo.id
-  path                = "my/secret/bar"  # change to Vault backend path
+  path                = "my/secret/bar" # change to Vault backend path
   http_method         = "POST"
   request_body        = <<EOT
 {

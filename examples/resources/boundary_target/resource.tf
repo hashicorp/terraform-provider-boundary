@@ -21,8 +21,8 @@ resource "boundary_scope" "project" {
 resource "boundary_credential_store_vault" "foo" {
   name        = "vault_store"
   description = "My first Vault credential store!"
-  address     = "http://127.0.0.1:8200"       # change to Vault address
-  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5"  # change to valid Vault token
+  address     = "http://127.0.0.1:8200"      # change to Vault address
+  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5" # change to valid Vault token
   scope_id    = boundary_scope.project.id
 }
 
