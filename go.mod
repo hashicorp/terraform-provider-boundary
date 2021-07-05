@@ -15,6 +15,8 @@ require (
 	github.com/aws/aws-sdk-go v1.35.4 // indirect
 	github.com/circonus-labs/circonusllhist v0.1.4 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
+	github.com/go-openapi/loads v0.20.2
+	github.com/go-openapi/spec v0.20.1
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/hashicorp/boundary v0.4.0
 	github.com/hashicorp/boundary/api v0.0.13
@@ -27,12 +29,14 @@ require (
 	github.com/hashicorp/terraform-plugin-docs v0.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.7.0
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
+	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible // indirect
 	github.com/prometheus/common v0.14.0 // indirect
 	github.com/prometheus/procfs v0.2.0 // indirect
+	github.com/sanity-io/litter v1.5.1
 	github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c // indirect
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	google.golang.org/appengine v1.6.7 // indirect
