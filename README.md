@@ -129,7 +129,7 @@ resource "boundary_user" "users" {
   scope_id    = boundary_scope.corp.id
 }
 
-// organiation level group for readonly users 
+// organisation level group for readonly users 
 resource "boundary_group" "readonly" {
   name        = "readonly"
   description = "Organization group for readonly users"
