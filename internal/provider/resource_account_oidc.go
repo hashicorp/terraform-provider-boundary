@@ -60,6 +60,7 @@ func resourceAccountOidc() *schema.Resource {
 				Description: "The OIDC subject.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 			},
 		},
 	}

@@ -12,11 +12,12 @@ import (
 )
 
 const (
-	targetHostSetIdsKey             = "host_set_ids"
-	targetDefaultPortKey            = "default_port"
-	targetSessionMaxSecondsKey      = "session_max_seconds"
-	targetSessionConnectionLimitKey = "session_connection_limit"
-	targetWorkerFilterKey           = "worker_filter"
+	targetHostSetIdsKey                      = "host_set_ids"
+	targetApplicationCredentialLibraryIdsKey = "application_credential_library_ids"
+	targetDefaultPortKey                     = "default_port"
+	targetSessionMaxSecondsKey               = "session_max_seconds"
+	targetSessionConnectionLimitKey          = "session_connection_limit"
+	targetWorkerFilterKey                    = "worker_filter"
 
 	targetTypeTcp = "tcp"
 )
@@ -72,6 +73,12 @@ func resourceTarget() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			targetApplicationCredentialLibraryIdsKey: {
+				Description: "A list of application credential library ID's.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			targetSessionMaxSecondsKey: {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -105,6 +112,9 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 		return err
 	}
 	if err := d.Set(targetHostSetIdsKey, raw["host_set_ids"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetApplicationCredentialLibraryIdsKey, raw["application_credential_library_ids"]); err != nil {
 		return err
 	}
 	if err := d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"]); err != nil {
@@ -156,8 +166,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("invalid type provided")
 	}
 
-	opts := []targets.Option{}
-
+	var opts []targets.Option
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
@@ -206,6 +215,15 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	var credentialLibraryIds []string
+	if credentialLibraryIdsVal, ok := d.GetOk(targetApplicationCredentialLibraryIdsKey); ok {
+		list := credentialLibraryIdsVal.(*schema.Set).List()
+		credentialLibraryIds = make([]string, 0, len(list))
+		for _, i := range list {
+			credentialLibraryIds = append(credentialLibraryIds, i.(string))
+		}
+	}
+
 	workerFilterVal, ok := d.GetOk(targetWorkerFilterKey)
 	if ok {
 		workerFilterStr := workerFilterVal.(string)
@@ -223,10 +241,20 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	raw := tcr.GetResponse().Map
 
+	version := tcr.Item.Version
 	if hostSetIds != nil {
-		tur, err := tc.SetHostSets(ctx, tcr.Item.Id, tcr.Item.Version, hostSetIds)
+		tur, err := tc.SetHostSets(ctx, tcr.Item.Id, version, hostSetIds)
 		if err != nil {
 			return diag.Errorf("error setting host sets on target: %v", err)
+		}
+		raw = tur.GetResponse().Map
+		version = tur.Item.Version
+	}
+
+	if credentialLibraryIds != nil {
+		tur, err := tc.SetCredentialLibraries(ctx, tcr.Item.Id, version, targets.WithApplicationCredentialLibraryIds(credentialLibraryIds))
+		if err != nil {
+			return diag.Errorf("error setting credential libraries on target: %v", err)
 		}
 		raw = tur.GetResponse().Map
 	}
@@ -265,7 +293,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	md := meta.(*metaData)
 	tc := targets.NewClient(md.client)
 
-	opts := []targets.Option{}
+	var opts []targets.Option
 
 	var name *string
 	if d.HasChange(NameKey) {
@@ -396,6 +424,34 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error updating host sets in target: %v", err)
 		}
 		if err := d.Set(targetHostSetIdsKey, hostSetIds); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	// The above calls may not actually happen, so we use d.Id() and automatic
+	// versioning here
+	if d.HasChange(targetApplicationCredentialLibraryIdsKey) {
+		var credentialLibraryIds []string
+		if credentialLibraryIdsVal, ok := d.GetOk(targetApplicationCredentialLibraryIdsKey); ok {
+			credLibsIds := credentialLibraryIdsVal.(*schema.Set).List()
+			for _, credLibId := range credLibsIds {
+				credentialLibraryIds = append(credentialLibraryIds, credLibId.(string))
+			}
+		}
+
+		opts := []targets.Option{
+			targets.WithAutomaticVersioning(true),
+			targets.DefaultApplicationCredentialLibraryIds(),
+		}
+		if len(credentialLibraryIds) > 0 {
+			opts = append(opts, targets.WithApplicationCredentialLibraryIds(credentialLibraryIds))
+		}
+
+		_, err := tc.SetCredentialLibraries(ctx, d.Id(), 0, opts...)
+		if err != nil {
+			return diag.Errorf("error updating credential libraries in target: %v", err)
+		}
+		if err := d.Set(targetApplicationCredentialLibraryIdsKey, credentialLibraryIds); err != nil {
 			return diag.FromErr(err)
 		}
 	}

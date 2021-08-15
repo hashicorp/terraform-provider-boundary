@@ -51,7 +51,7 @@ func resourceHostCatalog() *schema.Resource {
 				ForceNew:    true,
 			},
 			TypeKey: {
-				Description: "The host catalog type. Only `Static` (yes, title case) is supported.",
+				Description: "The host catalog type. Only `static` is supported.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
