@@ -42,8 +42,8 @@ func resourceManagedGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			ScopeIdKey: {
-				Description: "The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.",
+			AuthMethodIdKey: {
+				Description: "The resource ID for the auth method.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -64,7 +64,7 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
 		return err
 	}
-	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
+	if err := d.Set(AuthMethodIdKey, raw[AuthMethodIdKey]); err != nil {
 		return err
 	}
 	if err := d.Set(managedGroupFilterKey, raw[managedGroupFilterKey]); err != nil {
@@ -79,11 +79,11 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	var scopeId string
-	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
-		scopeId = scopeIdVal.(string)
+	var authMethodId string
+	if authMethodVal, ok := d.GetOk(AuthMethodIdKey); ok {
+		authMethodId = authMethodVal.(string)
 	} else {
-		return diag.Errorf("no scope ID provided")
+		return diag.Errorf("no auth method ID provided")
 	}
 
 	opts := []managedgroups.Option{}
@@ -108,7 +108,7 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 
 	grps := managedgroups.NewClient(md.client)
 
-	gcr, err := grps.Create(ctx, scopeId, opts...)
+	gcr, err := grps.Create(ctx, authMethodId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating managed group: %v", err)
 	}
