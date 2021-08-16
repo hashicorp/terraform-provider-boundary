@@ -78,16 +78,16 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 
 func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
+	grpClient := managedgroups.NewClient(md.client)
 
 	var authMethodId string
-	if authMethodVal, ok := d.GetOk(AuthMethodIdKey); ok {
-		authMethodId = authMethodVal.(string)
-	} else {
+	authMethodVal, ok := d.GetOk(AuthMethodIdKey)
+	if !ok {
 		return diag.Errorf("no auth method ID provided")
 	}
+	authMethodId = authMethodVal.(string)
 
-	opts := []managedgroups.Option{}
-
+	var opts []managedgroups.Option
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
 		nameStr := nameVal.(string)
@@ -106,16 +106,14 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		opts = append(opts, managedgroups.WithOidcManagedGroupFilter(str))
 	}
 
-	grps := managedgroups.NewClient(md.client)
-
-	gcr, err := grps.Create(ctx, authMethodId, opts...)
+	grp, err := grpClient.Create(ctx, authMethodId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating managed group: %v", err)
 	}
-	if gcr == nil {
+	if grp == nil {
 		return diag.Errorf("managed group nil after create")
 	}
-	raw := gcr.GetResponse().Map
+	raw := grp.GetResponse().Map
 
 	if err := setFromManagedGroupResponseMap(d, raw); err != nil {
 		return diag.FromErr(err)
@@ -126,9 +124,9 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceManagedGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	grps := managedgroups.NewClient(md.client)
+	grpClient := managedgroups.NewClient(md.client)
 
-	g, err := grps.Read(ctx, d.Id())
+	grp, err := grpClient.Read(ctx, d.Id())
 	if err != nil {
 		if apiErr := api.AsServerError(err); apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -136,11 +134,11 @@ func resourceManagedGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 		return diag.Errorf("error reading managed group: %v", err)
 	}
-	if g == nil {
+	if grp == nil {
 		return diag.Errorf("managed group nil after read")
 	}
 
-	if err := setFromManagedGroupResponseMap(d, g.GetResponse().Map); err != nil {
+	if err := setFromManagedGroupResponseMap(d, grp.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -149,10 +147,9 @@ func resourceManagedGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceManagedGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	grps := managedgroups.NewClient(md.client)
+	grpClient := managedgroups.NewClient(md.client)
 
-	opts := []managedgroups.Option{}
-
+	var opts []managedgroups.Option
 	var name *string
 	if d.HasChange(NameKey) {
 		opts = append(opts, managedgroups.DefaultName())
@@ -186,7 +183,7 @@ func resourceManagedGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if len(opts) > 0 {
 		opts = append(opts, managedgroups.WithAutomaticVersioning(true))
-		_, err := grps.Update(ctx, d.Id(), 0, opts...)
+		_, err := grpClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating managed group: %v", err)
 		}
@@ -213,9 +210,9 @@ func resourceManagedGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceManagedGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	grps := managedgroups.NewClient(md.client)
+	grpClient := managedgroups.NewClient(md.client)
 
-	_, err := grps.Delete(ctx, d.Id())
+	_, err := grpClient.Delete(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling delete managed group: %s", err.Error())
 	}

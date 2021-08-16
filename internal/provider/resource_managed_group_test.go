@@ -86,9 +86,9 @@ func testAccCheckManagedGroupResourceExists(testProvider *schema.Provider, name 
 		}
 
 		md := testProvider.Meta().(*metaData)
-		grps := managedgroups.NewClient(md.client)
+		grpClient := managedgroups.NewClient(md.client)
 
-		_, err := grps.Read(context.Background(), id)
+		_, err := grpClient.Read(context.Background(), id)
 		if err != nil {
 			return fmt.Errorf("Got an error when reading group %q: %v", id, err)
 		}
@@ -108,11 +108,10 @@ func testAccCheckManagedGroupResourceDestroy(t *testing.T, testProvider *schema.
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
 			case "boundary_managed_group":
-				grps := managedgroups.NewClient(md.client)
-
+				grpClient := managedgroups.NewClient(md.client)
 				id := rs.Primary.ID
 
-				_, err := grps.Read(context.Background(), id)
+				_, err := grpClient.Read(context.Background(), id)
 				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
 					return fmt.Errorf("didn't get a 404 when reading destroyed resource %q: %v", id, apiErr)
 				}
