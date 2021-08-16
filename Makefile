@@ -41,7 +41,10 @@ all:
 	GOOS=windows go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_windows-amd64 main.go
 	GOOS=linux go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_linux-amd64 main.go
 
+docs: 
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+
 rm-id-flag-from-docs:
 	find docs/ -name "*.md" -type f | xargs sed -i -e '/- \*\*id\*\*/d'
 
-.PHONY: testacc tools
+.PHONY: testacc tools docs

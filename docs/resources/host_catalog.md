@@ -42,7 +42,7 @@ resource "boundary_host_catalog" "example" {
 ### Required
 
 - **scope_id** (String) The scope ID in which the resource is created.
-- **type** (String) The host catalog type. Only `Static` (yes, title case) is supported.
+- **type** (String) The host catalog type. Only `static` is supported.
 
 ### Optional
 

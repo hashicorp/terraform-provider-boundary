@@ -33,6 +33,22 @@ resource "boundary_scope" "project" {
   auto_create_admin_role = true
 }
 
+resource "boundary_credential_store_vault" "foo" {
+  name        = "vault_store"
+  description = "My first Vault credential store!"
+  address     = "http://127.0.0.1:8200"      # change to Vault address
+  token       = "s.0ufRo6XEGU2jOqnIr7OlFYP5" # change to valid Vault token
+  scope_id    = boundary_scope.project.id
+}
+
+resource "boundary_credential_library_vault" "foo" {
+  name                = "foo"
+  description         = "My first Vault credential library!"
+  credential_store_id = boundary_credential_store_vault.foo.id
+  path                = "my/secret/foo" # change to Vault backend path
+  http_method         = "GET"
+}
+
 resource "boundary_host_catalog" "foo" {
   name        = "test"
   description = "test catalog"
@@ -72,6 +88,9 @@ resource "boundary_target" "foo" {
   host_set_ids = [
     boundary_host_set.foo.id
   ]
+  application_credential_library_ids = [
+    boundary_credential_library_vault.foo.id
+  ]
 }
 ```
 
@@ -85,6 +104,7 @@ resource "boundary_target" "foo" {
 
 ### Optional
 
+- **application_credential_library_ids** (Set of String) A list of application credential library ID's.
 - **default_port** (Number) The default port for this target.
 - **description** (String) The target description.
 - **host_set_ids** (Set of String) A list of host set ID's.
