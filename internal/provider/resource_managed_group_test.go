@@ -53,7 +53,6 @@ func TestAccManagedGroup(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
-		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
