@@ -4,69 +4,78 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/managedgroups"
 	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
-	managedGroupName        = "test_managed_group"
+	managedGroupName        = "test"
 	managedGroupDescription = "test managed group"
 	managedGroupUpdate      = "_update"
 )
 
 var (
-	orgManagedGroup = fmt.Sprintf(`
-resource "boundary_managed_group" "test" {
-	name        = "%s"
-	description = "%s"
-	scope_id    = boundary_scope.org1.id
-	depends_on = [boundary_role.org1_admin]
+	fooManagedGroup = fmt.Sprintf(`
+resource "boundary_managed_group" "foo" {
+	name           = "%s"
+	description    = "%s"
+	auth_method_id = boundary_auth_method_oidc.foo.id
+	filter         = "name == \"foo\""
 }`, managedGroupName, managedGroupDescription)
 
-	orgManagedGroupUpdate = fmt.Sprintf(`
-resource "boundary_managed_group" "test" {
-	name        = "%s"
-	description = "%s"
-	scope_id    = boundary_scope.org1.id
-	depends_on  = [boundary_role.org1_admin]
+	fooManagedGroupUpdate = fmt.Sprintf(`
+resource "boundary_managed_group" "foo" {
+	name           = "%s"
+	description    = "%s"
+	auth_method_id = boundary_auth_method_oidc.foo.id
+	filter         = "name == \"bar\""
 }`, managedGroupName+managedGroupUpdate, managedGroupDescription+managedGroupUpdate)
 )
 
 func TestAccManagedGroup(t *testing.T) {
 	wrapper := testWrapper(t, tcRecoveryKey)
+	tp := oidc.StartTestProvider(t)
 	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
+
+	tpCert := strings.TrimSpace(tp.CACert())
+	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
 
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfigWithRecovery(url, fooOrg, orgManagedGroup),
+				Config: testConfig(url, fooOrg, createConfig, fooManagedGroup),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.org1"),
-					resource.TestCheckResourceAttr("boundary_managed_group.org1", DescriptionKey, managedGroupDescription),
-					resource.TestCheckResourceAttr("boundary_managed_group.org1", NameKey, managedGroupName),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "foo"`),
 				),
 			},
-			importStep("boundary_managed_group.org1"),
+			importStep("boundary_managed_group.foo"),
 			{
 				// test update
-				Config: testConfigWithRecovery(url, fooOrg, orgManagedGroupUpdate),
+				Config: testConfig(url, fooOrg, createConfig, fooManagedGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.org1"),
-					resource.TestCheckResourceAttr("boundary_managed_group.org1", DescriptionKey, managedGroupDescription+managedGroupUpdate),
-					resource.TestCheckResourceAttr("boundary_managed_group.org1", NameKey, managedGroupName+managedGroupUpdate),
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription+managedGroupUpdate),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName+managedGroupUpdate),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "bar"`),
 				),
 			},
 		},

@@ -67,8 +67,14 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 	if err := d.Set(AuthMethodIdKey, raw[AuthMethodIdKey]); err != nil {
 		return err
 	}
-	if err := d.Set(managedGroupFilterKey, raw[managedGroupFilterKey]); err != nil {
-		return err
+
+	if attrsVal, ok := raw["attributes"]; ok {
+		attrs := attrsVal.(map[string]interface{})
+		if v, ok := attrs[managedGroupFilterKey]; ok {
+			if err := d.Set(managedGroupFilterKey, v); err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(raw[IDKey].(string))
