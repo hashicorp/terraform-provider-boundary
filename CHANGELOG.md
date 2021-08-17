@@ -1,3 +1,10 @@
+## 1.0.4 (Unreleased)
+
+### New and Improved
+
+* Adds managed groups resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/118)).
+
 ## 1.0.3 (June 30, 2021)
 
 ### New and Improved
