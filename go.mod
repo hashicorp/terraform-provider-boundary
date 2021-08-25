@@ -19,7 +19,7 @@ require (
 	github.com/hashicorp/boundary/sdk v0.0.7
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
-	github.com/hashicorp/go-kms-wrapping v0.6.5
+	github.com/hashicorp/go-kms-wrapping v0.6.6
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-docs v0.4.0
