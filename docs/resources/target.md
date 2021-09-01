@@ -82,6 +82,7 @@ resource "boundary_host_set" "foo" {
 
 resource "boundary_target" "foo" {
   name         = "foo"
+  type         = "tcp"
   description  = "Foo target"
 	type         = "tcp"
   default_port = "22"
