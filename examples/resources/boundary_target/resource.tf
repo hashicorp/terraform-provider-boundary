@@ -67,9 +67,8 @@ resource "boundary_host_set" "foo" {
 
 resource "boundary_target" "foo" {
   name         = "foo"
-  type         = "tcp"
   description  = "Foo target"
-	type         = "tcp"
+  type         = "tcp"
   default_port = "22"
   scope_id     = boundary_scope.project.id
   host_set_ids = [
