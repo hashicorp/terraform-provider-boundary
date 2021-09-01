@@ -6,11 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/vault"
-
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/targets"
 	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/boundary/testing/vault"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -87,10 +86,10 @@ resource "boundary_target" "foo" {
 	description  = "%s"
 	type         = "tcp"
 	scope_id     = boundary_scope.proj1.id
-	host_set_ids = [
+	host_source_ids = [
 		boundary_host_set.foo.id
 	]
-	application_credential_library_ids = [
+	application_credential_source_ids = [
 		boundary_credential_library_vault.foo.id
 	]
 	default_port = 22
@@ -106,10 +105,10 @@ resource "boundary_target" "foo" {
 	description  = "%s"
 	type         = "tcp"
 	scope_id     = boundary_scope.proj1.id
-	host_set_ids = [
+	host_source_ids = [
 		boundary_host_set.bar.id
 	]
-	application_credential_library_ids = [
+	application_credential_source_ids = [
 		boundary_credential_library_vault.bar.id
 	]
 	default_port = 80
@@ -119,7 +118,7 @@ resource "boundary_target" "foo" {
 	worker_filter = "type == \"bar\""
 }`, fooTargetDescriptionUpdate)
 
-	fooTargetUpdateUnsetHostAndCredLibs = fmt.Sprintf(`
+	fooTargetUpdateUnsetHostAndCredSources = fmt.Sprintf(`
 resource "boundary_target" "foo" {
 	name         = "test"
 	description  = "%s"
@@ -131,6 +130,44 @@ resource "boundary_target" "foo" {
 	session_connection_limit = 7
 	worker_filter = "type == \"bar\""
 }`, fooTargetDescriptionUpdate)
+
+	// TODO: remove this when host_set_ids and application_credential_library_ids
+	// are fully deprecated
+	fooTargetDeprecatedFields = `
+resource "boundary_target" "foo" {
+	name         = "test_deprecated"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	host_set_ids = [
+		boundary_host_set.foo.id
+	]
+	application_credential_library_ids = [
+		boundary_credential_library_vault.foo.id
+	]
+	depends_on  = [boundary_role.proj1_admin]
+}`
+
+	fooTargetDeprecatedFieldsUpdate = `
+resource "boundary_target" "foo" {
+	name         = "test_deprecated"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	host_set_ids = [
+		boundary_host_set.bar.id
+	]
+	application_credential_library_ids = [
+		boundary_credential_library_vault.bar.id
+	]
+	depends_on  = [boundary_role.proj1_admin]
+}`
+
+	fooTargetDeprecatedFieldsUnset = `
+resource "boundary_target" "foo" {
+	name       = "test_deprecated"
+	type       = "tcp"
+	scope_id   = boundary_scope.proj1.id
+	depends_on = [boundary_role.proj1_admin]
+}`
 )
 
 func TestAccTarget(t *testing.T) {
@@ -151,6 +188,7 @@ func TestAccTarget(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckTargetResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
@@ -165,6 +203,8 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "6000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "foo"`),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
+					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
 					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
 					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
 				),
@@ -180,14 +220,16 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
+					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
 					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
 					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
 				),
 			},
 			importStep("boundary_target.foo"),
 			{
-				// test unset hosts and cred libs
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdateUnsetHostAndCredLibs),
+				// test unset hosts and cred sources
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdateUnsetHostAndCredSources),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
@@ -195,6 +237,8 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", nil),
+					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", nil),
 					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", nil),
 					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", nil),
 				),
@@ -204,6 +248,180 @@ func TestAccTarget(t *testing.T) {
 	})
 }
 
+func TestAccTargetDeprecatedFields(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	vc := vault.NewTestVaultServer(t)
+	_, token := vc.CreateToken(t)
+	credStoreRes := vaultCredStoreResource(vc,
+		vaultCredStoreName,
+		vaultCredStoreDesc,
+		vaultCredStoreNamespace,
+		"www.original.com",
+		token,
+		true)
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckTargetResourceDestroy(t, provider),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetDeprecatedFields),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
+					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
+					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
+					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
+				),
+			},
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetDeprecatedFieldsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
+					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
+					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
+					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
+				),
+			},
+			{
+				// test unset hosts and cred sources
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetDeprecatedFieldsUnset),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", nil),
+					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", nil),
+					testAccCheckTargetResourceHostSet(provider, "boundary_target.foo", nil),
+					testAccCheckTargetResourceAppCredLibs(provider, "boundary_target.foo", nil),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckTargetResourceHostSource(testProvider *schema.Provider, name string, hostSources []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("target resource not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("target resource ID is not set")
+		}
+
+		// ensure host sources are declared in state
+		var hostSourceIDs []string
+		for _, hostSourceResourceID := range hostSources {
+			hs, ok := s.RootModule().Resources[hostSourceResourceID]
+			if !ok {
+				return fmt.Errorf("host source resource not found: %s", hostSourceResourceID)
+			}
+
+			hostSourceID := hs.Primary.ID
+			if id == "" {
+				return fmt.Errorf("host source resource ID not set")
+			}
+
+			hostSourceIDs = append(hostSourceIDs, hostSourceID)
+		}
+
+		// check boundary to ensure it matches
+		md := testProvider.Meta().(*metaData)
+		tgtsClient := targets.NewClient(md.client)
+
+		t, err := tgtsClient.Read(context.Background(), id)
+		if err != nil {
+			return fmt.Errorf("Got an error when reading target %q: %v", id, err)
+		}
+
+		if len(t.Item.HostSourceIds) != len(hostSourceIDs) {
+			return fmt.Errorf("tf state and boundary have different number of host sources")
+		}
+
+		for _, stateHostSourceId := range t.Item.HostSourceIds {
+			ok := false
+			for _, gotHostSourceID := range hostSourceIDs {
+				if gotHostSourceID == stateHostSourceId {
+					ok = true
+				}
+			}
+			if !ok {
+				return fmt.Errorf("host source id in state not set in boundary: %s", stateHostSourceId)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTargetResourceAppCredSources(testProvider *schema.Provider, name string, credSources []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("target resource not found: %s", name)
+		}
+
+		id := rs.Primary.ID
+		if id == "" {
+			return fmt.Errorf("target resource ID is not set")
+		}
+
+		// ensure cred sources are declared in state
+		var credSourceIDs []string
+		for _, credSourceResourceID := range credSources {
+			cl, ok := s.RootModule().Resources[credSourceResourceID]
+			if !ok {
+				return fmt.Errorf("credential source resource not found: %s", credSourceResourceID)
+			}
+
+			credSourceID := cl.Primary.ID
+			if id == "" {
+				return fmt.Errorf("credential source resource ID not set")
+			}
+
+			credSourceIDs = append(credSourceIDs, credSourceID)
+		}
+
+		// check boundary to ensure it matches
+		md := testProvider.Meta().(*metaData)
+		tgtsClient := targets.NewClient(md.client)
+
+		t, err := tgtsClient.Read(context.Background(), id)
+		if err != nil {
+			return fmt.Errorf("got an error when reading target %q: %w", id, err)
+		}
+
+		if len(t.Item.ApplicationCredentialSourceIds) != len(credSourceIDs) {
+			return fmt.Errorf("tf state and boundary have different number of application credential sources")
+		}
+
+		for _, stateCredSourceId := range t.Item.ApplicationCredentialSourceIds {
+			ok := false
+			for _, gotCredSourceID := range credSourceIDs {
+				if gotCredSourceID == stateCredSourceId {
+					ok = true
+				}
+			}
+			if !ok {
+				return fmt.Errorf("application credential source id in state not set in boundary: %s", stateCredSourceId)
+			}
+		}
+
+		return nil
+	}
+}
+
+// TODO: remove when host_set_ids is fully deprecated
 func testAccCheckTargetResourceHostSet(testProvider *schema.Provider, name string, hostSets []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -261,6 +479,7 @@ func testAccCheckTargetResourceHostSet(testProvider *schema.Provider, name strin
 	}
 }
 
+// TODO: remove when application_credential_library_ids is fully deprecated
 func testAccCheckTargetResourceAppCredLibs(testProvider *schema.Provider, name string, credLibs []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
