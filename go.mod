@@ -16,7 +16,7 @@ require (
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/hashicorp/boundary v0.5.1
 	github.com/hashicorp/boundary/api v0.0.15
-	github.com/hashicorp/boundary/sdk v0.0.7
+	github.com/hashicorp/boundary/sdk v0.0.8
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
 	github.com/hashicorp/go-kms-wrapping v0.6.5
