@@ -1,3 +1,11 @@
+## Next
+
+### Deprecations/Changes
+
+* Deprecate fields `host_set_ids` and `application_credential_library_ids` of the 
+  `target` resource. See boundary 0.5.0 [changelog](https://github.com/hashicorp/boundary/blob/main/CHANGELOG.md#deprecationschanges) for more detail on the deprecation.
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/134)).
+
 ## 1.0.4 (August 19, 2021)
 
 ### New and Improved

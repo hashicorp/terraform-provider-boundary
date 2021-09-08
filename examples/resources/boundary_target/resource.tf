@@ -68,12 +68,13 @@ resource "boundary_host_set" "foo" {
 resource "boundary_target" "foo" {
   name         = "foo"
   description  = "Foo target"
+  type         = "tcp"
   default_port = "22"
   scope_id     = boundary_scope.project.id
-  host_set_ids = [
+  host_source_ids = [
     boundary_host_set.foo.id
   ]
-  application_credential_library_ids = [
+  application_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
 }

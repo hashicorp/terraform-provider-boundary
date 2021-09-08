@@ -22,7 +22,7 @@ resource "boundary_user" "readonly" {
 resource "boundary_role" "readonly" {
   name          = "readonly"
   description   = "A readonly role"
-  principals    = [boundary_user.readonly.id]
-  grant_strings = ["id=*;action=read"]
+  principal_ids = [boundary_user.readonly.id]
+  grant_strings = ["id=*;type=*;actions=read"]
   scope_id      = boundary_scope.project.id
 }
