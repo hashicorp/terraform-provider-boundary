@@ -51,7 +51,7 @@ func resourceManagedGroup() *schema.Resource {
 			managedGroupFilterKey: {
 				Description: "Boolean expression to filter the workers for this managed group.",
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 			},
 		},
 	}

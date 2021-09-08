@@ -18,11 +18,11 @@ The managed group resource allows you to configure a Boundary group.
 ### Required
 
 - **auth_method_id** (String) The resource ID for the auth method.
+- **filter** (String) Boolean expression to filter the workers for this managed group.
 
 ### Optional
 
 - **description** (String) The managed group description.
-- **filter** (String) Boolean expression to filter the workers for this managed group.
 - **name** (String) The managed group name. Defaults to the resource name.
 
 ### Read-Only
