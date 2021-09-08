@@ -16,6 +16,6 @@ resource "boundary_role" "readonly" {
   name          = "readonly"
   description   = "A readonly role"
   principal_ids = [boundary_user.readonly.id]
-  grants        = ["id=*;type=*;actions=read"]
+  grant_strings = ["id=*;type=*;actions=read"]
   scope_id      = boundary_scope.org.id
 }
