@@ -1,4 +1,4 @@
-## 1.0.5 (Unreleased)
+## 1.0.5 (September 09, 2021)
 
 ### Deprecations/Changes
 
