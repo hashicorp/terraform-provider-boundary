@@ -1,4 +1,4 @@
-## Next
+## 1.0.5 (Unreleased)
 
 ### Deprecations/Changes
 
