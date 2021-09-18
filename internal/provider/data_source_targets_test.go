@@ -48,10 +48,13 @@ func TestAccDataSourceTargets(t *testing.T) {
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTarget, fooTargetsData),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.boundary_targets.foo", "id", "boundary-targets"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.#", "1"),
-					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.%", "17"),
+					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.%", "21"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.application_credential_libraries.#", "0"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.application_credential_library_ids.#", "0"),
+					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.application_credential_source_ids.#", "0"),
+					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.application_credential_sources.#", "0"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.authorized_actions.#", "11"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.authorized_actions.0", "no-op"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.authorized_actions.1", "read"),
@@ -68,6 +71,8 @@ func TestAccDataSourceTargets(t *testing.T) {
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.description", "bar"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.host_set_ids.#", "0"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.host_sets.#", "0"),
+					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.host_source_ids.#", "0"),
+					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.host_sources.#", "0"),
 					resource.TestCheckResourceAttrSet("data.boundary_targets.foo", "items.0.id"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.name", "test"),
 					resource.TestCheckResourceAttr("data.boundary_targets.foo", "items.0.scope.#", "1"),

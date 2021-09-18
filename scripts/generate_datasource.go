@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	boundaryVersion = "v0.4.0"
+	boundaryVersion = "v0.6.1"
 	swaggerFile     = fmt.Sprintf("https://raw.githubusercontent.com/hashicorp/boundary/%s/internal/gen/controller.swagger.json", boundaryVersion)
 )
 
