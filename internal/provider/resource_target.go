@@ -67,35 +67,17 @@ func resourceTarget() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
-			"host_set_ids": {
-				Description:   "A list of host set ID's.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Deprecated:    "Please use 'host_source_ids' instead",
-				ConflictsWith: []string{targetHostSourceIdsKey},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-			},
-			"application_credential_library_ids": {
-				Description:   "A list of application credential library ID's.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Deprecated:    "Please use 'application_credential_source_ids' instead",
-				ConflictsWith: []string{targetApplicationCredentialSourceIdsKey},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-			},
 			targetHostSourceIdsKey: {
-				Description:   "A list of host source ID's.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"host_set_ids"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Description: "A list of host source ID's.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			targetApplicationCredentialSourceIdsKey: {
-				Description:   "A list of application credential source ID's.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"application_credential_library_ids"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Description: "A list of application credential source ID's.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			targetSessionMaxSecondsKey: {
 				Type:     schema.TypeInt,
@@ -129,23 +111,11 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	if err := d.Set(TypeKey, raw["type"]); err != nil {
 		return err
 	}
-	if _, ok := d.GetOk("host_set_ids"); ok {
-		if err := d.Set("host_set_ids", raw["host_set_ids"]); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set(targetHostSourceIdsKey, raw["host_source_ids"]); err != nil {
-			return err
-		}
+	if err := d.Set(targetHostSourceIdsKey, raw["host_source_ids"]); err != nil {
+		return err
 	}
-	if _, ok := d.GetOk("application_credential_library_ids"); ok {
-		if err := d.Set("application_credential_library_ids", raw["application_credential_library_ids"]); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set(targetApplicationCredentialSourceIdsKey, raw["application_credential_source_ids"]); err != nil {
-			return err
-		}
+	if err := d.Set(targetApplicationCredentialSourceIdsKey, raw["application_credential_source_ids"]); err != nil {
+		return err
 	}
 	if err := d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"]); err != nil {
 		return err
@@ -245,27 +215,9 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	// TODO: remove when host_set_ids is fully deprecated
-	if hostSetIdsVal, ok := d.GetOk("host_set_ids"); ok {
-		list := hostSetIdsVal.(*schema.Set).List()
-		hostSourceIds = make([]string, 0, len(list))
-		for _, i := range list {
-			hostSourceIds = append(hostSourceIds, i.(string))
-		}
-	}
-
 	var credentialSourceIds []string
 	if credentialSourceIdsVal, ok := d.GetOk(targetApplicationCredentialSourceIdsKey); ok {
 		list := credentialSourceIdsVal.(*schema.Set).List()
-		credentialSourceIds = make([]string, 0, len(list))
-		for _, i := range list {
-			credentialSourceIds = append(credentialSourceIds, i.(string))
-		}
-	}
-
-	// TODO: remove when application_credential_library_ids is fully deprecated
-	if credentialLibIdsVal, ok := d.GetOk("application_credential_library_ids"); ok {
-		list := credentialLibIdsVal.(*schema.Set).List()
 		credentialSourceIds = make([]string, 0, len(list))
 		for _, i := range list {
 			credentialSourceIds = append(credentialSourceIds, i.(string))
@@ -476,24 +428,6 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	// // TODO: remove when host_set_ids is fully deprecated
-	if d.HasChange("host_set_ids") {
-		var hostSourceIds []string
-		if hostSourceIdsVal, ok := d.GetOk("host_set_ids"); ok {
-			hostSources := hostSourceIdsVal.(*schema.Set).List()
-			for _, hostSource := range hostSources {
-				hostSourceIds = append(hostSourceIds, hostSource.(string))
-			}
-		}
-		_, err := tc.SetHostSets(ctx, d.Id(), 0, hostSourceIds, targets.WithAutomaticVersioning(true))
-		if err != nil {
-			return diag.Errorf("error updating host sources in target: %v", err)
-		}
-		if err := d.Set("host_set_ids", hostSourceIds); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
 	// The above calls may not actually happen, so we use d.Id() and automatic
 	// versioning here
 	if d.HasChange(targetApplicationCredentialSourceIdsKey) {
@@ -518,33 +452,6 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error updating credential sources in target: %v", err)
 		}
 		if err := d.Set(targetApplicationCredentialSourceIdsKey, credentialSourceIds); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	// TODO: remove when application_credential_library_ids is fully deprecated
-	if d.HasChange("application_credential_library_ids") {
-		var credentialSourceIds []string
-		if credentialSourceIdsVal, ok := d.GetOk("application_credential_library_ids"); ok {
-			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
-			for _, credSourceId := range credSourceIds {
-				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
-			}
-		}
-
-		opts := []targets.Option{
-			targets.WithAutomaticVersioning(true),
-			targets.DefaultApplicationCredentialLibraryIds(),
-		}
-		if len(credentialSourceIds) > 0 {
-			opts = append(opts, targets.WithApplicationCredentialLibraryIds(credentialSourceIds))
-		}
-
-		_, err := tc.SetCredentialLibraries(ctx, d.Id(), 0, opts...)
-		if err != nil {
-			return diag.Errorf("error updating credential sources in target: %v", err)
-		}
-		if err := d.Set("application_credential_library_ids", credentialSourceIds); err != nil {
 			return diag.FromErr(err)
 		}
 	}
