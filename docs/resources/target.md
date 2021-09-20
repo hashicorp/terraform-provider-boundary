@@ -105,11 +105,9 @@ resource "boundary_target" "foo" {
 
 ### Optional
 
-- **application_credential_library_ids** (Set of String, Deprecated) A list of application credential library ID's.
 - **application_credential_source_ids** (Set of String) A list of application credential source ID's.
 - **default_port** (Number) The default port for this target.
 - **description** (String) The target description.
-- **host_set_ids** (Set of String, Deprecated) A list of host set ID's.
 - **host_source_ids** (Set of String) A list of host source ID's.
 - **name** (String) The target name. Defaults to the resource name.
 - **session_connection_limit** (Number)
