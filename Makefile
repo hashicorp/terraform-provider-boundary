@@ -1,4 +1,4 @@
-default: testacc 
+default: testacc
 GOOS=$(shell go env GOOS)
 GOARCH=$(shell go env GOARCH)
 INSTALL_PATH=~/.local/share/terraform/plugins/localhost/providers/boundary/0.0.1/linux_$(GOARCH)
@@ -10,6 +10,16 @@ endif
 ifeq ($(GOOS), "windows")
 	INSTALL_PATH=%APPDATA%/HashiCorp/Terraform/plugins/localhost/providers/boundary/0.0.1/windows_$(GOARCH)
 endif
+
+REGISTRY_NAME?=docker.io/hashicorpboundary
+IMAGE_NAME=postgres
+IMAGE_TAG ?= $(REGISTRY_NAME)/$(IMAGE_NAME):11-alpine
+DOCKER_ARGS ?= -d
+PG_OPTS ?=
+TEST_DB_PORT ?= 5432
+BOUNDARY_VERSION = $(shell go mod edit -json | jq -r '.["Require"][] | select(.Path=="github.com/hashicorp/boundary") | .["Version"]')
+GOPATH ?= ~/go
+GOMODCACHE ?= $(GOPATH)/pkg/mod
 
 tools:
 	go generate -tags tools tools/tools.go
@@ -28,11 +38,13 @@ testacc-ci: install-go
 	git config --global --add url."git@github.com:".insteadOf "https://github.com/"
 	TF_ACC=1 ~/.go/bin/go test ./... -v $(TESTARGS) -timeout 120m
 
-install-go:
+install-go: ~/.go/bin/go
+
+~/.go/bin/go:
 	./ci/goinstall.sh
 
 dev:
-	mkdir -p $(INSTALL_PATH)	
+	mkdir -p $(INSTALL_PATH)
 	go build -o $(INSTALL_PATH)/terraform-provider-boundary main.go
 
 all:
@@ -41,10 +53,35 @@ all:
 	GOOS=windows go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_windows-amd64 main.go
 	GOOS=linux go build -o $(BUILD_ALL_PATH)/terraform-provider-boundary_linux-amd64 main.go
 
-docs: 
+docs:
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 
 rm-id-flag-from-docs:
 	find docs/ -name "*.md" -type f | xargs sed -i -e '/- \*\*id\*\*/d'
 
-.PHONY: testacc tools docs
+test-database-up:
+	@echo "Using image:                       $(IMAGE_TAG)"
+	@echo "Additional postgres configuration: $(PG_OPTS)"
+	@echo "Using volume:                      $(GOMODCACHE)/github.com/hashicorp/boundary@$(BOUNDARY_VERSION)/internal/db/schema/migrations/postgres:/migrations"
+	@docker run \
+		$(DOCKER_ARGS) \
+		--name boundary-sql-tests \
+		-p $(TEST_DB_PORT):5432 \
+		-e POSTGRES_PASSWORD=boundary \
+		-e POSTGRES_USER=boundary \
+		-e POSTGRES_DB=boundary \
+		-e PGDATA=/pgdata \
+		--mount type=tmpfs,destination=/pgdata \
+		-v "$(GOMODCACHE)/github.com/hashicorp/boundary@$(BOUNDARY_VERSION)/internal/db/schema/migrations/postgres":/migrations \
+		$(IMAGE_TAG) \
+		-c 'config_file=/etc/postgresql/postgresql.conf' \
+		$(PG_OPTS) 1> /dev/null
+	@echo "Test database available at:        127.0.0.1:$(TEST_DB_PORT)"
+	@echo "For database logs run:"
+	@echo "    docker logs boundary-sql-tests"
+
+test-database-down:
+	docker stop boundary-sql-tests || true
+	docker rm -v boundary-sql-tests || true
+
+.PHONY: testacc tools docs test-database-up test-database-down

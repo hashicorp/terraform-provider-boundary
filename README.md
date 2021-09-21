@@ -53,13 +53,24 @@ If you wish to work on the provider, you'll first need [Go](http://www.golang.or
 
 To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
+In order to run the full suite of Acceptance tests,
+a postgres docker container must be started first:
+
+```sh
+$ go mod download # ensure boundary is installed, files are used by the docker image
+$ make test-database-up
+```
+
+Once the test database is ready the tests can be run using `make testacc`.
 
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
 ```sh
 $ make testacc
 ```
+
+For more details on the docker image and troubleshooting see the
+[boundary testing doc](https://github.com/hashicorp/boundary/blob/main/CONTRIBUTING.md#testing).
 
 Generating Docs
 ----------------------
