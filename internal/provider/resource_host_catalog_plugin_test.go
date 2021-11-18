@@ -1,6 +1,5 @@
 package provider
 
-/*
 import (
 	"context"
 	"fmt"
@@ -16,65 +15,69 @@ import (
 )
 
 const (
-	fooHostCatalogDescription       = "bar"
-	fooHostCatalogDescriptionUpdate = "foo bar"
+	testPluginHostCatalogDescription       = "bar"
+	testPluginHostCatalogDescriptionUpdate = "foo bar"
 )
 
 var (
-	projHostCatalog = fmt.Sprintf(`
-resource "boundary_host_catalog" "foo" {
+	projPluginHostCatalog = fmt.Sprintf(`
+resource "boundary_host_catalog_plugin" "foo" {
 	name        = "foo"
 	description = "%s"
 	scope_id    = boundary_scope.proj1.id
-	type        = "static"
+	type        = "plugin"
+	plugin_name = "loopback"
 	depends_on  = [boundary_role.proj1_admin]
-}`, fooHostCatalogDescription)
+}`, testPluginHostCatalogDescription)
 
-	projHostCatalogUpdate = fmt.Sprintf(`
-resource "boundary_host_catalog" "foo" {
+	projPluginHostCatalogUpdate = fmt.Sprintf(`
+resource "boundary_host_catalog_plugin" "foo" {
 	name        = "foo"
 	description = "%s"
 	scope_id    = boundary_scope.proj1.id
-	type        = "static"
+	type        = "plugin"
+	plugin_name = "loopback"
 	depends_on  = [boundary_role.proj1_admin]
-}`, fooHostCatalogDescriptionUpdate)
+}`, testPluginHostCatalogDescriptionUpdate)
 )
 
-func TestAccHostCatalogCreate(t *testing.T) {
+func TestAccPluginHostCatalogCreate(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
+	resName := "boundary_host_catalog_plugin.foo"
+
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckPluginHostCatalogResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalog),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projPluginHostCatalog),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
-					testAccCheckHostCatalogResourceExists(provider, "boundary_host_catalog.foo"),
-					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescription),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescription),
 				),
 			},
-			importStep("boundary_host_catalog.foo"),
+			importStep(resName),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalogUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, projPluginHostCatalogUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostCatalogResourceExists(provider, "boundary_host_catalog.foo"),
-					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescriptionUpdate),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
 				),
 			},
-			importStep("boundary_host_catalog.foo"),
+			importStep(resName),
 		},
 	})
 }
 
-func testAccCheckHostCatalogResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -97,7 +100,7 @@ func testAccCheckHostCatalogResourceExists(testProvider *schema.Provider, name s
 	}
 }
 
-func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckPluginHostCatalogResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		md := testProvider.Meta().(*metaData)
 
@@ -120,4 +123,3 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.P
 		return nil
 	}
 }
-*/

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -55,12 +56,14 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true, // If name is provided this will be computed
 			},
 			PluginNameKey: {
 				Description: "The name of the plugin that should back the resource. This or " + PluginIdKey + " must be defined.",
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true,
 			},
 			TypeKey: {
 				Description: "The host catalog type. Only `plugin` is supported, and is the default.",
@@ -82,6 +85,7 @@ func resourceHostCatalogPlugin() *schema.Resource {
 			SecretsHmacKey: {
 				Description: "The HMAC'd secrets value returned from the server.",
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 			},
 		},
@@ -98,11 +102,33 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
 		return err
 	}
+	if err := d.Set(TypeKey, raw[TypeKey]); err != nil {
+		return err
+	}
 	if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
 		return err
 	}
-	if err := d.Set(TypeKey, raw[TypeKey]); err != nil {
-		return err
+	{
+		// Boundary doesn't currently return the plugin name in responses
+		pluginRaw, ok := raw["plugin"]
+		if !ok {
+			return fmt.Errorf("plugin field not found in response")
+		}
+		pluginInfo, ok := pluginRaw.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("plugin field in response has wrong type")
+		}
+		pluginNameRaw, ok := pluginInfo["name"]
+		if !ok {
+			return fmt.Errorf("plugin name field not found in response")
+		}
+		pluginName, ok := pluginNameRaw.(string)
+		if !ok {
+			return fmt.Errorf("plugin name field in response has wrong type")
+		}
+		if err := d.Set(PluginNameKey, pluginName); err != nil {
+			return err
+		}
 	}
 	if err := d.Set(AttributesKey, raw[AttributesKey]); err != nil {
 		return err
