@@ -15,4 +15,14 @@ const (
 	HostCatalogIdKey = "host_catalog_id"
 	// AuthMethodIdKey is used for common "auth_method_id" resource attribute
 	AuthMethodIdKey = "auth_method_id"
+	// PluginIdKey is used for common "plugin_id" resource attribute
+	PluginIdKey = "plugin_id"
+	// PluginNameKey is used for common "plugin_name" resource attribute
+	PluginNameKey = "plugin_name"
+	// AttributesKey is used for setting attributes
+	AttributesKey = "attributes"
+	// SecretsKey is used for setting secrets
+	SecretsKey = "secrets"
+	// SecretsHmacKey is a read-only key used for ensuring we detect if secrets have changed
+	SecretsHmacKey = "secrets_hmac"
 )

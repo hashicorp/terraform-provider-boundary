@@ -11,19 +11,19 @@ import (
 )
 
 const (
-	hostCatalogTypeStatic = "static"
+	hostCatalogTypePlugin = "plugin"
 )
 
-func resourceHostCatalog() *schema.Resource {
+func resourceHostCatalogPlugin() *schema.Resource {
 	return &schema.Resource{
-		Description: "The host catalog resource allows you to configure a Boundary host catalog. Host " +
+		Description: "The host catalog resource allows you to configure a Boundary plugin-type host catalog. Host " +
 			"catalogs are always part of a project, so a project resource should be used inline or you " +
 			"should have the project ID in hand to successfully configure a host catalog.",
 
-		CreateContext: resourceHostCatalogCreate,
-		ReadContext:   resourceHostCatalogRead,
-		UpdateContext: resourceHostCatalogUpdate,
-		DeleteContext: resourceHostCatalogDelete,
+		CreateContext: resourceHostCatalogPluginCreate,
+		ReadContext:   resourceHostCatalogPluginRead,
+		UpdateContext: resourceHostCatalogPluginUpdate,
+		DeleteContext: resourceHostCatalogPluginDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,34 +50,71 @@ func resourceHostCatalog() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			TypeKey: {
-				Description: "The host catalog type. Only `static` is supported.",
+			PluginIdKey: {
+				Description: "The ID of the plugin that should back the resource. This or " + PluginNameKey + " must be defined.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
+			},
+			PluginNameKey: {
+				Description: "The name of the plugin that should back the resource. This or " + PluginIdKey + " must be defined.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+			},
+			TypeKey: {
+				Description: "The host catalog type. Only `plugin` is supported, and is the default.",
+				Type:        schema.TypeString,
+				ForceNew:    true,
+				Optional:    true,
+				Default:     "plugin",
+			},
+			AttributesKey: {
+				Description: "The attributes for the host catalog.",
+				Type:        schema.TypeMap,
+				Optional:    true,
+			},
+			SecretsKey: {
+				Description: "The secrets for the host catalog.",
+				Type:        schema.TypeMap,
+				Optional:    true,
+			},
+			SecretsHmacKey: {
+				Description: "The HMAC'd secrets value returned from the server.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func setFromHostCatalogResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
-	if err := d.Set(NameKey, raw["name"]); err != nil {
+func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw[NameKey]); err != nil {
 		return err
 	}
-	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
 		return err
 	}
-	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
+	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
 		return err
 	}
-	if err := d.Set(TypeKey, raw["type"]); err != nil {
+	if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
 		return err
 	}
-	d.SetId(raw["id"].(string))
+	if err := d.Set(TypeKey, raw[TypeKey]); err != nil {
+		return err
+	}
+	if err := d.Set(AttributesKey, raw[AttributesKey]); err != nil {
+		return err
+	}
+	if err := d.Set(SecretsHmacKey, raw[SecretsHmacKey]); err != nil {
+		return err
+	}
+	d.SetId(raw[IDKey].(string))
 	return nil
 }
 
-func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -94,12 +131,28 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("no type provided")
 	}
 	switch typeStr {
-	case hostCatalogTypeStatic:
+	case hostCatalogTypePlugin:
 	default:
 		return diag.Errorf("invalid type provided")
 	}
 
 	opts := []hostcatalogs.Option{}
+
+	var foundPluginId bool
+	var foundPluginName bool
+	if pluginIdVal, ok := d.GetOk(PluginIdKey); ok {
+		pluginId := pluginIdVal.(string)
+		opts = append(opts, hostcatalogs.WithPluginId(pluginId))
+		foundPluginId = true
+	}
+	if pluginNameVal, ok := d.GetOk(PluginNameKey); ok {
+		pluginName := pluginNameVal.(string)
+		opts = append(opts, hostcatalogs.WithPluginName(pluginName))
+		foundPluginName = true
+	}
+	if !foundPluginId && !foundPluginName {
+		return diag.Errorf("neither plugin ID nor plugin name provided")
+	}
 
 	nameVal, ok := d.GetOk(NameKey)
 	if ok {
@@ -113,6 +166,12 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		opts = append(opts, hostcatalogs.WithDescription(descStr))
 	}
 
+	attrsVal, ok := d.GetOk(AttributesKey)
+	if ok {
+		attrs := attrsVal.(map[string]interface{})
+		opts = append(opts, hostcatalogs.WithAttributes(attrs))
+	}
+
 	hcClient := hostcatalogs.NewClient(md.client)
 
 	hccr, err := hcClient.Create(ctx, typeStr, scopeId, opts...)
@@ -123,14 +182,14 @@ func resourceHostCatalogCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("nil host catalog after create")
 	}
 
-	if err := setFromHostCatalogResponseMap(d, hccr.GetResponse().Map); err != nil {
+	if err := setFromHostCatalogPluginResponseMap(d, hccr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCatalogPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
@@ -146,14 +205,14 @@ func resourceHostCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	if err := setFromHostCatalogResponseMap(d, hcrr.GetResponse().Map); err != nil {
+	if err := setFromHostCatalogPluginResponseMap(d, hcrr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceHostCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
@@ -203,7 +262,7 @@ func resourceHostCatalogUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceHostCatalogDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostCatalogPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
