@@ -16,30 +16,20 @@ import (
 
 const (
 	testPluginHostCatalogDescription       = "bar"
-	testPluginHostCatalogDescriptionUpdate = "foo bar"
+	testPluginHostCatalogDescriptionUpdate = "bar foo"
+	testPluginHostCatalogZipAttr           = "zap"
+	testPluginHostCatalogZipAttrUpdate     = "zoop"
 )
 
-var (
-	projPluginHostCatalog = fmt.Sprintf(`
+var projPluginHostCatalogBase = `
 resource "boundary_host_catalog_plugin" "foo" {
 	name        = "foo"
-	description = "%s"
 	scope_id    = boundary_scope.proj1.id
 	type        = "plugin"
 	plugin_name = "loopback"
+%s
 	depends_on  = [boundary_role.proj1_admin]
-}`, testPluginHostCatalogDescription)
-
-	projPluginHostCatalogUpdate = fmt.Sprintf(`
-resource "boundary_host_catalog_plugin" "foo" {
-	name        = "foo"
-	description = "%s"
-	scope_id    = boundary_scope.proj1.id
-	type        = "plugin"
-	plugin_name = "loopback"
-	depends_on  = [boundary_role.proj1_admin]
-}`, testPluginHostCatalogDescriptionUpdate)
-)
+}`
 
 func TestAccPluginHostCatalogCreate(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
@@ -47,6 +37,30 @@ func TestAccPluginHostCatalogCreate(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resName := "boundary_host_catalog_plugin.foo"
+	initialValuesStr := fmt.Sprintf(`
+	description = "%s"
+	attributes = {
+		foo = "bar"
+		zip = "%s"
+	}
+	`,
+		testPluginHostCatalogDescription,
+		testPluginHostCatalogZipAttr,
+	)
+
+	updatedValuesStr := fmt.Sprintf(`
+	description = "%s"
+	attributes = {
+		foo = "bar"
+		zip = "%s"
+	}
+	`,
+		testPluginHostCatalogDescriptionUpdate,
+		testPluginHostCatalogZipAttrUpdate,
+	)
+
+	initialHcl := fmt.Sprintf(projPluginHostCatalogBase, initialValuesStr)
+	updatedHcl := fmt.Sprintf(projPluginHostCatalogBase, updatedValuesStr)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -55,7 +69,7 @@ func TestAccPluginHostCatalogCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projPluginHostCatalog),
+				Config: testConfig(url, fooOrg, firstProjectFoo, initialHcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
@@ -66,7 +80,7 @@ func TestAccPluginHostCatalogCreate(t *testing.T) {
 			importStep(resName),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projPluginHostCatalogUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, updatedHcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
