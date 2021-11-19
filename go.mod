@@ -21,6 +21,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.8.0
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
+	github.com/kr/pretty v0.3.0
 	github.com/lib/pq v1.10.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect

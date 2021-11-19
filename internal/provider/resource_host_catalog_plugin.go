@@ -9,11 +9,14 @@ import (
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/kr/pretty"
 )
 
 const (
 	hostCatalogTypePlugin = "plugin"
 )
+
+var updateCount uint
 
 func resourceHostCatalogPlugin() *schema.Resource {
 	return &schema.Resource{
@@ -81,6 +84,11 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				Description: "The secrets for the host catalog.",
 				Type:        schema.TypeMap,
 				Optional:    true,
+				Sensitive:   true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					fmt.Println("diff suppress", k, old, new)
+					return false
+				},
 			},
 			SecretsHmacKey: {
 				Description: "The HMAC'd secrets value returned from the server.",
@@ -133,9 +141,12 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	if err := d.Set(AttributesKey, raw[AttributesKey]); err != nil {
 		return err
 	}
+	// We do not save secrets into the state file, and they're not returned in
+	// the response
 	if err := d.Set(SecretsHmacKey, raw[SecretsHmacKey]); err != nil {
 		return err
 	}
+	fmt.Println("SECRETS", pretty.Sprint(raw[SecretsHmacKey]))
 	d.SetId(raw[IDKey].(string))
 	return nil
 }
@@ -198,6 +209,12 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 		opts = append(opts, hostcatalogs.WithAttributes(attrs))
 	}
 
+	secretsVal, ok := d.GetOk(SecretsKey)
+	if ok {
+		secrets := secretsVal.(map[string]interface{})
+		opts = append(opts, hostcatalogs.WithSecrets(secrets))
+	}
+
 	hcClient := hostcatalogs.NewClient(md.client)
 
 	hccr, err := hcClient.Create(ctx, typeStr, scopeId, opts...)
@@ -237,6 +254,8 @@ func resourceHostCatalogPluginRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	fmt.Println("update called", updateCount)
+	updateCount++
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
@@ -266,6 +285,22 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 		if ok {
 			attrs := attrVal.(map[string]interface{})
 			opts = append(opts, hostcatalogs.WithAttributes(attrs))
+		}
+	}
+
+	// We don't save it in state so we can't compare; we can only look to see if
+	// it's set. If it is, set whatever is there.
+	secretsVal, ok := d.GetOk(SecretsKey)
+	rawVal := d.GetRawConfig()
+	fmt.Println("secretsval, ok, rawConfig type, rawConfig val = ", secretsVal, ok, pretty.Sprint(rawVal), rawVal.IsNull())
+	if ok {
+		secrets := secretsVal.(map[string]interface{})
+		switch len(secrets) {
+		case 0:
+			fmt.Println("EMPTY BUT SET SECRETS")
+			opts = append(opts, hostcatalogs.DefaultSecrets())
+		default:
+			opts = append(opts, hostcatalogs.WithSecrets(secrets))
 		}
 	}
 
