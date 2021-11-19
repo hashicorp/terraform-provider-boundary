@@ -205,9 +205,8 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error creating host catalog: %v", err)
 	}
 	if hccr == nil {
-		return diag.Errorf("nil host catalog after create")
+		return diag.Errorf("host catalog nil after create")
 	}
-
 	if err := setFromHostCatalogPluginResponseMap(d, hccr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
@@ -230,7 +229,6 @@ func resourceHostCatalogPluginRead(ctx context.Context, d *schema.ResourceData, 
 	if hcrr == nil {
 		return diag.Errorf("host catalog nil after read")
 	}
-
 	if err := setFromHostCatalogPluginResponseMap(d, hcrr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
@@ -244,43 +242,43 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 
 	opts := []hostcatalogs.Option{}
 
-	var name *string
 	if d.HasChange(NameKey) {
 		opts = append(opts, hostcatalogs.DefaultName())
 		nameVal, ok := d.GetOk(NameKey)
 		if ok {
 			nameStr := nameVal.(string)
-			name = &nameStr
 			opts = append(opts, hostcatalogs.WithName(nameStr))
 		}
 	}
 
-	var desc *string
 	if d.HasChange(DescriptionKey) {
 		opts = append(opts, hostcatalogs.DefaultDescription())
 		descVal, ok := d.GetOk(DescriptionKey)
 		if ok {
 			descStr := descVal.(string)
-			desc = &descStr
 			opts = append(opts, hostcatalogs.WithDescription(descStr))
+		}
+	}
+
+	if d.HasChange(AttributesKey) {
+		opts = append(opts, hostcatalogs.DefaultAttributes())
+		attrVal, ok := d.GetOk(AttributesKey)
+		if ok {
+			attrs := attrVal.(map[string]interface{})
+			opts = append(opts, hostcatalogs.WithAttributes(attrs))
 		}
 	}
 
 	if len(opts) > 0 {
 		opts = append(opts, hostcatalogs.WithAutomaticVersioning(true))
-		_, err := hcClient.Update(ctx, d.Id(), 0, opts...)
+		hcrr, err := hcClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
 			return diag.Errorf("error updating host catalog: %v", err)
 		}
-	}
-
-	if d.HasChange(NameKey) {
-		if err := d.Set(NameKey, name); err != nil {
-			return diag.FromErr(err)
+		if hcrr == nil {
+			return diag.Errorf("host catalog nil after update")
 		}
-	}
-	if d.HasChange(DescriptionKey) {
-		if err := d.Set(DescriptionKey, desc); err != nil {
+		if err := setFromHostCatalogPluginResponseMap(d, hcrr.GetResponse().Map); err != nil {
 			return diag.FromErr(err)
 		}
 	}
