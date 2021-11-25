@@ -2,21 +2,21 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
+	"github.com/hashicorp/go-secure-stdlib/parseutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/kr/pretty"
 )
 
 const (
 	hostCatalogTypePlugin = "plugin"
 )
-
-var updateCount uint
 
 func resourceHostCatalogPlugin() *schema.Resource {
 	return &schema.Resource{
@@ -75,20 +75,30 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				Optional:    true,
 				Default:     "plugin",
 			},
-			AttributesKey: {
-				Description: "The attributes for the host catalog.",
-				Type:        schema.TypeMap,
+			AttributesJsonKey: {
+				Description: `The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.`,
+				Type:        schema.TypeString,
 				Optional:    true,
+				// If set to null in config and nothing comes from API, consider
+				// it the same. Same if config changes from empty to null.
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					switch {
+					case old == new:
+						return true
+					case old == "null" && new == "":
+						return true
+					case old == "" && new == "null":
+						return true
+					default:
+						return false
+					}
+				},
 			},
-			SecretsKey: {
-				Description: "The secrets for the host catalog.",
-				Type:        schema.TypeMap,
+			SecretsJsonKey: {
+				Description: `The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.`,
+				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					fmt.Println("diff suppress", k, old, new)
-					return false
-				},
 			},
 			SecretsHmacKey: {
 				Description: "The HMAC'd secrets value returned from the server.",
@@ -113,10 +123,11 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	if err := d.Set(TypeKey, raw[TypeKey]); err != nil {
 		return err
 	}
-	if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
-		return err
-	}
+	// Plugin stuff
 	{
+		if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
+			return err
+		}
 		// Boundary doesn't currently return the plugin name in responses
 		pluginRaw, ok := raw["plugin"]
 		if !ok {
@@ -138,15 +149,36 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 			return err
 		}
 	}
-	if err := d.Set(AttributesKey, raw[AttributesKey]); err != nil {
-		return err
+	// Attributes stuff
+	{
+		attrRaw, ok := raw["attributes"]
+		switch ok {
+		case true:
+			encodedAttributes, err := json.Marshal(attrRaw)
+			if err != nil {
+				return err
+			}
+			if err := d.Set(AttributesJsonKey, string(encodedAttributes)); err != nil {
+				return err
+			}
+		default:
+			d.Set(AttributesJsonKey, nil)
+		}
 	}
-	// We do not save secrets into the state file, and they're not returned in
-	// the response
-	if err := d.Set(SecretsHmacKey, raw[SecretsHmacKey]); err != nil {
-		return err
+	// Secrets stuff
+	{
+		// We do not save secrets into the state file, and they're not returned in
+		// the response
+		secretsRaw, ok := raw["secrets"]
+		switch ok {
+		case true:
+			if err := d.Set(SecretsHmacKey, secretsRaw); err != nil {
+				return err
+			}
+		default:
+			d.Set(SecretsHmacKey, nil)
+		}
 	}
-	fmt.Println("SECRETS", pretty.Sprint(raw[SecretsHmacKey]))
 	d.SetId(raw[IDKey].(string))
 	return nil
 }
@@ -203,16 +235,44 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 		opts = append(opts, hostcatalogs.WithDescription(descStr))
 	}
 
-	attrsVal, ok := d.GetOk(AttributesKey)
+	attrsVal, ok := d.GetOk(AttributesJsonKey)
 	if ok {
-		attrs := attrsVal.(map[string]interface{})
-		opts = append(opts, hostcatalogs.WithAttributes(attrs))
+		attrsStr, err := parseutil.ParsePath(attrsVal.(string))
+		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+			return diag.Errorf("error parsing path with attributes: %v", err)
+		}
+		switch attrsStr {
+		case "null":
+			opts = append(opts, hostcatalogs.DefaultAttributes())
+		default:
+			// What comes in is json-encoded but we want to set a
+			// map[string]interface{} so we unmarshal it and set that
+			var m map[string]interface{}
+			if err := json.Unmarshal([]byte(attrsStr), &m); err != nil {
+				return diag.Errorf("error unmarshaling attributes: %v", err)
+			}
+			opts = append(opts, hostcatalogs.WithAttributes(m))
+		}
 	}
 
-	secretsVal, ok := d.GetOk(SecretsKey)
+	secretsVal, ok := d.GetOk(SecretsJsonKey)
 	if ok {
-		secrets := secretsVal.(map[string]interface{})
-		opts = append(opts, hostcatalogs.WithSecrets(secrets))
+		secretsStr, err := parseutil.ParsePath(secretsVal.(string))
+		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+			return diag.Errorf("error parsing path with secrets: %v", err)
+		}
+		switch secretsStr {
+		case "null":
+			opts = append(opts, hostcatalogs.DefaultSecrets())
+		default:
+			// What comes in is json-encoded but we want to set a
+			// map[string]interface{} so we unmarshal it and set that
+			var m map[string]interface{}
+			if err := json.Unmarshal([]byte(secretsStr), &m); err != nil {
+				return diag.Errorf("error unmarshaling secrets: %v", err)
+			}
+			opts = append(opts, hostcatalogs.WithSecrets(m))
+		}
 	}
 
 	hcClient := hostcatalogs.NewClient(md.client)
@@ -254,8 +314,6 @@ func resourceHostCatalogPluginRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	fmt.Println("update called", updateCount)
-	updateCount++
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
 
@@ -279,28 +337,49 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChange(AttributesKey) {
-		opts = append(opts, hostcatalogs.DefaultAttributes())
-		attrVal, ok := d.GetOk(AttributesKey)
+	if d.HasChange(AttributesJsonKey) {
+		attrsVal, ok := d.GetOk(AttributesJsonKey)
 		if ok {
-			attrs := attrVal.(map[string]interface{})
-			opts = append(opts, hostcatalogs.WithAttributes(attrs))
+			attrsStr, err := parseutil.ParsePath(attrsVal.(string))
+			if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+				return diag.Errorf("error parsing path with attributes: %v", err)
+			}
+			switch attrsStr {
+			case "null", "":
+				opts = append(opts, hostcatalogs.DefaultAttributes())
+			default:
+				// What comes in is json-encoded but we want to set a
+				// map[string]interface{} so we unmarshal it and set that
+				var m map[string]interface{}
+				if err := json.Unmarshal([]byte(attrsStr), &m); err != nil {
+					return diag.Errorf("error unmarshaling attributes: %v", err)
+				}
+				opts = append(opts, hostcatalogs.WithAttributes(m))
+			}
+		} else {
+			opts = append(opts, hostcatalogs.DefaultAttributes())
 		}
 	}
 
 	// We don't save it in state so we can't compare; we can only look to see if
 	// it's set. If it is, set whatever is there.
-	secretsVal, ok := d.GetOk(SecretsKey)
-	rawVal := d.GetRawConfig()
-	fmt.Println("secretsval, ok, rawConfig type, rawConfig val = ", secretsVal, ok, pretty.Sprint(rawVal), rawVal.IsNull())
+	secretsVal, ok := d.GetOk(SecretsJsonKey)
 	if ok {
-		secrets := secretsVal.(map[string]interface{})
-		switch len(secrets) {
-		case 0:
-			fmt.Println("EMPTY BUT SET SECRETS")
+		secretsStr, err := parseutil.ParsePath(secretsVal.(string))
+		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+			return diag.Errorf("error parsing path with secrets: %v", err)
+		}
+		switch secretsStr {
+		case "null":
 			opts = append(opts, hostcatalogs.DefaultSecrets())
 		default:
-			opts = append(opts, hostcatalogs.WithSecrets(secrets))
+			// What comes in is json-encoded but we want to set a
+			// map[string]interface{} so we unmarshal it and set that
+			var m map[string]interface{}
+			if err := json.Unmarshal([]byte(secretsStr), &m); err != nil {
+				return diag.Errorf("error unmarshaling secrets: %v", err)
+			}
+			opts = append(opts, hostcatalogs.WithSecrets(m))
 		}
 	}
 

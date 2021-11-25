@@ -19,10 +19,10 @@ const (
 	PluginIdKey = "plugin_id"
 	// PluginNameKey is used for common "plugin_name" resource attribute
 	PluginNameKey = "plugin_name"
-	// AttributesKey is used for setting attributes
-	AttributesKey = "attributes"
-	// SecretsKey is used for setting secrets
-	SecretsKey = "secrets"
+	// AttributesJsonKey is used for setting attributes and corresponds to the API "attributes" key
+	AttributesJsonKey = "attributes_json"
+	// SecretsJsonKey is used for setting secrets and corresponds to the API "secrets" key
+	SecretsJsonKey = "secrets_json"
 	// SecretsHmacKey is a read-only key used for ensuring we detect if secrets have changed
 	SecretsHmacKey = "secrets_hmac"
 )
