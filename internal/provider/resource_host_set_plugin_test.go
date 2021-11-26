@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"testing"
@@ -17,14 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccHostSetPlugin(t *testing.T) {
-	t.Run("basic-crud", func(t *testing.T) {
-		t.Parallel()
-		testAccHostSetPluginCrud(t)
-	})
-}
+var currentPluginHostSetAttributesValue string
 
-func testAccHostSetPluginCrud(t *testing.T) {
+func TestAccHostSetPlugin(t *testing.T) {
+	t.Parallel()
+
 	initialPreferredEndpoints := []string{"cidr:1.2.3.4/32", "dns:bar.foo.com"}
 	initialPreferredEndpointsRaw, err := json.Marshal(initialPreferredEndpoints)
 	require.NoError(t, err)
@@ -51,6 +49,7 @@ func testAccHostSetPluginCrud(t *testing.T) {
 		description        = "test hostset"
 		preferred_endpoints = %s
 		sync_interval_seconds = %d
+		%s
 	}`
 
 	tc := controller.NewTestController(t, tcConfig...)
@@ -58,8 +57,31 @@ func testAccHostSetPluginCrud(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 	fooSetName := "boundary_host_set_plugin.foo"
 
-	hsBlock := fmt.Sprintf(hostSetBlock, initialPreferredEndpointsStr, initialSyncIntervalSeconds)
-	hsUpdateBlock := fmt.Sprintf(hostSetBlock, updatePreferredEndpointsStr, updateSyncIntervalSeconds)
+	attrBlock1 := `attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zap"
+	})`
+	attrBlock2 := `attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zoop"
+	})`
+	attrBlock3 := `attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zoop"
+	})`
+	attrBlock4 := ``
+	attrBlock5 := `attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zoop"
+	})`
+	attrBlock6 := `attributes_json = "null"`
+
+	hsBlock := fmt.Sprintf(hostSetBlock, initialPreferredEndpointsStr, initialSyncIntervalSeconds, attrBlock1)
+	hsUpdate1Block := fmt.Sprintf(hostSetBlock, updatePreferredEndpointsStr, updateSyncIntervalSeconds, attrBlock2)
+	hsUpdate2Block := fmt.Sprintf(hostSetBlock, updatePreferredEndpointsStr, updateSyncIntervalSeconds, attrBlock3)
+	hsUpdate3Block := fmt.Sprintf(hostSetBlock, updatePreferredEndpointsStr, updateSyncIntervalSeconds, attrBlock4)
+	hsUpdate4Block := fmt.Sprintf(hostSetBlock, updatePreferredEndpointsStr, updateSyncIntervalSeconds, attrBlock5)
+	hsUpdate5Block := fmt.Sprintf(hostSetBlock, updatePreferredEndpointsStr, updateSyncIntervalSeconds, attrBlock6)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -70,7 +92,7 @@ func testAccHostSetPluginCrud(t *testing.T) {
 				// test project hostset create
 				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostSetPluginResourceExists(provider, fooSetName),
+					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
 					resource.TestCheckResourceAttr(fooSetName, DescriptionKey, "test hostset"),
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", initialSyncIntervalSeconds)),
@@ -80,9 +102,57 @@ func testAccHostSetPluginCrud(t *testing.T) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdateBlock),
+				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate1Block),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostSetPluginResourceExists(provider, fooSetName),
+					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetButChanged),
+					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
+					resource.TestCheckResourceAttr(fooSetName, DescriptionKey, "test hostset"),
+					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
+					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
+				),
+			},
+			importStep(fooSetName),
+			{
+				// test project hostset update
+				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate2Block),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetNoChange),
+					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
+					resource.TestCheckResourceAttr(fooSetName, DescriptionKey, "test hostset"),
+					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
+					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
+				),
+			},
+			importStep(fooSetName),
+			{
+				// test project hostset update
+				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate3Block),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetNowEmpty),
+					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
+					resource.TestCheckResourceAttr(fooSetName, DescriptionKey, "test hostset"),
+					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
+					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
+				),
+			},
+			importStep(fooSetName),
+			{
+				// test project hostset update
+				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate4Block),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslyEmptyNowSet),
+					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
+					resource.TestCheckResourceAttr(fooSetName, DescriptionKey, "test hostset"),
+					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
+					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
+				),
+			},
+			importStep(fooSetName),
+			{
+				// test project hostset update
+				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate5Block),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
 					resource.TestCheckResourceAttr(fooSetName, DescriptionKey, "test hostset"),
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
@@ -94,7 +164,7 @@ func testAccHostSetPluginCrud(t *testing.T) {
 	})
 }
 
-func testAccCheckHostSetPluginResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckHostSetPluginResourceExists(testProvider *schema.Provider, name string, expAttrs expectedAttributesState) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -114,7 +184,64 @@ func testAccCheckHostSetPluginResourceExists(testProvider *schema.Provider, name
 			return fmt.Errorf("Got an error when reading hostset %q: %v", id, err)
 		}
 
-		fmt.Println("found in existence check:", hsrr.GetItem().(*hostsets.HostSet).PreferredEndpoints)
+		attrs := hsrr.GetResponse().Map["attributes"]
+		switch expAttrs {
+		case expectedAttributesStatePreviouslyEmptyNowSet:
+			if currentPluginHostSetAttributesValue != "" {
+				return fmt.Errorf("expected no previous attributes value, got %s", currentPluginHostSetAttributesValue)
+			}
+			if attrs == nil {
+				return errors.New("expected non-empty new attributes value")
+			}
+			attrsVal, err := json.Marshal(attrs)
+			if err != nil {
+				return fmt.Errorf("error marshaling attrs: %w", err)
+			}
+			currentPluginHostSetAttributesValue = string(attrsVal)
+
+		case expectedAttributesStatePreviouslySetButChanged:
+			if currentPluginHostSetAttributesValue == "" {
+				return errors.New("expected previous attributes value")
+			}
+			if attrs == nil {
+				return errors.New("expected non-empty new attributes value")
+			}
+			attrsVal, err := json.Marshal(attrs)
+			if err != nil {
+				return fmt.Errorf("error marshaling attrs: %w", err)
+			}
+			if string(attrsVal) == currentPluginHostSetAttributesValue {
+				return errors.New("expected changed attrs value")
+			}
+			currentPluginHostSetAttributesValue = string(attrsVal)
+
+		case expectedAttributesStatePreviouslySetNoChange:
+			if currentPluginHostSetAttributesValue == "" {
+				return errors.New("expected previous attributes value")
+			}
+			if attrs == nil {
+				return errors.New("expected non-empty new attributes value")
+			}
+			attrsVal, err := json.Marshal(attrs)
+			if err != nil {
+				return fmt.Errorf("error marshaling attrs: %w", err)
+			}
+			if string(attrsVal) == "" {
+				return errors.New("expected non-empty new attributes value")
+			}
+			if string(attrsVal) != currentPluginHostSetAttributesValue {
+				return errors.New("expected same attributes value")
+			}
+
+		case expectedAttributesStatePreviouslySetNowEmpty:
+			if currentPluginHostSetAttributesValue == "" {
+				return errors.New("expected previous attributes value")
+			}
+			if attrs != nil {
+				return fmt.Errorf("expected empty new attributes value, got %s", attrs)
+			}
+			currentPluginHostSetAttributesValue = ""
+		}
 
 		return nil
 	}

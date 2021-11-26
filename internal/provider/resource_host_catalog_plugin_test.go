@@ -23,13 +23,13 @@ const (
 	testPluginHostCatalogDescriptionUpdate2 = "bar foo foo"
 )
 
-type expectedAttrSecretsHmacState uint
+type expectedAttributesState uint
 
 const (
-	expectedAttrSecretsHmacStatePreviouslyEmptyNowSet expectedAttrSecretsHmacState = iota
-	expectedAttrSecretsHmacStatePreviouslySetNoChange
-	expectedAttrSecretsHmacStatePreviouslySetButChanged
-	expectedAttrSecretsHmacStatePreviouslySetNowEmpty
+	expectedAttributesStatePreviouslyEmptyNowSet expectedAttributesState = iota
+	expectedAttributesStatePreviouslySetNoChange
+	expectedAttributesStatePreviouslySetButChanged
+	expectedAttributesStatePreviouslySetNowEmpty
 )
 
 var projPluginHostCatalogBase = `
@@ -43,11 +43,11 @@ resource "boundary_host_catalog_plugin" "foo" {
 }`
 
 var (
-	currentSecretsHmacValue string
-	currentAttributesValue  string
+	currentPluginHostCatalogSecretsHmacValue string
+	currentPluginHostCatalogAttributesValue  string
 )
 
-func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
+func TestAccPluginHostCatalog(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
@@ -157,7 +157,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslyEmptyNowSet),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescription),
 				),
 			},
@@ -166,7 +166,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslySetButChanged),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
 				),
 			},
@@ -175,7 +175,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslySetNoChange),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
@@ -184,7 +184,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslySetNoChange),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
@@ -193,7 +193,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslySetNowEmpty),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
@@ -202,7 +202,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslyEmptyNowSet),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
@@ -211,7 +211,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update6Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttrSecretsHmacStatePreviouslySetNowEmpty),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
@@ -220,7 +220,7 @@ func TestAccPluginHostCatalogCreateUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, name string, expSecrets expectedAttrSecretsHmacState) resource.TestCheckFunc {
+func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, name string, expSecrets expectedAttributesState) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -245,17 +245,17 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 		secretsHmac := val.GetResponse().Map[SecretsHmacKey]
 		attrs := val.GetResponse().Map["attributes"]
 		switch expSecrets {
-		case expectedAttrSecretsHmacStatePreviouslyEmptyNowSet:
-			if currentSecretsHmacValue != "" {
+		case expectedAttributesStatePreviouslyEmptyNowSet:
+			if currentPluginHostCatalogSecretsHmacValue != "" {
 				return errors.New("expected no previous secrets hmac value")
 			}
 			val := secretsHmac.(string)
 			if val == "" {
 				return errors.New("expected non-empty new secrets hmac value")
 			}
-			currentSecretsHmacValue = val
-			if currentAttributesValue != "" {
-				return fmt.Errorf("expected no previous attributes value, got %s", currentAttributesValue)
+			currentPluginHostCatalogSecretsHmacValue = val
+			if currentPluginHostCatalogAttributesValue != "" {
+				return fmt.Errorf("expected no previous attributes value, got %s", currentPluginHostCatalogAttributesValue)
 			}
 			if attrs == nil {
 				return errors.New("expected non-empty new attributes value")
@@ -264,21 +264,21 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 			if err != nil {
 				return fmt.Errorf("error marshaling attrs: %w", err)
 			}
-			currentAttributesValue = string(attrsVal)
+			currentPluginHostCatalogAttributesValue = string(attrsVal)
 
-		case expectedAttrSecretsHmacStatePreviouslySetButChanged:
-			if currentSecretsHmacValue == "" {
+		case expectedAttributesStatePreviouslySetButChanged:
+			if currentPluginHostCatalogSecretsHmacValue == "" {
 				return errors.New("expected previous secrets hmac value")
 			}
 			val := secretsHmac.(string)
 			if val == "" {
 				return errors.New("expected non-empty new secrets hmac value")
 			}
-			if val == currentSecretsHmacValue {
+			if val == currentPluginHostCatalogSecretsHmacValue {
 				return errors.New("expected changed secrets hmac value")
 			}
-			currentSecretsHmacValue = val
-			if currentAttributesValue == "" {
+			currentPluginHostCatalogSecretsHmacValue = val
+			if currentPluginHostCatalogAttributesValue == "" {
 				return errors.New("expected previous attributes value")
 			}
 			if attrs == nil {
@@ -288,23 +288,23 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 			if err != nil {
 				return fmt.Errorf("error marshaling attrs: %w", err)
 			}
-			if string(attrsVal) == currentAttributesValue {
+			if string(attrsVal) == currentPluginHostCatalogAttributesValue {
 				return errors.New("expected changed attrs value")
 			}
-			currentAttributesValue = string(attrsVal)
+			currentPluginHostCatalogAttributesValue = string(attrsVal)
 
-		case expectedAttrSecretsHmacStatePreviouslySetNoChange:
-			if currentSecretsHmacValue == "" {
+		case expectedAttributesStatePreviouslySetNoChange:
+			if currentPluginHostCatalogSecretsHmacValue == "" {
 				return errors.New("expected previous secrets hmac value")
 			}
 			val := secretsHmac.(string)
 			if val == "" {
 				return errors.New("expected non-empty new secrets hmac value")
 			}
-			if val != currentSecretsHmacValue {
+			if val != currentPluginHostCatalogSecretsHmacValue {
 				return errors.New("expected same secrets hmac value")
 			}
-			if currentAttributesValue == "" {
+			if currentPluginHostCatalogAttributesValue == "" {
 				return errors.New("expected previous attributes value")
 			}
 			if attrs == nil {
@@ -317,25 +317,25 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 			if string(attrsVal) == "" {
 				return errors.New("expected non-empty new attributes value")
 			}
-			if string(attrsVal) != currentAttributesValue {
+			if string(attrsVal) != currentPluginHostCatalogAttributesValue {
 				return errors.New("expected same attributes value")
 			}
 
-		case expectedAttrSecretsHmacStatePreviouslySetNowEmpty:
-			if currentSecretsHmacValue == "" {
+		case expectedAttributesStatePreviouslySetNowEmpty:
+			if currentPluginHostCatalogSecretsHmacValue == "" {
 				return errors.New("expected previous secrets hmac value")
 			}
 			if secretsHmac != nil {
 				return fmt.Errorf("expected empty new secrets hmac value, got %s", secretsHmac.(string))
 			}
-			currentSecretsHmacValue = ""
-			if currentAttributesValue == "" {
+			currentPluginHostCatalogSecretsHmacValue = ""
+			if currentPluginHostCatalogAttributesValue == "" {
 				return errors.New("expected previous attributes value")
 			}
 			if attrs != nil {
 				return fmt.Errorf("expected empty new attributes value, got %s", attrs)
 			}
-			currentAttributesValue = ""
+			currentPluginHostCatalogAttributesValue = ""
 		}
 
 		return nil

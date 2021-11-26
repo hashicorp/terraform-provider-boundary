@@ -2,11 +2,14 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/go-secure-stdlib/parseutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -78,6 +81,25 @@ func resourceHostSetPlugin() *schema.Resource {
 					}
 				},
 			},
+			AttributesJsonKey: {
+				Description: `The attributes for the host set. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host set.`,
+				Type:        schema.TypeString,
+				Optional:    true,
+				// If set to null in config and nothing comes from API, consider
+				// it the same. Same if config changes from empty to null.
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					switch {
+					case old == new:
+						return true
+					case old == "null" && new == "":
+						return true
+					case old == "" && new == "null":
+						return true
+					default:
+						return false
+					}
+				},
+			},
 		},
 	}
 }
@@ -100,6 +122,22 @@ func setFromHostSetPluginResponseMap(d *schema.ResourceData, raw map[string]inte
 	}
 	if err := d.Set(PreferredEndpointsKey, raw[PreferredEndpointsKey]); err != nil {
 		return err
+	}
+	// Attributes stuff
+	{
+		attrRaw, ok := raw["attributes"]
+		switch ok {
+		case true:
+			encodedAttributes, err := json.Marshal(attrRaw)
+			if err != nil {
+				return err
+			}
+			if err := d.Set(AttributesJsonKey, string(encodedAttributes)); err != nil {
+				return err
+			}
+		default:
+			d.Set(AttributesJsonKey, nil)
+		}
 	}
 	d.SetId(raw[IDKey].(string))
 	return nil
@@ -157,6 +195,26 @@ func resourceHostSetPluginCreate(ctx context.Context, d *schema.ResourceData, me
 			preferredEndpoints = append(preferredEndpoints, i.(string))
 		}
 		opts = append(opts, hostsets.WithPreferredEndpoints(preferredEndpoints))
+	}
+
+	attrsVal, ok := d.GetOk(AttributesJsonKey)
+	if ok {
+		attrsStr, err := parseutil.ParsePath(attrsVal.(string))
+		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+			return diag.Errorf("error parsing path with attributes: %v", err)
+		}
+		switch attrsStr {
+		case "null":
+			opts = append(opts, hostsets.DefaultAttributes())
+		default:
+			// What comes in is json-encoded but we want to set a
+			// map[string]interface{} so we unmarshal it and set that
+			var m map[string]interface{}
+			if err := json.Unmarshal([]byte(attrsStr), &m); err != nil {
+				return diag.Errorf("error unmarshaling attributes: %v", err)
+			}
+			opts = append(opts, hostsets.WithAttributes(m))
+		}
 	}
 
 	hsClient := hostsets.NewClient(md.client)
@@ -244,11 +302,27 @@ func resourceHostSetPluginUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if len(opts) > 0 {
-		opts = append(opts, hostsets.WithAutomaticVersioning(true))
-		_, err := hsClient.Update(ctx, d.Id(), 0, opts...)
-		if err != nil {
-			return diag.Errorf("error updating host set: %v", err)
+	if d.HasChange(AttributesJsonKey) {
+		attrsVal, ok := d.GetOk(AttributesJsonKey)
+		if ok {
+			attrsStr, err := parseutil.ParsePath(attrsVal.(string))
+			if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+				return diag.Errorf("error parsing path with attributes: %v", err)
+			}
+			switch attrsStr {
+			case "null", "":
+				opts = append(opts, hostsets.DefaultAttributes())
+			default:
+				// What comes in is json-encoded but we want to set a
+				// map[string]interface{} so we unmarshal it and set that
+				var m map[string]interface{}
+				if err := json.Unmarshal([]byte(attrsStr), &m); err != nil {
+					return diag.Errorf("error unmarshaling attributes: %v", err)
+				}
+				opts = append(opts, hostsets.WithAttributes(m))
+			}
+		} else {
+			opts = append(opts, hostsets.DefaultAttributes())
 		}
 	}
 
