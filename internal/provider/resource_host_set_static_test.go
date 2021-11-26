@@ -14,64 +14,71 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var (
-	fooHostset = ` 
-resource "boundary_host_catalog" "foo" {
-	scope_id    = boundary_scope.proj1.id
-	type        = "static"
-	depends_on  = [boundary_role.proj1_admin]
+func TestAccHostSet(t *testing.T) {
+	t.Run("non-static", func(t *testing.T) {
+		t.Parallel()
+		testAccHostSet(t, false)
+	})
+	t.Run("static", func(t *testing.T) {
+		t.Parallel()
+		testAccHostSet(t, true)
+	})
 }
 
-resource "boundary_host" "foo" {
-	type            = "static"
-	host_catalog_id = boundary_host_catalog.foo.id
-	address         = "10.0.0.1"
-}
+func testAccHostSet(t *testing.T, static bool) {
+	catalogBlock := ` 
+	resource "%s" "foo" {
+		%s
+		scope_id    = boundary_scope.proj1.id
+		depends_on  = [boundary_role.proj1_admin]
+	}`
 
-resource "boundary_host_set" "foo" {
-	type               = "static"
-	name               = "test"
-	description        = "test hostset"
-	host_catalog_id    = boundary_host_catalog.foo.id
-	host_ids           = [boundary_host.foo.id]
-}`
+	hostBlock := `
+	resource "%s" "foo" {
+		host_catalog_id = %s.foo.id
+		%s
+		address         = "10.0.0.1"
+	}`
 
-	fooHostsetUpdate = `
-resource "boundary_host_catalog" "foo" {
-	scope_id    = boundary_scope.proj1.id
-	type        = "static"
-	depends_on  = [boundary_role.proj1_admin]
-}
+	hostSetBlock := `
+	resource "%s" "foo" {
+		host_catalog_id    = %s.foo.id
+		name               = "test"
+		description        = "test hostset"
+		%s
+		host_ids           = [%s.foo.id%s]
+	}`
 
-resource "boundary_host" "foo" {
-	type            = "static"
-	host_catalog_id = boundary_host_catalog.foo.id
-	address         = "10.0.0.1"
-}
+	host2Block := `
+	resource "%s" "bar" {
+		host_catalog_id = %s.foo.id
+		%s
+		address         = "10.0.0.2"
+	}`
 
-resource "boundary_host" "bar" {
-	type            = "static"
-	host_catalog_id = boundary_host_catalog.foo.id
-	address         = "10.0.0.2"
-}
-
-resource "boundary_host_set" "foo" {
-	type               = "static"
-	host_catalog_id    = boundary_host_catalog.foo.id
-	name               = "test"
-	description        = "test hostset"
-	host_ids           = [
-	  	boundary_host.foo.id, 
-		boundary_host.bar.id,
-	]
-}`
-)
-
-func TestAccHostset(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	//	org := iam.TestOrg(t, tc.IamRepo())
 	url := tc.ApiAddrs()[0]
+
+	catalogName := "boundary_host_catalog"
+	hostName := "boundary_host"
+	setName := "boundary_host_set"
+	typeStr := `type = "static"`
+	if static {
+		catalogName = "boundary_host_catalog_static"
+		hostName = "boundary_host_static"
+		setName = "boundary_host_set_static"
+		typeStr = ""
+	}
+	fooSetName := fmt.Sprintf("%s.foo", setName)
+	fooHostName := fmt.Sprintf("%s.foo", hostName)
+	barHostName := fmt.Sprintf("%s.bar", hostName)
+	hcBlock := fmt.Sprintf(catalogBlock, catalogName, typeStr)
+	hBlock := fmt.Sprintf(hostBlock, hostName, catalogName, typeStr)
+	h2Block := fmt.Sprintf(host2Block, hostName, catalogName, typeStr)
+	hsBlock := fmt.Sprintf(hostSetBlock, setName, catalogName, typeStr, hostName, "")
+	hsUpdateBlock := fmt.Sprintf(hostSetBlock, setName, catalogName, typeStr, hostName, fmt.Sprintf(`, %s.bar.id`, hostName))
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -80,26 +87,26 @@ func TestAccHostset(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostset),
+				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hBlock, hsBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostsetResourceExists(provider, "boundary_host_set.foo"),
-					testAccCheckHostsetHostIDsSet(provider, "boundary_host_set.foo", []string{"boundary_host.foo"}),
-					resource.TestCheckResourceAttr("boundary_host_set.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_host_set.foo", "description", "test hostset"),
+					testAccCheckHostsetResourceExists(provider, fooSetName),
+					testAccCheckHostsetHostIDsSet(provider, fooSetName, []string{fooHostName}),
+					resource.TestCheckResourceAttr(fooSetName, "name", "test"),
+					resource.TestCheckResourceAttr(fooSetName, "description", "test hostset"),
 				),
 			},
-			importStep("boundary_host_set.foo"),
+			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooHostsetUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hBlock, h2Block, hsUpdateBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostsetResourceExists(provider, "boundary_host_set.foo"),
-					testAccCheckHostsetHostIDsSet(provider, "boundary_host_set.foo", []string{"boundary_host.foo", "boundary_host.bar"}),
-					resource.TestCheckResourceAttr("boundary_host_set.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_host_set.foo", "description", "test hostset"),
+					testAccCheckHostsetResourceExists(provider, fooSetName),
+					testAccCheckHostsetHostIDsSet(provider, fooSetName, []string{fooHostName, barHostName}),
+					resource.TestCheckResourceAttr(fooSetName, "name", "test"),
+					resource.TestCheckResourceAttr(fooSetName, "description", "test hostset"),
 				),
 			},
-			importStep("boundary_host_set.foo"),
+			importStep(fooSetName),
 		},
 	})
 }

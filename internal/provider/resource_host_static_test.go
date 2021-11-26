@@ -15,52 +15,58 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const (
-	fooHostAddress       = "10.0.0.1"
-	fooHostAddressUpdate = "10.10.0.0"
-)
-
-var (
-	projHost = fmt.Sprintf(`
-resource "boundary_host_catalog" "foo" {
-	name        = "test"
-	description = "test catalog"
-	scope_id    = boundary_scope.proj1.id
-	type        = "static"
-	depends_on  = [boundary_role.proj1_admin]
-}
-
-resource "boundary_host" "foo" {
-	type            = "static"
-	host_catalog_id = boundary_host_catalog.foo.id
-	name            = "test"
-	description     = "test host"
-	address         = "%s"
-}`, fooHostAddress)
-
-	projHostUpdate = fmt.Sprintf(`
-resource "boundary_host_catalog" "foo" {
-	name        = "test"
-	description = "test catalog"
-	scope_id    = boundary_scope.proj1.id
-	type        = "static"
-	depends_on  = [boundary_role.proj1_admin]
-}
-
-resource "boundary_host" "foo" {
-	type            = "static"
-	host_catalog_id = boundary_host_catalog.foo.id
-	name            = "test"
-	description     = "test host"
-	address         = "%s"
-}`, fooHostAddressUpdate)
-)
-
 func TestAccHost(t *testing.T) {
+	t.Run("non-static", func(t *testing.T) {
+		t.Parallel()
+		testAccHost(t, false)
+	})
+	t.Run("static", func(t *testing.T) {
+		t.Parallel()
+		testAccHost(t, true)
+	})
+}
+
+func testAccHost(t *testing.T, static bool) {
+	const (
+		fooHostAddress       = "10.0.0.1"
+		fooHostAddressUpdate = "10.10.0.0"
+	)
+
+	projCatalog := `
+	resource "%s" "foo" {
+		name        = "test"
+		description = "test catalog"
+		%s
+		scope_id    = boundary_scope.proj1.id
+		depends_on  = [boundary_role.proj1_admin]
+	}`
+
+	projHost := `
+	resource "%s" "foo" {
+		host_catalog_id = %s.foo.id
+		name            = "test"
+		description     = "test host"
+		%s
+		address         = "%s"
+	}`
+
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	//	org := iam.TestOrg(t, tc.IamRepo())
 	url := tc.ApiAddrs()[0]
+
+	catalogName := "boundary_host_catalog"
+	hostName := "boundary_host"
+	typeStr := `type = "static"`
+	if static {
+		catalogName = "boundary_host_catalog_static"
+		hostName = "boundary_host_static"
+		typeStr = ""
+	}
+	fooHostName := fmt.Sprintf("%s.foo", hostName)
+	hcBlock := fmt.Sprintf(projCatalog, catalogName, typeStr)
+	hostBlock := fmt.Sprintf(projHost, hostName, catalogName, typeStr, fooHostAddress)
+	hostUpdateBlock := fmt.Sprintf(projHost, hostName, catalogName, typeStr, fooHostAddressUpdate)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -69,28 +75,28 @@ func TestAccHost(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test project host create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projHost),
+				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hostBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostAttributeSet(provider, "boundary_host.foo", "address", fooHostAddress),
-					testAccCheckHostResourceExists(provider, "boundary_host.foo"),
-					resource.TestCheckResourceAttr("boundary_host.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_host.foo", "description", "test host"),
-					resource.TestCheckResourceAttr("boundary_host.foo", "address", fooHostAddress),
+					testAccCheckHostAttributeSet(provider, fooHostName, "address", fooHostAddress),
+					testAccCheckHostResourceExists(provider, fooHostName),
+					resource.TestCheckResourceAttr(fooHostName, "name", "test"),
+					resource.TestCheckResourceAttr(fooHostName, "description", "test host"),
+					resource.TestCheckResourceAttr(fooHostName, "address", fooHostAddress),
 				),
 			},
-			importStep("boundary_host.foo"),
+			importStep(fooHostName),
 			{
 				// test project host update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projHostUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hostUpdateBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostAttributeSet(provider, "boundary_host.foo", "address", fooHostAddressUpdate),
-					testAccCheckHostResourceExists(provider, "boundary_host.foo"),
-					resource.TestCheckResourceAttr("boundary_host.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_host.foo", "description", "test host"),
-					resource.TestCheckResourceAttr("boundary_host.foo", "address", fooHostAddressUpdate),
+					testAccCheckHostAttributeSet(provider, fooHostName, "address", fooHostAddressUpdate),
+					testAccCheckHostResourceExists(provider, fooHostName),
+					resource.TestCheckResourceAttr(fooHostName, "name", "test"),
+					resource.TestCheckResourceAttr(fooHostName, "description", "test host"),
+					resource.TestCheckResourceAttr(fooHostName, "address", fooHostAddressUpdate),
 				),
 			},
-			importStep("boundary_host.foo"),
+			importStep(fooHostName),
 		},
 	})
 }

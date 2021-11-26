@@ -15,11 +15,10 @@ const (
 	hostsetTypeStatic = "static"
 )
 
-func resourceHostset() *schema.Resource {
+func resourceHostSet() *schema.Resource {
 	return &schema.Resource{
-		Description: "The host_set resource allows you to configure a Boundary host set. Host sets are " +
-			"always part of a host catalog, so a host catalog resource should be used inline or you " +
-			"should have the host catalog ID in hand to successfully configure a host set.",
+		DeprecationMessage: "Deprecated: use `resource_host_set_static` instead.",
+		Description:        "Deprecated: use `resource_host_set_static` instead.",
 
 		CreateContext: resourceHostsetCreate,
 		ReadContext:   resourceHostsetRead,
@@ -46,14 +45,69 @@ func resourceHostset() *schema.Resource {
 				Optional:    true,
 			},
 			TypeKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Description: "The type of host set",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			HostCatalogIdKey: {
 				Description: "The catalog for the hostset.",
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
+			},
+			hostsetHostIdsKey: {
+				Description: "The list of host IDs contained in this set.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+		},
+	}
+}
+
+func resourceHostSetStatic() *schema.Resource {
+	return &schema.Resource{
+		Description: "The host_set_static resource allows you to configure a Boundary host set. Host sets are " +
+			"always part of a host catalog, so a host catalog resource should be used inline or you " +
+			"should have the host catalog ID in hand to successfully configure a host set.",
+
+		CreateContext: resourceHostsetCreate,
+		ReadContext:   resourceHostsetRead,
+		UpdateContext: resourceHostsetUpdate,
+		DeleteContext: resourceHostsetDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the hostset.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			NameKey: {
+				Description: "The hostset name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			DescriptionKey: {
+				Description: "The host set description.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			TypeKey: {
+				Description: "The type of host set",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "static",
+			},
+			HostCatalogIdKey: {
+				Description: "The catalog for the host set.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
 			hostsetHostIdsKey: {
 				Description: "The list of host IDs contained in this set.",

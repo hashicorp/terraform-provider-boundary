@@ -25,7 +25,7 @@ resource "%s" "foo" {
 	name        = "foo"
 	description = "bar"
 	scope_id    = boundary_scope.proj1.id 
-	type        = "static"
+	%s
 	depends_on  = [boundary_role.proj1_admin]
 }`
 
@@ -34,7 +34,7 @@ resource "%s" "foo" {
 	name        = "foo"
 	description = "foo bar"
 	scope_id    = boundary_scope.proj1.id 
-	type        = "static"
+	%s
 	depends_on  = [boundary_role.proj1_admin]
 }`
 )
@@ -42,24 +42,26 @@ resource "%s" "foo" {
 func TestAccHostCatalogCreate(t *testing.T) {
 	t.Run("non-static", func(t *testing.T) {
 		t.Parallel()
-		testAccHostCatalogCreate(t, false)
+		testAccHostCatalog(t, false)
 	})
 	t.Run("static", func(t *testing.T) {
 		t.Parallel()
-		testAccHostCatalogCreate(t, true)
+		testAccHostCatalog(t, true)
 	})
 }
 
-func testAccHostCatalogCreate(t *testing.T, static bool) {
+func testAccHostCatalog(t *testing.T, static bool) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
 	resName := "boundary_host_catalog"
+	typeStr := `type = "static"`
 	if static {
 		resName = "boundary_host_catalog_static"
+		typeStr = ""
 	}
-	hc, hcu := fmt.Sprintf(projHostCatalog, resName), fmt.Sprintf(projHostCatalogUpdate, resName)
+	hc, hcu := fmt.Sprintf(projHostCatalog, resName, typeStr), fmt.Sprintf(projHostCatalogUpdate, resName, typeStr)
 	fooName := fmt.Sprintf("%s.foo", resName)
 
 	var provider *schema.Provider

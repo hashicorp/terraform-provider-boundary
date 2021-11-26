@@ -17,14 +17,13 @@ const (
 
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
-		Description: "The host resource allows you to configure a Boundary static host. Hosts are " +
-			"always part of a project, so a project resource should be used inline or you should have " +
-			"the project ID in hand to successfully configure a host.",
+		DeprecationMessage: "Deprecated: use `resource_host_static` instead.",
+		Description:        "Deprecated: use `resource_host_static` instead.",
 
-		CreateContext: resourceHostCreate,
-		ReadContext:   resourceHostRead,
-		UpdateContext: resourceHostUpdate,
-		DeleteContext: resourceHostDelete,
+		CreateContext: resourceHostStaticCreate,
+		ReadContext:   resourceHostStaticRead,
+		UpdateContext: resourceHostStaticUpdate,
+		DeleteContext: resourceHostStaticDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -46,9 +45,60 @@ func resourceHost() *schema.Resource {
 				Optional:    true,
 			},
 			TypeKey: {
+				Description: "The type of host",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+			},
+			HostCatalogIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
+			},
+			hostAddressKey: {
+				Description: "The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+		},
+	}
+}
+
+func resourceHostStatic() *schema.Resource {
+	return &schema.Resource{
+		Description: "The static host resource allows you to configure a Boundary static host. Hosts are " +
+			"always part of a project, so a project resource should be used inline or you should have " +
+			"the project ID in hand to successfully configure a host.",
+
+		CreateContext: resourceHostStaticCreate,
+		ReadContext:   resourceHostStaticRead,
+		UpdateContext: resourceHostStaticUpdate,
+		DeleteContext: resourceHostStaticDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the host.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			NameKey: {
+				Description: "The host name. Defaults to the resource name.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			DescriptionKey: {
+				Description: "The host description.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			TypeKey: {
+				Description: "The type of host",
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "static",
 			},
 			HostCatalogIdKey: {
 				Type:     schema.TypeString,
@@ -91,7 +141,7 @@ func setFromHostResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	return nil
 }
 
-func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostStaticCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
 	var hostCatalogId string
@@ -158,7 +208,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostStaticRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hClient := hosts.NewClient(md.client)
 
@@ -181,7 +231,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostStaticUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hClient := hosts.NewClient(md.client)
 
@@ -252,7 +302,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostStaticDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hClient := hosts.NewClient(md.client)
 
