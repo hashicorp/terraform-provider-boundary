@@ -25,4 +25,8 @@ const (
 	SecretsJsonKey = "secrets_json"
 	// SecretsHmacKey is a read-only key used for ensuring we detect if secrets have changed
 	SecretsHmacKey = "secrets_hmac"
+	// PreferredEndpointsKey is used for setting preferred endpoints
+	PreferredEndpointsKey = "preferred_endpoints"
+	// SyncIntervalSecondsKey is used for setting the interval seconds
+	SyncIntervalSecondsKey = "sync_interval_seconds"
 )

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	hostsetHostIdsKey = "host_ids"
-	hostsetTypeStatic = "static"
+	hostSetHostIdsKey = "host_ids"
+	hostSetTypeStatic = "static"
 )
 
 func resourceHostSet() *schema.Resource {
@@ -20,27 +20,27 @@ func resourceHostSet() *schema.Resource {
 		DeprecationMessage: "Deprecated: use `resource_host_set_static` instead.",
 		Description:        "Deprecated: use `resource_host_set_static` instead.",
 
-		CreateContext: resourceHostsetCreate,
-		ReadContext:   resourceHostsetRead,
-		UpdateContext: resourceHostsetUpdate,
-		DeleteContext: resourceHostsetDelete,
+		CreateContext: resourceHostSetStaticCreate,
+		ReadContext:   resourceHostSetStaticRead,
+		UpdateContext: resourceHostSetStaticUpdate,
+		DeleteContext: resourceHostSetStaticDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			IDKey: {
-				Description: "The ID of the hostset.",
+				Description: "The ID of the host set.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			NameKey: {
-				Description: "The hostset name. Defaults to the resource name.",
+				Description: "The host set name. Defaults to the resource name.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			DescriptionKey: {
-				Description: "The hostset description.",
+				Description: "The host set description.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -51,12 +51,12 @@ func resourceHostSet() *schema.Resource {
 				ForceNew:    true,
 			},
 			HostCatalogIdKey: {
-				Description: "The catalog for the hostset.",
+				Description: "The catalog for the host set.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 			},
-			hostsetHostIdsKey: {
+			hostSetHostIdsKey: {
 				Description: "The list of host IDs contained in this set.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -72,22 +72,22 @@ func resourceHostSetStatic() *schema.Resource {
 			"always part of a host catalog, so a host catalog resource should be used inline or you " +
 			"should have the host catalog ID in hand to successfully configure a host set.",
 
-		CreateContext: resourceHostsetCreate,
-		ReadContext:   resourceHostsetRead,
-		UpdateContext: resourceHostsetUpdate,
-		DeleteContext: resourceHostsetDelete,
+		CreateContext: resourceHostSetStaticCreate,
+		ReadContext:   resourceHostSetStaticRead,
+		UpdateContext: resourceHostSetStaticUpdate,
+		DeleteContext: resourceHostSetStaticDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			IDKey: {
-				Description: "The ID of the hostset.",
+				Description: "The ID of the host set.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			NameKey: {
-				Description: "The hostset name. Defaults to the resource name.",
+				Description: "The host set name. Defaults to the resource name.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -101,7 +101,7 @@ func resourceHostSetStatic() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				ForceNew:    true,
-				Default:     "static",
+				Default:     hostSetTypeStatic,
 			},
 			HostCatalogIdKey: {
 				Description: "The catalog for the host set.",
@@ -109,7 +109,7 @@ func resourceHostSetStatic() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			hostsetHostIdsKey: {
+			hostSetHostIdsKey: {
 				Description: "The list of host IDs contained in this set.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -119,7 +119,7 @@ func resourceHostSetStatic() *schema.Resource {
 	}
 }
 
-func setFromHostSetResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+func setFromHostSetStaticResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
 	if err := d.Set(NameKey, raw["name"]); err != nil {
 		return err
 	}
@@ -132,14 +132,14 @@ func setFromHostSetResponseMap(d *schema.ResourceData, raw map[string]interface{
 	if err := d.Set(TypeKey, raw["type"]); err != nil {
 		return err
 	}
-	if err := d.Set(hostsetHostIdsKey, raw["host_ids"]); err != nil {
+	if err := d.Set(hostSetHostIdsKey, raw["host_ids"]); err != nil {
 		return err
 	}
 	d.SetId(raw["id"].(string))
 	return nil
 }
 
-func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostSetStaticCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
 	var hostsetHostCatalogId string
@@ -150,7 +150,7 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	var hostIds []string
-	if hostIdsVal, ok := d.GetOk(hostsetHostIdsKey); ok {
+	if hostIdsVal, ok := d.GetOk(hostSetHostIdsKey); ok {
 		list := hostIdsVal.(*schema.Set).List()
 		hostIds = make([]string, 0, len(list))
 		for _, i := range list {
@@ -169,7 +169,7 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	switch typeStr {
 	// NOTE: When other types are added, ensure they don't accept hostSetIds if
 	// it's not allowed
-	case hostsetTypeStatic:
+	case hostSetTypeStatic:
 	default:
 		return diag.Errorf("invalid type provided")
 	}
@@ -208,14 +208,14 @@ func resourceHostsetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		raw = hsshr.GetResponse().Map
 	}
 
-	if err := setFromHostSetResponseMap(d, raw); err != nil {
+	if err := setFromHostSetStaticResponseMap(d, raw); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostSetStaticRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hsClient := hostsets.NewClient(md.client)
 
@@ -231,14 +231,14 @@ func resourceHostsetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("host set nil after read")
 	}
 
-	if err := setFromHostSetResponseMap(d, hsrr.GetResponse().Map); err != nil {
+	if err := setFromHostSetStaticResponseMap(d, hsrr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostSetStaticUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hsClient := hostsets.NewClient(md.client)
 
@@ -287,9 +287,9 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// The above call may not actually happen, so we use d.Id() and automatic
 	// versioning here
-	if d.HasChange(hostsetHostIdsKey) {
+	if d.HasChange(hostSetHostIdsKey) {
 		var hostIds []string
-		if hostIdsVal, ok := d.GetOk(hostsetHostIdsKey); ok {
+		if hostIdsVal, ok := d.GetOk(hostSetHostIdsKey); ok {
 			hosts := hostIdsVal.(*schema.Set).List()
 			for _, host := range hosts {
 				hostIds = append(hostIds, host.(string))
@@ -299,7 +299,7 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("error updating hosts in host set: %v", err)
 		}
-		if err := d.Set(hostsetHostIdsKey, hostIds); err != nil {
+		if err := d.Set(hostSetHostIdsKey, hostIds); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -307,7 +307,7 @@ func resourceHostsetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceHostsetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostSetStaticDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hsClient := hostsets.NewClient(md.client)
 

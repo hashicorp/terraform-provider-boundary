@@ -71,6 +71,7 @@ func New() *schema.Provider {
 			"boundary_host_catalog_plugin":      resourceHostCatalogPlugin(),
 			"boundary_host_set":                 resourceHostSet(),
 			"boundary_host_set_static":          resourceHostSetStatic(),
+			"boundary_host_set_plugin":          resourceHostSetPlugin(),
 			"boundary_role":                     resourceRole(),
 			"boundary_scope":                    resourceScope(),
 			"boundary_target":                   resourceTarget(),

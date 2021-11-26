@@ -14,18 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccHostSet(t *testing.T) {
+func TestAccHostSetStatic(t *testing.T) {
 	t.Run("non-static", func(t *testing.T) {
 		t.Parallel()
-		testAccHostSet(t, false)
+		testAccHostSetStatic(t, false)
 	})
 	t.Run("static", func(t *testing.T) {
 		t.Parallel()
-		testAccHostSet(t, true)
+		testAccHostSetStatic(t, true)
 	})
 }
 
-func testAccHostSet(t *testing.T, static bool) {
+func testAccHostSetStatic(t *testing.T, static bool) {
 	catalogBlock := ` 
 	resource "%s" "foo" {
 		%s
@@ -83,14 +83,14 @@ func testAccHostSet(t *testing.T, static bool) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckHostsetResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckHostSetStaticResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
 				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hBlock, hsBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostsetResourceExists(provider, fooSetName),
-					testAccCheckHostsetHostIDsSet(provider, fooSetName, []string{fooHostName}),
+					testAccCheckHostSetStaticResourceExists(provider, fooSetName),
+					testAccCheckHostSetStaticHostIDsSet(provider, fooSetName, []string{fooHostName}),
 					resource.TestCheckResourceAttr(fooSetName, "name", "test"),
 					resource.TestCheckResourceAttr(fooSetName, "description", "test hostset"),
 				),
@@ -100,8 +100,8 @@ func testAccHostSet(t *testing.T, static bool) {
 				// test project hostset update
 				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hBlock, h2Block, hsUpdateBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostsetResourceExists(provider, fooSetName),
-					testAccCheckHostsetHostIDsSet(provider, fooSetName, []string{fooHostName, barHostName}),
+					testAccCheckHostSetStaticResourceExists(provider, fooSetName),
+					testAccCheckHostSetStaticHostIDsSet(provider, fooSetName, []string{fooHostName, barHostName}),
 					resource.TestCheckResourceAttr(fooSetName, "name", "test"),
 					resource.TestCheckResourceAttr(fooSetName, "description", "test hostset"),
 				),
@@ -111,7 +111,7 @@ func testAccHostSet(t *testing.T, static bool) {
 	})
 }
 
-func testAccCheckHostsetResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckHostSetStaticResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -134,7 +134,7 @@ func testAccCheckHostsetResourceExists(testProvider *schema.Provider, name strin
 	}
 }
 
-func testAccCheckHostsetHostIDsSet(testProvider *schema.Provider, name string, wantHostIDs []string) resource.TestCheckFunc {
+func testAccCheckHostSetStaticHostIDsSet(testProvider *schema.Provider, name string, wantHostIDs []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -192,7 +192,7 @@ func testAccCheckHostsetHostIDsSet(testProvider *schema.Provider, name string, w
 	}
 }
 
-func testAccCheckHostsetResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckHostSetStaticResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
