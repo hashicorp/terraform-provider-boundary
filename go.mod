@@ -9,7 +9,7 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.545 // indirect
 	github.com/containerd/continuity v0.0.0-20200710164510-efbc4488d8fe // indirect
 	github.com/golang/snappy v0.0.2 // indirect
-	github.com/hashicorp/boundary v0.7.2-0.20211126234230-a7e268432126
+	github.com/hashicorp/boundary v0.7.2-0.20211127043612-fb6113ced1c6
 	github.com/hashicorp/boundary/api v0.0.20
 	github.com/hashicorp/boundary/sdk v0.0.12
 	github.com/hashicorp/cap v0.1.1
