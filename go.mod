@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.17
 
 require (
-	github.com/hashicorp/boundary v0.7.2-0.20211127043612-fb6113ced1c6
+	github.com/hashicorp/boundary v0.7.2-0.20211128202046-5417cc5cb07d
 	github.com/hashicorp/boundary/api v0.0.20
 	github.com/hashicorp/boundary/sdk v0.0.12
 	github.com/hashicorp/cap v0.1.1
@@ -117,19 +117,19 @@ require (
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.10.0 // indirect
+	github.com/jackc/pgconn v1.10.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.1.1 // indirect
+	github.com/jackc/pgproto3/v2 v2.2.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
-	github.com/jackc/pgtype v1.7.0 // indirect
-	github.com/jackc/pgx/v4 v4.11.0 // indirect
+	github.com/jackc/pgtype v1.9.0 // indirect
+	github.com/jackc/pgx/v4 v4.14.0 // indirect
 	github.com/jefferai/go-libsecret v0.0.0-20210105015933-d08a58b018bc // indirect
 	github.com/jefferai/isbadcipher v0.0.0-20190226160619-51d2077c035f // indirect
 	github.com/jefferai/keyring v1.1.7-0.20210105022822-8749b3d9ce79 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.2 // indirect
+	github.com/jinzhu/now v1.1.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
@@ -181,7 +181,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
 	golang.org/x/sys v0.0.0-20211004093028-2c5d950f24ef // indirect
 	golang.org/x/term v0.0.0-20210916214954-140adaaadfaf // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	golang.org/x/tools v0.1.6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
@@ -194,7 +194,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	gorm.io/driver/postgres v1.1.0 // indirect
-	gorm.io/gorm v1.21.17-0.20211013130203-9a5ba3760424 // indirect
+	gorm.io/driver/postgres v1.2.2 // indirect
+	gorm.io/gorm v1.22.3 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
