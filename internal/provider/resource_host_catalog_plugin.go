@@ -68,13 +68,6 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				ForceNew:    true,
 				Computed:    true,
 			},
-			TypeKey: {
-				Description: "The host catalog type. Only `plugin` is supported, and is the default.",
-				Type:        schema.TypeString,
-				ForceNew:    true,
-				Optional:    true,
-				Default:     "plugin",
-			},
 			AttributesJsonKey: {
 				Description: `The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.`,
 				Type:        schema.TypeString,
@@ -120,15 +113,11 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
 		return err
 	}
-	if err := d.Set(TypeKey, raw[TypeKey]); err != nil {
-		return err
-	}
 	// Plugin stuff
 	{
 		if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
 			return err
 		}
-		// Boundary doesn't currently return the plugin name in responses
 		pluginRaw, ok := raw["plugin"]
 		if !ok {
 			return fmt.Errorf("plugin field not found in response")
@@ -169,7 +158,7 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	{
 		// We do not save secrets into the state file, and they're not returned in
 		// the response
-		secretsRaw, ok := raw["secrets"]
+		secretsRaw, ok := raw[SecretsHmacKey]
 		switch ok {
 		case true:
 			if err := d.Set(SecretsHmacKey, secretsRaw); err != nil {
@@ -191,18 +180,6 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 		scopeId = scopeIdVal.(string)
 	} else {
 		return diag.Errorf("no scope ID provided")
-	}
-
-	var typeStr string
-	if typeVal, ok := d.GetOk(TypeKey); ok {
-		typeStr = typeVal.(string)
-	} else {
-		return diag.Errorf("no type provided")
-	}
-	switch typeStr {
-	case hostCatalogTypePlugin:
-	default:
-		return diag.Errorf("invalid type provided")
 	}
 
 	opts := []hostcatalogs.Option{}
@@ -277,7 +254,7 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 
 	hcClient := hostcatalogs.NewClient(md.client)
 
-	hccr, err := hcClient.Create(ctx, typeStr, scopeId, opts...)
+	hccr, err := hcClient.Create(ctx, hostCatalogTypePlugin, scopeId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating host catalog: %v", err)
 	}

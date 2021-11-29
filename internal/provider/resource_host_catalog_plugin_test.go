@@ -36,7 +36,6 @@ var projPluginHostCatalogBase = `
 resource "boundary_host_catalog_plugin" "foo" {
 	name        = "foo"
 	scope_id    = boundary_scope.proj1.id
-	type        = "plugin"
 	plugin_name = "loopback"
 %s
 	depends_on  = [boundary_role.proj1_admin]
@@ -47,6 +46,9 @@ var (
 	currentPluginHostCatalogAttributesValue  string
 )
 
+// NOTE: In the test below, secrets and attributes change in the same manner at
+// the same time; the eventual result is the same even if the JSON looks
+// different.
 func TestAccPluginHostCatalog(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
