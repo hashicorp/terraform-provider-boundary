@@ -222,7 +222,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	})
 }
 
-func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, name string, expSecrets expectedAttributesState) resource.TestCheckFunc {
+func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, name string, expAttrState expectedAttributesState) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
