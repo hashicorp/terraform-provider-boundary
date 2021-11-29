@@ -69,9 +69,23 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				Computed:    true,
 			},
 			AttributesJsonKey: {
-				Description: `The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Remove the block to clear all attributes in the host catalog.`,
+				Description: `The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.`,
 				Type:        schema.TypeString,
 				Optional:    true,
+				// If set to null in config and nothing comes from API, consider
+				// it the same. Same if config changes from empty to null.
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					switch {
+					case old == new:
+						return true
+					case old == "null" && new == "":
+						return true
+					case old == "" && new == "null":
+						return true
+					default:
+						return false
+					}
+				},
 			},
 			SecretsJsonKey: {
 				Description: `The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.`,

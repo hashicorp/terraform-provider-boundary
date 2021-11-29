@@ -23,6 +23,8 @@ const (
 	testPluginHostCatalogDescriptionUpdate2 = "bar foo foo"
 )
 
+// expectedAttributesState is used here and in plugin host sets to control how
+// we expect attributes to behave compared to the previous step.
 type expectedAttributesState uint
 
 const (
@@ -48,7 +50,8 @@ var (
 
 // NOTE: In the test below, secrets and attributes change in the same manner at
 // the same time; the eventual result is the same even if the JSON looks
-// different.
+// different. Thus expectedAttributesState also controls expectations for
+// secrets.
 func TestAccPluginHostCatalog(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
@@ -244,7 +247,7 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 		}
 		secretsHmac := val.GetResponse().Map[SecretsHmacKey]
 		attrs := val.GetResponse().Map["attributes"]
-		switch expSecrets {
+		switch expAttrState {
 		case expectedAttributesStatePreviouslyEmptyNowSet:
 			if currentPluginHostCatalogSecretsHmacValue != "" {
 				return errors.New("expected no previous secrets hmac value")
