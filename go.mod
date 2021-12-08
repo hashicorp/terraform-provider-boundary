@@ -23,10 +23,9 @@ require (
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
 	github.com/hashicorp/terraform-plugin-docs v0.5.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.8.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.0
 	github.com/hashicorp/yamux v0.0.0-20200609203250-aecfd211c9ce // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/oracle/oci-go-sdk v24.3.0+incompatible // indirect
 	golang.org/x/crypto v0.0.0-20210915214749-c084706c2272
