@@ -149,6 +149,13 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	update5Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate5)
 	update6Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate6)
 
+	_ = update1Hcl
+	_ = update2Hcl
+	_ = update3Hcl
+	_ = update4Hcl
+	_ = update5Hcl
+	_ = update6Hcl
+
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
@@ -164,7 +171,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescription),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
@@ -173,7 +180,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
@@ -182,7 +189,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
@@ -191,7 +198,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
@@ -200,7 +207,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
@@ -209,7 +216,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update6Hcl),
@@ -218,7 +225,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
 			},
-			importStep(resName, "secrets"),
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 		},
 	})
 }

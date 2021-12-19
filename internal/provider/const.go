@@ -19,14 +19,27 @@ const (
 	PluginIdKey = "plugin_id"
 	// PluginNameKey is used for common "plugin_name" resource attribute
 	PluginNameKey = "plugin_name"
-	// AttributesJsonKey is used for setting attributes and corresponds to the API "attributes" key
+	// AttributesJsonKey is used for setting attributes and corresponds to the
+	// API "attributes" key
 	AttributesJsonKey = "attributes_json"
-	// SecretsJsonKey is used for setting secrets and corresponds to the API "secrets" key
+	// SecretsJsonKey is used for setting secrets and corresponds to the API
+	// "secrets" key
 	SecretsJsonKey = "secrets_json"
-	// SecretsHmacKey is a read-only key used for ensuring we detect if secrets have changed
+	// SecretsHmacKey is a read-only key used for ensuring we detect if secrets
+	// have changed
 	SecretsHmacKey = "secrets_hmac"
 	// PreferredEndpointsKey is used for setting preferred endpoints
 	PreferredEndpointsKey = "preferred_endpoints"
 	// SyncIntervalSecondsKey is used for setting the interval seconds
 	SyncIntervalSecondsKey = "sync_interval_seconds"
+	// internalSecretsConfigHmacKey is used for storing an hmac of hmac from server +
+	// config string
+	internalSecretsConfigHmacKey = "internal_secrets_config_hmac"
+	// internalHmacUsedForSecretsConfigHmacKey is used for storing the server-provided
+	// hmac used when calculating the current value of secretsConfigHmacKey
+	internalHmacUsedForSecretsConfigHmacKey = "internal_hmac_used_for_secrets_config_hmac"
+	// internalNextUpdateUseSecretsKey is used by the hmac diffing function to indicate
+	// that when update runs it should use the value currently found in
+	// secrets_json
+	internalNextUpdateUseSecretsKey = "internal_next_update_use_secrets_key"
 )
