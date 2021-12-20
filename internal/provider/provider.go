@@ -52,6 +52,11 @@ func New() *schema.Provider {
 				Optional:    true,
 				Description: "The auth method password for password-style auth methods",
 			},
+			"tls_insecure": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "When set to true, does not validate the Boundary API endpoint certificate",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"boundary_account":                  resourceAccount(),
@@ -172,6 +177,12 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 		}
 		if client.Addr() == "" {
 			return nil, diag.Errorf(`"no valid address could be determined from "addr" or "BOUNDARY_ADDR" env var`)
+		}
+
+		if tlsInsecure, ok := d.GetOk("tls_insecure"); ok {
+			if client.SetTLSConfig(&api.TLSConfig{Insecure: tlsInsecure.(bool)}) != nil {
+				return nil, diag.Errorf("could not set insecure tls")
+			}
 		}
 
 		client.SetLimiter(5, 5)
