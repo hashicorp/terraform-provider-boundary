@@ -38,8 +38,7 @@ const (
 	// internalHmacUsedForSecretsConfigHmacKey is used for storing the server-provided
 	// hmac used when calculating the current value of secretsConfigHmacKey
 	internalHmacUsedForSecretsConfigHmacKey = "internal_hmac_used_for_secrets_config_hmac"
-	// internalNextUpdateUseSecretsKey is used by the hmac diffing function to indicate
-	// that when update runs it should use the value currently found in
-	// secrets_json
-	internalNextUpdateUseSecretsKey = "internal_next_update_use_secrets_key"
+	// internalForceUpdateKey is used to force updates so we can always check
+	// the value of secrets
+	internalForceUpdateKey = "internal_force_update"
 )

@@ -46,6 +46,7 @@ resource "boundary_host_catalog_plugin" "foo" {
 var (
 	currentPluginHostCatalogSecretsHmacValue string
 	currentPluginHostCatalogAttributesValue  string
+	testStep                                 = 1
 )
 
 // NOTE: In the test below, secrets and attributes change in the same manner at
@@ -183,6 +184,17 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
 			{
 				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+				),
+			},
+			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			{
+				// this runs the same HCL; mostly used in some manual checking
+				// to ensure update is still called even when nothing has
+				// changed (as we need for secrets)
 				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
@@ -348,6 +360,7 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 			currentPluginHostCatalogAttributesValue = ""
 		}
 
+		testStep++
 		return nil
 	}
 }

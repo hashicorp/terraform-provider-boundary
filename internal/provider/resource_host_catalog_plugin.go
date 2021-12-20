@@ -8,7 +8,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
+	"strconv"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
@@ -115,12 +117,18 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
-			internalNextUpdateUseSecretsKey: {
-				Description: "Internal only. Indicates that on the read step it was detected that during the next update we should honor the value of secrets_json.",
-				Type:        schema.TypeBool,
+			internalForceUpdateKey: {
+				Description: "Internal only. Used to force update so that we can always check the value of secrets.",
+				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 			},
+		},
+
+		// We want to always force an update (which itself may not actually do
+		// anything) so that we can properly check secrets state.
+		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+			return d.SetNew(internalForceUpdateKey, strconv.FormatInt(rand.Int63(), 10))
 		},
 	}
 }
@@ -130,11 +138,7 @@ func resourceHostCatalogPlugin() *schema.Resource {
 // and then re-marshal the JSON to take advantage of Go alphabetizing JSON
 // output so that we can ensure we'll treat the same objects as equivalent
 // regardless of initial input order.
-func calculateCurrentConfigHmac(serverHmac, secretsJson string) (string, error) {
-	secretsStr, err := parseutil.ParsePath(secretsJson)
-	if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
-		return "", fmt.Errorf("error parsing path with secrets: %v", err)
-	}
+func calculateCurrentConfigHmac(serverHmac, secretsStr string) (string, error) {
 	var v interface{}
 	if err := json.Unmarshal([]byte(secretsStr), &v); err != nil {
 		return "", err
@@ -155,45 +159,19 @@ func calculateCurrentConfigHmac(serverHmac, secretsJson string) (string, error) 
 }
 
 // calculateConfigHmacPlan, given the schema and the current server HMAC,
-// returns what to set on the server (if anything) and any diagnostics.
-func calculateConfigHmacPlan(d *schema.ResourceData, storeNewHmacConfig bool) diag.Diagnostics {
-	// Always clear this value; we will explicitly set it in the only cases we
-	// want it to occur.
-	if err := d.Set(internalNextUpdateUseSecretsKey, nil); err != nil {
-		return diag.FromErr(err)
-	}
-	serverHmac := d.Get(SecretsHmacKey).(string)
+// returns what to set on the server (if anything) and any diagnostics. If
+// clearExisting is set we should nil out existing values in state. If
+// sendToBoundary is set then the read secrets_json should be sent in an API
+// call.
+func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceData) (clearExisting, sendToBoundary bool, diagWarn *diag.Diagnostic, retErr error) {
 	existingConfigHmac := d.Get(internalSecretsConfigHmacKey).(string)
-	secretsJson := d.Get(SecretsJsonKey).(string)
-
-	// If we have storeNewHmacConfig set it means we just updated values through
-	// the API, so before deciding on actions we need to store the new values.
-	if storeNewHmacConfig {
-		var err error
-		existingConfigHmac, err = calculateCurrentConfigHmac(serverHmac, secretsJson)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(internalSecretsConfigHmacKey, existingConfigHmac); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, serverHmac); err != nil {
-			return diag.FromErr(err)
-		}
-	}
 
 	// Iterate through possible states and handle appropriately
 	switch {
 	case serverHmac == "" && secretsJson == "":
 		// State 1: No configured secrets in either Boundary or TF. Clear HMAC'd
 		// config if present.
-		if err := d.Set(internalSecretsConfigHmacKey, nil); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, nil); err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
+		return true, false, nil, nil
 
 	case serverHmac == "" && secretsJson != "":
 		// State 2: Boundary has no secrets but TF does. Put secrets into
@@ -202,19 +180,10 @@ func calculateConfigHmacPlan(d *schema.ResourceData, storeNewHmacConfig bool) di
 		// present.
 		switch secretsJson {
 		case "null":
-			if err := d.Set(internalSecretsConfigHmacKey, nil); err != nil {
-				return diag.FromErr(err)
-			}
-			if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, nil); err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+			return true, false, nil, nil
 
 		default:
-			if err := d.Set(internalNextUpdateUseSecretsKey, true); err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+			return false, true, nil, nil
 		}
 
 	case serverHmac != "" && secretsJson == "":
@@ -227,13 +196,7 @@ func calculateConfigHmacPlan(d *schema.ResourceData, storeNewHmacConfig bool) di
 		// set. Note that we wipe knowledge of the HMAC'd config in this case,
 		// so if they re-add values (even the same ones) we'll hit state 4. This
 		// is the escape hatch for state 6a below.
-		if err := d.Set(internalSecretsConfigHmacKey, nil); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, nil); err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
+		return true, false, nil, nil
 
 	case serverHmac != "" && secretsJson != "" && existingConfigHmac == "":
 		// State 4: In this case Boundary has secrets and TF config has secrets,
@@ -242,23 +205,20 @@ func calculateConfigHmacPlan(d *schema.ResourceData, storeNewHmacConfig bool) di
 		// file was written, or at least prior to the value being added to TF's
 		// config, since running TF with config would generate an HMAC'd config
 		// value. We can assume that the TF config is new and meant as an update.
-		if err := d.Set(internalNextUpdateUseSecretsKey, true); err != nil {
-			return diag.FromErr(err)
-		}
-		return nil
+		return false, true, nil, nil
 
 	case serverHmac != "" && secretsJson != "":
 		// At this point we need to calculated the current HMAC'd config value
 		// so we can see if it matches.
 		currentConfigHmac, err := calculateCurrentConfigHmac(serverHmac, secretsJson)
 		if err != nil {
-			return diag.FromErr(err)
+			return false, false, nil, err
 		}
 
 		if existingConfigHmac == currentConfigHmac {
 			// State 5: Both Boundary and TF have secrets configured and they
 			// are known to match, so do nothing.
-			return nil
+			return false, false, nil, nil
 		}
 
 		// The next bit is a little complicated. We have been storing not just
@@ -281,61 +241,58 @@ func calculateConfigHmacPlan(d *schema.ResourceData, storeNewHmacConfig bool) di
 		switch {
 		case serverHmac != d.Get(internalHmacUsedForSecretsConfigHmacKey).(string):
 			// State 6a: mismatch. Warn the user.
-			return diag.Diagnostics{diag.Diagnostic{
+			return false, false, &diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "Mismatch in secrets state between Boundary and Terraform.",
 				Detail:   "Boundary's secret state is out of sync with Terraform. Usually this is the result of secrets being provided directly via Boundary's API. To suppress this warning, either remove the secrets via Boundary's API and allow Terraform to repopulate them, or remove the secrets_json block from Terraform's configuration file (the next time you add secrets_json back to the file, those values will be used to overwrite the current Boundary values.)",
-			}}
+			}, nil
 
 		default:
 			// State 6b: Boundary's HMAC hasn't changed from the one we used to
 			// generate the HMAC'd config, so we know the config has changed.
-			if err := d.Set(internalNextUpdateUseSecretsKey, true); err != nil {
-				return diag.FromErr(err)
-			}
-			return nil
+			return false, true, nil, nil
 		}
 
 	default:
-		return diag.FromErr(fmt.Errorf(
+		return false, false, nil, fmt.Errorf(
 			"unhandled secrets state; server hmac is found: %t; secrets detected in config: %t; existing hmac'd config: %t",
-			serverHmac != "", secretsJson != "", existingConfigHmac != ""))
+			serverHmac != "", secretsJson != "", existingConfigHmac != "")
 	}
 }
 
-func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]interface{}, storeNewHmacConfig bool) diag.Diagnostics {
+func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
 	if err := d.Set(NameKey, raw[NameKey]); err != nil {
-		return diag.FromErr(err)
+		return err
 	}
 	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
-		return diag.FromErr(err)
+		return err
 	}
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
-		return diag.FromErr(err)
+		return err
 	}
 	// Plugin stuff
 	{
 		if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 		pluginRaw, ok := raw["plugin"]
 		if !ok {
-			return diag.FromErr(fmt.Errorf("plugin field not found in response"))
+			return fmt.Errorf("plugin field not found in response")
 		}
 		pluginInfo, ok := pluginRaw.(map[string]interface{})
 		if !ok {
-			return diag.FromErr(fmt.Errorf("plugin field in response has wrong type"))
+			return fmt.Errorf("plugin field in response has wrong type")
 		}
 		pluginNameRaw, ok := pluginInfo["name"]
 		if !ok {
-			return diag.FromErr(fmt.Errorf("plugin name field not found in response"))
+			return fmt.Errorf("plugin name field not found in response")
 		}
 		pluginName, ok := pluginNameRaw.(string)
 		if !ok {
-			return diag.FromErr(fmt.Errorf("plugin name field in response has wrong type"))
+			return fmt.Errorf("plugin name field in response has wrong type")
 		}
 		if err := d.Set(PluginNameKey, pluginName); err != nil {
-			return diag.FromErr(err)
+			return err
 		}
 	}
 	// Attributes stuff
@@ -345,10 +302,10 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 		case true:
 			encodedAttributes, err := json.Marshal(attrRaw)
 			if err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 			if err := d.Set(AttributesJsonKey, string(encodedAttributes)); err != nil {
-				return diag.FromErr(err)
+				return err
 			}
 		default:
 			d.Set(AttributesJsonKey, nil)
@@ -358,19 +315,20 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	{
 		// We do not save secrets into the state file, and they're not returned in
 		// the response
-		secretsRaw, ok := raw[SecretsHmacKey]
+		secretsHmacRaw, ok := raw[SecretsHmacKey]
 		switch ok {
 		case true:
-			if err := d.Set(SecretsHmacKey, secretsRaw); err != nil {
-				return diag.FromErr(err)
+			if err := d.Set(SecretsHmacKey, secretsHmacRaw); err != nil {
+				return err
 			}
 		default:
 			d.Set(SecretsHmacKey, nil)
 		}
 	}
+
 	d.SetId(raw[IDKey].(string))
 
-	return calculateConfigHmacPlan(d, storeNewHmacConfig)
+	return nil
 }
 
 func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -433,10 +391,11 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	var storeNewHmacConfig bool
 	secretsVal, ok := d.GetOk(SecretsJsonKey)
+	var secretsStr string
 	if ok {
-		secretsStr, err := parseutil.ParsePath(secretsVal.(string))
+		var err error
+		secretsStr, err = parseutil.ParsePath(secretsVal.(string))
 		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
 			return diag.Errorf("error parsing path with secrets: %v", err)
 		}
@@ -451,7 +410,6 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 				return diag.Errorf("error unmarshaling secrets: %v", err)
 			}
 			opts = append(opts, hostcatalogs.WithSecrets(m))
-			storeNewHmacConfig = true
 		}
 	}
 
@@ -465,7 +423,24 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("host catalog nil after create")
 	}
 
-	return setFromHostCatalogPluginResponseMap(d, hccr.GetResponse().Map, storeNewHmacConfig)
+	if err := setFromHostCatalogPluginResponseMap(d, hccr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if serverHmac := d.Get(SecretsHmacKey).(string); serverHmac != "" {
+		configHmac, err := calculateCurrentConfigHmac(serverHmac, secretsStr)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set(internalSecretsConfigHmacKey, configHmac); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, serverHmac); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	return nil
 }
 
 func resourceHostCatalogPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -484,12 +459,54 @@ func resourceHostCatalogPluginRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("host catalog nil after read")
 	}
 
-	return setFromHostCatalogPluginResponseMap(d, hcrr.GetResponse().Map, false)
+	if err := setFromHostCatalogPluginResponseMap(d, hcrr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
 }
 
 func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	hcClient := hostcatalogs.NewClient(md.client)
+
+	// We need to refresh the current server hmac value to figure out what to do
+	// next around secrets handling
+	var clearExistingSecrets, sendSecretsToBoundary bool
+	var secretsJson string
+	var currentDiagnostics diag.Diagnostics
+	{
+		hcrr, err := hcClient.Read(ctx, d.Id())
+		if err != nil {
+			if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
+				d.SetId("")
+				return nil
+			}
+			return diag.Errorf("error reading host catalog in update: %v", err)
+		}
+		if hcrr == nil {
+			return diag.Errorf("host catalog nil after read in update")
+		}
+		var serverSecretsHmac string
+		if secretsHmacRaw, ok := hcrr.GetResponse().Map[SecretsHmacKey]; ok {
+			serverSecretsHmac = secretsHmacRaw.(string)
+		}
+		// Get current secrets_json value
+		secretsJson, err = parseutil.ParsePath(d.Get(SecretsJsonKey).(string))
+		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
+			return diag.Errorf("error parsing path with secrets: %v", err)
+		}
+		// Now that we have the value from the server, see if anything needs to be
+		// done
+		var diagWarning *diag.Diagnostic
+		clearExistingSecrets, sendSecretsToBoundary, diagWarning, err = calculateConfigHmacPlan(serverSecretsHmac, secretsJson, d)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		if diagWarning != nil {
+			currentDiagnostics = append(currentDiagnostics, *diagWarning)
+		}
+	}
 
 	opts := []hostcatalogs.Option{}
 
@@ -516,7 +533,7 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 		if ok {
 			attrsStr, err := parseutil.ParsePath(attrsVal.(string))
 			if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
-				return diag.Errorf("error parsing path with attributes: %v", err)
+				return append(currentDiagnostics, diag.Errorf("error parsing path with attributes: %v", err)...)
 			}
 			switch attrsStr {
 			case "null", "":
@@ -526,7 +543,7 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 				// map[string]interface{} so we unmarshal it and set that
 				var m map[string]interface{}
 				if err := json.Unmarshal([]byte(attrsStr), &m); err != nil {
-					return diag.Errorf("error unmarshaling attributes: %v", err)
+					return append(currentDiagnostics, diag.Errorf("error unmarshaling attributes: %v", err)...)
 				}
 				opts = append(opts, hostcatalogs.WithAttributes(m))
 			}
@@ -535,38 +552,59 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	// If we know we must use this value, accept what's there.
-	var storeNewHmacConfig bool
-	if d.Get(internalNextUpdateUseSecretsKey).(bool) {
-		secretsStr, err := parseutil.ParsePath(d.Get(SecretsJsonKey).(string))
-		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
-			return diag.Errorf("error parsing path with secrets: %v", err)
-		}
-		switch secretsStr {
+	if sendSecretsToBoundary {
+		switch secretsJson {
 		case "null":
 			opts = append(opts, hostcatalogs.DefaultSecrets())
 		default:
 			// What comes in is json-encoded but we want to set a
 			// map[string]interface{} so we unmarshal it and set that
 			var m map[string]interface{}
-			if err := json.Unmarshal([]byte(secretsStr), &m); err != nil {
-				return diag.Errorf("error unmarshaling secrets: %v", err)
+			if err := json.Unmarshal([]byte(secretsJson), &m); err != nil {
+				return append(currentDiagnostics, diag.Errorf("error unmarshaling secrets: %v", err)...)
 			}
 			opts = append(opts, hostcatalogs.WithSecrets(m))
-			storeNewHmacConfig = true
 		}
 	}
 
 	if len(opts) > 0 {
 		opts = append(opts, hostcatalogs.WithAutomaticVersioning(true))
-		hcrr, err := hcClient.Update(ctx, d.Id(), 0, opts...)
+		hcur, err := hcClient.Update(ctx, d.Id(), 0, opts...)
 		if err != nil {
-			return diag.Errorf("error updating host catalog: %v", err)
+			return append(currentDiagnostics, diag.Errorf("error updating host catalog: %v", err)...)
 		}
-		if hcrr == nil {
-			return diag.Errorf("host catalog nil after update")
+		if hcur == nil {
+			return append(currentDiagnostics, diag.Errorf("host catalog nil after update")...)
 		}
-		return setFromHostCatalogPluginResponseMap(d, hcrr.GetResponse().Map, storeNewHmacConfig)
+
+		if err := setFromHostCatalogPluginResponseMap(d, hcur.GetResponse().Map); err != nil {
+			return append(currentDiagnostics, diag.FromErr(err)...)
+		}
+	}
+
+	// Save any updated secrets information if needed
+	switch {
+	case clearExistingSecrets:
+		if err := d.Set(internalSecretsConfigHmacKey, nil); err != nil {
+			return append(currentDiagnostics, diag.FromErr(err)...)
+		}
+		if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, nil); err != nil {
+			return append(currentDiagnostics, diag.FromErr(err)...)
+		}
+
+	case sendSecretsToBoundary:
+		if serverHmac := d.Get(SecretsHmacKey).(string); serverHmac != "" {
+			configHmac, err := calculateCurrentConfigHmac(serverHmac, secretsJson)
+			if err != nil {
+				return append(currentDiagnostics, diag.FromErr(err)...)
+			}
+			if err := d.Set(internalSecretsConfigHmacKey, configHmac); err != nil {
+				return append(currentDiagnostics, diag.FromErr(err)...)
+			}
+			if err := d.Set(internalHmacUsedForSecretsConfigHmacKey, serverHmac); err != nil {
+				return append(currentDiagnostics, diag.FromErr(err)...)
+			}
+		}
 	}
 
 	return nil
