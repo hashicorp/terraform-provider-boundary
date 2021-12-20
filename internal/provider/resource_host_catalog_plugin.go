@@ -128,7 +128,7 @@ func resourceHostCatalogPlugin() *schema.Resource {
 		// We want to always force an update (which itself may not actually do
 		// anything) so that we can properly check secrets state.
 		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
-			return d.SetNew(internalForceUpdateKey, strconv.FormatInt(rand.Int63(), 10))
+			return d.SetNewComputed(internalForceUpdateKey)
 		},
 	}
 }
@@ -327,6 +327,10 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	}
 
 	d.SetId(raw[IDKey].(string))
+
+	if err := d.Set(internalForceUpdateKey, strconv.FormatInt(rand.Int63(), 10)); err != nil {
+		return err
+	}
 
 	return nil
 }

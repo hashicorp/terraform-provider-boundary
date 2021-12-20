@@ -171,8 +171,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescription),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
@@ -180,8 +181,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
@@ -189,8 +191,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// this runs the same HCL; mostly used in some manual checking
 				// to ensure update is still called even when nothing has
@@ -200,8 +203,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
@@ -209,8 +213,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
@@ -218,8 +223,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
@@ -227,8 +233,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
 				Config: testConfig(url, fooOrg, firstProjectFoo, update6Hcl),
@@ -236,8 +243,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
 				),
+				ExpectNonEmptyPlan: true,
 			},
-			// importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalNextUpdateUseSecretsKey, internalSecretsConfigHmacKey),
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 		},
 	})
 }
