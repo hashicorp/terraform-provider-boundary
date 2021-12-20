@@ -396,21 +396,21 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	secretsVal, ok := d.GetOk(SecretsJsonKey)
-	var secretsStr string
+	var secretsJson string
 	if ok {
 		var err error
-		secretsStr, err = parseutil.ParsePath(secretsVal.(string))
+		secretsJson, err = parseutil.ParsePath(secretsVal.(string))
 		if err != nil && !errors.Is(err, parseutil.ErrNotAUrl) {
 			return diag.Errorf("error parsing path with secrets: %v", err)
 		}
-		switch secretsStr {
+		switch secretsJson {
 		case "null":
 			opts = append(opts, hostcatalogs.DefaultSecrets())
 		default:
 			// What comes in is json-encoded but we want to set a
 			// map[string]interface{} so we unmarshal it and set that
 			var m map[string]interface{}
-			if err := json.Unmarshal([]byte(secretsStr), &m); err != nil {
+			if err := json.Unmarshal([]byte(secretsJson), &m); err != nil {
 				return diag.Errorf("error unmarshaling secrets: %v", err)
 			}
 			opts = append(opts, hostcatalogs.WithSecrets(m))
@@ -432,7 +432,7 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if serverHmac := d.Get(SecretsHmacKey).(string); serverHmac != "" {
-		configHmac, err := calculateCurrentConfigHmac(serverHmac, secretsStr)
+		configHmac, err := calculateCurrentConfigHmac(serverHmac, secretsJson)
 		if err != nil {
 			return diag.FromErr(err)
 		}
