@@ -61,23 +61,26 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				ForceNew:    true,
 			},
 			PluginIdKey: {
-				Description: "The ID of the plugin that should back the resource. This or " + PluginNameKey + " must be defined.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true, // If name is provided this will be computed
+				Description:   "The ID of the plugin that should back the resource. This or " + PluginNameKey + " must be defined.",
+				Type:          schema.TypeString,
+				ConflictsWith: []string{PluginNameKey},
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true, // If name is provided this will be computed
 			},
 			PluginNameKey: {
-				Description: "The name of the plugin that should back the resource. This or " + PluginIdKey + " must be defined.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Computed:    true,
+				Description:   "The name of the plugin that should back the resource. This or " + PluginIdKey + " must be defined.",
+				Type:          schema.TypeString,
+				ConflictsWith: []string{PluginIdKey},
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
 			},
 			AttributesJsonKey: {
-				Description: `The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.`,
-				Type:        schema.TypeString,
-				Optional:    true,
+				Description: `The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, ` +
+					`or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.`,
+				Type:     schema.TypeString,
+				Optional: true,
 				// If set to null in config and nothing comes from API, consider
 				// it the same. Same if config changes from empty to null.
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -94,10 +97,12 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				},
 			},
 			SecretsJsonKey: {
-				Description: `The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.`,
-				Type:        schema.TypeString,
-				Optional:    true,
-				Sensitive:   true,
+				Description: `The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, ` +
+					`or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing ` +
+					`this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.`,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			SecretsHmacKey: {
 				Description: "The HMAC'd secrets value returned from the server.",
@@ -244,7 +249,10 @@ func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceD
 			return false, false, &diag.Diagnostic{
 				Severity: diag.Warning,
 				Summary:  "Mismatch in secrets state between Boundary and Terraform.",
-				Detail:   "Boundary's secret state is out of sync with Terraform. Usually this is the result of secrets being provided directly via Boundary's API. To suppress this warning, either remove the secrets via Boundary's API and allow Terraform to repopulate them, or remove the secrets_json block from Terraform's configuration file (the next time you add secrets_json back to the file, those values will be used to overwrite the current Boundary values.)",
+				Detail: `Boundary's secret state is out of sync with Terraform. Usually this is the result of secrets being provided ` +
+					`directly via Boundary's API. To suppress this warning, either remove the secrets via Boundary's API and allow Terraform to ` +
+					`repopulate them, or remove the secrets_json block from Terraform's configuration file (the next time you add secrets_json ` +
+					`back to the file, those values will be used to overwrite the current Boundary values.)`,
 			}, nil
 
 		default:
@@ -476,7 +484,7 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 
 	// We need to refresh the current server hmac value to figure out what to do
 	// next around secrets handling
-	var clearExistingSecrets, sendSecretsToBoundary bool
+	var clearStateSecrets, sendSecretsToBoundary bool
 	var secretsJson string
 	var currentDiagnostics diag.Diagnostics
 	{
@@ -503,7 +511,7 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 		// Now that we have the value from the server, see if anything needs to be
 		// done
 		var diagWarning *diag.Diagnostic
-		clearExistingSecrets, sendSecretsToBoundary, diagWarning, err = calculateConfigHmacPlan(serverSecretsHmac, secretsJson, d)
+		clearStateSecrets, sendSecretsToBoundary, diagWarning, err = calculateConfigHmacPlan(serverSecretsHmac, secretsJson, d)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -588,7 +596,7 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 
 	// Save any updated secrets information if needed
 	switch {
-	case clearExistingSecrets:
+	case clearStateSecrets:
 		if err := d.Set(internalSecretsConfigHmacKey, nil); err != nil {
 			return append(currentDiagnostics, diag.FromErr(err)...)
 		}
