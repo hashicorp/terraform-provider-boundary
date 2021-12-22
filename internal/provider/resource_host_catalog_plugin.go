@@ -84,6 +84,11 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				// If set to null in config and nothing comes from API, consider
 				// it the same. Same if config changes from empty to null.
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					sanitizedNew, err := sanitizeJson(new)
+					if err != nil {
+						return false
+					}
+					new = string(sanitizedNew)
 					switch {
 					case old == new:
 						return true
@@ -138,18 +143,26 @@ func resourceHostCatalogPlugin() *schema.Resource {
 	}
 }
 
+func sanitizeJson(in string) ([]byte, error) {
+	var v interface{}
+	if err := json.Unmarshal([]byte(in), &v); err != nil {
+		return nil, err
+	}
+	// Remarshal so we sanitize the order
+	out, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // calculateCurrentConfigHmac generates an HMAC'd config value using the
 // server's calculated HMAC as an HMAC key. Prior to calculating this we parse
 // and then re-marshal the JSON to take advantage of Go alphabetizing JSON
 // output so that we can ensure we'll treat the same objects as equivalent
 // regardless of initial input order.
 func calculateCurrentConfigHmac(serverHmac, secretsStr string) (string, error) {
-	var v interface{}
-	if err := json.Unmarshal([]byte(secretsStr), &v); err != nil {
-		return "", err
-	}
-	// Remarshal so we sanitize the order
-	jsonBytes, err := json.Marshal(v)
+	jsonBytes, err := sanitizeJson(secretsStr)
 	if err != nil {
 		return "", err
 	}
@@ -165,11 +178,11 @@ func calculateCurrentConfigHmac(serverHmac, secretsStr string) (string, error) {
 
 // calculateConfigHmacPlan, given the schema and the current server HMAC,
 // returns what to set on the server (if anything) and any diagnostics. If
-// clearExisting is set we should nil out existing values in state. If
+// clearState is set we should nil out existing values in state. If
 // sendToBoundary is set then the read secrets_json should be sent in an API
 // call.
-func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceData) (clearExisting, sendToBoundary bool, diagWarn *diag.Diagnostic, retErr error) {
-	existingConfigHmac := d.Get(internalSecretsConfigHmacKey).(string)
+func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceData) (clearState, sendToBoundary bool, diagWarn *diag.Diagnostic, retErr error) {
+	stateConfigHmac := d.Get(internalSecretsConfigHmacKey).(string)
 
 	// Iterate through possible states and handle appropriately
 	switch {
@@ -203,7 +216,7 @@ func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceD
 		// is the escape hatch for state 6a below.
 		return true, false, nil, nil
 
-	case serverHmac != "" && secretsJson != "" && existingConfigHmac == "":
+	case serverHmac != "" && secretsJson != "" && stateConfigHmac == "":
 		// State 4: In this case Boundary has secrets and TF config has secrets,
 		// but we have no HMAC value at all in state. This almost certainly
 		// means that Boundary was configured before the Terraform configuration
@@ -220,7 +233,7 @@ func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceD
 			return false, false, nil, err
 		}
 
-		if existingConfigHmac == currentConfigHmac {
+		if stateConfigHmac == currentConfigHmac {
 			// State 5: Both Boundary and TF have secrets configured and they
 			// are known to match, so do nothing.
 			return false, false, nil, nil
@@ -264,7 +277,7 @@ func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceD
 	default:
 		return false, false, nil, fmt.Errorf(
 			"unhandled secrets state; server hmac is found: %t; secrets detected in config: %t; existing hmac'd config: %t",
-			serverHmac != "", secretsJson != "", existingConfigHmac != "")
+			serverHmac != "", secretsJson != "", stateConfigHmac != "")
 	}
 }
 
