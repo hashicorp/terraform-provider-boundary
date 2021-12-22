@@ -34,7 +34,7 @@ test:
 testacc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
-testacc-ci: install-go
+testacc-ci:
 	git config --global --add url."git@github.com:".insteadOf "https://github.com/"
 	TF_ACC=1 ~/.go/bin/go test ./... -v $(TESTARGS) -timeout 120m
 

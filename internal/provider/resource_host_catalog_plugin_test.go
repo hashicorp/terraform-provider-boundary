@@ -150,13 +150,6 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	update5Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate5)
 	update6Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate6)
 
-	_ = update1Hcl
-	_ = update2Hcl
-	_ = update3Hcl
-	_ = update4Hcl
-	_ = update5Hcl
-	_ = update6Hcl
-
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
