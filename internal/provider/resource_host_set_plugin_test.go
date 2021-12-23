@@ -98,6 +98,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", initialSyncIntervalSeconds)),
 					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, initialPreferredEndpoints),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			importStep(fooSetName),
 			{
@@ -110,6 +111,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
 					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			importStep(fooSetName),
 			{
@@ -122,6 +124,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
 					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			importStep(fooSetName),
 			{
@@ -134,6 +137,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
 					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			importStep(fooSetName),
 			{
@@ -146,6 +150,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
 					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			importStep(fooSetName),
 			{
@@ -158,6 +163,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 					resource.TestCheckResourceAttr(fooSetName, SyncIntervalSecondsKey, fmt.Sprintf("%d", updateSyncIntervalSeconds)),
 					testAccCheckHostSetPluginPreferredEndpoints(t, provider, fooSetName, updatePreferredEndpoints),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			importStep(fooSetName),
 		},
