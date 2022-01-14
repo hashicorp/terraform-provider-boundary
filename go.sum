@@ -447,8 +447,9 @@ github.com/grpc-ecosystem/grpc-gateway/v2 v2.6.0/go.mod h1:qrJPVzv9YlhsrxJc3P/Q8
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=
 github.com/hashicorp/boundary v0.6.2 h1:IYkijZNeVYbqP+wXEeMn6Vc2FxSz8LKVIm9s3Lw6xkU=
 github.com/hashicorp/boundary v0.6.2/go.mod h1:ICHtgvinE2VT3M6M+ijl39Fydr9PepY3K027KWsTLoo=
-github.com/hashicorp/boundary/api v0.0.19 h1:gO+us6jn1yWtYtZbQ1yYQL0z3tz28+V//d5MFzbzPbA=
 github.com/hashicorp/boundary/api v0.0.19/go.mod h1:RnI3KvUBdqPoOgRsvsmx0XFT+6WPtZMjL7Ig/j3LoYo=
+github.com/hashicorp/boundary/api v0.0.21 h1:6W+m9Ws5PyRWEKi2hTFVaTcw8jy/wm3xRLkEInE31tA=
+github.com/hashicorp/boundary/api v0.0.21/go.mod h1:PEW6zM1DqfcGN1AVhn2CDPhBR0/SIYju3rcBgVodHgM=
 github.com/hashicorp/boundary/sdk v0.0.11 h1:i/tdam2WzvnuBk0d7u6U6ec6qo8NP1tFVplMB5jxmLI=
 github.com/hashicorp/boundary/sdk v0.0.11/go.mod h1:cAHY1icFXqEDZqYx0ufkeYTuriIe/laNtJfN/kIsVEw=
 github.com/hashicorp/cap v0.1.1 h1:GjO4+9+H0wv/89YoEsxeVc2jIizL19r5v5l2lpaH8Kg=
