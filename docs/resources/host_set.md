@@ -3,12 +3,12 @@
 page_title: "boundary_host_set Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The host_set resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
+  Deprecated: use resource_host_set_static instead.
 ---
 
 # boundary_host_set (Resource)
 
-The host_set resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
+Deprecated: use `resource_host_set_static` instead.
 
 ## Example Usage
 
@@ -63,18 +63,18 @@ resource "boundary_host_set" "web" {
 
 ### Required
 
-- **host_catalog_id** (String) The catalog for the hostset.
-- **type** (String)
+- **host_catalog_id** (String) The catalog for the host set.
+- **type** (String) The type of host set
 
 ### Optional
 
-- **description** (String) The hostset description.
+- **description** (String) The host set description.
 - **host_ids** (Set of String) The list of host IDs contained in this set.
-- **name** (String) The hostset name. Defaults to the resource name.
+- **name** (String) The host set name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the hostset.
+- **id** (String) The ID of the host set.
 
 ## Import
 
