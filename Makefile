@@ -34,7 +34,7 @@ test:
 testacc:
 	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
 
-testacc-ci: install-go
+testacc-ci:
 	git config --global --add url."git@github.com:".insteadOf "https://github.com/"
 	TF_ACC=1 ~/.go/bin/go test ./... -v $(TESTARGS) -timeout 120m
 
@@ -62,7 +62,7 @@ rm-id-flag-from-docs:
 test-database-up:
 	@echo "Using image:                       $(IMAGE_TAG)"
 	@echo "Additional postgres configuration: $(PG_OPTS)"
-	@echo "Using volume:                      $(GOMODCACHE)/github.com/hashicorp/boundary@$(BOUNDARY_VERSION)/internal/db/schema/migrations/postgres:/migrations"
+	@echo "Using volume:                      $(GOMODCACHE)/github.com/hashicorp/boundary@$(BOUNDARY_VERSION)/internal/db/schema/migrations:/migrations"
 	@docker run \
 		$(DOCKER_ARGS) \
 		--name boundary-sql-tests \
@@ -72,7 +72,7 @@ test-database-up:
 		-e POSTGRES_DB=boundary \
 		-e PGDATA=/pgdata \
 		--mount type=tmpfs,destination=/pgdata \
-		-v "$(GOMODCACHE)/github.com/hashicorp/boundary@$(BOUNDARY_VERSION)/internal/db/schema/migrations/postgres":/migrations \
+		-v "$(GOMODCACHE)/github.com/hashicorp/boundary@$(BOUNDARY_VERSION)/internal/db/schema/migrations":/migrations \
 		$(IMAGE_TAG) \
 		-c 'config_file=/etc/postgresql/postgresql.conf' \
 		$(PG_OPTS) 1> /dev/null

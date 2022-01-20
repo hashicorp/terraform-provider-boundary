@@ -3,12 +3,12 @@
 page_title: "boundary_host Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The host resource allows you to configure a Boundary static host. Hosts are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host.
+  Deprecated: use resource_host_static instead.
 ---
 
 # boundary_host (Resource)
 
-The host resource allows you to configure a Boundary static host. Hosts are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host.
+Deprecated: use `resource_host_static` instead.
 
 ## Example Usage
 
@@ -49,7 +49,7 @@ resource "boundary_host" "example" {
 ### Required
 
 - **host_catalog_id** (String)
-- **type** (String)
+- **type** (String) The type of host
 
 ### Optional
 

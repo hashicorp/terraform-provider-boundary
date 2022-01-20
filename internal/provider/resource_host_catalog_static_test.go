@@ -20,29 +20,49 @@ const (
 )
 
 var (
-	projHostCatalog = fmt.Sprintf(`
-resource "boundary_host_catalog" "foo" {
+	projHostCatalog = `
+resource "%s" "foo" {
 	name        = "foo"
-	description = "%s"
+	description = "bar"
 	scope_id    = boundary_scope.proj1.id 
-	type        = "static"
+	%s
 	depends_on  = [boundary_role.proj1_admin]
-}`, fooHostCatalogDescription)
+}`
 
-	projHostCatalogUpdate = fmt.Sprintf(`
-resource "boundary_host_catalog" "foo" {
+	projHostCatalogUpdate = `
+resource "%s" "foo" {
 	name        = "foo"
-	description = "%s"
+	description = "foo bar"
 	scope_id    = boundary_scope.proj1.id 
-	type        = "static"
+	%s
 	depends_on  = [boundary_role.proj1_admin]
-}`, fooHostCatalogDescriptionUpdate)
+}`
 )
 
 func TestAccHostCatalogCreate(t *testing.T) {
+	t.Run("non-static", func(t *testing.T) {
+		t.Parallel()
+		testAccHostCatalog(t, false)
+	})
+	t.Run("static", func(t *testing.T) {
+		t.Parallel()
+		testAccHostCatalog(t, true)
+	})
+}
+
+func testAccHostCatalog(t *testing.T, static bool) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
+
+	resName := "boundary_host_catalog"
+	typeStr := `type = "static"`
+	if static {
+		resName = "boundary_host_catalog_static"
+		typeStr = ""
+	}
+	hc, hcu := fmt.Sprintf(projHostCatalog, resName, typeStr), fmt.Sprintf(projHostCatalogUpdate, resName, typeStr)
+	fooName := fmt.Sprintf("%s.foo", resName)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -51,24 +71,24 @@ func TestAccHostCatalogCreate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalog),
+				Config: testConfig(url, fooOrg, firstProjectFoo, hc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
-					testAccCheckHostCatalogResourceExists(provider, "boundary_host_catalog.foo"),
-					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescription),
+					testAccCheckHostCatalogResourceExists(provider, fooName),
+					resource.TestCheckResourceAttr(fooName, DescriptionKey, fooHostCatalogDescription),
 				),
 			},
-			importStep("boundary_host_catalog.foo"),
+			importStep(fooName),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projHostCatalogUpdate),
+				Config: testConfig(url, fooOrg, firstProjectFoo, hcu),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostCatalogResourceExists(provider, "boundary_host_catalog.foo"),
-					resource.TestCheckResourceAttr("boundary_host_catalog.foo", DescriptionKey, fooHostCatalogDescriptionUpdate),
+					testAccCheckHostCatalogResourceExists(provider, fooName),
+					resource.TestCheckResourceAttr(fooName, DescriptionKey, fooHostCatalogDescriptionUpdate),
 				),
 			},
-			importStep("boundary_host_catalog.foo"),
+			importStep(fooName),
 		},
 	})
 }
@@ -102,7 +122,7 @@ func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.P
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_host_catalog":
+			case "boundary_host_catalog", "boundary_host_catalog_static":
 
 				id := rs.Primary.ID
 				hcClient := hostcatalogs.NewClient(md.client)

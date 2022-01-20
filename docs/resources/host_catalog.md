@@ -3,12 +3,12 @@
 page_title: "boundary_host_catalog Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The host catalog resource allows you to configure a Boundary host catalog. Host catalogs are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host catalog.
+  Deprecated: use resource_host_catalog_static instead.
 ---
 
 # boundary_host_catalog (Resource)
 
-The host catalog resource allows you to configure a Boundary host catalog. Host catalogs are always part of a project, so a project resource should be used inline or you should have the project ID in hand to successfully configure a host catalog.
+Deprecated: use `resource_host_catalog_static` instead.
 
 ## Example Usage
 
