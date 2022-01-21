@@ -1,3 +1,18 @@
+## 1.0.6 (Unreleased)
+
+### New and Improved
+
+* Adds dynamic host plugin catalog/set
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/159)).
+* Adds support for insecure TLS to Boundary 
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/163)).
+
+ ### Deprecations/Changes
+
+* Removes fields `host_set_ids` and `application_credential_library_ids` of the 
+  `target` resource, which were deprecated in 1.0.5 
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/150)).
+
 ## 1.0.5 (September 09, 2021)
 
 ### Deprecations/Changes
