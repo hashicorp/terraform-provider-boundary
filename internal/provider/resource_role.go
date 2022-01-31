@@ -167,24 +167,24 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	if principalIds != nil {
 		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
-		if err != nil {
+		switch {
+		case err != nil:
 			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
-		} else {
-			if tspr == nil {
-				return diag.Errorf("nil role after setting principal IDs")
-			}
+		case tspr == nil:
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principal IDs"})
+		default:
 			raw = tspr.GetResponse().Map
 		}
 	}
 
 	if grantStrings != nil {
 		tsgr, err := rc.SetGrants(ctx, tcr.Item.Id, 0, grantStrings, roles.WithAutomaticVersioning(true))
-		if err != nil {
+		switch {
+		case err != nil:
 			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
-		} else {
-			if tsgr == nil {
-				return diag.Errorf("nil role after setting grant strings")
-			}
+		case tsgr == nil:
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grant strings"})
+		default:
 			raw = tsgr.GetResponse().Map
 		}
 	}
