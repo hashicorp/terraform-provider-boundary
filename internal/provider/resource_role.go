@@ -164,33 +164,36 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	raw := tcr.GetResponse().Map
 
+	var diags diag.Diagnostics
 	if principalIds != nil {
 		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
 		if err != nil {
-			return diag.Errorf("error setting principal IDs on role: %v", err)
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
+		} else {
+			if tspr == nil {
+				return diag.Errorf("nil role after setting principal IDs")
+			}
+			raw = tspr.GetResponse().Map
 		}
-		if tspr == nil {
-			return diag.Errorf("nil role after setting principal IDs")
-		}
-		raw = tspr.GetResponse().Map
 	}
 
 	if grantStrings != nil {
 		tsgr, err := rc.SetGrants(ctx, tcr.Item.Id, 0, grantStrings, roles.WithAutomaticVersioning(true))
 		if err != nil {
-			return diag.Errorf("error setting grant strings on role: %v", err)
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
+		} else {
+			if tsgr == nil {
+				return diag.Errorf("nil role after setting grant strings")
+			}
+			raw = tsgr.GetResponse().Map
 		}
-		if tsgr == nil {
-			return diag.Errorf("nil role after setting grant strings")
-		}
-		raw = tsgr.GetResponse().Map
 	}
 
 	if err := setFromRoleResponseMap(d, raw); err != nil {
 		return diag.FromErr(err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -279,6 +282,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	var diags diag.Diagnostics
 	if d.HasChange(roleGrantStringsKey) {
 		var grantStrings []string
 		if grantStringsVal, ok := d.GetOk(roleGrantStringsKey); ok {
@@ -289,10 +293,11 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		_, err := rc.SetGrants(ctx, d.Id(), 0, grantStrings, roles.WithAutomaticVersioning(true))
 		if err != nil {
-			return diag.Errorf("error updating grant strings on role: %v", err)
-		}
-		if err := d.Set(roleGrantStringsKey, grantStrings); err != nil {
-			return diag.FromErr(err)
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
+		} else {
+			if err := d.Set(roleGrantStringsKey, grantStrings); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
@@ -306,14 +311,15 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		_, err := rc.SetPrincipals(ctx, d.Id(), 0, principalIds, roles.WithAutomaticVersioning(true))
 		if err != nil {
-			return diag.Errorf("error updating grant strings on role: %v", err)
-		}
-		if err := d.Set(rolePrincipalIdsKey, principalIds); err != nil {
-			return diag.FromErr(err)
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
+		} else {
+			if err := d.Set(rolePrincipalIdsKey, principalIds); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

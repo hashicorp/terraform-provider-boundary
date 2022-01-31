@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -54,13 +55,23 @@ resource "boundary_role" "foo" {
 	depends_on  = [boundary_role.proj1_admin]
 }`, fooRoleDescriptionUpdate)
 
-	projRoleWithPrincipal = `
+	fooUser = `
 resource "boundary_user" "foo" {
 	name       = "foo"
 	scope_id   = boundary_scope.org1.id
 	depends_on = [boundary_role.org1_admin]
 }
+`
 
+	barUser = `
+resource "boundary_user" "bar" {
+	name       = "bar"
+	scope_id   = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
+}
+`
+
+	projRoleWithPrincipal = `
 resource "boundary_role" "with_principal" {
 	name           = "with_principal"
 	description    = "with principal"
@@ -69,23 +80,29 @@ resource "boundary_role" "with_principal" {
 	depends_on     = [boundary_role.proj1_admin]
 }`
 
-	projRoleWithPrincipalUpdate = `
-resource "boundary_user" "foo" {
-	name       = "foo"
-	scope_id   = boundary_scope.org1.id
-	depends_on = [boundary_role.org1_admin]
-}
-
-resource "boundary_user" "bar" {
-	name       = "bar"
-	scope_id   = boundary_scope.org1.id
-	depends_on = [boundary_role.org1_admin]
-}
-
+	projRoleWithInvalidPrincipal = `
 resource "boundary_role" "with_principal" {
 	name           = "with_principal"
 	description    = "with principal"
+	principal_ids  = ["u_fakeuser"]
+	scope_id       = boundary_scope.proj1.id
+	depends_on     = [boundary_role.proj1_admin]
+}`
+
+	projRoleWithPrincipalUpdate = `
+resource "boundary_role" "with_principal" {
+	name           = "with_principal_update"
+	description    = "with principal update"
 	principal_ids  = [boundary_user.foo.id, boundary_user.bar.id]
+	scope_id       = boundary_scope.proj1.id
+	depends_on     = [boundary_role.proj1_admin]
+}`
+
+	projRoleWithInvalidPrincipalUpdate = `
+resource "boundary_role" "with_principal" {
+	name           = "with_principal_update"
+	description    = "with principal update"
+	principal_ids  = [boundary_user.foo.id, "u_fakeuser"]
 	scope_id       = boundary_scope.proj1.id
 	depends_on     = [boundary_role.proj1_admin]
 }`
@@ -128,6 +145,7 @@ resource "boundary_role" "with_groups" {
 
 	readonlyGrant       = "id=*;type=*;actions=read"
 	readonlyGrantUpdate = "id=*;type=*;actions=read,create"
+	invalidGrant        = "id=*;type=*;actions=badaction"
 
 	projRoleWithGrants = fmt.Sprintf(`
 resource "boundary_role" "with_grants" {
@@ -138,10 +156,28 @@ resource "boundary_role" "with_grants" {
 	depends_on    = [boundary_role.proj1_admin]
 }`, readonlyGrant)
 
-	projRoleWithGrantsUpdate = fmt.Sprintf(`
+	projRoleWithInvalidGrants = fmt.Sprintf(`
 resource "boundary_role" "with_grants" {
 	name          = "with_grants"
 	description   = "with grants"
+	grant_strings = ["%s"]
+	scope_id      = boundary_scope.proj1.id
+	depends_on    = [boundary_role.proj1_admin]
+}`, invalidGrant)
+
+	projRoleWithInvalidGrantsUpdate = fmt.Sprintf(`
+resource "boundary_role" "with_grants" {
+	name          = "with_grants_update"
+	description   = "with grants update"
+	grant_strings = ["%s", "%s"]
+	scope_id      = boundary_scope.proj1.id
+	depends_on    = [boundary_role.proj1_admin]
+}`, readonlyGrant, invalidGrant)
+
+	projRoleWithGrantsUpdate = fmt.Sprintf(`
+resource "boundary_role" "with_grants" {
+	name          = "with_grants_update"
+	description   = "with grants update"
 	grant_strings = ["%s", "%s"]
 	scope_id      = boundary_scope.proj1.id
 	depends_on    = [boundary_role.proj1_admin]
@@ -209,11 +245,23 @@ func TestAccRoleWithGrants(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				// test project role create with grants
+				// Create should return error due to invalid grant, however the role will still
+				// be created and should be set in state.
+				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithInvalidGrants),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
+				),
+				ExpectError: regexp.MustCompile(`Improperly formatted grant`),
+			},
+			{
+				// Create again with valid grants should succeed
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrants),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
@@ -224,13 +272,24 @@ func TestAccRoleWithGrants(t *testing.T) {
 			},
 			importStep("boundary_role.with_grants"),
 			{
-				// test project role update with grants
+				// Update should return error due to invalid grant, however the role will still
+				// be updated and should be set in state.
+				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithInvalidGrantsUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants_update"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants update"),
+				),
+				ExpectError: regexp.MustCompile(`Improperly formatted grant`),
+			},
+			{
+				// Update should now succeed
 				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrantsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
 					testAccCheckRoleResourceGrantsSet(provider, "boundary_role.with_grants", []string{readonlyGrant, readonlyGrantUpdate}),
-					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
-					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants_update"),
+					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants update"),
 				),
 			},
 			importStep("boundary_role.with_grants"),
@@ -245,12 +304,24 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithPrincipal),
+				// Create with invalid principal should create role but return empty plan
+				// since principal was not set correctly.
+				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithInvalidPrincipal),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", DescriptionKey, "with principal"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", NameKey, "with_principal"),
+				),
+				ExpectError: regexp.MustCompile(`Unable to set principals on role`),
+			},
+			{
+				// Create again without invalid principal should produce empty plan
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, projRoleWithPrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
 					testAccCheckRoleResourcePrincipalsSet(provider, "boundary_role.with_principal", []string{"boundary_user.foo"}),
@@ -262,13 +333,26 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 			},
 			importStep("boundary_role.with_principal"),
 			{
-				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithPrincipalUpdate),
+				// Update with invalid principal should update role but return empty plan
+				// since principal was not set correctly.
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, projRoleWithInvalidPrincipalUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", DescriptionKey, "with principal update"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", NameKey, "with_principal_update"),
+				),
+				ExpectError: regexp.MustCompile(`Unable to set principals on role`),
+			},
+			{
+				// Update again without invalid principal should produce empty plan
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, barUser, projRoleWithPrincipalUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
 					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
 					testAccCheckUserResourceExists(provider, "boundary_user.bar"),
 					testAccCheckRoleResourcePrincipalsSet(provider, "boundary_role.with_principal", []string{"boundary_user.foo", "boundary_user.bar"}),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", DescriptionKey, "with principal update"),
+					resource.TestCheckResourceAttr("boundary_role.with_principal", NameKey, "with_principal_update"),
 				),
 			},
 			importStep("boundary_role.with_principal"),
