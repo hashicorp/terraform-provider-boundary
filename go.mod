@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/hashicorp/boundary v0.7.4
-	github.com/hashicorp/boundary/api v0.0.21
+	github.com/hashicorp/boundary/api v0.0.22
 	github.com/hashicorp/boundary/sdk v0.0.13
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
