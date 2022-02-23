@@ -70,8 +70,8 @@ func setFromAccountOidcResponseMap(d *schema.ResourceData, raw map[string]interf
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(AuthMethodIdKey, raw["auth_method_id"])
-	d.Set(accountOidcIssuerKey, raw["issuer"])
-	d.Set(accountOidcSubjectKey, raw["subject"])
+	d.Set(accountOidcIssuerKey, raw["attributes"].(map[string]interface{})["issuer"])
+	d.Set(accountOidcSubjectKey, raw["attributes"].(map[string]interface{})["subject"])
 	d.SetId(raw["id"].(string))
 }
 
