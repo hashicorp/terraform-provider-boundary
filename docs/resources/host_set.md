@@ -38,6 +38,7 @@ resource "boundary_host" "1" {
   address         = "10.0.0.1"
   host_catalog_id = boundary_host_catalog.static.id
   scope_id        = boundary_scope.project.id
+  type            = "static"
 }
 
 resource "boundary_host" "2" {
@@ -46,6 +47,7 @@ resource "boundary_host" "2" {
   address         = "10.0.0.2"
   host_catalog_id = boundary_host_catalog.static.id
   scope_id        = boundary_scope.project.id
+  type            = "static"
 }
 
 resource "boundary_host_set" "web" {
