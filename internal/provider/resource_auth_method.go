@@ -47,11 +47,14 @@ func resourceAuthMethod() *schema.Resource {
 				ForceNew:    true,
 			},
 			TypeKey: {
-				Description:  "The resource type.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{authmethodTypePassword}, false),
+				Description: "The resource type.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					authmethodTypeOidc,
+					authmethodTypePassword,
+				}, false),
 			},
 			authmethodMinLoginNameLengthKey: {
 				Description: "The minimum login name length.",
