@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/boundary/sdk v0.0.13
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
-	github.com/hashicorp/go-kms-wrapping v0.6.8
+	github.com/hashicorp/go-kms-wrapping v0.7.1
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.2
 	github.com/hashicorp/terraform-plugin-docs v0.5.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
