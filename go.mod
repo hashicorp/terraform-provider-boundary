@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/hashicorp/boundary v0.7.6
-	github.com/hashicorp/boundary/api v0.0.22
+	github.com/hashicorp/boundary/api v0.0.23
 	github.com/hashicorp/boundary/sdk v0.0.13
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
@@ -15,7 +15,7 @@ require (
 	github.com/kr/pretty v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
+	golang.org/x/crypto v0.0.0-20220313003712-b769efc7c000
 )
 
 require (
@@ -82,6 +82,7 @@ require (
 	github.com/hashicorp/go-dbw v0.0.0-20211215222256-2ff0d37184ff // indirect
 	github.com/hashicorp/go-hclog v1.2.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.3 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
