@@ -70,9 +70,12 @@ func setFromAccountOidcResponseMap(d *schema.ResourceData, raw map[string]interf
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(AuthMethodIdKey, raw["auth_method_id"])
-	d.Set(accountOidcIssuerKey, raw["issuer"])
-	d.Set(accountOidcSubjectKey, raw["subject"])
 	d.SetId(raw["id"].(string))
+	if attrsVal, ok := raw["attributes"]; ok {
+		attrs := attrsVal.(map[string]interface{})
+		d.Set(accountOidcIssuerKey, attrs["issuer"])
+		d.Set(accountOidcSubjectKey, attrs["subject"])
+	}
 }
 
 func resourceAccountOidcCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
