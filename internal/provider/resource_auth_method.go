@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAuthMethod() *schema.Resource {
@@ -50,6 +51,10 @@ func resourceAuthMethod() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					authmethodTypeOidc,
+					authmethodTypePassword,
+				}, false),
 			},
 			authmethodMinLoginNameLengthKey: {
 				Description: "The minimum login name length.",
