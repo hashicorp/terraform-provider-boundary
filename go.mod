@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/boundary v0.7.6
 	github.com/hashicorp/boundary/api v0.0.22
 	github.com/hashicorp/boundary/sdk v0.0.13
-	github.com/hashicorp/cap v0.1.1
+	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping v0.7.1
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.4
@@ -48,7 +48,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.0 // indirect
 	github.com/containerd/containerd v1.4.3 // indirect
 	github.com/containerd/continuity v0.0.0-20200709052629-daa8e1ccc0bc // indirect
-	github.com/coreos/go-oidc/v3 v3.0.0 // indirect
+	github.com/coreos/go-oidc/v3 v3.1.0 // indirect
 	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
@@ -175,9 +175,9 @@ require (
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
-	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
-	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
+	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f // indirect
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/term v0.0.0-20210916214954-140adaaadfaf // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
@@ -187,7 +187,7 @@ require (
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gorm.io/driver/postgres v1.2.2 // indirect
