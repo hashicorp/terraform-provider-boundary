@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/hashicorp/boundary v0.7.6
 	github.com/hashicorp/boundary/api v0.0.22
-	github.com/hashicorp/boundary/sdk v0.0.13
+	github.com/hashicorp/boundary/sdk v0.0.15
 	github.com/hashicorp/cap v0.1.1
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping v0.7.1
@@ -15,7 +15,7 @@ require (
 	github.com/kr/pretty v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
+	golang.org/x/crypto v0.0.0-20220313003712-b769efc7c000
 )
 
 require (
@@ -75,13 +75,15 @@ require (
 	github.com/hashicorp/dbassert v0.0.0-20210708202608-ecf920cf1ed8 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/eventlogger v0.1.1-0.20211106154408-4ff8da3a890c // indirect
-	github.com/hashicorp/eventlogger/filters/encrypt v0.1.6-0.20211027211326-5db60a48f239 // indirect
+	github.com/hashicorp/eventlogger/filters/encrypt v0.1.7 // indirect
 	github.com/hashicorp/go-bexpr v0.1.10 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-dbw v0.0.0-20211215222256-2ff0d37184ff // indirect
 	github.com/hashicorp/go-hclog v1.2.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
+	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.2 // indirect
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.4 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.3 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
@@ -89,10 +91,12 @@ require (
 	github.com/hashicorp/go-secure-stdlib/awsutil v0.1.6 // indirect
 	github.com/hashicorp/go-secure-stdlib/base62 v0.1.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/configutil v0.1.2 // indirect
+	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/gatedwriter v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/kv-builder v0.1.1 // indirect
-	github.com/hashicorp/go-secure-stdlib/listenerutil v0.1.3-0.20211129134915-8f7e6fb52622 // indirect
+	github.com/hashicorp/go-secure-stdlib/listenerutil v0.1.4 // indirect
 	github.com/hashicorp/go-secure-stdlib/mlock v0.1.1 // indirect
+	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/reloadutil v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/tlsutil v0.1.1 // indirect
@@ -160,7 +164,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/posener/complete v1.2.3 // indirect
-	github.com/rogpeppe/go-internal v1.8.1-0.20211023094830-115ce09fd6b4 // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
@@ -175,15 +179,15 @@ require (
 	github.com/zclconf/go-cty v1.10.0 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
-	golang.org/x/sys v0.0.0-20211210111614-af8b64212486 // indirect
-	golang.org/x/term v0.0.0-20210916214954-140adaaadfaf // indirect
+	golang.org/x/sys v0.0.0-20220204135822-1c1b9b1eba6a // indirect
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/api v0.44.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210903162649-d08c68adba83 // indirect
+	google.golang.org/genproto v0.0.0-20220208230804-65c12eb4c068 // indirect
 	google.golang.org/grpc v1.45.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
