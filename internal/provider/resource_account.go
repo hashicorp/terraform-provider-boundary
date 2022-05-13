@@ -12,7 +12,8 @@ import (
 
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Description: "The account resource allows you to configure a Boundary account.",
+		DeprecationMessage: "Deprecated: use `resource_account_password` instead.",
+		Description:        "Deprecated: use `resource_account_password` instead.",
 
 		CreateContext: resourceAccountCreate,
 		ReadContext:   resourceAccountRead,
@@ -54,13 +55,11 @@ func resourceAccount() *schema.Resource {
 				Description: "The login name for this account.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Deprecated:  "Will be removed in favor of using attributes parameter",
 			},
 			accountPasswordKey: {
 				Description: "The account password. Only set on create, changes will not be reflected when updating account.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Deprecated:  "Will be removed in favor of using attributes parameter",
 
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Id() == "" {
@@ -88,7 +87,6 @@ func setFromAccountResponseMap(d *schema.ResourceData, raw map[string]interface{
 		return err
 	}
 
-	// TODO(malnick) - remove after deprecation cycle in favor of attributes
 	switch raw["type"].(string) {
 	case accountTypePassword:
 		if attrsVal, ok := raw["attributes"]; ok {
@@ -123,12 +121,10 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		opts = append(opts, accounts.WithDescription(descVal.(string)))
 	}
 
-	// TODO(malnick) - remove after deprecation cycle
 	if name, ok := d.GetOk(accountLoginNameKey); ok {
 		opts = append(opts, accounts.WithPasswordAccountLoginName(name.(string)))
 	}
 
-	// TODO(malnick) - remove after deprecation cycle
 	if pass, ok := d.GetOk(accountPasswordKey); ok {
 		opts = append(opts, accounts.WithPasswordAccountPassword(pass.(string)))
 	}
@@ -195,7 +191,6 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// TODO(malnick) - remove after deprecation cycle
 	if d.HasChange(accountLoginNameKey) {
 		opts = append(opts, accounts.DefaultPasswordAccountLoginName())
 		if keyVal, ok := d.GetOk(accountLoginNameKey); ok {

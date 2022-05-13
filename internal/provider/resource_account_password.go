@@ -60,13 +60,11 @@ func resourceAccountPassword() *schema.Resource {
 				Description: "The login name for this account.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Deprecated:  "Will be removed in favor of using attributes parameter",
 			},
 			accountPasswordKey: {
 				Description: "The account password. Only set on create, changes will not be reflected when updating account.",
 				Type:        schema.TypeString,
 				Optional:    true,
-				Deprecated:  "Will be removed in favor of using attributes parameter",
 
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Id() == "" {
