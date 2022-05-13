@@ -114,7 +114,7 @@ resource "boundary_group" "proj1" {
 
 // NOTE: this test also tests out the recovery KMS mechanism.
 func TestAccGroup(t *testing.T) {
-	wrapper := testWrapper(t, tcRecoveryKey)
+	wrapper := testWrapper(context.Background(), t, tcRecoveryKey)
 	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
 
 	defer tc.Shutdown()
@@ -122,6 +122,7 @@ func TestAccGroup(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckGroupResourceDestroy(t, provider),
 		Steps: []resource.TestStep{

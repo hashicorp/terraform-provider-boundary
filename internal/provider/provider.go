@@ -8,8 +8,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
+	kms_plugin_assets "github.com/hashicorp/boundary/plugins/kms"
 	"github.com/hashicorp/boundary/sdk/wrapper"
-	wrapping "github.com/hashicorp/go-kms-wrapping"
+	wrapping "github.com/hashicorp/go-kms-wrapping/v2"
+	"github.com/hashicorp/go-secure-stdlib/configutil/v2"
+	"github.com/hashicorp/go-secure-stdlib/pluginutil/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -109,15 +112,16 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 		if err != nil {
 			return fmt.Errorf(`error reading data from "recovery_kms_hcl": %v`, err)
 		}
-		wrapper, err := wrapper.GetWrapperFromHcl(recoveryHclStr, "recovery")
+		wrapper, _, err := wrapper.GetWrapperFromHcl(ctx, recoveryHclStr, "recovery",
+			configutil.WithPluginOptions(
+				pluginutil.WithPluginsMap(kms_plugin_assets.BuiltinKmsPlugins()),
+				pluginutil.WithPluginsFilesystem(kms_plugin_assets.KmsPluginPrefix, kms_plugin_assets.FileSystem()),
+			))
 		if err != nil {
 			return fmt.Errorf(`error reading wrappers from "recovery_kms_hcl": %v`, err)
 		}
 		if wrapper == nil {
 			return errors.New(`No "kms" block with purpose "recovery" found in "recovery_kms_hcl"`)
-		}
-		if err := wrapper.Init(ctx); err != nil {
-			return fmt.Errorf("error initializing recovery kms: %v", err)
 		}
 
 		md.recoveryKmsWrapper = wrapper

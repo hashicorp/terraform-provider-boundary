@@ -41,7 +41,7 @@ resource "boundary_managed_group" "foo" {
 )
 
 func TestAccManagedGroup(t *testing.T) {
-	wrapper := testWrapper(t, tcRecoveryKey)
+	wrapper := testWrapper(context.Background(), t, tcRecoveryKey)
 	tp := oidc.StartTestProvider(t)
 	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
 
