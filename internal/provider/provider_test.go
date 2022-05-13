@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
@@ -8,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/testing/controller"
-	wrapping "github.com/hashicorp/go-kms-wrapping"
-	"github.com/hashicorp/go-kms-wrapping/wrappers/aead"
+	wrapping "github.com/hashicorp/go-kms-wrapping/v2"
+	"github.com/hashicorp/go-kms-wrapping/v2/aead"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -36,7 +37,7 @@ func providerFactories(p **schema.Provider) map[string]func() (*schema.Provider,
 	}
 }
 
-func testWrapper(t *testing.T, key string) wrapping.Wrapper {
+func testWrapper(ctx context.Context, t *testing.T, key string) wrapping.Wrapper {
 	var keyBytes []byte
 	switch key {
 	case "":
@@ -56,15 +57,13 @@ func testWrapper(t *testing.T, key string) wrapping.Wrapper {
 			t.Fatal(err)
 		}
 	}
-	wrapper := aead.NewWrapper(nil)
+	wrapper := aead.NewWrapper()
 
-	_, err := wrapper.SetConfig(map[string]string{
-		"key_id": key,
-	})
+	_, err := wrapper.SetConfig(ctx, wrapping.WithKeyId(key))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := wrapper.SetAESGCMKeyBytes(keyBytes); err != nil {
+	if err := wrapper.SetAesGcmKeyBytes(keyBytes); err != nil {
 		t.Fatal(err)
 	}
 	return wrapper
