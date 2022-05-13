@@ -258,7 +258,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants"),
 				),
-				ExpectError: regexp.MustCompile(`Improperly formatted grant`),
+				ExpectError: regexp.MustCompile(`Improperly`),
 			},
 			{
 				// Create again with valid grants should succeed
@@ -280,7 +280,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants_update"),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "description", "with grants update"),
 				),
-				ExpectError: regexp.MustCompile(`Improperly formatted grant`),
+				ExpectError: regexp.MustCompile(`Improperly`),
 			},
 			{
 				// Update should now succeed
