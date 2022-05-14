@@ -11,7 +11,7 @@ resource "boundary_auth_method" "password" {
   type     = "password"
 }
 
-resource "boundary_account" "jeff" {
+resource "boundary_account_password" "jeff" {
   auth_method_id = boundary_auth_method.password.id
   type           = "password"
   login_name     = "jeff"
@@ -21,6 +21,6 @@ resource "boundary_account" "jeff" {
 resource "boundary_user" "jeff" {
   name        = "jeff"
   description = "Jeff's user resource"
-  account_ids = [boundary_account.jeff.id]
+  account_ids = [boundary_account_password.jeff.id]
   scope_id    = boundary_scope.org.id
 }

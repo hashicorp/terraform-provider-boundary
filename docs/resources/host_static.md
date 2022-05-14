@@ -17,17 +17,17 @@ The static host resource allows you to configure a Boundary static host. Hosts a
 
 ### Required
 
-- **host_catalog_id** (String)
+- `host_catalog_id` (String)
 
 ### Optional
 
-- **address** (String) The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.
-- **description** (String) The host description.
-- **name** (String) The host name. Defaults to the resource name.
-- **type** (String) The type of host
+- `address` (String) The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.
+- `description` (String) The host description.
+- `name` (String) The host name. Defaults to the resource name.
+- `type` (String) The type of host
 
 ### Read-Only
 
-- **id** (String) The ID of the host.
+- `id` (String) The ID of the host.
 
 

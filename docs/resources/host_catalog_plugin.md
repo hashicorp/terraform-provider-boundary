@@ -17,23 +17,23 @@ The host catalog resource allows you to configure a Boundary plugin-type host ca
 
 ### Required
 
-- **scope_id** (String) The scope ID in which the resource is created.
+- `scope_id` (String) The scope ID in which the resource is created.
 
 ### Optional
 
-- **attributes_json** (String) The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.
-- **description** (String) The host catalog description.
-- **internal_force_update** (String) Internal only. Used to force update so that we can always check the value of secrets.
-- **internal_hmac_used_for_secrets_config_hmac** (String) Internal only. The Boundary-provided HMAC used to calculate the current value of the HMAC'd config. Used for drift detection.
-- **internal_secrets_config_hmac** (String) Internal only. HMAC of (serverSecretsHmac + config secrets). Used for proper secrets handling.
-- **name** (String) The host catalog name. Defaults to the resource name.
-- **plugin_id** (String) The ID of the plugin that should back the resource. This or plugin_name must be defined.
-- **plugin_name** (String) The name of the plugin that should back the resource. This or plugin_id must be defined.
-- **secrets_hmac** (String) The HMAC'd secrets value returned from the server.
-- **secrets_json** (String, Sensitive) The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.
+- `attributes_json` (String) The attributes for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host catalog.
+- `description` (String) The host catalog description.
+- `internal_force_update` (String) Internal only. Used to force update so that we can always check the value of secrets.
+- `internal_hmac_used_for_secrets_config_hmac` (String) Internal only. The Boundary-provided HMAC used to calculate the current value of the HMAC'd config. Used for drift detection.
+- `internal_secrets_config_hmac` (String) Internal only. HMAC of (serverSecretsHmac + config secrets). Used for proper secrets handling.
+- `name` (String) The host catalog name. Defaults to the resource name.
+- `plugin_id` (String) The ID of the plugin that should back the resource. This or plugin_name must be defined.
+- `plugin_name` (String) The name of the plugin that should back the resource. This or plugin_id must be defined.
+- `secrets_hmac` (String) The HMAC'd secrets value returned from the server.
+- `secrets_json` (String, Sensitive) The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.
 
 ### Read-Only
 
-- **id** (String) The ID of the host catalog.
+- `id` (String) The ID of the host catalog.
 
 

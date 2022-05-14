@@ -17,17 +17,17 @@ The account resource allows you to configure a Boundary account.
 
 ### Required
 
-- **auth_method_id** (String) The resource ID for the auth method.
+- `auth_method_id` (String) The resource ID for the auth method.
 
 ### Optional
 
-- **description** (String) The account description.
-- **issuer** (String) The OIDC issuer.
-- **name** (String) The account name. Defaults to the resource name.
-- **subject** (String) The OIDC subject.
+- `description` (String) The account description.
+- `issuer` (String) The OIDC issuer.
+- `name` (String) The account name. Defaults to the resource name.
+- `subject` (String) The OIDC subject.
 
 ### Read-Only
 
-- **id** (String) The ID of the account.
+- `id` (String) The ID of the account.
 
 

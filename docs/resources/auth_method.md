@@ -32,19 +32,19 @@ resource "boundary_auth_method" "password" {
 
 ### Required
 
-- **scope_id** (String) The scope ID.
-- **type** (String) The resource type.
+- `scope_id` (String) The scope ID.
+- `type` (String) The resource type.
 
 ### Optional
 
-- **description** (String) The auth method description.
-- **min_login_name_length** (Number, Deprecated) The minimum login name length.
-- **min_password_length** (Number, Deprecated) The minimum password length.
-- **name** (String) The auth method name. Defaults to the resource name.
+- `description` (String) The auth method description.
+- `min_login_name_length` (Number, Deprecated) The minimum login name length.
+- `min_password_length` (Number, Deprecated) The minimum password length.
+- `name` (String) The auth method name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the account.
+- `id` (String) The ID of the account.
 
 ## Import
 

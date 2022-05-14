@@ -63,19 +63,19 @@ EOT
 
 ### Required
 
-- **credential_store_id** (String) The ID of the credential store that this library belongs to.
-- **path** (String) The path in Vault to request credentials from.
+- `credential_store_id` (String) The ID of the credential store that this library belongs to.
+- `path` (String) The path in Vault to request credentials from.
 
 ### Optional
 
-- **description** (String) The Vault credential library description.
-- **http_method** (String) The HTTP method the library uses when requesting credentials from Vault. Defaults to 'GET'
-- **http_request_body** (String) The body of the HTTP request the library sends to Vault when requesting credentials. Only valid if `http_method` is set to `POST`.
-- **name** (String) The Vault credential library name. Defaults to the resource name.
+- `description` (String) The Vault credential library description.
+- `http_method` (String) The HTTP method the library uses when requesting credentials from Vault. Defaults to 'GET'
+- `http_request_body` (String) The body of the HTTP request the library sends to Vault when requesting credentials. Only valid if `http_method` is set to `POST`.
+- `name` (String) The Vault credential library name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the Vault credential library.
+- `id` (String) The ID of the Vault credential library.
 
 ## Import
 

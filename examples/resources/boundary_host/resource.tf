@@ -21,6 +21,7 @@ resource "boundary_host_catalog" "static" {
 }
 
 resource "boundary_host" "example" {
+  type            = "static"
   name            = "example_host"
   description     = "My first host!"
   address         = "10.0.0.1"
