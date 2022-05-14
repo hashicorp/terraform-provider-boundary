@@ -1,3 +1,11 @@
+## Next
+
+### Deprecations/Changes
+
+* Undoes an erroneous deprecation of the `login_name` and `password` fields in `resource_account_password` and `resource_account`. 
+  Deprecates `resource_account` that was replaced with `resource_account_password`
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/201)).
+
 ## 1.0.6 (January 21, 2022)
 
 ### New and Improved
