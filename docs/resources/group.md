@@ -69,17 +69,17 @@ resource "boundary_group" "example" {
 
 ### Required
 
-- **scope_id** (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+- `scope_id` (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
 
 ### Optional
 
-- **description** (String) The group description.
-- **member_ids** (Set of String) Resource IDs for group members, these are most likely boundary users.
-- **name** (String) The group name. Defaults to the resource name.
+- `description` (String) The group description.
+- `member_ids` (Set of String) Resource IDs for group members, these are most likely boundary users.
+- `name` (String) The group name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the group.
+- `id` (String) The ID of the group.
 
 ## Import
 

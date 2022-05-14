@@ -57,6 +57,7 @@ resource "boundary_host_catalog" "foo" {
 }
 
 resource "boundary_host" "foo" {
+  type            = "static"
   name            = "foo"
   host_catalog_id = boundary_host_catalog.foo.id
   scope_id        = boundary_scope.project.id
@@ -64,6 +65,7 @@ resource "boundary_host" "foo" {
 }
 
 resource "boundary_host" "bar" {
+  type            = "static"
   name            = "bar"
   host_catalog_id = boundary_host_catalog.foo.id
   scope_id        = boundary_scope.project.id
@@ -71,6 +73,7 @@ resource "boundary_host" "bar" {
 }
 
 resource "boundary_host_set" "foo" {
+  type            = "static"
   name            = "foo"
   host_catalog_id = boundary_host_catalog.foo.id
 
@@ -100,23 +103,23 @@ resource "boundary_target" "foo" {
 
 ### Required
 
-- **scope_id** (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
-- **type** (String) The target resource type.
+- `scope_id` (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+- `type` (String) The target resource type.
 
 ### Optional
 
-- **application_credential_source_ids** (Set of String) A list of application credential source ID's.
-- **default_port** (Number) The default port for this target.
-- **description** (String) The target description.
-- **host_source_ids** (Set of String) A list of host source ID's.
-- **name** (String) The target name. Defaults to the resource name.
-- **session_connection_limit** (Number)
-- **session_max_seconds** (Number)
-- **worker_filter** (String) Boolean expression to filter the workers for this target
+- `application_credential_source_ids` (Set of String) A list of application credential source ID's.
+- `default_port` (Number) The default port for this target.
+- `description` (String) The target description.
+- `host_source_ids` (Set of String) A list of host source ID's.
+- `name` (String) The target name. Defaults to the resource name.
+- `session_connection_limit` (Number)
+- `session_max_seconds` (Number)
+- `worker_filter` (String) Boolean expression to filter the workers for this target
 
 ### Read-Only
 
-- **id** (String) The ID of the target.
+- `id` (String) The ID of the target.
 
 ## Import
 

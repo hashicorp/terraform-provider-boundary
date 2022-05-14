@@ -17,17 +17,17 @@ The host_set_static resource allows you to configure a Boundary host set. Host s
 
 ### Required
 
-- **host_catalog_id** (String) The catalog for the host set.
+- `host_catalog_id` (String) The catalog for the host set.
 
 ### Optional
 
-- **description** (String) The host set description.
-- **host_ids** (Set of String) The list of host IDs contained in this set.
-- **name** (String) The host set name. Defaults to the resource name.
-- **type** (String) The type of host set
+- `description` (String) The host set description.
+- `host_ids` (Set of String) The list of host IDs contained in this set.
+- `name` (String) The host set name. Defaults to the resource name.
+- `type` (String) The type of host set
 
 ### Read-Only
 
-- **id** (String) The ID of the host set.
+- `id` (String) The ID of the host set.
 
 

@@ -36,6 +36,7 @@ resource "boundary_host_catalog" "static" {
 }
 
 resource "boundary_host" "example" {
+  type            = "static"
   name            = "example_host"
   description     = "My first host!"
   address         = "10.0.0.1"
@@ -48,18 +49,18 @@ resource "boundary_host" "example" {
 
 ### Required
 
-- **host_catalog_id** (String)
-- **type** (String) The type of host
+- `host_catalog_id` (String)
+- `type` (String) The type of host
 
 ### Optional
 
-- **address** (String) The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.
-- **description** (String) The host description.
-- **name** (String) The host name. Defaults to the resource name.
+- `address` (String) The static address of the host resource as `<IP>` (note: port assignment occurs in the target resource definition, do not add :port here) or a domain name.
+- `description` (String) The host description.
+- `name` (String) The host name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the host.
+- `id` (String) The ID of the host.
 
 ## Import
 

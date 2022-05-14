@@ -17,15 +17,15 @@ The static host catalog resource allows you to configure a Boundary static-type 
 
 ### Required
 
-- **scope_id** (String) The scope ID in which the resource is created.
+- `scope_id` (String) The scope ID in which the resource is created.
 
 ### Optional
 
-- **description** (String) The host catalog description.
-- **name** (String) The host catalog name. Defaults to the resource name.
+- `description` (String) The host catalog description.
+- `name` (String) The host catalog name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the host catalog.
+- `id` (String) The ID of the host catalog.
 
 

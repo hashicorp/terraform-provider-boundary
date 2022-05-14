@@ -17,19 +17,19 @@ The host_set_plugin resource allows you to configure a Boundary host set. Host s
 
 ### Required
 
-- **host_catalog_id** (String) The catalog for the host set.
+- `host_catalog_id` (String) The catalog for the host set.
 
 ### Optional
 
-- **attributes_json** (String) The attributes for the host set. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host set.
-- **description** (String) The host set description.
-- **name** (String) The host set name. Defaults to the resource name.
-- **preferred_endpoints** (List of String) The ordered list of preferred endpoints.
-- **sync_interval_seconds** (Number) The value to set for the sync interval seconds.
-- **type** (String) The type of host set
+- `attributes_json` (String) The attributes for the host set. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host set.
+- `description` (String) The host set description.
+- `name` (String) The host set name. Defaults to the resource name.
+- `preferred_endpoints` (List of String) The ordered list of preferred endpoints.
+- `sync_interval_seconds` (Number) The value to set for the sync interval seconds.
+- `type` (String) The type of host set
 
 ### Read-Only
 
-- **id** (String) The ID of the host set.
+- `id` (String) The ID of the host set.
 
 

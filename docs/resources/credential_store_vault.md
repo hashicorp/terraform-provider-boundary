@@ -42,26 +42,26 @@ resource "boundary_credential_store_vault" "example" {
 
 ### Required
 
-- **address** (String) The address to Vault server. This should be a complete URL such as 'https://127.0.0.1:8200'
-- **scope_id** (String) The scope for this credential store.
-- **token** (String, Sensitive) A token used for accessing Vault.
+- `address` (String) The address to Vault server. This should be a complete URL such as 'https://127.0.0.1:8200'
+- `scope_id` (String) The scope for this credential store.
+- `token` (String, Sensitive) A token used for accessing Vault.
 
 ### Optional
 
-- **ca_cert** (String) A PEM-encoded CA certificate to verify the Vault server's TLS certificate.
-- **client_certificate** (String) A PEM-encoded client certificate to use for TLS authentication to the Vault server.
-- **client_certificate_key** (String, Sensitive) A PEM-encoded private key matching the client certificate from 'client_certificate'.
-- **description** (String) The Vault credential store description.
-- **name** (String) The Vault credential store name. Defaults to the resource name.
-- **namespace** (String) The namespace within Vault to use.
-- **tls_server_name** (String) Name to use as the SNI host when connecting to Vault via TLS.
-- **tls_skip_verify** (Boolean) Whether or not to skip TLS verification.
+- `ca_cert` (String) A PEM-encoded CA certificate to verify the Vault server's TLS certificate.
+- `client_certificate` (String) A PEM-encoded client certificate to use for TLS authentication to the Vault server.
+- `client_certificate_key` (String, Sensitive) A PEM-encoded private key matching the client certificate from 'client_certificate'.
+- `description` (String) The Vault credential store description.
+- `name` (String) The Vault credential store name. Defaults to the resource name.
+- `namespace` (String) The namespace within Vault to use.
+- `tls_server_name` (String) Name to use as the SNI host when connecting to Vault via TLS.
+- `tls_skip_verify` (Boolean) Whether or not to skip TLS verification.
 
 ### Read-Only
 
-- **client_certificate_key_hmac** (String) The Vault client certificate key hmac.
-- **id** (String) The ID of the Vault credential store.
-- **token_hmac** (String) The Vault token hmac.
+- `client_certificate_key_hmac` (String) The Vault client certificate key hmac.
+- `id` (String) The ID of the Vault credential store.
+- `token_hmac` (String) The Vault token hmac.
 
 ## Import
 

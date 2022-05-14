@@ -122,20 +122,20 @@ resource "boundary_role" "readonly" {
 
 ### Required
 
-- **scope_id** (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+- `scope_id` (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
 
 ### Optional
 
-- **default_role** (Boolean) Indicates that the role containing this value is the default role (that is, has the id 'r_default'), which triggers some specialized behavior to allow it to be imported and managed.
-- **description** (String) The role description.
-- **grant_scope_id** (String)
-- **grant_strings** (Set of String) A list of stringified grants for the role.
-- **name** (String) The role name. Defaults to the resource name.
-- **principal_ids** (Set of String) A list of principal (user or group) IDs to add as principals on the role.
+- `default_role` (Boolean) Indicates that the role containing this value is the default role (that is, has the id 'r_default'), which triggers some specialized behavior to allow it to be imported and managed.
+- `description` (String) The role description.
+- `grant_scope_id` (String)
+- `grant_strings` (Set of String) A list of stringified grants for the role.
+- `name` (String) The role name. Defaults to the resource name.
+- `principal_ids` (Set of String) A list of principal (user or group) IDs to add as principals on the role.
 
 ### Read-Only
 
-- **id** (String) The ID of the role.
+- `id` (String) The ID of the role.
 
 ## Import
 

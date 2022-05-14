@@ -26,7 +26,7 @@ resource "boundary_auth_method" "password" {
   type     = "password"
 }
 
-resource "boundary_account" "jeff" {
+resource "boundary_account_password" "jeff" {
   auth_method_id = boundary_auth_method.password.id
   type           = "password"
   login_name     = "jeff"
@@ -36,7 +36,7 @@ resource "boundary_account" "jeff" {
 resource "boundary_user" "jeff" {
   name        = "jeff"
   description = "Jeff's user resource"
-  account_ids = [boundary_account.jeff.id]
+  account_ids = [boundary_account_password.jeff.id]
   scope_id    = boundary_scope.org.id
 }
 ```
@@ -46,17 +46,17 @@ resource "boundary_user" "jeff" {
 
 ### Required
 
-- **scope_id** (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
+- `scope_id` (String) The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.
 
 ### Optional
 
-- **account_ids** (Set of String) Account ID's to associate with this user resource.
-- **description** (String) The user description.
-- **name** (String) The username. Defaults to the resource name.
+- `account_ids` (Set of String) Account ID's to associate with this user resource.
+- `description` (String) The user description.
+- `name` (String) The username. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the user.
+- `id` (String) The ID of the user.
 
 ## Import
 

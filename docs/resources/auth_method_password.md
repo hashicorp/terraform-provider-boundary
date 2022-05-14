@@ -17,18 +17,18 @@ The auth method resource allows you to configure a Boundary auth_method_password
 
 ### Required
 
-- **scope_id** (String) The scope ID.
+- `scope_id` (String) The scope ID.
 
 ### Optional
 
-- **description** (String) The auth method description.
-- **min_login_name_length** (Number) The minimum login name length.
-- **min_password_length** (Number) The minimum password length.
-- **name** (String) The auth method name. Defaults to the resource name.
-- **type** (String) The resource type, hardcoded per resource
+- `description` (String) The auth method description.
+- `min_login_name_length` (Number) The minimum login name length.
+- `min_password_length` (Number) The minimum password length.
+- `name` (String) The auth method name. Defaults to the resource name.
+- `type` (String) The resource type, hardcoded per resource
 
 ### Read-Only
 
-- **id** (String) The ID of the account.
+- `id` (String) The ID of the account.
 
 

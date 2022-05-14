@@ -29,10 +29,12 @@ resource "boundary_scope" "project" {
 }
 
 resource "boundary_host_catalog" "static" {
+  type = "static"
   scope_id = boundary_scope.project.id
 }
 
-resource "boundary_host" "1" {
+resource "boundary_host" "first" {
+  type = "static"
   name            = "host_1"
   description     = "My first host!"
   address         = "10.0.0.1"
@@ -40,7 +42,8 @@ resource "boundary_host" "1" {
   scope_id        = boundary_scope.project.id
 }
 
-resource "boundary_host" "2" {
+resource "boundary_host" "second" {
+  type = "static"
   name            = "host_2"
   description     = "My second host!"
   address         = "10.0.0.2"
@@ -52,8 +55,8 @@ resource "boundary_host_set" "web" {
   host_catalog_id = boundary_host_catalog.static.id
   type            = "static"
   host_ids = [
-    boundary_host.1.id,
-    boundary_host.2.id,
+    boundary_host.first.id,
+    boundary_host.second.id,
   ]
 }
 ```
@@ -63,18 +66,18 @@ resource "boundary_host_set" "web" {
 
 ### Required
 
-- **host_catalog_id** (String) The catalog for the host set.
-- **type** (String) The type of host set
+- `host_catalog_id` (String) The catalog for the host set.
+- `type` (String) The type of host set
 
 ### Optional
 
-- **description** (String) The host set description.
-- **host_ids** (Set of String) The list of host IDs contained in this set.
-- **name** (String) The host set name. Defaults to the resource name.
+- `description` (String) The host set description.
+- `host_ids` (Set of String) The list of host IDs contained in this set.
+- `name` (String) The host set name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the host set.
+- `id` (String) The ID of the host set.
 
 ## Import
 

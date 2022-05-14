@@ -65,19 +65,19 @@ resource "boundary_role" "org_admin" {
 
 ### Required
 
-- **scope_id** (String) The scope ID containing the sub scope resource.
+- `scope_id` (String) The scope ID containing the sub scope resource.
 
 ### Optional
 
-- **auto_create_admin_role** (Boolean) If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
-- **auto_create_default_role** (Boolean) Only relevant when creating an org scope. If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
-- **description** (String) The scope description.
-- **global_scope** (Boolean) Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.
-- **name** (String) The scope name. Defaults to the resource name.
+- `auto_create_admin_role` (Boolean) If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives permissions to manage the scope to the provider's user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
+- `auto_create_default_role` (Boolean) Only relevant when creating an org scope. If set, when a new scope is created, the provider will not disable the functionality that automatically creates a role in the new scope and gives listing of scopes and auth methods and the ability to authenticate to the anonymous user. Marking this true makes for simpler HCL but results in role resources that are unmanaged by Terraform.
+- `description` (String) The scope description.
+- `global_scope` (Boolean) Indicates that the scope containing this value is the global scope, which triggers some specialized behavior to allow it to be imported and managed.
+- `name` (String) The scope name. Defaults to the resource name.
 
 ### Read-Only
 
-- **id** (String) The ID of the scope.
+- `id` (String) The ID of the scope.
 
 ## Import
 

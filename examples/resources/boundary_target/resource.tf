@@ -42,6 +42,7 @@ resource "boundary_host_catalog" "foo" {
 }
 
 resource "boundary_host" "foo" {
+  type            = "static"
   name            = "foo"
   host_catalog_id = boundary_host_catalog.foo.id
   scope_id        = boundary_scope.project.id
@@ -49,6 +50,7 @@ resource "boundary_host" "foo" {
 }
 
 resource "boundary_host" "bar" {
+  type            = "static"
   name            = "bar"
   host_catalog_id = boundary_host_catalog.foo.id
   scope_id        = boundary_scope.project.id
@@ -56,6 +58,7 @@ resource "boundary_host" "bar" {
 }
 
 resource "boundary_host_set" "foo" {
+  type            = "static"
   name            = "foo"
   host_catalog_id = boundary_host_catalog.foo.id
 
