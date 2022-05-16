@@ -1,4 +1,4 @@
-## Next
+## 1.0.7 (May 16, 2022)
 
 ### Deprecations/Changes
 
