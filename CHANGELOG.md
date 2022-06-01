@@ -1,4 +1,4 @@
-## Next
+## 1.0.8 (June 1, 2022)
 
 ### Bug Fixes
 
@@ -10,7 +10,6 @@
             Error configuring kms: plugin is nil
   ([Issue](https://github.com/hashicorp/terraform-provider-boundary/issues/209)),
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/213)).
-
 
 ## 1.0.7 (May 16, 2022)
 
