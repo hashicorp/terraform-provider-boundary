@@ -1,3 +1,17 @@
+## Next
+
+### Bug Fixes
+
+* After moving to go-kms-wrapping V2, the Boundary Terraform Provider
+  did not load all KMS plugins resulting in an error when trying to
+  create a wrapper for any type other than 'aead':
+
+            Error: error reading wrappers from "recovery_kms_hcl":
+            Error configuring kms: plugin is nil
+  ([Issue](https://github.com/hashicorp/terraform-provider-boundary/issues/209)),
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/213)).
+
+
 ## 1.0.7 (May 16, 2022)
 
 ### Deprecations/Changes
