@@ -29,12 +29,12 @@ resource "boundary_scope" "project" {
 }
 
 resource "boundary_host_catalog" "static" {
-  type = "static"
+  type     = "static"
   scope_id = boundary_scope.project.id
 }
 
 resource "boundary_host" "first" {
-  type = "static"
+  type            = "static"
   name            = "host_1"
   description     = "My first host!"
   address         = "10.0.0.1"
@@ -43,7 +43,7 @@ resource "boundary_host" "first" {
 }
 
 resource "boundary_host" "second" {
-  type = "static"
+  type            = "static"
   name            = "host_2"
   description     = "My second host!"
   address         = "10.0.0.2"
