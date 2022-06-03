@@ -44,7 +44,7 @@ install-go: ~/.go/bin/go
 	./ci/goinstall.sh
 
 dev:
-	./scripts/plugins.sh
+	GOOS=${GOOS} GOARCH=${GOARCH} ./scripts/plugins.sh
 	mkdir -p $(INSTALL_PATH)
 	go build -o $(INSTALL_PATH)/terraform-provider-boundary main.go
 

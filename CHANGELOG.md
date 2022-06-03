@@ -1,3 +1,17 @@
+## Next
+
+### Bug Fixes
+
+* The bug fix released in 1.0.8 to resolve the `plugin is nil` error only worked for 
+  Linux AMD64. This was due to a build issue where the plugin binaries were only built for 
+  Linux AMD64. Other platforms would receive an error similar to:
+
+            Error: error reading wrappers from "recovery_kms_hcl":
+            Error configuring kms: error fetching kms plugin rpc client: 
+            fork/exec boundary-plugin-kms-awskms.gz: exec format error
+  ([Issue](https://github.com/hashicorp/terraform-provider-boundary/issues/209)),
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/216)).
+
 ## 1.0.8 (June 1, 2022)
 
 ### Bug Fixes
