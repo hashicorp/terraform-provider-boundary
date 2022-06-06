@@ -1,4 +1,4 @@
-## Next
+## 1.0.9 (June 6, 2022)
 
 ### Bug Fixes
 
