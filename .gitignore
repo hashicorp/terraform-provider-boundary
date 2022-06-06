@@ -35,4 +35,4 @@ website/vendor
 *.winfile eol=crlf
 
 # Compilation outputs
-/plugins/kms/assets/boundary-plugin*
+/plugins/kms/assets/*/*/boundary-plugin*

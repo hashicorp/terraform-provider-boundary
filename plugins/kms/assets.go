@@ -1,19 +1,17 @@
 package kms_plugin_assets
 
 import (
-	"embed"
 	"io/fs"
+	"path"
+	"runtime"
 )
 
 const contentDir = "assets"
 
-// content is our static web server content.
-//go:embed assets
-var content embed.FS
-
 func FileSystem() fs.FS {
 	// Remove the root
-	f, err := fs.Sub(content, contentDir)
+	dir := path.Join(contentDir, runtime.GOOS, runtime.GOARCH)
+	f, err := fs.Sub(content, dir)
 	if err != nil {
 		panic(err)
 	}
