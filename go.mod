@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.17.0
 	github.com/kr/pretty v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.4
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 )
 
