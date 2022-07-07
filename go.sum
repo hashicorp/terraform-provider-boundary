@@ -328,8 +328,8 @@ github.com/hashicorp/boundary v0.8.1 h1:Kmu0IHjDS33hlreqi3p7iGcQW9WPKqiTKYcp0ulc
 github.com/hashicorp/boundary v0.8.1/go.mod h1:MNCyjIIhkhi/jkx28hk4IF6dR7QnMkLutxWAookht6U=
 github.com/hashicorp/boundary/api v0.0.24 h1:+WcwcRCXictp4QBHuZvU5s8LsNHM8GRA+Uo0ECiNunI=
 github.com/hashicorp/boundary/api v0.0.24/go.mod h1:wNVRAQwG50gu+De0P4Y4yHjo6M4/e+tebjYQ8P7gEPg=
-github.com/hashicorp/boundary/sdk v0.0.15 h1:d14EO420Vlf4WYNZpgd+GN0y8Y+1tjdw9NWvXX96kJ8=
-github.com/hashicorp/boundary/sdk v0.0.15/go.mod h1:z/1Qx/SVkdwKkLXHJ/w97QgqRlLmgPGePE3Zr2wzqzQ=
+github.com/hashicorp/boundary/sdk v0.0.17 h1:87gX4UboE4c5UHDO1XgnjPByHj9iAMegRfrIupkwivA=
+github.com/hashicorp/boundary/sdk v0.0.17/go.mod h1:JKefKvzmjo0zSN2Z1RgNC/oAv66UmMIxPVpzEJSXE+E=
 github.com/hashicorp/cap v0.2.0 h1:Cgr1iDczX17y0PNF5VG+bWTtDiimYL8F18izMPbWNy4=
 github.com/hashicorp/cap v0.2.0/go.mod h1:zb3VvIFA0lM2lbmO69NjowV9dJzJnZS89TaM9blXPJA=
 github.com/hashicorp/dbassert v0.0.0-20210708202608-ecf920cf1ed8 h1:/3iubtqEdLgdXB6ue+WAKvbcpn313jjL5mQvU5ByymE=
@@ -386,8 +386,8 @@ github.com/hashicorp/go-rootcerts v1.0.2/go.mod h1:pqUvnprVnM5bf7AOirdbb01K4ccR3
 github.com/hashicorp/go-secure-stdlib/base62 v0.1.1/go.mod h1:EdWO6czbmthiwZ3/PUsDV+UD1D5IRU4ActiaWGwt0Yw=
 github.com/hashicorp/go-secure-stdlib/base62 v0.1.2 h1:ET4pqyjiGmY09R5y+rSd70J2w45CtbWDNvGqWp/R3Ng=
 github.com/hashicorp/go-secure-stdlib/base62 v0.1.2/go.mod h1:EdWO6czbmthiwZ3/PUsDV+UD1D5IRU4ActiaWGwt0Yw=
-github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.3 h1:S6WL0r1++gBPUhsSLSuao5AhnEX0R4MHxdf+dsKThis=
-github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.3/go.mod h1:QBMYnRoWszJPLWzQvS3KsvyTsS7upY4dIbagkp4N7iY=
+github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.4 h1:WSluQBp6dNGdqeciGwTWeYDUVbq0Hiw/SigGQPAeOQc=
+github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.4/go.mod h1:QBMYnRoWszJPLWzQvS3KsvyTsS7upY4dIbagkp4N7iY=
 github.com/hashicorp/go-secure-stdlib/gatedwriter v0.1.1 h1:9um9R8i0+HbRHS9d64kdvWR0/LJvo12sIonvR9zr1+U=
 github.com/hashicorp/go-secure-stdlib/gatedwriter v0.1.1/go.mod h1:6RoRTSMDK2H/rKh3P/JIsk1tK8aatKTt3JyvIopi3GQ=
 github.com/hashicorp/go-secure-stdlib/kv-builder v0.1.1 h1:IJgULbAXuvWxzKFfu+Au1FUmHIJulS6N4F7Hkn+Kck0=
