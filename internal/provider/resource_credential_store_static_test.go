@@ -1,10 +1,6 @@
 package provider
 
 import (
-
-	// "crypto/hmac"
-	// "crypto/sha256"
-	// "encoding/base64"
 	"context"
 	"fmt"
 	"net/http"
@@ -16,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	// "golang.org/x/crypto/blake2b"
 )
 
 const (
@@ -28,10 +23,6 @@ const (
 )
 
 func staticCredStoreResource(name string, description string) string {
-	// caCert := fmt.Sprintf("\"%s\"", strings.Replace(string(vc.CaCert), "\n", `\n`, -1))
-	// clientCert := fmt.Sprintf("\"%s\"", strings.Replace(string(vc.ClientCert), "\n", `\n`, -1))
-	// clientKey := fmt.Sprintf("\"%s\"", strings.Replace(string(vc.ClientKey), "\n", `\n`, -1))
-
 	return fmt.Sprintf(`
 resource "boundary_credential_store_static" "example" {
 	name  = "%s"
@@ -40,14 +31,6 @@ resource "boundary_credential_store_static" "example" {
 }`, name,
 		description)
 }
-
-// func tokenHmac(token, accessor string) string {
-// 	key := blake2b.Sum256([]byte(accessor))
-// 	mac := hmac.New(sha256.New, key[:])
-// 	_, _ = mac.Write([]byte(token))
-// 	hmac := mac.Sum(nil)
-// 	return base64.RawURLEncoding.EncodeToString(hmac)
-// }
 
 func TestAccCredentialStoreStatic(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
@@ -106,61 +89,6 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 		},
 	})
 }
-
-// var storeId string
-
-// // externalUpdate uses the global storeId, therefore this function cannot be called until
-// // a previous test step that calls testAccCheckCredentialStoreVaultResourceExists has completed.
-// func externalUpdate(t *testing.T, testProvider *schema.Provider) {
-// 	if storeId == "" {
-// 		t.Fatal("storeId must be set before testing an external update")
-// 	}
-// 	vs := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
-// 	_, token := vs.CreateToken(t)
-
-// 	md := testProvider.Meta().(*metaData)
-// 	c := credentialstores.NewClient(md.client)
-// 	cr, err := c.Read(context.Background(), storeId)
-// 	if err != nil {
-// 		t.Fatal(fmt.Errorf("got an error reading %q: %w", storeId, err))
-// 	}
-
-// 	// update Vault server to existing store
-// 	var opts []credentialstores.Option
-// 	opts = append(opts, credentialstores.WithVaultCredentialStoreToken(token))
-// 	opts = append(opts, credentialstores.WithVaultCredentialStoreAddress(vs.Addr))
-// 	opts = append(opts, credentialstores.WithVaultCredentialStoreCaCert(string(vs.CaCert)))
-// 	opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificate(string(vs.ClientCert)))
-// 	opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(string(vs.ClientKey)))
-
-// 	_, err = c.Update(context.Background(), cr.Item.Id, cr.Item.Version, opts...)
-// 	if err != nil {
-// 		t.Fatal(fmt.Errorf("got an error updating %q: %w", cr.Item.Id, err))
-// 	}
-// }
-
-// func testAccCheckCredentialStoreVaultResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[name]
-// 		if !ok {
-// 			return fmt.Errorf("not found: %s", name)
-// 		}
-
-// 		id := rs.Primary.ID
-// 		if id == "" {
-// 			return fmt.Errorf("no ID is set")
-// 		}
-// 		storeId = id
-
-// 		md := testProvider.Meta().(*metaData)
-// 		c := credentialstores.NewClient(md.client)
-// 		if _, err := c.Read(context.Background(), id); err != nil {
-// 			return fmt.Errorf("got an error reading %q: %w", id, err)
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccCheckCredentialStoreStaticResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
