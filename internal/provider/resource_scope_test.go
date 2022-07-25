@@ -42,6 +42,7 @@ resource "boundary_scope" "proj1" {
 	scope_id    = boundary_scope.org1.id
 	description = "foo"
 	depends_on = [boundary_role.org1_admin]
+	auto_create_admin_role = true // this is necessary for creating static credential store. without it, boundary returns a 403 on creation
 }
 
 resource "boundary_role" "proj1_admin" {

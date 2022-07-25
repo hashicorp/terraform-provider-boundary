@@ -10,29 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const ( /*
-		staticCredentialStoreAddressKey                  = "address"
-		staticCredentialStoreNamespaceKey                = "namespace"
-		staticCredentialStoreCaCertKey                   = "ca_cert"
-		staticCredentialStoreTlsServerNameKey            = "tls_server_name"
-		staticCredentialStoreTlsSkipVerifyKey            = "tls_skip_verify"
-		staticCredentialStoreTokenKey                    = "token"
-		staticCredentialStoreTokenHmacKey                = "token_hmac"
-		staticCredentialStoreClientCertificateKey        = "client_certificate"
-		staticCredentialStoreClientCertificateKeyKey     = "client_certificate_key"
-		staticCredentialStoreClientCertificateKeyHmacKey = "client_certificate_key_hmac" */
-	staticCredentialStoreType = "static"
-)
-
-/*
-var staticCredentialStoreAttrs = []string{
-	staticCredentialStoreAddressKey,
-	staticCredentialStoreNamespaceKey,
-	staticCredentialStoreCaCertKey,
-	staticCredentialStoreTlsServerNameKey,
-	staticCredentialStoreTlsSkipVerifyKey,
-	staticCredentialStoreClientCertificateKey,
-} */
+const staticCredentialStoreType = "static"
 
 func resourceStaticCredentialStore() *schema.Resource {
 	return &schema.Resource{
@@ -82,44 +60,6 @@ func setFromStaticCredentialStoreResponseMap(d *schema.ResourceData, raw map[str
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
 		return err
 	}
-
-	/* if attrsVal, ok := raw["attributes"]; ok {
-		attrs := attrsVal.(map[string]interface{})
-		for _, v := range staticCredentialStoreAttrs {
-			if err := d.Set(v, attrs[v]); err != nil {
-				return err
-			}
-		}
-
-		stateTokenHmac := d.Get(staticCredentialStoreTokenHmacKey)
-		boundaryTokenHmac := attrs[staticCredentialStoreTokenHmacKey].(string)
-		if stateTokenHmac.(string) != boundaryTokenHmac && fromRead {
-			// TokenHmac has changed in Boundary, therefore the token has changed.
-			// Update token value to force tf to attempt update.
-			if err := d.Set(staticCredentialStoreTokenKey, "(changed in Boundary)"); err != nil {
-				return err
-			}
-		}
-		if err := d.Set(staticCredentialStoreTokenHmacKey, boundaryTokenHmac); err != nil {
-			return err
-		}
-
-		stateClientKeyHmac := d.Get(staticCredentialStoreClientCertificateKeyHmacKey)
-		var boundaryClientKeyHmac string
-		if v, ok := attrs[staticCredentialStoreClientCertificateKeyHmacKey]; ok {
-			boundaryClientKeyHmac = v.(string)
-		}
-		if stateClientKeyHmac.(string) != boundaryClientKeyHmac && fromRead {
-			// ClientKeyHmac has changed in Boundary, therefore the ClientKey has changed.
-			// Update ClientKey value to force tf to attempt update.
-			if err := d.Set(staticCredentialStoreClientCertificateKeyKey, "(changed in Boundary)"); err != nil {
-				return err
-			}
-		}
-		if err := d.Set(staticCredentialStoreClientCertificateKeyHmacKey, boundaryClientKeyHmac); err != nil {
-			return err
-		}
-	} */
 
 	d.SetId(raw["id"].(string))
 
