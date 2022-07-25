@@ -12,7 +12,7 @@ import (
 
 const staticCredentialStoreType = "static"
 
-func resourceStaticCredentialStore() *schema.Resource {
+func resourceCredentialStoreStatic() *schema.Resource {
 	return &schema.Resource{
 		Description: "The static credential store resource allows you to configure a Boundary static credential store.",
 

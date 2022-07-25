@@ -102,7 +102,7 @@ func staticCredentialStoreExternalUpdate(t *testing.T, testProvider *schema.Prov
 		t.Fatal(fmt.Errorf("got an error reading %q: %w", storeId, err))
 	}
 
-	// update Vault server to existing store
+	// update credential store options
 	var opts []credentialstores.Option
 	opts = append(opts, credentialstores.WithDescription("this is an updated description, my guy"))
 
