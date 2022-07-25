@@ -80,7 +80,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 				// update again but apply a preConfig to externally update resource
 				// TODO: Boundary currently causes an error on moving back to a previously
 				// used token, for now verify that a plan only step had changes
-				PreConfig:          func() { externalUpdate(t, provider) },
+				PreConfig:          func() { staticCredentialStoreExternalUpdate(t, provider) },
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 				Config:             testConfig(url, fooOrg, firstProjectFoo, resUpdate),
@@ -88,6 +88,28 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 			importStep(staticCredStoreResc),
 		},
 	})
+}
+
+func staticCredentialStoreExternalUpdate(t *testing.T, testProvider *schema.Provider) {
+	if storeId == "" {
+		t.Fatal("storeId must be set before testing an external update")
+	}
+
+	md := testProvider.Meta().(*metaData)
+	c := credentialstores.NewClient(md.client)
+	cr, err := c.Read(context.Background(), storeId)
+	if err != nil {
+		t.Fatal(fmt.Errorf("got an error reading %q: %w", storeId, err))
+	}
+
+	// update Vault server to existing store
+	var opts []credentialstores.Option
+	opts = append(opts, credentialstores.WithDescription("this is an updated description, my guy"))
+
+	_, err = c.Update(context.Background(), cr.Item.Id, cr.Item.Version, opts...)
+	if err != nil {
+		t.Fatal(fmt.Errorf("got an error updating %q: %w", cr.Item.Id, err))
+	}
 }
 
 func testAccCheckCredentialStoreStaticResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
