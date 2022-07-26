@@ -12,8 +12,8 @@ import (
 
 func resourceAccount() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "Deprecated: use `resource_account_password` instead.",
-		Description:        "Deprecated: use `resource_account_password` instead.",
+		DeprecationMessage: "Deprecated: use the `boundary_account_password` resource instead.",
+		Description:        "Deprecated: use the `boundary_account_password` resource instead.",
 
 		CreateContext: resourceAccountCreate,
 		ReadContext:   resourceAccountRead,
