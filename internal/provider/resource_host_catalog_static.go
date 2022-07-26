@@ -16,8 +16,8 @@ const (
 
 func resourceHostCatalog() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "Deprecated: use `resource_host_catalog_static` instead.",
-		Description:        "Deprecated: use `resource_host_catalog_static` instead.",
+		DeprecationMessage: "Deprecated: use the `boundary_host_catalog_static` resource instead.",
+		Description:        "Deprecated: use the `boundary_host_catalog_static` resource instead.",
 
 		CreateContext: resourceHostCatalogStaticCreate(true),
 		ReadContext:   resourceHostCatalogStaticRead(true),
