@@ -17,8 +17,8 @@ const (
 
 func resourceHostSet() *schema.Resource {
 	return &schema.Resource{
-		DeprecationMessage: "Deprecated: use `resource_host_set_static` instead.",
-		Description:        "Deprecated: use `resource_host_set_static` instead.",
+		DeprecationMessage: "Deprecated: use the `boundary_host_set_static` resource instead.",
+		Description:        "Deprecated: use the `boundary_host_set_static` resource instead.",
 
 		CreateContext: resourceHostSetStaticCreate,
 		ReadContext:   resourceHostSetStaticRead,
