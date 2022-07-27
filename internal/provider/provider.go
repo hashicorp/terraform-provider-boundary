@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/go-secure-stdlib/pluginutil/v2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-boundary/plugins/kms"
+	kms_plugin_assets "github.com/hashicorp/terraform-provider-boundary/plugins/kms"
 )
 
 func init() {
@@ -70,6 +70,7 @@ func New() *schema.Provider {
 			"boundary_auth_method_oidc":         resourceAuthMethodOidc(),
 			"boundary_credential_library_vault": resourceCredentialLibraryVault(),
 			"boundary_credential_store_vault":   resourceCredentialStoreVault(),
+			"boundary_credential_store_static":  resourceCredentialStoreStatic(),
 			"boundary_managed_group":            resourceManagedGroup(),
 			"boundary_group":                    resourceGroup(),
 			"boundary_host":                     resourceHost(),
