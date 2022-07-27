@@ -42,7 +42,6 @@ resource "boundary_scope" "proj1" {
 	scope_id    = boundary_scope.org1.id
 	description = "foo"
 	depends_on = [boundary_role.org1_admin]
-	auto_create_admin_role = true // this is necessary for creating static credential store. without it, boundary returns a 403 on creation
 }
 
 resource "boundary_role" "proj1_admin" {
@@ -105,7 +104,7 @@ func TestAccScopeCreation(t *testing.T) {
 				),
 			},
 			importStep("boundary_scope.org1"),
-			importStep("boundary_scope.proj1", "auto_create_admin_role"),
+			importStep("boundary_scope.proj1"),
 			// Updates the first project to have description bar
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
@@ -115,7 +114,7 @@ func TestAccScopeCreation(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_scope.proj2", DescriptionKey, "project2"),
 				),
 			},
-			importStep("boundary_scope.proj1", "auto_create_admin_role"),
+			importStep("boundary_scope.proj1"),
 			// Remove second project
 			{
 				Config: testConfig(url, fooOrg, firstProjectBar),
@@ -124,7 +123,7 @@ func TestAccScopeCreation(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
 				),
 			},
-			importStep("boundary_scope.proj1", "auto_create_admin_role"),
+			importStep("boundary_scope.proj1"),
 		},
 	})
 }

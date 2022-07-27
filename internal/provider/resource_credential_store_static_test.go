@@ -28,6 +28,7 @@ resource "boundary_credential_store_static" "example" {
 	name  = "%s"
 	description = "%s"
 	scope_id = boundary_scope.proj1.id
+	depends_on = [boundary_role.proj1_admin]
 }`, name,
 		description)
 }
