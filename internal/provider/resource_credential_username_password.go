@@ -14,11 +14,12 @@ const (
 	credentialUsernamePasswordUsernameKey     = "username"
 	credentialUsernamePasswordPasswordKey     = "password"
 	credentialUsernamePasswordPasswordHmacKey = "password_hmac"
+	credentialUsernamePasswordCredentialType  = "username_password"
 )
 
 func resourceCredentialUsernamePassword() *schema.Resource {
 	return &schema.Resource{
-		Description: "The credential store for Vault resource allows you to configure a Boundary credential store for Vault.",
+		Description: "The username/password credential resource allows you to configure a credential using a username and password pair.",
 
 		CreateContext: resourceCredentialUsernamePasswordCreate,
 		ReadContext:   resourceCredentialUsernamePasswordRead,
@@ -124,25 +125,25 @@ func resourceCredentialUsernamePasswordCreate(ctx context.Context, d *schema.Res
 		opts = append(opts, credentials.WithUsernamePasswordCredentialPassword(v.(string)))
 	}
 
-	var scope string
-	gotScope, ok := d.GetOk(ScopeIdKey)
+	var credential_store_id string
+	retrievedStoreId, ok := d.GetOk(credentialStoreIdKey)
 	if ok {
-		scope = gotScope.(string)
+		credential_store_id = retrievedStoreId.(string)
 	} else {
-		return diag.Errorf("no scope is set")
+		return diag.Errorf("credential store id is unset")
 	}
 
 	client := credentials.NewClient(md.client)
-	cr, err := client.Create(ctx, credentialStoreType, scope, opts...)
+	cr, err := client.Create(ctx, credentialUsernamePasswordCredentialType, credential_store_id, opts...)
 	if err != nil {
-		return diag.Errorf("error creating credential store: %v", err)
+		return diag.Errorf("error creating credential: %v", err)
 	}
 	if cr == nil {
-		return diag.Errorf("nil credential store after create")
+		return diag.Errorf("nil credential after create")
 	}
 
 	if err := setFromCredentialUsernamePasswordResponseMap(d, cr.GetResponse().Map, false); err != nil {
-		return diag.Errorf("error generating credential store from response map: %v", err)
+		return diag.Errorf("error generating credential from response map: %v", err)
 	}
 
 	return nil
@@ -158,14 +159,14 @@ func resourceCredentialUsernamePasswordRead(ctx context.Context, d *schema.Resou
 			d.SetId("")
 			return nil
 		}
-		return diag.Errorf("error reading credential store: %v", err)
+		return diag.Errorf("error reading credential: %v", err)
 	}
 	if cr == nil {
-		return diag.Errorf("credential store nil after read")
+		return diag.Errorf("credential nil after read")
 	}
 
 	if err := setFromCredentialUsernamePasswordResponseMap(d, cr.GetResponse().Map, true); err != nil {
-		return diag.Errorf("error generating credential store from response map: %v", err)
+		return diag.Errorf("error generating credential from response map: %v", err)
 	}
 
 	return nil
@@ -195,14 +196,14 @@ func resourceCredentialUsernamePasswordUpdate(ctx context.Context, d *schema.Res
 	if d.HasChange(credentialUsernamePasswordUsernameKey) {
 		usernameVal, ok := d.GetOk(credentialUsernamePasswordUsernameKey)
 		if ok {
-			opts = append(opts, credentials.WithDescription(usernameVal.(string)))
+			opts = append(opts, credentials.WithUsernamePasswordCredentialUsername(usernameVal.(string)))
 		}
 	}
 
 	if d.HasChange(credentialUsernamePasswordPasswordKey) {
 		passwordVal, ok := d.GetOk(credentialUsernamePasswordPasswordKey)
 		if ok {
-			opts = append(opts, credentials.WithDescription(passwordVal.(string)))
+			opts = append(opts, credentials.WithUsernamePasswordCredentialPassword(passwordVal.(string)))
 		}
 	}
 
@@ -230,7 +231,7 @@ func resourceCredentialUsernamePasswordDelete(ctx context.Context, d *schema.Res
 
 	_, err := client.Delete(ctx, d.Id())
 	if err != nil {
-		return diag.Errorf("error deleting credential store: %v", err)
+		return diag.Errorf("error deleting credential: %v", err)
 	}
 
 	return nil
