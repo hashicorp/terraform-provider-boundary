@@ -71,7 +71,6 @@ func resourceCredentialUsernamePassword() *schema.Resource {
 }
 
 func setFromCredentialUsernamePasswordResponseMap(d *schema.ResourceData, raw map[string]interface{}, fromRead bool) error {
-	// TODO: this needs to be updated for username/password fields
 	if err := d.Set(NameKey, raw[NameKey]); err != nil {
 		return err
 	}
@@ -83,7 +82,6 @@ func setFromCredentialUsernamePasswordResponseMap(d *schema.ResourceData, raw ma
 	}
 
 	if attrsVal, ok := raw["attributes"]; ok {
-		// is username in attributes or in raw?
 		attrs := attrsVal.(map[string]interface{})
 		if err := d.Set(credentialUsernamePasswordUsernameKey, attrs[credentialUsernamePasswordUsernameKey]); err != nil {
 			return err
@@ -92,7 +90,7 @@ func setFromCredentialUsernamePasswordResponseMap(d *schema.ResourceData, raw ma
 		statePasswordHmac := d.Get(credentialUsernamePasswordPasswordHmacKey)
 		boundaryPasswordHmac := attrs[credentialUsernamePasswordPasswordHmacKey].(string)
 		if statePasswordHmac.(string) != boundaryPasswordHmac && fromRead {
-			// PasswordHmac has changed in Boundary, therefore the token has changed.
+			// PasswordHmac has changed in Boundary, therefore the password has changed.
 			// Update password value to force tf to attempt update.
 			if err := d.Set(credentialUsernamePasswordPasswordKey, "(changed in Boundary)"); err != nil {
 				return err
@@ -125,16 +123,16 @@ func resourceCredentialUsernamePasswordCreate(ctx context.Context, d *schema.Res
 		opts = append(opts, credentials.WithUsernamePasswordCredentialPassword(v.(string)))
 	}
 
-	var credential_store_id string
+	var credentialStoreId string
 	retrievedStoreId, ok := d.GetOk(credentialStoreIdKey)
 	if ok {
-		credential_store_id = retrievedStoreId.(string)
+		credentialStoreId = retrievedStoreId.(string)
 	} else {
 		return diag.Errorf("credential store id is unset")
 	}
 
 	client := credentials.NewClient(md.client)
-	cr, err := client.Create(ctx, credentialUsernamePasswordCredentialType, credential_store_id, opts...)
+	cr, err := client.Create(ctx, credentialUsernamePasswordCredentialType, credentialStoreId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating credential: %v", err)
 	}
