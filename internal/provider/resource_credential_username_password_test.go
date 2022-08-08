@@ -2,25 +2,16 @@ package provider
 
 import (
 	"context"
-	"crypto/ed25519"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"net/http"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentials"
 	"github.com/hashicorp/boundary/testing/controller"
-	wrapping "github.com/hashicorp/go-kms-wrapping/v2"
-	"github.com/hashicorp/go-kms-wrapping/v2/aead"
-	"github.com/hashicorp/go-kms-wrapping/v2/extras/multi"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"golang.org/x/crypto/hkdf"
 )
 
 const (
@@ -86,7 +77,7 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordUsernameKey, usernamePasswordCredUsername),
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey, usernamePasswordCredPassword),
 
-					testAccCheckCredentialStoreUsernamePasswordHmac(provider, tc, usernamePasswordCredPassword),
+					testAccCheckCredentialStoreUsernamePasswordHmac(provider),
 					testAccCheckCredentialUsernamePasswordResourceExists(provider, usernamePasswordCredResc),
 				),
 			},
@@ -100,7 +91,7 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordUsernameKey, usernamePasswordCredUsername+usernamePasswordCredUpdate),
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey, usernamePasswordCredPassword+usernamePasswordCredUpdate),
 
-					testAccCheckCredentialStoreUsernamePasswordHmac(provider, tc, usernamePasswordCredPassword+usernamePasswordCredUpdate),
+					testAccCheckCredentialStoreUsernamePasswordHmac(provider),
 					testAccCheckCredentialUsernamePasswordResourceExists(provider, usernamePasswordCredResc),
 				),
 			},
@@ -195,102 +186,18 @@ func testAccCheckCredentialUsernamePasswordResourceDestroy(t *testing.T, testPro
 	}
 }
 
-func testAccCheckCredentialStoreUsernamePasswordHmac(testProvider *schema.Provider, tc *controller.TestController, password string) resource.TestCheckFunc {
+func testAccCheckCredentialStoreUsernamePasswordHmac(testProvider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		sRs, ok := s.RootModule().Resources[staticCredStoreResc]
-		if !ok {
-			return fmt.Errorf("not found: %s", staticCredStoreResc)
-		}
-
-		upRs, ok := s.RootModule().Resources[usernamePasswordCredResc]
+		rs, ok := s.RootModule().Resources[usernamePasswordCredResc]
 		if !ok {
 			return fmt.Errorf("not found: %s", usernamePasswordCredResc)
 		}
 
-		databaseWrapper, err := tc.Kms().GetWrapper(context.Background(), sRs.Primary.Attributes["scope_id"], 1)
-		if err != nil {
-			return err
-		}
-		hmac, err := HmacSha256(context.Background(), []byte(password), databaseWrapper, []byte(sRs.Primary.Attributes["id"]), nil)
-		if err != nil {
-			return err
-		}
-		computed := upRs.Primary.Attributes["password_hmac"]
-		if hmac != computed {
-			return fmt.Errorf("HMACs do not match. expected %q, got %q", hmac, computed)
+		computed := rs.Primary.Attributes["password_hmac"]
+		if len(computed) != 43 {
+			return fmt.Errorf("Computed password hmac not the expected length of 43 characters. hmac: %q", computed)
 		}
 
 		return nil
 	}
-}
-
-// HmacSha256 the provided data. Supports WithPrefix, WithEd25519 and WithPrk
-// options. WithEd25519 is a "legacy" way to complete this operation and should
-// not be used in new operations unless backward compatibility is needed. The
-// WithPrefix option will prepend the prefix to the hmac-sha256 value.
-func HmacSha256(ctx context.Context, data []byte, cipher wrapping.Wrapper, salt, info []byte) (string, error) {
-	const op = "crypto.HmacSha256"
-	var key [32]byte
-	reader, err := NewDerivedReader(ctx, cipher, 32, salt, info)
-	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-	edKey, _, err := ed25519.GenerateKey(reader)
-	if err != nil {
-		return "", fmt.Errorf("%s: unable to generate derived key", op)
-	}
-	n := copy(key[:], edKey)
-	if n != 32 {
-		return "", fmt.Errorf("%s: expected to copy 32 bytes and got: %d", op, n)
-	}
-
-	mac := hmac.New(sha256.New, key[:])
-	_, _ = mac.Write(data)
-	hmac := mac.Sum(nil)
-
-	return base64.RawURLEncoding.EncodeToString(hmac), nil
-}
-
-// DerivedReader returns a reader from which keys can be read, using the
-// given wrapper, reader length limit, salt and context info. Salt and info can
-// be nil.
-//
-// Example:
-//	reader, _ := NewDerivedReader(wrapper, userId, jobId)
-// 	key := ed25519.GenerateKey(reader)
-func NewDerivedReader(ctx context.Context, wrapper wrapping.Wrapper, lenLimit int64, salt, info []byte) (*io.LimitedReader, error) {
-	const op = "crypto.NewDerivedReader"
-	if wrapper == nil {
-		return nil, fmt.Errorf("%s: missing wrapper", op)
-	}
-	if lenLimit < 20 {
-		return nil, fmt.Errorf("%s: lenLimit must be >= 20", op)
-	}
-	var aeadWrapper *aead.Wrapper
-	switch w := wrapper.(type) {
-	case *multi.PooledWrapper:
-		raw := w.WrapperForKeyId("__base__")
-		var ok bool
-		if aeadWrapper, ok = raw.(*aead.Wrapper); !ok {
-			return nil, fmt.Errorf("%s: unexpected wrapper type from multiwrapper base", op)
-		}
-	case *aead.Wrapper:
-		aeadWrapper = w
-	default:
-		return nil, fmt.Errorf("%s: unknown wrapper type", op)
-	}
-
-	keyBytes, err := aeadWrapper.KeyBytes(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("%s: error reading aead key bytes: %w", op, err)
-	}
-	if keyBytes == nil {
-		return nil, fmt.Errorf("%s: aead wrapper missing bytes", op)
-	}
-
-	reader := hkdf.New(sha256.New, keyBytes, salt, info)
-	return &io.LimitedReader{
-		R: reader,
-		N: lenLimit,
-	}, nil
 }
