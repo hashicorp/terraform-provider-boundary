@@ -3,12 +3,12 @@
 page_title: "boundary_host_catalog Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Deprecated: use resource_host_catalog_static instead.
+  Deprecated: use boundary_host_catalog_static instead.
 ---
 
 # boundary_host_catalog (Resource)
 
-Deprecated: use `resource_host_catalog_static` instead.
+Deprecated: use `boundary_host_catalog_static` instead.
 
 ## Example Usage
 

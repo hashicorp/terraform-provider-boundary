@@ -30,7 +30,7 @@ resource "boundary_scope" "project" {
 
 resource "boundary_credential_store_static" "example" {
   name        = "example_static_credential_store"
-  description = "My first sttatic credential store!"
+  description = "My first static credential store!"
   scope_id    = boundary_scope.project.id
 }
 ```

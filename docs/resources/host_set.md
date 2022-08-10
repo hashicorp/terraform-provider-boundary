@@ -3,12 +3,12 @@
 page_title: "boundary_host_set Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Deprecated: use resource_host_set_static instead.
+  Deprecated: use boundary_host_set_static instead.
 ---
 
 # boundary_host_set (Resource)
 
-Deprecated: use `resource_host_set_static` instead.
+Deprecated: use `boundary_host_set_static` instead.
 
 ## Example Usage
 
