@@ -3,12 +3,12 @@
 page_title: "boundary_account Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  Deprecated: use resource_account_password instead.
+  Deprecated: use boundary_account_password instead.
 ---
 
 # boundary_account (Resource)
 
-Deprecated: use `resource_account_password` instead.
+Deprecated: use `boundary_account_password` instead.
 
 
 
