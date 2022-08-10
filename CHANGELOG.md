@@ -1,3 +1,12 @@
+## 1.0.10 (August 10, 2022)
+
+### New and Improved
+
+* Adds support for static credential stores
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/236)).
+* Adds support for username password credentials 
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/242)).
+
 ## 1.0.9 (June 6, 2022)
 
 ### Bug Fixes
