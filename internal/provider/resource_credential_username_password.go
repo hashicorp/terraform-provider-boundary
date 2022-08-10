@@ -31,33 +31,33 @@ func resourceCredentialUsernamePassword() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			IDKey: {
-				Description: "The ID of this username and password pair.",
+				Description: "The ID of this username/password credential.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			NameKey: {
-				Description: "The name of this username and password pair. Defaults to the resource name.",
+				Description: "The name of this username/password credential. Defaults to the resource name.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			DescriptionKey: {
-				Description: "The description of this username and password pair.",
+				Description: "The description of this username/password credential.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
 			credentialStoreIdKey: {
-				Description: "The credential store in which to save this username and password pair.",
+				Description: "The credential store in which to save this username/password credential.",
 				Type:        schema.TypeString,
 				ForceNew:    true,
 				Required:    true,
 			},
 			credentialUsernamePasswordUsernameKey: {
-				Description: "The username of this username/password pairing.",
+				Description: "The username of this username/password credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
 			credentialUsernamePasswordPasswordKey: {
-				Description: "The password of this username/password pairing.",
+				Description: "The password of this username/password credential.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},

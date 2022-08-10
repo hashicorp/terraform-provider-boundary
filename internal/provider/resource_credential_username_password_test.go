@@ -104,12 +104,8 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
 			{
 				// update again but apply a preConfig to externally update resource
-				// TODO: Boundary currently causes an error on moving back to a previously
-				// used token, for now verify that a plan only step had changes
-				PreConfig:          func() { usernamePasswordCredExternalUpdate(t, provider) },
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: true,
-				Config:             testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				PreConfig: func() { usernamePasswordCredExternalUpdate(t, provider) },
+				Config:    testConfig(url, fooOrg, firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
 		},
