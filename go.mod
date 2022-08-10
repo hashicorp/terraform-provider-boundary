@@ -3,17 +3,17 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.18
 
 require (
-	github.com/hashicorp/boundary v0.9.1
-	github.com/hashicorp/boundary/api v0.0.25
-	github.com/hashicorp/boundary/sdk v0.0.17
+	github.com/hashicorp/boundary v0.10.0
+	github.com/hashicorp/boundary/api v0.0.28
+	github.com/hashicorp/boundary/sdk v0.0.19
 	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
-	github.com/hashicorp/go-kms-wrapping/v2 v2.0.6-0.20220512190651-85bdcdd684e6
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.6-0.20220722192355-a843f53fa48d
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.4
-	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.6
+	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.1
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.19.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.20.0
 	github.com/kr/pretty v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.0
@@ -70,7 +70,7 @@ require (
 	github.com/hashicorp/go-dbw v0.0.0-20220412153211-c470aec9369f // indirect
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20220515130442-cac0b5ac133b // indirect
+	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20220711120347-32232bae6803 // indirect
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.4.4 // indirect
@@ -92,11 +92,11 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.13.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/nodeenrollment v0.1.4 // indirect
+	github.com/hashicorp/nodeenrollment v0.1.13 // indirect
 	github.com/hashicorp/terraform-exec v0.17.2 // indirect
 	github.com/hashicorp/terraform-json v0.14.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.12.0 // indirect
-	github.com/hashicorp/terraform-plugin-log v0.6.0 // indirect
+	github.com/hashicorp/terraform-plugin-log v0.7.0 // indirect
 	github.com/hashicorp/terraform-registry-address v0.0.0-20220623143253-7d51757b572c // indirect
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
 	github.com/hashicorp/vault/api v1.3.1 // indirect
