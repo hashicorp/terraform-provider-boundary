@@ -15,6 +15,7 @@ const (
 	credentialLibraryVaultHttpMethodKey      = "http_method"
 	credentialLibraryVaultHttpRequestBodyKey = "http_request_body"
 	credentialLibraryVaultPathKey            = "path"
+	credentialLibraryCredentialTypeKey       = "credential_type"
 )
 
 var libraryVaultAttrs = []string{
@@ -72,6 +73,11 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			credentialLibraryCredentialTypeKey: {
+				Description: "The type of credential the library generates.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -119,6 +125,9 @@ func resourceCredentialLibraryCreateVault(ctx context.Context, d *schema.Resourc
 	}
 	if v, ok := d.GetOk(credentialLibraryVaultPathKey); ok {
 		opts = append(opts, credentiallibraries.WithVaultCredentialLibraryPath(v.(string)))
+	}
+	if v, ok := d.GetOk(credentialLibraryCredentialTypeKey); ok {
+		opts = append(opts, credentiallibraries.WithCredentialType(v.(string)))
 	}
 
 	var credentialStoreId string

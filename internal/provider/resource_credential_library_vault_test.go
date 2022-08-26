@@ -17,6 +17,7 @@ import (
 
 const (
 	vaultCredResc            = "boundary_credential_library_vault.example"
+	vaultCredTypedResc       = "boundary_credential_library_vault.typed_example"
 	vaultCredLibName         = "foo"
 	vaultCredLibDesc         = "the foo"
 	vaultCredLibPath         = "/foo/bar"
@@ -52,6 +53,19 @@ resource "boundary_credential_library_vault" "example" {
 	vaultCredLibMethodPost,
 	vaultCredLibRequestBody)
 
+var vaultTypedCredLibResource = fmt.Sprintf(`
+resource "boundary_credential_library_vault" "typed_example" {
+	name                = "%s"
+	description         = "%s"
+	credential_store_id = boundary_credential_store_vault.example.id
+  	path                = "%s"
+  	http_method         = "%s"
+	credential_type     = "ssh_private_key"
+}`, vaultCredLibName,
+	vaultCredLibDesc,
+	vaultCredLibPath,
+	vaultCredLibMethodGet)
+
 func TestAccCredentialLibraryVault(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
@@ -69,8 +83,9 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialLibraryVaultResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -98,6 +113,22 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredResc, credentialLibraryVaultHttpRequestBodyKey, vaultCredLibRequestBody),
 
 					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredResc),
+				),
+			},
+			importStep(vaultCredResc),
+
+			{
+				// create typed credential library, note credential type is immutable so no need for update test
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultTypedCredLibResource),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(vaultCredTypedResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredTypedResc, DescriptionKey, vaultCredLibDesc),
+					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryVaultPathKey, vaultCredLibPath),
+					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
+					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryVaultHttpRequestBodyKey, ""),
+					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryCredentialTypeKey, "ssh_private_key"),
+
+					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredTypedResc),
 				),
 			},
 			importStep(vaultCredResc),
