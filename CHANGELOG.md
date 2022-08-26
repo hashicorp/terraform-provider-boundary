@@ -1,3 +1,16 @@
+# Boundary Terraform Provider CHANGELOG
+
+Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
+
+## Next
+
+### New and Improved
+
+* Add support for SSH private key credentials
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/257)).
+* Add support for credential type in Vault libraries
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/257)).
+
 ## 1.0.10 (August 10, 2022)
 
 ### New and Improved
