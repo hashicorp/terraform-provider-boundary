@@ -24,6 +24,6 @@ resource "boundary_credential_ssh_private_key" "example" {
   description            = "My first ssh private key credential!"
   credential_store_id    = boundary_credential_store_static.example.id
   username               = "my-username"
-  private_key            = file("~/.ssh/id_rsa")  # change to valid SSH Private Key
-  private_key_passphrase = "optional-passphrase"  # change to the passphrase of the Private Key if required
+  private_key            = file("~/.ssh/id_rsa") # change to valid SSH Private Key
+  private_key_passphrase = "optional-passphrase" # change to the passphrase of the Private Key if required
 }
