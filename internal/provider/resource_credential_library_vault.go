@@ -16,6 +16,7 @@ const (
 	credentialLibraryVaultHttpMethodKey      = "http_method"
 	credentialLibraryVaultHttpRequestBodyKey = "http_request_body"
 	credentialLibraryVaultPathKey            = "path"
+	credentialLibraryVaultCredentialTypeKey  = "credential_type"
 )
 
 var libraryVaultAttrs = []string{
@@ -73,6 +74,11 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			credentialLibraryVaultCredentialTypeKey: {
+				Description: `The type of credential this library will issue. Current options are "ssh_private_key" and "username_password". If unset this defaults to Unspecified.`,
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -128,6 +134,19 @@ func resourceCredentialLibraryCreateVault(ctx context.Context, d *schema.Resourc
 		credentialStoreId = cid.(string)
 	} else {
 		return diag.Errorf("no credential store ID is set")
+	}
+
+	var credentialType string
+	ct, ok := d.GetOk(credentialLibraryVaultCredentialTypeKey)
+	if ok {
+		credentialType = ct.(string)
+		if credentialType == "username_password" || credentialType == "ssh_private_key" {
+			opts = append(opts, credentiallibraries.WithCredentialType(credentialType))
+		} else {
+			return diag.Errorf(`credential type must be either "ssh_private_key" or "username_password"`)
+		}
+	} else {
+		opts = append(opts, credentiallibraries.DefaultCredentialType())
 	}
 
 	client := credentiallibraries.NewClient(md.client)
