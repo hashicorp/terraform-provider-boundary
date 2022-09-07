@@ -83,10 +83,11 @@ func resourceTarget() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			targetBrokeredCredentialSourceIdsKey: {
-				Description: "A list of brokered credential source ID's.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description:   "A list of brokered credential source ID's.",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"application_credential_source_ids"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			targetInjectedAppCredentialSourceIdsKey: {
 				Description: "A list of injected application credential source ID's.",
