@@ -2,6 +2,13 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## Next
+
+### Deprecations/Changes
+
+* Deprecate `application_credential_source_ids` of the `target` resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/260)).
+
 ## 1.0.11 (August 26, 2022)
 
 ### New and Improved

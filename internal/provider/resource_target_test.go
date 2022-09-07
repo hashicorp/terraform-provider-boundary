@@ -89,7 +89,7 @@ resource "boundary_target" "foo" {
 	host_source_ids = [
 		boundary_host_set.foo.id
 	]
-	application_credential_source_ids = [
+	brokered_credential_source_ids = [
 		boundary_credential_library_vault.foo.id
 	]
 	default_port = 22
@@ -108,7 +108,7 @@ resource "boundary_target" "foo" {
 	host_source_ids = [
 		boundary_host_set.bar.id
 	]
-	application_credential_source_ids = [
+	brokered_credential_source_ids = [
 		boundary_credential_library_vault.bar.id
 	]
 	default_port = 80
@@ -166,7 +166,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "foo"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
-					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
+					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -181,7 +181,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
-					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
+					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -196,7 +196,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", nil),
-					testAccCheckTargetResourceAppCredSources(provider, "boundary_target.foo", nil),
+					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", nil),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -261,7 +261,7 @@ func testAccCheckTargetResourceHostSource(testProvider *schema.Provider, name st
 	}
 }
 
-func testAccCheckTargetResourceAppCredSources(testProvider *schema.Provider, name string, credSources []string) resource.TestCheckFunc {
+func testAccCheckTargetResourceBrokeredCredSources(testProvider *schema.Provider, name string, credSources []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -298,11 +298,11 @@ func testAccCheckTargetResourceAppCredSources(testProvider *schema.Provider, nam
 			return fmt.Errorf("got an error when reading target %q: %w", id, err)
 		}
 
-		if len(t.Item.ApplicationCredentialSourceIds) != len(credSourceIDs) {
-			return fmt.Errorf("tf state and boundary have different number of application credential sources")
+		if len(t.Item.BrokeredCredentialSourceIds) != len(credSourceIDs) {
+			return fmt.Errorf("tf state and boundary have different number of brokered credential sources")
 		}
 
-		for _, stateCredSourceId := range t.Item.ApplicationCredentialSourceIds {
+		for _, stateCredSourceId := range t.Item.BrokeredCredentialSourceIds {
 			ok := false
 			for _, gotCredSourceID := range credSourceIDs {
 				if gotCredSourceID == stateCredSourceId {
@@ -310,7 +310,7 @@ func testAccCheckTargetResourceAppCredSources(testProvider *schema.Provider, nam
 				}
 			}
 			if !ok {
-				return fmt.Errorf("application credential source id in state not set in boundary: %s", stateCredSourceId)
+				return fmt.Errorf("brokered credential source id in state not set in boundary: %s", stateCredSourceId)
 			}
 		}
 
