@@ -13,7 +13,8 @@ import (
 
 const (
 	targetHostSourceIdsKey                  = "host_source_ids"
-	targetApplicationCredentialSourceIdsKey = "application_credential_source_ids"
+	targetBrokeredCredentialSourceIdsKey    = "brokered_credential_source_ids"
+	targetInjectedAppCredentialSourceIdsKey = "injected_application_credential_source_ids"
 	targetDefaultPortKey                    = "default_port"
 	targetSessionMaxSecondsKey              = "session_max_seconds"
 	targetSessionConnectionLimitKey         = "session_connection_limit"
@@ -73,8 +74,23 @@ func resourceTarget() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			targetApplicationCredentialSourceIdsKey: {
-				Description: "A list of application credential source ID's.",
+			"application_credential_source_ids": {
+				Description:   "A list of application credential source ID's.",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Deprecated:    "Please use 'brokered_credential_source_ids' instead",
+				ConflictsWith: []string{targetBrokeredCredentialSourceIdsKey},
+				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			targetBrokeredCredentialSourceIdsKey: {
+				Description:   "A list of brokered credential source ID's.",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"application_credential_source_ids"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			targetInjectedAppCredentialSourceIdsKey: {
+				Description: "A list of injected application credential source ID's.",
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -114,7 +130,17 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	if err := d.Set(targetHostSourceIdsKey, raw["host_source_ids"]); err != nil {
 		return err
 	}
-	if err := d.Set(targetApplicationCredentialSourceIdsKey, raw["application_credential_source_ids"]); err != nil {
+	// TODO: remove when fully deprecating 'application_credential_source_ids'
+	if _, ok := d.GetOk("application_credential_source_ids"); ok {
+		if err := d.Set("application_credential_source_ids", raw["application_credential_source_ids"]); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set(targetBrokeredCredentialSourceIdsKey, raw["brokered_credential_source_ids"]); err != nil {
+			return err
+		}
+	}
+	if err := d.Set(targetInjectedAppCredentialSourceIdsKey, raw["injected_application_credential_source_ids"]); err != nil {
 		return err
 	}
 	if err := d.Set(targetSessionMaxSecondsKey, raw["session_max_seconds"]); err != nil {
@@ -215,12 +241,28 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	var credentialSourceIds []string
-	if credentialSourceIdsVal, ok := d.GetOk(targetApplicationCredentialSourceIdsKey); ok {
+	var brokeredCreds []string
+	if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
 		list := credentialSourceIdsVal.(*schema.Set).List()
-		credentialSourceIds = make([]string, 0, len(list))
+		brokeredCreds = make([]string, 0, len(list))
 		for _, i := range list {
-			credentialSourceIds = append(credentialSourceIds, i.(string))
+			brokeredCreds = append(brokeredCreds, i.(string))
+		}
+	} else if credentialSourceIdsVal, ok := d.GetOk("application_credential_source_ids"); ok {
+		// TODO: remove when fully deprecating 'application_credential_source_ids'
+		list := credentialSourceIdsVal.(*schema.Set).List()
+		brokeredCreds = make([]string, 0, len(list))
+		for _, i := range list {
+			brokeredCreds = append(brokeredCreds, i.(string))
+		}
+	}
+
+	var injectedCreds []string
+	if credentialSourceIdsVal, ok := d.GetOk(targetInjectedAppCredentialSourceIdsKey); ok {
+		list := credentialSourceIdsVal.(*schema.Set).List()
+		injectedCreds = make([]string, 0, len(list))
+		for _, i := range list {
+			injectedCreds = append(injectedCreds, i.(string))
 		}
 	}
 
@@ -251,8 +293,15 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		version = tur.Item.Version
 	}
 
-	if credentialSourceIds != nil {
-		tur, err := tc.SetCredentialSources(ctx, tcr.Item.Id, version, targets.WithApplicationCredentialSourceIds(credentialSourceIds))
+	var credOpts []targets.Option
+	if brokeredCreds != nil {
+		credOpts = append(credOpts, targets.WithBrokeredCredentialSourceIds(brokeredCreds))
+	}
+	if injectedCreds != nil {
+		credOpts = append(credOpts, targets.WithInjectedApplicationCredentialSourceIds(injectedCreds))
+	}
+	if len(credOpts) > 0 {
+		tur, err := tc.SetCredentialSources(ctx, tcr.Item.Id, version, credOpts...)
 		if err != nil {
 			return diag.Errorf("error setting credential sources on target: %v", err)
 		}
@@ -430,9 +479,10 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// The above calls may not actually happen, so we use d.Id() and automatic
 	// versioning here
-	if d.HasChange(targetApplicationCredentialSourceIdsKey) {
+	// TODO: remove when fully deprecating 'application_credential_source_ids'
+	if d.HasChange("application_credential_source_ids") {
 		var credentialSourceIds []string
-		if credentialSourceIdsVal, ok := d.GetOk(targetApplicationCredentialSourceIdsKey); ok {
+		if credentialSourceIdsVal, ok := d.GetOk("application_credential_source_ids"); ok {
 			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
 			for _, credSourceId := range credSourceIds {
 				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
@@ -451,7 +501,59 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return diag.Errorf("error updating credential sources in target: %v", err)
 		}
-		if err := d.Set(targetApplicationCredentialSourceIdsKey, credentialSourceIds); err != nil {
+		if err := d.Set("application_credential_source_ids", credentialSourceIds); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange(targetBrokeredCredentialSourceIdsKey) {
+		var credentialSourceIds []string
+		if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
+			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
+			for _, credSourceId := range credSourceIds {
+				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
+			}
+		}
+
+		opts := []targets.Option{
+			targets.WithAutomaticVersioning(true),
+			targets.DefaultBrokeredCredentialSourceIds(),
+		}
+		if len(credentialSourceIds) > 0 {
+			opts = append(opts, targets.WithBrokeredCredentialSourceIds(credentialSourceIds))
+		}
+
+		_, err := tc.SetCredentialSources(ctx, d.Id(), 0, opts...)
+		if err != nil {
+			return diag.Errorf("error updating brokered credential sources in target: %v", err)
+		}
+		if err := d.Set(targetBrokeredCredentialSourceIdsKey, credentialSourceIds); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if d.HasChange(targetInjectedAppCredentialSourceIdsKey) {
+		var credentialSourceIds []string
+		if credentialSourceIdsVal, ok := d.GetOk(targetInjectedAppCredentialSourceIdsKey); ok {
+			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
+			for _, credSourceId := range credSourceIds {
+				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
+			}
+		}
+
+		opts := []targets.Option{
+			targets.WithAutomaticVersioning(true),
+			targets.DefaultInjectedApplicationCredentialSourceIds(),
+		}
+		if len(credentialSourceIds) > 0 {
+			opts = append(opts, targets.WithInjectedApplicationCredentialSourceIds(credentialSourceIds))
+		}
+
+		_, err := tc.SetCredentialSources(ctx, d.Id(), 0, opts...)
+		if err != nil {
+			return diag.Errorf("error updating injected application credential sources in target: %v", err)
+		}
+		if err := d.Set(targetInjectedAppCredentialSourceIdsKey, credentialSourceIds); err != nil {
 			return diag.FromErr(err)
 		}
 	}

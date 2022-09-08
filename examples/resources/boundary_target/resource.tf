@@ -77,7 +77,7 @@ resource "boundary_target" "foo" {
   host_source_ids = [
     boundary_host_set.foo.id
   ]
-  application_credential_source_ids = [
+  brokered_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
 }

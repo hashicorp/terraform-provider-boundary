@@ -92,7 +92,7 @@ resource "boundary_target" "foo" {
   host_source_ids = [
     boundary_host_set.foo.id
   ]
-  application_credential_source_ids = [
+  brokered_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
 }
@@ -108,10 +108,12 @@ resource "boundary_target" "foo" {
 
 ### Optional
 
-- `application_credential_source_ids` (Set of String) A list of application credential source ID's.
+- `application_credential_source_ids` (Set of String, Deprecated) A list of application credential source ID's.
+- `brokered_credential_source_ids` (Set of String) A list of brokered credential source ID's.
 - `default_port` (Number) The default port for this target.
 - `description` (String) The target description.
 - `host_source_ids` (Set of String) A list of host source ID's.
+- `injected_application_credential_source_ids` (Set of String) A list of injected application credential source ID's.
 - `name` (String) The target name. Defaults to the resource name.
 - `session_connection_limit` (Number)
 - `session_max_seconds` (Number)
