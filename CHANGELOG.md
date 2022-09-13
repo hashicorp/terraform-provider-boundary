@@ -2,7 +2,12 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## Next
+## 1.0.12 (September 13, 2022)
+
+### New and Improved
+
+* Add support for SSH targets
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/264)).
 
 ### Deprecations/Changes
 
