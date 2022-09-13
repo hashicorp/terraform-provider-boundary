@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-boundary
 
-go 1.18
+go 1.19
 
 require (
 	github.com/hashicorp/boundary v0.10.4
