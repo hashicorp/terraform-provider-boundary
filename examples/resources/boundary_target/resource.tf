@@ -32,6 +32,7 @@ resource "boundary_credential_library_vault" "foo" {
   credential_store_id = boundary_credential_store_vault.foo.id
   path                = "my/secret/foo" # change to Vault backend path
   http_method         = "GET"
+  credential_type     = "username_password"
 }
 
 resource "boundary_host_catalog" "foo" {
@@ -78,6 +79,20 @@ resource "boundary_target" "foo" {
     boundary_host_set.foo.id
   ]
   brokered_credential_source_ids = [
+    boundary_credential_library_vault.foo.id
+  ]
+}
+
+resource "boundary_target" "ssh_foo" {
+  name         = "ssh_foo"
+  description  = "Ssh target"
+  type         = "ssh"
+  default_port = "22"
+  scope_id     = boundary_scope.project.id
+  host_source_ids = [
+    boundary_host_set.foo.id
+  ]
+  injected_application_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
 }
