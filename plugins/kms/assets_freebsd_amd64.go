@@ -5,5 +5,6 @@ import (
 )
 
 // content is our static kms plugin content.
+//
 //go:embed assets/freebsd/amd64
 var content embed.FS
