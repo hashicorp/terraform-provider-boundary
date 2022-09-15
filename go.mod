@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.2
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.22.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/kr/pretty v0.3.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.0
@@ -55,7 +55,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
