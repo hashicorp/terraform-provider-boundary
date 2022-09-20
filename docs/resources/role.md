@@ -126,7 +126,6 @@ resource "boundary_role" "readonly" {
 
 ### Optional
 
-- `default_role` (Boolean) Indicates that the role containing this value is the default role (that is, has the id 'r_default'), which triggers some specialized behavior to allow it to be imported and managed.
 - `description` (String) The role description.
 - `grant_scope_id` (String)
 - `grant_strings` (Set of String) A list of stringified grants for the role.
