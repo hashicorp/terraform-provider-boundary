@@ -75,20 +75,11 @@ func resourceTarget() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			"application_credential_source_ids": {
-				Description:   "A list of application credential source ID's.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Deprecated:    "Please use 'brokered_credential_source_ids' instead",
-				ConflictsWith: []string{targetBrokeredCredentialSourceIdsKey},
-				Elem:          &schema.Schema{Type: schema.TypeString},
-			},
 			targetBrokeredCredentialSourceIdsKey: {
-				Description:   "A list of brokered credential source ID's.",
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"application_credential_source_ids"},
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Description: "A list of brokered credential source ID's.",
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			targetInjectedAppCredentialSourceIdsKey: {
 				Description: "A list of injected application credential source ID's.",
@@ -131,15 +122,8 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	if err := d.Set(targetHostSourceIdsKey, raw["host_source_ids"]); err != nil {
 		return err
 	}
-	// TODO: remove when fully deprecating 'application_credential_source_ids'
-	if _, ok := d.GetOk("application_credential_source_ids"); ok {
-		if err := d.Set("application_credential_source_ids", raw["application_credential_source_ids"]); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set(targetBrokeredCredentialSourceIdsKey, raw["brokered_credential_source_ids"]); err != nil {
-			return err
-		}
+	if err := d.Set(targetBrokeredCredentialSourceIdsKey, raw["brokered_credential_source_ids"]); err != nil {
+		return err
 	}
 	if err := d.Set(targetInjectedAppCredentialSourceIdsKey, raw["injected_application_credential_source_ids"]); err != nil {
 		return err
@@ -249,13 +233,6 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var brokeredCreds []string
 	if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
-		list := credentialSourceIdsVal.(*schema.Set).List()
-		brokeredCreds = make([]string, 0, len(list))
-		for _, i := range list {
-			brokeredCreds = append(brokeredCreds, i.(string))
-		}
-	} else if credentialSourceIdsVal, ok := d.GetOk("application_credential_source_ids"); ok {
-		// TODO: remove when fully deprecating 'application_credential_source_ids'
 		list := credentialSourceIdsVal.(*schema.Set).List()
 		brokeredCreds = make([]string, 0, len(list))
 		for _, i := range list {
@@ -510,19 +487,9 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// if any of the credential types are changed, then all credential ids must be gathered
 	// because the SetCredentialSources function will remove ids that are not present.
-	// TODO: remove when fully deprecating 'application_credential_source_ids'
-	if d.HasChange("application_credential_source_ids") || d.HasChange(targetBrokeredCredentialSourceIdsKey) || d.HasChange(targetInjectedAppCredentialSourceIdsKey) {
+	if d.HasChange(targetBrokeredCredentialSourceIdsKey) || d.HasChange(targetInjectedAppCredentialSourceIdsKey) {
 		credOpts := []targets.Option{
 			targets.WithAutomaticVersioning(true),
-		}
-
-		if credentialSourceIdsVal, ok := d.GetOk("application_credential_source_ids"); ok {
-			var credentialSourceIds []string
-			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
-			for _, credSourceId := range credSourceIds {
-				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
-			}
-			credOpts = append(credOpts, targets.WithBrokeredCredentialSourceIds(credentialSourceIds))
 		}
 
 		if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
@@ -548,7 +515,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error updating credential sources in target: %v", err)
 		}
 
-		if d.HasChange("application_credential_source_ids") || d.HasChange(targetBrokeredCredentialSourceIdsKey) {
+		if d.HasChange(targetBrokeredCredentialSourceIdsKey) {
 			if err := d.Set(targetBrokeredCredentialSourceIdsKey, result.Item.BrokeredCredentialSourceIds); err != nil {
 				return diag.FromErr(err)
 			}
