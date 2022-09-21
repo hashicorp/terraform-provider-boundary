@@ -47,7 +47,7 @@ resource "boundary_account_password" "jeff" {
 - `description` (String) The account description.
 - `login_name` (String) The login name for this account.
 - `name` (String) The account name. Defaults to the resource name.
-- `password` (String) The account password. Only set on create, changes will not be reflected when updating account.
+- `password` (String, Sensitive) The account password. Only set on create, changes will not be reflected when updating account.
 
 ### Read-Only
 
