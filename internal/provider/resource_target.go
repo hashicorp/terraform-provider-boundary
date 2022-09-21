@@ -522,7 +522,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			for _, credSourceId := range credSourceIds {
 				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
 			}
-			credOpts = append(credOpts, targets.WithApplicationCredentialSourceIds(credentialSourceIds))
+			credOpts = append(credOpts, targets.WithBrokeredCredentialSourceIds(credentialSourceIds))
 		}
 
 		if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
@@ -548,14 +548,16 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error updating credential sources in target: %v", err)
 		}
 
-		if err := d.Set("application_credential_source_ids", result.Item.ApplicationCredentialSourceIds); err != nil {
-			return diag.FromErr(err)
+		if d.HasChange("application_credential_source_ids") || d.HasChange(targetBrokeredCredentialSourceIdsKey) {
+			if err := d.Set(targetBrokeredCredentialSourceIdsKey, result.Item.BrokeredCredentialSourceIds); err != nil {
+				return diag.FromErr(err)
+			}
 		}
-		if err := d.Set(targetBrokeredCredentialSourceIdsKey, result.Item.BrokeredCredentialSourceIds); err != nil {
-			return diag.FromErr(err)
-		}
-		if err := d.Set(targetInjectedAppCredentialSourceIdsKey, result.Item.InjectedApplicationCredentialSourceIds); err != nil {
-			return diag.FromErr(err)
+
+		if d.HasChange(targetInjectedAppCredentialSourceIdsKey) {
+			if err := d.Set(targetInjectedAppCredentialSourceIdsKey, result.Item.InjectedApplicationCredentialSourceIds); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 
