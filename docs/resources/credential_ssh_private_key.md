@@ -50,14 +50,14 @@ resource "boundary_credential_ssh_private_key" "example" {
 ### Required
 
 - `credential_store_id` (String) ID of the credential store this credential belongs to.
-- `private_key` (String) The private key associated with the credential.
+- `private_key` (String, Sensitive) The private key associated with the credential.
 - `username` (String) The username associated with the credential.
 
 ### Optional
 
 - `description` (String) The description of the credential.
 - `name` (String) The name of the credential. Defaults to the resource name.
-- `private_key_passphrase` (String) The passphrase of the private key associated with the credential.
+- `private_key_passphrase` (String, Sensitive) The passphrase of the private key associated with the credential.
 
 ### Read-Only
 

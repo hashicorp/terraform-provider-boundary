@@ -60,6 +60,7 @@ func resourceCredentialUsernamePassword() *schema.Resource {
 				Description: "The password of this username/password credential.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 			},
 			credentialUsernamePasswordPasswordHmacKey: {
 				Description: "The password hmac.",

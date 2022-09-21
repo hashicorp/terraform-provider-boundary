@@ -27,7 +27,7 @@ The OIDC auth method resource allows you to configure a Boundary auth_method_oid
 - `callback_url` (String) The URL that should be provided to the IdP for callbacks.
 - `claims_scopes` (List of String) Claims scopes.
 - `client_id` (String) The client ID assigned to this auth method from the provider.
-- `client_secret` (String) The secret key assigned to this auth method from the provider. Once set, only the hash will be kept and the original value can be removed from configuration.
+- `client_secret` (String, Sensitive) The secret key assigned to this auth method from the provider. Once set, only the hash will be kept and the original value can be removed from configuration.
 - `client_secret_hmac` (String) The HMAC of the client secret returned by the Boundary controller, which is used for comparison after initial setting of the value.
 - `description` (String) The auth method description.
 - `disable_discovered_config_validation` (Boolean) Disables validation logic ensuring that the OIDC provider's information from its discovery endpoint matches the information here. The validation is only performed at create or update time.

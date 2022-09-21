@@ -99,6 +99,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Description: "The secret key assigned to this auth method from the provider. Once set, only the hash will be kept and the original value can be removed from configuration.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 			},
 			authmethodOidcIssuerKey: {
 				Description: "The issuer corresponding to the provider, which must match the issuer field in generated tokens.",

@@ -49,7 +49,7 @@ resource "boundary_credential_username_password" "example" {
 ### Required
 
 - `credential_store_id` (String) The credential store in which to save this username/password credential.
-- `password` (String) The password of this username/password credential.
+- `password` (String, Sensitive) The password of this username/password credential.
 - `username` (String) The username of this username/password credential.
 
 ### Optional

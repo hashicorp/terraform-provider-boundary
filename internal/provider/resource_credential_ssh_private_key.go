@@ -62,6 +62,7 @@ func resourceCredentialSshPrivateKey() *schema.Resource {
 				Description: "The private key associated with the credential.",
 				Type:        schema.TypeString,
 				Required:    true,
+				Sensitive:   true,
 			},
 			credentialSshPrivateKeyPrivateKeyHmacKey: {
 				Description: "The private key hmac.",
@@ -72,6 +73,7 @@ func resourceCredentialSshPrivateKey() *schema.Resource {
 				Description: "The passphrase of the private key associated with the credential.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 			},
 			credentialSshPrivateKeyPassphraseHmacKey: {
 				Description: "The private key passphrase hmac.",
