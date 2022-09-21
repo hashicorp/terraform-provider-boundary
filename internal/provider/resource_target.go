@@ -508,83 +508,53 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	// The above calls may not actually happen, so we use d.Id() and automatic
-	// versioning here
+	// if any of the credential types are changed, then all credential ids must be gathered
+	// because the SetCredentialSources function will remove ids that are not present.
 	// TODO: remove when fully deprecating 'application_credential_source_ids'
-	if d.HasChange("application_credential_source_ids") {
-		var credentialSourceIds []string
+	if d.HasChange("application_credential_source_ids") || d.HasChange(targetBrokeredCredentialSourceIdsKey) || d.HasChange(targetInjectedAppCredentialSourceIdsKey) {
+		credOpts := []targets.Option{
+			targets.WithAutomaticVersioning(true),
+		}
+
 		if credentialSourceIdsVal, ok := d.GetOk("application_credential_source_ids"); ok {
+			var credentialSourceIds []string
 			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
 			for _, credSourceId := range credSourceIds {
 				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
 			}
+			credOpts = append(credOpts, targets.WithApplicationCredentialSourceIds(credentialSourceIds))
 		}
 
-		opts := []targets.Option{
-			targets.WithAutomaticVersioning(true),
-			targets.DefaultApplicationCredentialSourceIds(),
-		}
-		if len(credentialSourceIds) > 0 {
-			opts = append(opts, targets.WithApplicationCredentialSourceIds(credentialSourceIds))
+		if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
+			var credentialSourceIds []string
+			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
+			for _, credSourceId := range credSourceIds {
+				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
+			}
+			credOpts = append(credOpts, targets.WithBrokeredCredentialSourceIds(credentialSourceIds))
 		}
 
-		_, err := tc.SetCredentialSources(ctx, d.Id(), 0, opts...)
+		if credentialSourceIdsVal, ok := d.GetOk(targetInjectedAppCredentialSourceIdsKey); ok {
+			var credentialSourceIds []string
+			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
+			for _, credSourceId := range credSourceIds {
+				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
+			}
+			credOpts = append(credOpts, targets.WithInjectedApplicationCredentialSourceIds(credentialSourceIds))
+		}
+
+		result, err := tc.SetCredentialSources(ctx, d.Id(), 0, credOpts...)
 		if err != nil {
 			return diag.Errorf("error updating credential sources in target: %v", err)
 		}
-		if err := d.Set("application_credential_source_ids", credentialSourceIds); err != nil {
+
+		if err := d.Set("application_credential_source_ids", result.Item.ApplicationCredentialSourceIds); err != nil {
 			return diag.FromErr(err)
 		}
-	}
-
-	if d.HasChange(targetBrokeredCredentialSourceIdsKey) {
-		var credentialSourceIds []string
-		if credentialSourceIdsVal, ok := d.GetOk(targetBrokeredCredentialSourceIdsKey); ok {
-			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
-			for _, credSourceId := range credSourceIds {
-				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
-			}
-		}
-
-		opts := []targets.Option{
-			targets.WithAutomaticVersioning(true),
-			targets.DefaultBrokeredCredentialSourceIds(),
-		}
-		if len(credentialSourceIds) > 0 {
-			opts = append(opts, targets.WithBrokeredCredentialSourceIds(credentialSourceIds))
-		}
-
-		_, err := tc.SetCredentialSources(ctx, d.Id(), 0, opts...)
-		if err != nil {
-			return diag.Errorf("error updating brokered credential sources in target: %v", err)
-		}
-		if err := d.Set(targetBrokeredCredentialSourceIdsKey, credentialSourceIds); err != nil {
+		if err := d.Set(targetBrokeredCredentialSourceIdsKey, result.Item.BrokeredCredentialSourceIds); err != nil {
 			return diag.FromErr(err)
 		}
-	}
-
-	if d.HasChange(targetInjectedAppCredentialSourceIdsKey) {
-		var credentialSourceIds []string
-		if credentialSourceIdsVal, ok := d.GetOk(targetInjectedAppCredentialSourceIdsKey); ok {
-			credSourceIds := credentialSourceIdsVal.(*schema.Set).List()
-			for _, credSourceId := range credSourceIds {
-				credentialSourceIds = append(credentialSourceIds, credSourceId.(string))
-			}
-		}
-
-		opts := []targets.Option{
-			targets.WithAutomaticVersioning(true),
-			targets.DefaultInjectedApplicationCredentialSourceIds(),
-		}
-		if len(credentialSourceIds) > 0 {
-			opts = append(opts, targets.WithInjectedApplicationCredentialSourceIds(credentialSourceIds))
-		}
-
-		_, err := tc.SetCredentialSources(ctx, d.Id(), 0, opts...)
-		if err != nil {
-			return diag.Errorf("error updating injected application credential sources in target: %v", err)
-		}
-		if err := d.Set(targetInjectedAppCredentialSourceIdsKey, credentialSourceIds); err != nil {
+		if err := d.Set(targetInjectedAppCredentialSourceIdsKey, result.Item.InjectedApplicationCredentialSourceIds); err != nil {
 			return diag.FromErr(err)
 		}
 	}
