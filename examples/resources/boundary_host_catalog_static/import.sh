@@ -1,0 +1,1 @@
+terraform import boundary_host_catalog_static.foo <my-id>

@@ -1,0 +1,1 @@
+terraform import boundary_host_static.foo <my-id>
