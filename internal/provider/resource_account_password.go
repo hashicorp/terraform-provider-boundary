@@ -65,7 +65,7 @@ func resourceAccountPassword() *schema.Resource {
 				Description: "The account password. Only set on create, changes will not be reflected when updating account.",
 				Type:        schema.TypeString,
 				Optional:    true,
-
+				Sensitive:   true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Id() == "" {
 						// This is a new resource do not suppress password diff
