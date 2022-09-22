@@ -639,8 +639,8 @@ github.com/hashicorp/boundary v0.10.4 h1:e+pSRcMdLlwzZJ3ESkTrwi9cQFvI/dnoZyKqaln
 github.com/hashicorp/boundary v0.10.4/go.mod h1:3+i6UGZfucbHEEdf4sl7LROi2S01SqVwldVX7WlCMhE=
 github.com/hashicorp/boundary/api v0.0.29 h1:d7hl5xWOuF3q3tCaraNxitBL2HvhYlh0/HjCNHSAn4k=
 github.com/hashicorp/boundary/api v0.0.29/go.mod h1:yroNrsyCVCSEKnrbyDeyS2iO0aMq7BTYtAptZWgIb60=
-github.com/hashicorp/boundary/sdk v0.0.22 h1:Umc80/q57Aj6sVzHJZViPfHiQnhEwZmK6BpDJ0ONphU=
-github.com/hashicorp/boundary/sdk v0.0.22/go.mod h1:rriE6QxdGmK8zDenGdeKDcZewVl8tzUdXOYTBf8uj+Y=
+github.com/hashicorp/boundary/sdk v0.0.24 h1:FX5YiZ6tKXIuqQDcLQPpCcAKP6dWQwRPpoyG28JhCJY=
+github.com/hashicorp/boundary/sdk v0.0.24/go.mod h1:rriE6QxdGmK8zDenGdeKDcZewVl8tzUdXOYTBf8uj+Y=
 github.com/hashicorp/cap v0.2.0 h1:Cgr1iDczX17y0PNF5VG+bWTtDiimYL8F18izMPbWNy4=
 github.com/hashicorp/cap v0.2.0/go.mod h1:zb3VvIFA0lM2lbmO69NjowV9dJzJnZS89TaM9blXPJA=
 github.com/hashicorp/dbassert v0.0.0-20210708202608-ecf920cf1ed8 h1:/3iubtqEdLgdXB6ue+WAKvbcpn313jjL5mQvU5ByymE=
