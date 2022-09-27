@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -123,36 +124,49 @@ func resourceCredentialStoreVault() *schema.Resource {
 	}
 }
 
-func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[string]interface{}, fromRead bool) error {
+func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[string]interface{}, fromRead bool) diag.Diagnostics {
 	if err := d.Set(NameKey, raw[NameKey]); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set(DescriptionKey, raw[DescriptionKey]); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
+	var diags diag.Diagnostics
+	csId := raw["id"]
 	if attrsVal, ok := raw["attributes"]; ok {
 		attrs := attrsVal.(map[string]interface{})
 		for _, v := range storeVaultAttrs {
 			if err := d.Set(v, attrs[v]); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 
-		stateTokenHmac := d.Get(credentialStoreVaultTokenHmacKey)
-		boundaryTokenHmac := attrs[credentialStoreVaultTokenHmacKey].(string)
-		if stateTokenHmac.(string) != boundaryTokenHmac && fromRead {
-			// TokenHmac has changed in Boundary, therefore the token has changed.
-			// Update token value to force tf to attempt update.
-			if err := d.Set(credentialStoreVaultTokenKey, "(changed in Boundary)"); err != nil {
-				return err
+		boundaryTokenHmac, ok := attrs[credentialStoreVaultTokenHmacKey]
+		tokenStatus := attrs["token_status"]
+		switch {
+		case ok:
+			boundaryTokenHmacStr := boundaryTokenHmac.(string)
+			stateTokenHmac := d.Get(credentialStoreVaultTokenHmacKey)
+			if stateTokenHmac.(string) != boundaryTokenHmacStr && fromRead {
+				// TokenHmac has changed in Boundary, therefore the token has changed.
+				// Update token value to force tf to attempt update.
+				if err := d.Set(credentialStoreVaultTokenKey, "(changed in Boundary)"); err != nil {
+					return diag.FromErr(err)
+				}
 			}
-		}
-		if err := d.Set(credentialStoreVaultTokenHmacKey, boundaryTokenHmac); err != nil {
-			return err
+			if err := d.Set(credentialStoreVaultTokenHmacKey, boundaryTokenHmacStr); err != nil {
+				return diag.FromErr(err)
+			}
+
+		case tokenStatus == "expired":
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Vault token has expired for credential store %q, please update.", csId),
+			})
 		}
 
 		stateClientKeyHmac := d.Get(credentialStoreVaultClientCertificateKeyHmacKey)
@@ -164,17 +178,17 @@ func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[stri
 			// ClientKeyHmac has changed in Boundary, therefore the ClientKey has changed.
 			// Update ClientKey value to force tf to attempt update.
 			if err := d.Set(credentialStoreVaultClientCertificateKeyKey, "(changed in Boundary)"); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		if err := d.Set(credentialStoreVaultClientCertificateKeyHmacKey, boundaryClientKeyHmac); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	d.SetId(raw["id"].(string))
+	d.SetId(csId.(string))
 
-	return nil
+	return diags
 }
 
 func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -229,8 +243,8 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("nil credential store after create")
 	}
 
-	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map, false); err != nil {
-		return diag.Errorf("error generating credential store from response map: %v", err)
+	if diagnostics := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map, false); diagnostics != nil {
+		return diagnostics
 	}
 
 	return nil
@@ -252,8 +266,8 @@ func resourceCredentialStoreVaultRead(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("credential store nil after read")
 	}
 
-	if err := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map, true); err != nil {
-		return diag.Errorf("error generating credential store from response map: %v", err)
+	if diagnostics := setFromVaultCredentialStoreResponseMap(d, cr.GetResponse().Map, true); diagnostics != nil {
+		return diagnostics
 	}
 
 	return nil
@@ -352,8 +366,8 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.Errorf("credential store nil after update")
 		}
 
-		if err = setFromVaultCredentialStoreResponseMap(d, crUpdate.GetResponse().Map, false); err != nil {
-			return diag.Errorf("error generating credential store from response map: %v", err)
+		if diagnostics := setFromVaultCredentialStoreResponseMap(d, crUpdate.GetResponse().Map, false); diagnostics != nil {
+			return diagnostics
 		}
 	}
 
