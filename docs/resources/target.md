@@ -123,7 +123,6 @@ resource "boundary_target" "ssh_foo" {
 
 ### Optional
 
-- `application_credential_source_ids` (Set of String, Deprecated) A list of application credential source ID's.
 - `brokered_credential_source_ids` (Set of String) A list of brokered credential source ID's.
 - `default_port` (Number) The default port for this target.
 - `description` (String) The target description.
