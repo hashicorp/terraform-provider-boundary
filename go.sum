@@ -635,8 +635,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFb
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2 h1:BqHID5W5qnMkug0Z8UmL8tN0gAy4jQ+B4WFt8cCgluU=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2/go.mod h1:ZbS3MZTZq/apAfAEHGoB5HbsQQstoqP92SjAqtQ9zeg=
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=
-github.com/hashicorp/boundary v0.10.4 h1:e+pSRcMdLlwzZJ3ESkTrwi9cQFvI/dnoZyKqalnHC0c=
-github.com/hashicorp/boundary v0.10.4/go.mod h1:3+i6UGZfucbHEEdf4sl7LROi2S01SqVwldVX7WlCMhE=
+github.com/hashicorp/boundary v0.11.0 h1:JiqfBY2PKDGmnq//3rFtvOjjb7lK8m1u6nwYx3S+Qq4=
+github.com/hashicorp/boundary v0.11.0/go.mod h1:A5di0ps0ovurUNyhjoF8Ehog5ZzP0DlPluF2jKaniQc=
 github.com/hashicorp/boundary/api v0.0.29 h1:d7hl5xWOuF3q3tCaraNxitBL2HvhYlh0/HjCNHSAn4k=
 github.com/hashicorp/boundary/api v0.0.29/go.mod h1:yroNrsyCVCSEKnrbyDeyS2iO0aMq7BTYtAptZWgIb60=
 github.com/hashicorp/boundary/sdk v0.0.22 h1:Umc80/q57Aj6sVzHJZViPfHiQnhEwZmK6BpDJ0ONphU=
@@ -748,8 +748,8 @@ github.com/hashicorp/hcl/v2 v2.14.0 h1:jX6+Q38Ly9zaAJlAjnFVyeNSNCKKW8D0wvyg7vij5
 github.com/hashicorp/hcl/v2 v2.14.0/go.mod h1:e4z5nxYlWNPdDSNYX+ph14EvWYMFm3eP0zIUqPc2jr0=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
-github.com/hashicorp/nodeenrollment v0.1.16 h1:TZ+lN7uvkW733OZE25Wo1FgkC0zwcQo1eo3NtEnHLkw=
-github.com/hashicorp/nodeenrollment v0.1.16/go.mod h1:N5gYsm8mWiDfIw/j+1IQ6NBO1cWCmhPpvQ9GB1QUnsU=
+github.com/hashicorp/nodeenrollment v0.1.17 h1:ZaGNugd3EOZIdJxgC5bUA1CbHZ/OKZcgXnquzoFql6E=
+github.com/hashicorp/nodeenrollment v0.1.17/go.mod h1:N5gYsm8mWiDfIw/j+1IQ6NBO1cWCmhPpvQ9GB1QUnsU=
 github.com/hashicorp/terraform-exec v0.17.3 h1:MX14Kvnka/oWGmIkyuyvL6POx25ZmKrjlaclkx3eErU=
 github.com/hashicorp/terraform-exec v0.17.3/go.mod h1:+NELG0EqQekJzhvikkeQsOAZpsw0cv/03rbeQJqscAI=
 github.com/hashicorp/terraform-json v0.14.0 h1:sh9iZ1Y8IFJLx+xQiKHGud6/TSUCM0N8e17dKDpqV7s=
