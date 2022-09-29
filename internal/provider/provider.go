@@ -73,6 +73,7 @@ func New() *schema.Provider {
 			"boundary_credential_store_static":      resourceCredentialStoreStatic(),
 			"boundary_credential_username_password": resourceCredentialUsernamePassword(),
 			"boundary_credential_ssh_private_key":   resourceCredentialSshPrivateKey(),
+			"boundary_credential_json":              resourceCredentialJson(),
 			"boundary_managed_group":                resourceManagedGroup(),
 			"boundary_group":                        resourceGroup(),
 			"boundary_host":                         resourceHost(),
