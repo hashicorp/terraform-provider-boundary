@@ -15,10 +15,12 @@ import (
 )
 
 const (
-	jsonCredResc = "boundary_credential_json.example"
-	jsonCredName = "bar"
-	jsonCredDesc = "the bar"
-	jsonCredObj  = `jsonencode({
+	jsonCredResc       = "boundary_credential_json.example"
+	jsonCredName       = "bar"
+	jsonCredNameUpdate = "foo"
+	jsonCredDesc       = "the bar"
+	jsonCredDescUpdate = "the foo"
+	jsonCredObj        = `jsonencode({
 		password = "password",
 		username = "admin"
 	})`
@@ -57,8 +59,8 @@ func TestAccCredentialJson(t *testing.T) {
 	)
 
 	resUpdate := jsonCredResource(
-		jsonCredName,
-		jsonCredDesc,
+		jsonCredNameUpdate,
+		jsonCredDescUpdate,
 		jsonCredObjUpdate,
 	)
 
@@ -84,8 +86,8 @@ func TestAccCredentialJson(t *testing.T) {
 				// update
 				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(jsonCredResc, NameKey, jsonCredName),
-					resource.TestCheckResourceAttr(jsonCredResc, DescriptionKey, jsonCredDesc),
+					resource.TestCheckResourceAttr(jsonCredResc, NameKey, jsonCredNameUpdate),
+					resource.TestCheckResourceAttr(jsonCredResc, DescriptionKey, jsonCredDescUpdate),
 					resource.TestCheckResourceAttr(jsonCredResc, credentialJsonObjectKey, `{"password":"password","username":"db-admin"}`),
 
 					testAccCheckCredentialJsonObjectHmac(provider),
