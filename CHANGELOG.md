@@ -2,6 +2,26 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## 1.1.0 (October 4, 2022)
+
+### New and Improved
+
+* Add support for JSON credentials
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/271)).
+* Add support for setting the plugin execution directory from the config
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/280)).
+
+### Deprecations/Changes
+
+* Fix panic resulting from expired Vault credential store tokens
+  ([Issue](https://github.com/hashicorp/terraform-provider-boundary/issues/279),
+  [PR](https://github.com/hashicorp/terraform-provider-boundary/pull/277)).
+* Remove `application_credential_source_ids` of the `target` resource which was deprecated
+  in 1.0.12 ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/273)).
+* Remove `default_role` from the `role` resource, this schema was never supported and was
+  included mistakenly ([Issue](https://github.com/hashicorp/terraform-provider-boundary/issues/130),
+  [PR](https://github.com/hashicorp/terraform-provider-boundary/pull/269)).
+
 ## 1.0.12 (September 13, 2022)
 
 ### New and Improved
