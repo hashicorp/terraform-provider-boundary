@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.6-0.20220722192355-a843f53fa48d
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.5
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
-	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.2
+	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.13.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/kr/pretty v0.3.0
