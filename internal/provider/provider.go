@@ -60,6 +60,11 @@ func New() *schema.Provider {
 				Optional:    true,
 				Description: "When set to true, does not validate the Boundary API endpoint certificate",
 			},
+			"plugin_execution_dir": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: `Specifies a directory that the Boundary provider can use to write and execute its built-in plugins.`,
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"boundary_account":                      resourceAccount(),
@@ -116,16 +121,35 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 		if err != nil {
 			return fmt.Errorf(`error reading data from "recovery_kms_hcl": %v`, err)
 		}
-		wrapper, _, err := wrapper.GetWrapperFromHcl(ctx, recoveryHclStr, "recovery",
-			configutil.WithPluginOptions(
-				pluginutil.WithPluginsMap(kms_plugin_assets.BuiltinKmsPlugins()),
-				pluginutil.WithPluginsFilesystem(kms_plugin_assets.KmsPluginPrefix, kms_plugin_assets.FileSystem()),
-			))
+
+		opts := []pluginutil.Option{
+			pluginutil.WithPluginsMap(kms_plugin_assets.BuiltinKmsPlugins()),
+			pluginutil.WithPluginsFilesystem(kms_plugin_assets.KmsPluginPrefix, kms_plugin_assets.FileSystem()),
+		}
+
+		if execDir, ok := d.GetOk("plugin_execution_dir"); ok {
+			opts = append(opts, pluginutil.WithPluginExecutionDirectory(execDir.(string)))
+		}
+
+		wrapper, cleanUp, err := wrapper.GetWrapperFromHcl(
+			ctx,
+			recoveryHclStr,
+			"recovery",
+			configutil.WithPluginOptions(opts...))
 		if err != nil {
 			return fmt.Errorf(`error reading wrappers from "recovery_kms_hcl": %v`, err)
 		}
 		if wrapper == nil {
 			return errors.New(`No "kms" block with purpose "recovery" found in "recovery_kms_hcl"`)
+		}
+		if cleanUp != nil {
+			// Terraform will cancel the context when work is complete.
+			go func() {
+				select {
+				case <-ctx.Done():
+					_ = cleanUp()
+				}
+			}()
 		}
 
 		md.recoveryKmsWrapper = wrapper
