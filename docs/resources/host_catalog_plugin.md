@@ -38,13 +38,13 @@ resource "boundary_host_catalog_plugin" "aws_example" {
   description     = "My first host catalog!"
   scope_id        = boundary_scope.project.id
   plugin_name     = "aws"
-  attributes_json = jsonencode({"region"="us-east-1"})
+  attributes_json = jsonencode({ "region" = "us-east-1" })
 
   # recommended to pass in aws secrets using a file() or using environment variables
   # the secrets below must be generated in aws by creating a aws iam user with programmatic access
-  secrets_json    = jsonencode({
-    "access_key_id"="aws_access_key_id_value",
-    "secret_access_key"="aws_secret_access_key_value"
+  secrets_json = jsonencode({
+    "access_key_id"     = "aws_access_key_id_value",
+    "secret_access_key" = "aws_secret_access_key_value"
   })
 }
 
@@ -54,23 +54,23 @@ resource "boundary_host_catalog_plugin" "aws_example" {
 # For more information about azure ad applications, please visit here:
 # https://learn.hashicorp.com/tutorials/boundary/azure-host-catalogs#register-a-new-azure-ad-application-1
 resource "boundary_host_catalog_plugin" "azure_example" {
-  name            = "My azure catalog"
-  description     = "My second host catalog!"
-  scope_id        = boundary_scope.project.id
-  plugin_name     = "azure"
+  name        = "My azure catalog"
+  description = "My second host catalog!"
+  scope_id    = boundary_scope.project.id
+  plugin_name = "azure"
 
   # the attributes below must be generated in azure by creating an ad application
   attributes_json = jsonencode({
-    "disable_credential_rotation"="true",
-    "tenant_id"="ARM_TENANT_ID",
-    "subscription_id"="ARM_SUBSCRIPTION_ID",
-    "client_id"="ARM_CLIENT_ID"
+    "disable_credential_rotation" = "true",
+    "tenant_id"                   = "ARM_TENANT_ID",
+    "subscription_id"             = "ARM_SUBSCRIPTION_ID",
+    "client_id"                   = "ARM_CLIENT_ID"
   })
 
   # recommended to pass in aws secrets using a file() or using environment variables
   # the secrets below must be generated in azure by creating an ad application
-  secrets_json    = jsonencode({
-    "secret_value"="ARM_CLIENT_SECRET"
+  secrets_json = jsonencode({
+    "secret_value" = "ARM_CLIENT_SECRET"
   })
 }
 ```
