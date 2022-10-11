@@ -11,11 +11,12 @@ import (
 )
 
 const (
-	credentialStoreIdKey                     = "credential_store_id"
-	credentialLibraryVaultHttpMethodKey      = "http_method"
-	credentialLibraryVaultHttpRequestBodyKey = "http_request_body"
-	credentialLibraryVaultPathKey            = "path"
-	credentialLibraryCredentialTypeKey       = "credential_type"
+	credentialStoreIdKey                           = "credential_store_id"
+	credentialLibraryVaultHttpMethodKey            = "http_method"
+	credentialLibraryVaultHttpRequestBodyKey       = "http_request_body"
+	credentialLibraryVaultPathKey                  = "path"
+	credentialLibraryCredentialTypeKey             = "credential_type"
+	credentialLibraryCredentialMappingOverridesKey = "credential_mapping_overrides"
 )
 
 var libraryVaultAttrs = []string{
@@ -78,6 +79,11 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
+			credentialLibraryCredentialMappingOverridesKey: {
+				Description: "The credential mapping override.",
+				Type:        schema.TypeMap,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -90,6 +96,10 @@ func setFromVaultCredentialLibraryResponseMap(d *schema.ResourceData, raw map[st
 		return err
 	}
 	if err := d.Set(credentialStoreIdKey, raw[credentialStoreIdKey]); err != nil {
+		return err
+	}
+
+	if err := d.Set(credentialLibraryCredentialMappingOverridesKey, raw[credentialLibraryCredentialMappingOverridesKey]); err != nil {
 		return err
 	}
 
@@ -128,6 +138,10 @@ func resourceCredentialLibraryCreateVault(ctx context.Context, d *schema.Resourc
 	}
 	if v, ok := d.GetOk(credentialLibraryCredentialTypeKey); ok {
 		opts = append(opts, credentiallibraries.WithCredentialType(v.(string)))
+	}
+	if v, ok := d.GetOk(credentialLibraryCredentialMappingOverridesKey); ok {
+		mappingOverrides := v.(map[string]interface{})
+		opts = append(opts, credentiallibraries.WithCredentialMappingOverrides(mappingOverrides))
 	}
 
 	var credentialStoreId string
@@ -215,6 +229,40 @@ func resourceCredentialLibraryUpdateVault(ctx context.Context, d *schema.Resourc
 		if ok {
 			opts = append(opts, credentiallibraries.WithVaultCredentialLibraryPath(v.(string)))
 		}
+	}
+	if d.HasChange(credentialLibraryCredentialMappingOverridesKey) {
+		var oldMapping, newMapping map[string]interface{}
+		old, new := d.GetChange(credentialLibraryCredentialMappingOverridesKey)
+
+		if old == nil {
+			old = map[string]interface{}{}
+		}
+		oldMapping = old.(map[string]interface{})
+
+		if new == nil {
+			new = map[string]interface{}{}
+		}
+		newMapping = new.(map[string]interface{})
+
+		newAttrs := []string{}
+		for k := range newMapping {
+			newAttrs = append(newAttrs, k)
+		}
+
+		for oldAttr := range oldMapping {
+			isRemoved := true
+			for _, newAttr := range newAttrs {
+				if oldAttr == newAttr {
+					isRemoved = false
+					break
+				}
+			}
+			if isRemoved {
+				newMapping[oldAttr] = nil
+			}
+		}
+
+		opts = append(opts, credentiallibraries.WithCredentialMappingOverrides(newMapping))
 	}
 
 	if len(opts) > 0 {
