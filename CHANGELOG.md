@@ -2,6 +2,14 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## 1.1.1 (October 12, 2022)
+
+### Bug Fixes
+
+* The plugin cleanup function is being called before the entire Terraform workflow is complete.
+  ([Issue](https://github.com/hashicorp/terraform-provider-boundary/issues/282)),
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/285)).
+
 ## 1.1.0 (October 4, 2022)
 
 ### New and Improved
