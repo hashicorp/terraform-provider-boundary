@@ -131,7 +131,8 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 			opts = append(opts, pluginutil.WithPluginExecutionDirectory(execDir.(string)))
 		}
 
-		wrapper, cleanUp, err := wrapper.GetWrapperFromHcl(
+		// TODO: cleanup plugin when finished
+		wrapper, _, err := wrapper.GetWrapperFromHcl(
 			ctx,
 			recoveryHclStr,
 			"recovery",
@@ -141,15 +142,6 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 		}
 		if wrapper == nil {
 			return errors.New(`No "kms" block with purpose "recovery" found in "recovery_kms_hcl"`)
-		}
-		if cleanUp != nil {
-			// Terraform will cancel the context when work is complete.
-			go func() {
-				select {
-				case <-ctx.Done():
-					_ = cleanUp()
-				}
-			}()
 		}
 
 		md.recoveryKmsWrapper = wrapper
