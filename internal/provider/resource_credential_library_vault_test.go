@@ -16,24 +16,26 @@ import (
 )
 
 const (
-	vaultCredResc            = "boundary_credential_library_vault.example"
-	vaultCredTypedResc       = "boundary_credential_library_vault.typed_example"
-	vaultCredLibName         = "foo"
-	vaultCredLibDesc         = "the foo"
-	vaultCredLibPath         = "/foo/bar"
-	vaultCredLibMethodGet    = "GET"
-	vaultCredLibMethodPost   = "POST"
-	vaultCredLibRequestBody  = "foobar"
-	vaultCredLibStringUpdate = "_random"
+	vaultCredResc                 = "boundary_credential_library_vault.example"
+	vaultCredTypedResc            = "boundary_credential_library_vault.typed_example"
+	vaultCredUsernamePasswordResc = "boundary_credential_library_vault.username_password_mapping_override"
+	vaultCredSshPrivateKeyResc    = "boundary_credential_library_vault.ssh_private_key_mapping_override"
+	vaultCredLibName              = "foo"
+	vaultCredLibDesc              = "the foo"
+	vaultCredLibPath              = "/foo/bar"
+	vaultCredLibMethodGet         = "GET"
+	vaultCredLibMethodPost        = "POST"
+	vaultCredLibRequestBody       = "foobar"
+	vaultCredLibStringUpdate      = "_random"
 )
 
 var vaultCredLibResource = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
-	name  = "%s"
-	description = "%s"
+	name                = "%s"
+	description         = "%s"
 	credential_store_id = boundary_credential_store_vault.example.id
-  	path = "%s"
-  	http_method = "%s"
+  	path                = "%s"
+  	http_method         = "%s"
 }`, vaultCredLibName,
 	vaultCredLibDesc,
 	vaultCredLibPath,
@@ -41,12 +43,12 @@ resource "boundary_credential_library_vault" "example" {
 
 var vaultCredLibResourceUpdate = fmt.Sprintf(`
 resource "boundary_credential_library_vault" "example" {
-  	name  = "%s"
-	description = "%s"
+  	name                = "%s"
+	description         = "%s"
   	credential_store_id = boundary_credential_store_vault.example.id
-  	path = "%s"
-  	http_method = "%s"
-  	http_request_body = "%s"
+  	path                = "%s"
+  	http_method         = "%s"
+  	http_request_body   = "%s"
 }`, vaultCredLibName+vaultCredLibStringUpdate,
 	vaultCredLibDesc+vaultCredLibStringUpdate,
 	vaultCredLibPath+vaultCredLibStringUpdate,
@@ -61,6 +63,71 @@ resource "boundary_credential_library_vault" "typed_example" {
   	path                = "%s"
   	http_method         = "%s"
 	credential_type     = "ssh_private_key"
+}`, vaultCredLibName,
+	vaultCredLibDesc,
+	vaultCredLibPath,
+	vaultCredLibMethodGet)
+
+var vaultUsernamePasswordMappingOverrideCredLibResource = fmt.Sprintf(`
+resource "boundary_credential_library_vault" "username_password_mapping_override" {
+	name                         = "%s"
+	description                  = "%s"
+	credential_store_id          = boundary_credential_store_vault.example.id
+	path                         = "%s"
+	http_method                  = "%s"
+	credential_type              = "username_password"
+	credential_mapping_overrides = {
+		password_attribute = "alternative_password_label"
+		username_attribute = "alternative_username_label"
+	}
+}`, vaultCredLibName,
+	vaultCredLibDesc,
+	vaultCredLibPath,
+	vaultCredLibMethodGet)
+
+var vaultUsernamePasswordMappingOverrideCredLibResourceUpdate = fmt.Sprintf(`
+	resource "boundary_credential_library_vault" "username_password_mapping_override" {
+		name                         = "%s"
+		description                  = "%s"
+		credential_store_id          = boundary_credential_store_vault.example.id
+		path                         = "%s"
+		http_method                  = "%s"
+		credential_type              = "username_password"
+		credential_mapping_overrides = {
+			password_attribute = "updated_password_label"
+			username_attribute = "updated_username_label"
+		}
+	}`, vaultCredLibName,
+	vaultCredLibDesc,
+	vaultCredLibPath,
+	vaultCredLibMethodGet)
+
+var vaultUsernamePasswordMappingOverrideCredLibResourceRemove = fmt.Sprintf(`
+	resource "boundary_credential_library_vault" "username_password_mapping_override" {
+		name                         = "%s"
+		description                  = "%s"
+		credential_store_id          = boundary_credential_store_vault.example.id
+		path                         = "%s"
+		http_method                  = "%s"
+		credential_type              = "username_password"
+	}`, vaultCredLibName,
+	vaultCredLibDesc,
+	vaultCredLibPath,
+	vaultCredLibMethodGet)
+
+var vaultSshPrivateKeyMappingOverrideCredLibResource = fmt.Sprintf(`
+resource "boundary_credential_library_vault" "ssh_private_key_mapping_override" {
+	name                         = "%s"
+	description                  = "%s"
+	credential_store_id          = boundary_credential_store_vault.example.id
+	path                         = "%s"
+	http_method                  = "%s"
+	credential_type              = "ssh_private_key"
+	credential_mapping_overrides = {
+		private_key_attribute 			 = "alternative_key_label"
+		private_key_passphrase_attribute = "alternative_passphrase_label"
+		username_attribute 				 = "alternative_username_label"
+	}
 }`, vaultCredLibName,
 	vaultCredLibDesc,
 	vaultCredLibPath,
@@ -129,6 +196,74 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryCredentialTypeKey, "ssh_private_key"),
 
 					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredTypedResc),
+				),
+			},
+			importStep(vaultCredResc),
+
+			{
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResource),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultPathKey, vaultCredLibPath),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpRequestBodyKey, ""),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryCredentialTypeKey, "username_password"),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.password_attribute", "alternative_password_label"),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.username_attribute", "alternative_username_label"),
+
+					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredUsernamePasswordResc),
+				),
+			},
+			importStep(vaultCredResc),
+
+			{
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultPathKey, vaultCredLibPath),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpRequestBodyKey, ""),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryCredentialTypeKey, "username_password"),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.password_attribute", "updated_password_label"),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.username_attribute", "updated_username_label"),
+
+					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredUsernamePasswordResc),
+				),
+			},
+			importStep(vaultCredResc),
+
+			{
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceRemove),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultPathKey, vaultCredLibPath),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpRequestBodyKey, ""),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryCredentialTypeKey, "username_password"),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryCredentialMappingOverridesKey+".%", "0"),
+
+					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredUsernamePasswordResc),
+				),
+			},
+			importStep(vaultCredResc),
+
+			{
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultSshPrivateKeyMappingOverrideCredLibResource),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, DescriptionKey, vaultCredLibDesc),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, credentialLibraryVaultPathKey, vaultCredLibPath),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, credentialLibraryVaultHttpRequestBodyKey, ""),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, credentialLibraryCredentialTypeKey, "ssh_private_key"),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, "credential_mapping_overrides.private_key_attribute", "alternative_key_label"),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, "credential_mapping_overrides.private_key_passphrase_attribute", "alternative_passphrase_label"),
+					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, "credential_mapping_overrides.username_attribute", "alternative_username_label"),
+
+					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredSshPrivateKeyResc),
 				),
 			},
 			importStep(vaultCredResc),
