@@ -155,7 +155,7 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	return nil
 }
 
-func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -256,7 +256,6 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	tc := targets.NewClient(md.client)
-
 	tcr, err := tc.Create(ctx, typeStr, scopeId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating target: %v", err)
@@ -264,7 +263,12 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if tcr == nil {
 		return diag.Errorf("target nil after create")
 	}
-	raw := tcr.GetResponse().Map
+	apiResponse := tcr.GetResponse().Map
+	defer func() {
+		if err := setFromTargetResponseMap(d, apiResponse); err != nil {
+			errs = append(errs, diag.FromErr(err)...)
+		}
+	}()
 
 	version := tcr.Item.Version
 	if hostSourceIds != nil {
@@ -272,7 +276,10 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return diag.Errorf("error setting host sources on target: %v", err)
 		}
-		raw = tur.GetResponse().Map
+		if tur == nil {
+			return diag.Errorf("nil target after setting host sources")
+		}
+		apiResponse = tur.GetResponse().Map
 		version = tur.Item.Version
 	}
 
@@ -288,11 +295,10 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return diag.Errorf("error setting credential sources on target: %v", err)
 		}
-		raw = tur.GetResponse().Map
-	}
-
-	if err := setFromTargetResponseMap(d, raw); err != nil {
-		return diag.FromErr(err)
+		if tur == nil {
+			return diag.Errorf("nil target after setting credential sources")
+		}
+		apiResponse = tur.GetResponse().Map
 	}
 
 	return nil

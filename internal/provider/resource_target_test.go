@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/boundary/api"
@@ -130,6 +131,21 @@ resource "boundary_target" "foo" {
 	session_connection_limit = 7
 	worker_filter = "type == \"bar\""
 }`, fooTargetDescriptionUpdate)
+
+	fooTargetPartialSuccess = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name                                       = "expected_to_fail"
+	description                                = "%s"
+	type                                       = "tcp"
+	scope_id                                   = boundary_scope.proj1.id
+	default_port                               = 80
+	depends_on                                 = [boundary_role.proj1_admin]
+	session_max_seconds                        = 7000
+	session_connection_limit                   = 7
+	injected_application_credential_source_ids = [
+		boundary_credential_library_vault.bar.id
+	]
+}`, fooTargetDescription)
 )
 
 func TestAccTarget(t *testing.T) {
@@ -197,6 +213,37 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", nil),
 					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", nil),
+				),
+			},
+			importStep("boundary_target.foo"),
+			{
+				// test updating state file when the target is created, but fails on associating an invalid injected credential source to a tcp target type
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooTargetPartialSuccess),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, ""),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetHostSourceIdsKey+".%", "0"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetInjectedAppCredentialSourceIdsKey+".%", "0"),
+				),
+				ExpectError: regexp.MustCompile("Unable to set credential sources in target: tcp.VetCredentialSources: tcp.Target only supports credential purpose"),
+			},
+			importStep("boundary_target.foo", targetInjectedAppCredentialSourceIdsKey),
+			{
+				// test resolving invalid injected credential source error without raising duplicate name error, due to state file not being in sync.
+				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooTargetUpdateUnsetHostAndCredSources),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetHostSourceIdsKey+".%", "0"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetInjectedAppCredentialSourceIdsKey+".%", "0"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetBrokeredCredentialSourceIdsKey+".%", "0"),
 				),
 			},
 			importStep("boundary_target.foo"),

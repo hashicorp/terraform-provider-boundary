@@ -94,7 +94,7 @@ func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	return nil
 }
 
-func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -151,18 +151,22 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if tcr == nil {
 		return diag.Errorf("nil role after create")
 	}
-	raw := tcr.GetResponse().Map
+	apiResponse := tcr.GetResponse().Map
+	defer func() {
+		if err := setFromRoleResponseMap(d, apiResponse); err != nil {
+			errs = append(errs, diag.FromErr(err)...)
+		}
+	}()
 
-	var diags diag.Diagnostics
 	if principalIds != nil {
 		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
 		switch {
 		case err != nil:
-			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
+			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
 		case tspr == nil:
-			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principal IDs"})
+			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principals"})
 		default:
-			raw = tspr.GetResponse().Map
+			apiResponse = tspr.GetResponse().Map
 		}
 	}
 
@@ -170,19 +174,15 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		tsgr, err := rc.SetGrants(ctx, tcr.Item.Id, 0, grantStrings, roles.WithAutomaticVersioning(true))
 		switch {
 		case err != nil:
-			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
+			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
 		case tsgr == nil:
-			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grant strings"})
+			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grants"})
 		default:
-			raw = tsgr.GetResponse().Map
+			apiResponse = tsgr.GetResponse().Map
 		}
 	}
 
-	if err := setFromRoleResponseMap(d, raw); err != nil {
-		return diag.FromErr(err)
-	}
-
-	return diags
+	return errs
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

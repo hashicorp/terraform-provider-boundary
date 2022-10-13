@@ -139,7 +139,7 @@ func setFromHostSetStaticResponseMap(d *schema.ResourceData, raw map[string]inte
 	return nil
 }
 
-func resourceHostSetStaticCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceHostSetStaticCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var hostsetHostCatalogId string
@@ -195,7 +195,12 @@ func resourceHostSetStaticCreate(ctx context.Context, d *schema.ResourceData, me
 	if hscr == nil {
 		return diag.Errorf("nil host set after create")
 	}
-	raw := hscr.GetResponse().Map
+	apiResponse := hscr.GetResponse().Map
+	defer func() {
+		if err := setFromHostSetStaticResponseMap(d, apiResponse); err != nil {
+			errs = append(errs, diag.FromErr(err)...)
+		}
+	}()
 
 	if hostIds != nil {
 		hsshr, err := hsClient.SetHosts(ctx, hscr.Item.Id, hscr.Item.Version, hostIds)
@@ -205,11 +210,7 @@ func resourceHostSetStaticCreate(ctx context.Context, d *schema.ResourceData, me
 		if hsshr == nil {
 			return diag.Errorf("nil host set after setting hosts")
 		}
-		raw = hsshr.GetResponse().Map
-	}
-
-	if err := setFromHostSetStaticResponseMap(d, raw); err != nil {
-		return diag.FromErr(err)
+		apiResponse = hsshr.GetResponse().Map
 	}
 
 	return nil

@@ -75,7 +75,7 @@ func setFromGroupResponseMap(d *schema.ResourceData, raw map[string]interface{})
 	return nil
 }
 
-func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -108,7 +108,12 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if gcr == nil {
 		return diag.Errorf("group nil after create")
 	}
-	raw := gcr.GetResponse().Map
+	apiResponse := gcr.GetResponse().Map
+	defer func() {
+		if err := setFromGroupResponseMap(d, apiResponse); err != nil {
+			errs = append(errs, diag.FromErr(err)...)
+		}
+	}()
 
 	if val, ok := d.GetOk(groupMemberIdsKey); ok {
 		list := val.(*schema.Set).List()
@@ -118,16 +123,12 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		gcsmr, err := grps.SetMembers(ctx, gcr.Item.Id, gcr.Item.Version, memberIds)
 		if err != nil {
-			return diag.Errorf("error setting principals on role: %v", err)
+			return diag.Errorf("error setting members on group: %v", err)
 		}
 		if gcsmr == nil {
 			return diag.Errorf("group nil after setting members")
 		}
-		raw = gcsmr.GetResponse().Map
-	}
-
-	if err := setFromGroupResponseMap(d, raw); err != nil {
-		return diag.FromErr(err)
+		apiResponse = gcsmr.GetResponse().Map
 	}
 
 	return nil

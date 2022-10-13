@@ -12,8 +12,10 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ### Bug Fixes
 
-* Improve error message when authenticating to boundary.
+* Improve error message when authenticating to boundary
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/290)).
+* Set state before returning an error when creating a resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/289))
 
 ## 1.1.1 (October 12, 2022)
 
