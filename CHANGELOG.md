@@ -2,6 +2,13 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## Next
+
+### New and Improved
+
+* Add support for setting mapping overrides for vault credential libraries
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/287)).
+
 ## 1.1.1 (October 12, 2022)
 
 ### Bug Fixes
