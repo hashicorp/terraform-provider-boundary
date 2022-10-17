@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/hashicorp/boundary/api"
@@ -176,6 +177,15 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 		at, err := am.Authenticate(ctx, authMethodId.(string), "login", credentials)
 		if err != nil {
+			if apiErr := api.AsServerError(err); apiErr != nil {
+				statusCode := apiErr.Response().StatusCode()
+				if statusCode == http.StatusNotFound {
+					return fmt.Errorf("unknown auth_method_id: %s", err.Error())
+				}
+				if statusCode == http.StatusUnauthorized {
+					return fmt.Errorf("invalid login name or password: %s", err.Error())
+				}
+			}
 			return err
 		}
 		md.client.SetToken(at.Attributes["token"].(string))
