@@ -73,7 +73,7 @@ func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	return nil
 }
 
-func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -106,7 +106,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if ucr == nil {
 		return diag.Errorf("user nil after create")
 	}
-	raw := ucr.GetResponse().Map
+	apiResponse := ucr.GetResponse().Map
+	defer func() {
+		if err := setFromUserResponseMap(d, apiResponse); err != nil {
+			errs = append(errs, diag.FromErr(err)...)
+		}
+	}()
 
 	if val, ok := d.GetOk(userAccountIDsKey); ok {
 		list := val.(*schema.Set).List()
@@ -121,11 +126,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		if usrac == nil {
 			return diag.Errorf("user nil after setting accounts")
 		}
-		raw = usrac.GetResponse().Map
-	}
-
-	if err := setFromUserResponseMap(d, raw); err != nil {
-		return diag.FromErr(err)
+		apiResponse = usrac.GetResponse().Map
 	}
 
 	return nil
