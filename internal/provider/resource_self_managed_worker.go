@@ -85,9 +85,12 @@ func resourceSelfManagedWorker() *schema.Resource {
 			},
 			configTags: {
 				Description: "",
-				Type:        schema.TypeList,
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
-					Type: schema.TypeMap,
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
 				Computed: true,
 			},
