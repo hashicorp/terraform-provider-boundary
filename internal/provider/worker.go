@@ -18,7 +18,6 @@ const (
 	address                            = "address"
 	canonicalTags                      = "canonical_tags"
 	configTags                         = "config_tags"
-	lastStatusTime                     = "last_status_time"
 	workerGeneratedAuthToken           = "worker_generated_auth_token"
 	controllerGeneratedActivationToken = "controller_generated_activation_token"
 	apiTags                            = "api_tags"
@@ -26,14 +25,14 @@ const (
 	authorizedActions                  = "authorized_actions"
 )
 
-func resourceSelfManagedWorker() *schema.Resource {
+func resourceWorker() *schema.Resource {
 	return &schema.Resource{
 		Description: "The resource allows you to create a self-managed worker object.",
 
-		CreateContext: resourceSelfManagedWorkerCreate,
-		ReadContext:   resourceSelfManagedWorkerRead,
-		UpdateContext: resourceSelfManagedWorkerUpdate,
-		DeleteContext: resourceSelfManagedWorkerDelete,
+		CreateContext: resourceWorkerCreate,
+		ReadContext:   resourceWorkerRead,
+		UpdateContext: resourceWorkerUpdate,
+		DeleteContext: resourceWorkerDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -52,7 +51,6 @@ func resourceSelfManagedWorker() *schema.Resource {
 			NameKey: {
 				Description: "The name for the worker.",
 				Type:        schema.TypeString,
-				Computed:    false,
 				Optional:    true,
 			},
 			DescriptionKey: {
@@ -60,34 +58,30 @@ func resourceSelfManagedWorker() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
-			createdTime: {
-				Description: "When the self managed worker was created.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
-			version: {
-				Description: "The internal version of the self managed worker resource.",
-				Type:        schema.TypeInt,
-				Computed:    true,
-			},
 			address: {
 				Description: "The accessible address of the self managed worker.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
 			canonicalTags: {
-				Description: "",
-				Type:        schema.TypeList,
+				Description: "The aggregated view of worker tags and API tags.",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
-					Type: schema.TypeMap,
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
 				Computed: true,
 			},
 			configTags: {
-				Description: "",
-				Type:        schema.TypeList,
+				Description: "Tags as configured in the worker's HCL file.",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
-					Type: schema.TypeMap,
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
 				Computed: true,
 			},
@@ -101,18 +95,16 @@ func resourceSelfManagedWorker() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			TypeKey: {
-				Description: "The type of self managed worker. Will be one of PKI or KMS.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			apiTags: {
-				Description: "",
-				Type:        schema.TypeList,
+				Description: "API tags applied to the worker.",
+				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
-					Type: schema.TypeMap,
+					Type: schema.TypeList,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
 				},
-				Computed: true,
+				Optional: true,
 			},
 			releaseVersion: {
 				Description: "The version of the Boundary binary running on the self managed worker.",
@@ -131,27 +123,24 @@ func resourceSelfManagedWorker() *schema.Resource {
 	}
 }
 
-func setFromSelfManagedWorkerResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+func setFromWorkerResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
 	d.SetId(raw["id"].(string))
 	d.Set(ScopeIdKey, raw["scope_id"])
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
-	d.Set(createdTime, raw["created_time"])
-	d.Set(version, raw["version"])
 	d.Set(address, raw["address"])
 	d.Set(canonicalTags, raw["canonical_tags"])
 	d.Set(configTags, raw["config_tags"])
 	d.Set(workerGeneratedAuthToken, raw["worker_generated_auth_token"])
 	d.Set(controllerGeneratedActivationToken, raw["controller_generated_activation_token"])
-	d.Set(TypeKey, raw["type"])
-	d.Set(apiTags, raw["api_tags"])
 	d.Set(releaseVersion, raw["release_version"])
 	d.Set(authorizedActions, raw["authorized_actions"])
+	d.Set(apiTags, raw["api_tags"])
 
 	return nil
 }
 
-func resourceSelfManagedWorkerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	wkrs := workers.NewClient(md.client)
 
@@ -167,14 +156,14 @@ func resourceSelfManagedWorkerRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("worker nil after read")
 	}
 
-	if err := setFromSelfManagedWorkerResponseMap(d, wrr.GetResponse().Map); err != nil {
+	if err := setFromWorkerResponseMap(d, wrr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceSelfManagedWorkerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	opts := []workers.Option{}
 
@@ -201,7 +190,7 @@ func resourceSelfManagedWorkerCreate(ctx context.Context, d *schema.ResourceData
 		if wkrc == nil {
 			return diag.Errorf("worker nil after create")
 		}
-		if err := setFromSelfManagedWorkerResponseMap(d, wkrc.GetResponse().Map); err != nil {
+		if err := setFromWorkerResponseMap(d, wkrc.GetResponse().Map); err != nil {
 			return diag.FromErr(err)
 		}
 	} else {
@@ -212,14 +201,14 @@ func resourceSelfManagedWorkerCreate(ctx context.Context, d *schema.ResourceData
 		if wkrc == nil {
 			return diag.Errorf("worker nil after create")
 		}
-		if err := setFromSelfManagedWorkerResponseMap(d, wkrc.GetResponse().Map); err != nil {
+		if err := setFromWorkerResponseMap(d, wkrc.GetResponse().Map); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 	return nil
 }
 
-func resourceSelfManagedWorkerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	wkr := workers.NewClient(md.client)
 
@@ -274,7 +263,7 @@ func resourceSelfManagedWorkerUpdate(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func resourceSelfManagedWorkerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceWorkerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 	wClient := workers.NewClient(md.client)
 
