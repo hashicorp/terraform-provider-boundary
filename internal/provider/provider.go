@@ -92,9 +92,9 @@ func New() *schema.Provider {
 			"boundary_host_set_plugin":              resourceHostSetPlugin(),
 			"boundary_role":                         resourceRole(),
 			"boundary_scope":                        resourceScope(),
-			"boundary_self_managed_worker":          resourceSelfManagedWorker(),
 			"boundary_target":                       resourceTarget(),
 			"boundary_user":                         resourceUser(),
+			"boundary_worker":                       resourceWorker(),
 		},
 	}
 
