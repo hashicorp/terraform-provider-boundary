@@ -1,0 +1,106 @@
+package provider
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/hashicorp/boundary/api"
+	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+const ()
+
+func dataSourceScope() *schema.Resource {
+	return &schema.Resource{
+		Description: "The scope resource allows you to read an existing Boundary scope.",
+		ReadContext: dataSourceScopeRead,
+
+		Schema: map[string]*schema.Schema{
+			IDKey: {
+				Description: "The ID of the scope.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			NameKey: {
+				Description: "The name of the scope to retrieve.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			DescriptionKey: {
+				Description: "The scope description.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			ScopeIdKey: {
+				Description: "The parent scope ID that will be queried for the scope.",
+				Type:        schema.TypeString,
+				Required:    true,
+			},
+			TypeKey: {
+				Description: "The scope type.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+		},
+	}
+}
+
+func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	md := meta.(*metaData)
+	opts := []scopes.Option{}
+
+	var name string
+	if v, ok := d.GetOk(NameKey); ok {
+		name = v.(string)
+	} else {
+		return diag.Errorf("no name provided")
+	}
+
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
+	} else {
+		return diag.Errorf("no scope ID provided")
+	}
+
+	scp := scopes.NewClient(md.client)
+
+	scpls, err := scp.List(ctx, scopeId, opts...)
+	if err != nil {
+		return diag.Errorf("error calling read scope: %v", err)
+	}
+	if scpls == nil {
+		return diag.Errorf("no scopes found")
+	}
+
+	var scopeIdRead string
+	for _, scopeItem := range scpls.GetItems() {
+		if scopeItem.Name == name {
+			scopeIdRead = scopeItem.Id
+		}
+	}
+
+	if scopeIdRead == "" {
+		return diag.Errorf("scope name %v not found in scope list", err)
+	}
+
+	srr, err := scp.Read(ctx, scopeIdRead)
+	if err != nil {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("error calling read scope: %v", err)
+	}
+	if srr == nil {
+		return diag.Errorf("scope nil after read")
+	}
+
+	if err := setFromScopeResponseMap(d, srr.GetResponse().Map); err != nil {
+		return diag.FromErr(err)
+	}
+
+	return nil
+}
