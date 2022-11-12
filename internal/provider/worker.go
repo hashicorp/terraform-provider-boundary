@@ -13,7 +13,6 @@ import (
 const (
 	scope                              = "scope"
 	scopeId                            = "global"
-	createdTime                        = "created_time"
 	version                            = "version"
 	address                            = "address"
 	canonicalTags                      = "canonical_tags"
@@ -75,11 +74,7 @@ func resourceWorker() *schema.Resource {
 				Computed: true,
 			},
 			configTags: {
-<<<<<<< HEAD:internal/provider/worker.go
 				Description: "Tags as configured in the worker's HCL file.",
-=======
-				Description: "",
->>>>>>> ef6f54e859b702c5a853f3f4e90737190ddf3dcc:internal/provider/resource_self_managed_worker.go
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeList,
