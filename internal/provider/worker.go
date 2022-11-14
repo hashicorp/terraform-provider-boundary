@@ -63,6 +63,7 @@ func resourceWorker() *schema.Resource {
 				Computed:    true,
 			},
 			canonicalTags: {
+				// To be implemented
 				Description: "The aggregated view of worker tags and API tags.",
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
@@ -74,6 +75,7 @@ func resourceWorker() *schema.Resource {
 				Computed: true,
 			},
 			configTags: {
+				// To be implemented
 				Description: "Tags as configured in the worker's HCL file.",
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
@@ -95,6 +97,7 @@ func resourceWorker() *schema.Resource {
 				Computed:    true,
 			},
 			apiTags: {
+				// To be implemented
 				Description: "API tags applied to the worker.",
 				Type:        schema.TypeMap,
 				Elem: &schema.Schema{
@@ -128,13 +131,13 @@ func setFromWorkerResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(address, raw["address"])
-	d.Set(canonicalTags, raw["canonical_tags"])
-	d.Set(configTags, raw["config_tags"])
+	// To be implemented d.Set(canonicalTags, raw["canonical_tags"])
+	// To be implemented d.Set(configTags, raw["config_tags"])
 	d.Set(workerGeneratedAuthToken, raw["worker_generated_auth_token"])
 	d.Set(controllerGeneratedActivationToken, raw["controller_generated_activation_token"])
 	d.Set(releaseVersion, raw["release_version"])
 	d.Set(authorizedActions, raw["authorized_actions"])
-	d.Set(apiTags, raw["api_tags"])
+	// To be implemented d.Set(apiTags, raw["api_tags"])
 
 	return nil
 }
