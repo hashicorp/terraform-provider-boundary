@@ -25,7 +25,7 @@ const (
 
 var (
 	workerLedCreate = fmt.Sprintf(`
-	resource "boundary_self_managed_worker" "worker_led" {
+	resource "boundary_worker" "worker_led" {
 		scope_id = "global"
 		name = "%s"
 		description = "%s"
@@ -33,7 +33,7 @@ var (
 	}`, workerName, workerDesc, workerToken)
 
 	workerLedUpdate = fmt.Sprintf(`
-	resource "boundary_self_managed_worker" "worker_led" {
+	resource "boundary_worker" "worker_led" {
 		scope_id = "global"
 		name = "%s"
 		description = "%s"
@@ -41,13 +41,13 @@ var (
 	}`, workerNameUpdate, workerDescUpdate, workerToken)
 
 	controllerLedCreate = fmt.Sprintf(`
-resource "boundary_self_managed_worker" "controller_led" {
+resource "boundary_worker" "controller_led" {
 	scope_id = "global"
 	name = "%s"
 	description = "%s"
 }`, workerName, workerDesc)
 	controllerLedUpdate = fmt.Sprintf(`
-resource "boundary_self_managed_worker" "controller_led" {
+resource "boundary_worker" "controller_led" {
 	scope_id = "global"
 	name = "%s"
 	description = "%s"
@@ -73,22 +73,22 @@ func TestWorkerWorkerLed(t *testing.T) {
 				// create
 				Config: testConfig(url, workerLedCreate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckworkerResourceExists(provider, "boundary_self_managed_worker.worker_led"),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.worker_led", "description", workerDesc),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.worker_led", "name", workerName),
+					testAccCheckworkerResourceExists(provider, "boundary_worker.worker_led"),
+					resource.TestCheckResourceAttr("boundary_worker.worker_led", "description", workerDesc),
+					resource.TestCheckResourceAttr("boundary_worker.worker_led", "name", workerName),
 				),
 			},
-			importStep("boundary_self_managed_worker.worker_led"),
+			importStep("boundary_worker.worker_led"),
 			{
 				// update
 				Config: testConfig(url, workerLedUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckworkerResourceExists(provider, "boundary_self_managed_worker.worker_led"),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.worker_led", "description", workerDescUpdate),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.worker_led", "name", workerNameUpdate),
+					testAccCheckworkerResourceExists(provider, "boundary_worker.worker_led"),
+					resource.TestCheckResourceAttr("boundary_worker.worker_led", "description", workerDescUpdate),
+					resource.TestCheckResourceAttr("boundary_worker.worker_led", "name", workerNameUpdate),
 				),
 			},
-			importStep("boundary_self_managed_worker.worker_led"),
+			importStep("boundary_worker.worker_led"),
 		},
 	})
 }
@@ -107,23 +107,23 @@ func TestWorkerControllerLed(t *testing.T) {
 				// create
 				Config: testConfig(url, controllerLedCreate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckworkerResourceExists(provider, "boundary_self_managed_worker.controller_led"),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.controller_led", "description", workerDesc),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.controller_led", "name", workerName),
-					resource.TestCheckResourceAttrSet("boundary_self_managed_worker.controller_led", "controller_generated_activation_token"),
+					testAccCheckworkerResourceExists(provider, "boundary_worker.controller_led"),
+					resource.TestCheckResourceAttr("boundary_worker.controller_led", "description", workerDesc),
+					resource.TestCheckResourceAttr("boundary_worker.controller_led", "name", workerName),
+					resource.TestCheckResourceAttrSet("boundary_worker.controller_led", "controller_generated_activation_token"),
 				),
 			},
-			importStep("boundary_self_managed_worker.controller_led"),
+			importStep("boundary_worker.controller_led"),
 			{
 				// update
 				Config: testConfig(url, controllerLedUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckworkerResourceExists(provider, "boundary_self_managed_worker.controller_led"),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.controller_led", "description", workerDescUpdate),
-					resource.TestCheckResourceAttr("boundary_self_managed_worker.controller_led", "name", workerNameUpdate),
+					testAccCheckworkerResourceExists(provider, "boundary_worker.controller_led"),
+					resource.TestCheckResourceAttr("boundary_worker.controller_led", "description", workerDescUpdate),
+					resource.TestCheckResourceAttr("boundary_worker.controller_led", "name", workerNameUpdate),
 				),
 			},
-			importStep("boundary_self_managed_worker.controller_led"),
+			importStep("boundary_worker.controller_led"),
 		},
 	})
 }
@@ -161,7 +161,7 @@ func testAccCheckworkerResourceDestroy(t *testing.T, testProvider *schema.Provid
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_self_managed_worker":
+			case "boundary_worker":
 				id := rs.Primary.ID
 
 				wkrClient := workers.NewClient(md.client)
