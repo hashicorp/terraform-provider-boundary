@@ -74,14 +74,14 @@ jobs:
 
     - name: Close ticket
       if: (github.event.action == 'closed' || github.event.action == 'deleted') && steps.search.outputs.issue
-      uses: atlassian/gajira-transition@v2.0.2
+      uses: atlassian/gajira-transition@v3.0.0
       with:
         issue: ${{ steps.search.outputs.issue }}
         transition: Done
 
     - name: Reopen ticket
       if: github.event.action == 'reopened' && steps.search.outputs.issue
-      uses: atlassian/gajira-transition@v2.0.2
+      uses: atlassian/gajira-transition@v3.0.0
       with:
         issue: ${{ steps.search.outputs.issue }}
         transition: "To Do"
