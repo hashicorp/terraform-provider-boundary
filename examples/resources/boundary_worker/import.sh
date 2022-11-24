@@ -1,0 +1,1 @@
+terraform import boundary_worker.foo <my-id>

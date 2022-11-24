@@ -94,6 +94,7 @@ func New() *schema.Provider {
 			"boundary_scope":                        resourceScope(),
 			"boundary_target":                       resourceTarget(),
 			"boundary_user":                         resourceUser(),
+			"boundary_worker":                       resourceWorker(),
 		},
 	}
 
