@@ -2,13 +2,19 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## 1.1.3 (November 29, 2022)
+
+### New and Improved
+
+* Add support for a workers as a resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/293)).
+
 ## 1.1.2 (October 18, 2022)
 
 ### New and Improved
 
 * Add support for setting mapping overrides for vault credential libraries
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/287)).
-
 
 ### Bug Fixes
 
