@@ -14,7 +14,7 @@ const ()
 
 func dataSourceScope() *schema.Resource {
 	return &schema.Resource{
-		Description: "The scope resource allows you to read an existing Boundary scope.",
+		Description: "The scope data source allows you to discover an existing Boundary scope by name.",
 		ReadContext: dataSourceScopeRead,
 
 		Schema: map[string]*schema.Schema{
@@ -37,11 +37,6 @@ func dataSourceScope() *schema.Resource {
 				Description: "The parent scope ID that will be queried for the scope.",
 				Type:        schema.TypeString,
 				Required:    true,
-			},
-			TypeKey: {
-				Description: "The scope type.",
-				Type:        schema.TypeString,
-				Optional:    true,
 			},
 		},
 	}
