@@ -99,3 +99,12 @@ resource "boundary_target" "ssh_foo" {
     boundary_credential_library_vault.foo.id
   ]
 }
+
+resource "boundary_target" "address_foo" {
+  name         = "address_foo"
+  description  = "Foo target with an address"
+  type         = "tcp"
+  default_port = "22"
+  scope_id     = boundary_scope.project.id
+  address      = "127.0.0.1"
+}

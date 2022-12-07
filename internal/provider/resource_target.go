@@ -24,6 +24,7 @@ const (
 	targetWorkerFilterKey                   = "worker_filter"
 	targetWorkerEgressFilterKey             = "egress_worker_filter"
 	targetWorkerIngressFilterKey            = "ingress_worker_filter"
+	targetAddressKey                        = "address"
 
 	targetTypeTcp = "tcp"
 	targetTypeSsh = "ssh"
@@ -75,10 +76,11 @@ func resourceTarget() *schema.Resource {
 				Optional:    true,
 			},
 			targetHostSourceIdsKey: {
-				Description: "A list of host source ID's.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description:   "A list of host source ID's. Cannot be used alongside address.",
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{targetAddressKey},
 			},
 			targetBrokeredCredentialSourceIdsKey: {
 				Description: "A list of brokered credential source ID's.",
@@ -117,6 +119,12 @@ func resourceTarget() *schema.Resource {
 				Description: "HCP Only. Boolean expression to filter the workers a user will connect to when initiating a session against this target",
 				Type:        schema.TypeString,
 				Optional:    true,
+			},
+			targetAddressKey: {
+				Description:   "Optionally, a valid network address to connect to for this target. Cannot be used alongside host_source_ids.",
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{targetHostSourceIdsKey},
 			},
 		},
 	}
@@ -157,6 +165,9 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 		return err
 	}
 	if err := d.Set(targetWorkerIngressFilterKey, raw["ingress_worker_filter"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetAddressKey, raw["address"]); err != nil {
 		return err
 	}
 
@@ -287,6 +298,12 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if ok {
 		workerIngressFilterStr := workerIngressFilterVal.(string)
 		opts = append(opts, targets.WithIngressWorkerFilter(workerIngressFilterStr))
+	}
+
+	addrVal, ok := d.GetOk(targetAddressKey)
+	if ok {
+		addrStr := addrVal.(string)
+		opts = append(opts, targets.WithAddress(addrStr))
 	}
 
 	tc := targets.NewClient(md.client)
@@ -489,6 +506,17 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	var addr *string
+	if d.HasChange(targetAddressKey) {
+		opts = append(opts, targets.DefaultAddress())
+		addrVal, ok := d.GetOk(targetAddressKey)
+		if ok {
+			addrStr := addrVal.(string)
+			addr = &addrStr
+			opts = append(opts, targets.WithAddress(addrStr))
+		}
+	}
+
 	if len(opts) > 0 {
 		opts = append(opts, targets.WithAutomaticVersioning(true))
 		_, err := tc.Update(ctx, d.Id(), 0, opts...)
@@ -534,6 +562,11 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange(targetWorkerIngressFilterKey) {
 		if err := d.Set(targetWorkerIngressFilterKey, workerIngressFilter); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange(targetAddressKey) {
+		if err := d.Set(targetAddressKey, addr); err != nil {
 			return diag.FromErr(err)
 		}
 	}
