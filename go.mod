@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.19
 
 require (
-	github.com/hashicorp/boundary v0.11.1
+	github.com/hashicorp/boundary v0.11.2
 	github.com/hashicorp/boundary/api v0.0.32
 	github.com/hashicorp/boundary/sdk v0.0.26
 	github.com/hashicorp/cap v0.2.0
