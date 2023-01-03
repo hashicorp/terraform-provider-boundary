@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // Helpers for dealing with file paths and their contents
 //
 // Originally from Terraform; see
