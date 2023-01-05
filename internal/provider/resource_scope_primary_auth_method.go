@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -47,6 +48,7 @@ func setFromScopePrimaryAuthMethodResponseMap(d *schema.ResourceData, raw map[st
 		return err
 	}
 	d.SetId(raw["id"].(string))
+	fmt.Printf("\nDEBUG SET %v\n\n", d.State().Attributes)
 	return nil
 }
 
@@ -68,6 +70,7 @@ func resourceScopePrimaryAuthMethodCreate(ctx context.Context, d *schema.Resourc
 	if apiResponse == nil {
 		return diag.Errorf("scope nil after updating primary auth method")
 	}
+	fmt.Printf("\nDEBUG CREATE %v\n\n", apiResponse.GetResponse().Map)
 
 	if err := setFromScopePrimaryAuthMethodResponseMap(d, apiResponse.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
@@ -91,6 +94,8 @@ func resourceScopePrimaryAuthMethodRead(ctx context.Context, d *schema.ResourceD
 	if apiResponse == nil {
 		return diag.Errorf("scope nil after read")
 	}
+
+	fmt.Printf("\nDEBUG READ %v\n\n", apiResponse.GetResponse().Map)
 
 	if err := setFromScopePrimaryAuthMethodResponseMap(d, apiResponse.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
