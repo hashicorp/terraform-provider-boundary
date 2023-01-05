@@ -73,7 +73,7 @@ func TestScopePrimaryAuthMethodCreation(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckPrimaryAuthMethodResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
 				Config: testConfig(url, bazOrg, bazAuthMethod, baseScopePrimaryAuthMethod),
@@ -156,6 +156,31 @@ func testCheckScopePrimaryAuthMethodResourceExists(testProvider *schema.Provider
 			return fmt.Errorf("Primary AuthMethod Id not matching expected value. got %s. wanted %s.", gotAuthMethodId, actualAuthMethodId)
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckPrimaryAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// retrieve the connection established in Provider configuration
+		md := testProvider.Meta().(*metaData)
+		scp := scopes.NewClient(md.client)
+
+		for _, rs := range s.RootModule().Resources {
+			id := rs.Primary.ID
+			switch rs.Type {
+			case "boundary_scope_primary_auth_method":
+				scopeResource, err := scp.Read(context.Background(), id)
+				if err != nil {
+					return fmt.Errorf("resource does not exist %q: %w", id, err)
+				}
+				if scopeResource.GetItem().PrimaryAuthMethodId != "" {
+					return fmt.Errorf("primary auth method id not removed from scope when reading destroyed resource %q: %w", id, err)
+				}
+			default:
+				continue
+			}
+		}
 		return nil
 	}
 }
