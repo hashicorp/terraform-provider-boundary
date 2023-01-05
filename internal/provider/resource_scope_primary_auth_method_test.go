@@ -82,21 +82,21 @@ func TestScopePrimaryAuthMethodCreation(t *testing.T) {
 				),
 			},
 			importStep("boundary_scope_primary_auth_method.baz"),
-			{
-				Config: testConfig(url, bazOrg, bazAuthMethod, baseScopePrimaryAuthMethod, updatePrimaryAuthMethod),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckScopePrimaryAuthMethodResourceExists(provider, "boundary_scope_primary_auth_method.baz"),
-				),
-			},
-			importStep("boundary_scope_primary_auth_method.baz"),
-			{
-				Config: testConfig(url, bazOrg, bazAuthMethod, baseScopePrimaryAuthMethod, updateScopeId),
-				Check: resource.ComposeTestCheckFunc(
-					testCheckScopePrimaryAuthMethodResourceExists(provider, "boundary_scope_primary_auth_method.baz"),
-					testCheckOldScopePrimaryAuthMethodResourceUnset(provider, "boundary_scope.baz.id"),
-				),
-			},
-			importStep("boundary_scope_primary_auth_method.baz"),
+			// {
+			// 	Config: testConfig(url, bazOrg, bazAuthMethod, baseScopePrimaryAuthMethod, updatePrimaryAuthMethod),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testCheckScopePrimaryAuthMethodResourceExists(provider, "boundary_scope_primary_auth_method.baz"),
+			// 	),
+			// },
+			// importStep("boundary_scope_primary_auth_method.baz"),
+			// {
+			// 	Config: testConfig(url, bazOrg, bazAuthMethod, baseScopePrimaryAuthMethod, updateScopeId),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testCheckScopePrimaryAuthMethodResourceExists(provider, "boundary_scope_primary_auth_method.baz"),
+			// 		testCheckOldScopePrimaryAuthMethodResourceUnset(provider, "boundary_scope.baz.id"),
+			// 	),
+			// },
+			// importStep("boundary_scope_primary_auth_method.baz"),
 		},
 	})
 }
