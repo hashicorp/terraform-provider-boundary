@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	scopeIdKey      = "scope_id"
 	authMethodIdKey = "auth_method_id"
 )
 
@@ -29,7 +28,7 @@ func resourceScopePrimaryAuthMethod() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			scopeIdKey: {
+			IDKey: {
 				Description: "The ID of the scope.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -55,7 +54,7 @@ func setFromScopePrimaryAuthMethodResponseMap(d *schema.ResourceData, raw map[st
 func resourceScopePrimaryAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	scopeId := d.Get(scopeIdKey).(string)
+	scopeId := d.Get(IDKey).(string)
 	authMethodId := d.Get(authMethodIdKey).(string)
 
 	opts := []scopes.Option{
@@ -108,8 +107,8 @@ func resourceScopePrimaryAuthMethodUpdate(ctx context.Context, d *schema.Resourc
 	md := meta.(*metaData)
 	scpClient := scopes.NewClient(md.client)
 
-	if d.HasChange(scopeIdKey) {
-		oldScopeId, _ := d.GetChange(scopeIdKey)
+	if d.HasChange(IDKey) {
+		oldScopeId, _ := d.GetChange(IDKey)
 		if oldScopeId != nil {
 			_, err := scpClient.Update(ctx, oldScopeId.(string), 0,
 				scopes.WithAutomaticVersioning(true),
@@ -123,7 +122,7 @@ func resourceScopePrimaryAuthMethodUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.HasChange(authMethodIdKey) {
-		scopeId := d.Get(scopeIdKey).(string)
+		scopeId := d.Get(IDKey).(string)
 		authMethodId := d.Get(authMethodIdKey).(string)
 		apiResponse, err := scpClient.Update(ctx, scopeId, 0,
 			scopes.WithAutomaticVersioning(true),
