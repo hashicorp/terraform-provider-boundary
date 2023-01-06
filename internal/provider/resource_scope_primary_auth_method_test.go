@@ -62,7 +62,7 @@ resource "boundary_scope_primary_auth_method" "baz" {
 	updateScopeId = `
 resource "boundary_scope_primary_auth_method" "baz" {
   scope_id       = boundary_scope.foobaz.id
-  auth_method_id = boundary_auth_method.foobaz.id
+  auth_method_id = boundary_auth_method.baz.id
 }
 `
 )
