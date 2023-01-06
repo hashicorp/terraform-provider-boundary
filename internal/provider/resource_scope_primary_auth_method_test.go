@@ -85,7 +85,7 @@ func TestScopePrimaryAuthMethodCreation(t *testing.T) {
 			},
 			importStep("boundary_scope_primary_auth_method.baz"),
 			{
-				Config: testConfig(url, bazOrg, bazAuthMethod, baseScopePrimaryAuthMethod, updatePrimaryAuthMethod),
+				Config: testConfig(url, bazOrg, bazAuthMethod, foobazAuthMethod, updatePrimaryAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckScopePrimaryAuthMethodResourceExists(provider, "boundary_scope_primary_auth_method.baz"),
 				),
