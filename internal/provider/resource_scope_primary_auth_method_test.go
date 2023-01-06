@@ -3,8 +3,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -170,12 +172,9 @@ func testAccCheckPrimaryAuthMethodResourceDestroy(t *testing.T, testProvider *sc
 			id := rs.Primary.ID
 			switch rs.Type {
 			case "boundary_scope_primary_auth_method":
-				scopeResource, err := scp.Read(context.Background(), id)
-				if err != nil {
-					return fmt.Errorf("resource does not exist %q: %w", id, err)
-				}
-				if scopeResource.GetItem().PrimaryAuthMethodId != "" {
-					return fmt.Errorf("primary auth method id not removed from scope when reading destroyed resource %q: %w", id, err)
+				_, err := scp.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed resource %q: %w", id, err)
 				}
 			default:
 				continue
