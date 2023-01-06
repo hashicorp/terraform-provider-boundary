@@ -31,7 +31,13 @@ func resourceScopePrimaryAuthMethod() *schema.Resource {
 			IDKey: {
 				Description: "The ID of the scope.",
 				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			ScopeIdKey: {
+				Description: "The ID of the scope.",
+				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 			},
 			authMethodIdKey: {
 				Description: "The ID of the auth method.",
@@ -46,6 +52,9 @@ func setFromScopePrimaryAuthMethodResponseMap(d *schema.ResourceData, raw map[st
 	if err := d.Set(authMethodIdKey, raw["primary_auth_method_id"]); err != nil {
 		return err
 	}
+	if err := d.Set(ScopeIdKey, raw["id"]); err != nil {
+		return err
+	}
 	d.SetId(raw["id"].(string))
 	fmt.Printf("\nDEBUG SET %v\n\n", d.State().Attributes)
 	return nil
@@ -54,7 +63,7 @@ func setFromScopePrimaryAuthMethodResponseMap(d *schema.ResourceData, raw map[st
 func resourceScopePrimaryAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
 
-	scopeId := d.Get(IDKey).(string)
+	scopeId := d.Get(ScopeIdKey).(string)
 	authMethodId := d.Get(authMethodIdKey).(string)
 
 	opts := []scopes.Option{
@@ -107,22 +116,8 @@ func resourceScopePrimaryAuthMethodUpdate(ctx context.Context, d *schema.Resourc
 	md := meta.(*metaData)
 	scpClient := scopes.NewClient(md.client)
 
-	if d.HasChange(IDKey) {
-		oldScopeId, _ := d.GetChange(IDKey)
-		if oldScopeId != nil {
-			_, err := scpClient.Update(ctx, oldScopeId.(string), 0,
-				scopes.WithAutomaticVersioning(true),
-				scopes.DefaultPrimaryAuthMethodId())
-			if err != nil {
-				if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() != http.StatusNotFound {
-					return diag.Errorf("error removing primary auth method from old scope %v", err)
-				}
-			}
-		}
-	}
-
 	if d.HasChange(authMethodIdKey) {
-		scopeId := d.Get(IDKey).(string)
+		scopeId := d.Get(ScopeIdKey).(string)
 		authMethodId := d.Get(authMethodIdKey).(string)
 		apiResponse, err := scpClient.Update(ctx, scopeId, 0,
 			scopes.WithAutomaticVersioning(true),
