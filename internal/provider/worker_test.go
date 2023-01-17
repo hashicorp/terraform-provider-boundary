@@ -29,7 +29,6 @@ const (
 var (
 	workerLedCreate = fmt.Sprintf(`
 	resource "boundary_worker" "worker_led" {
-		scope_id = "global"
 		name = "%s"
 		description = "%s"
 		worker_generated_auth_token = "%s"
@@ -37,7 +36,6 @@ var (
 
 	workerLedUpdate = fmt.Sprintf(`
 	resource "boundary_worker" "worker_led" {
-		scope_id = "global"
 		name = "%s"
 		description = "%s"
 		worker_generated_auth_token = "%s"
@@ -45,13 +43,11 @@ var (
 
 	controllerLedCreate = fmt.Sprintf(`
 resource "boundary_worker" "controller_led" {
-	scope_id = "global"
 	name = "%s"
 	description = "%s"
 }`, workerName, workerDesc)
 	controllerLedUpdate = fmt.Sprintf(`
 resource "boundary_worker" "controller_led" {
-	scope_id = "global"
 	name = "%s"
 	description = "%s"
 }`, workerNameUpdate, workerDescUpdate)

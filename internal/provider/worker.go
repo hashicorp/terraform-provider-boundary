@@ -48,7 +48,7 @@ func resourceWorker() *schema.Resource {
 			ScopeIdKey: {
 				Description: "The scope for the worker.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			NameKey: {
 				Description: "The name for the worker.",
