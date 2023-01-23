@@ -46,7 +46,7 @@ func resourceWorker() *schema.Resource {
 				Computed:    true,
 			},
 			ScopeIdKey: {
-				Description: "The scope for the worker.",
+				Description: "The scope for the worker. Defaults to `global`.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -214,7 +214,7 @@ func resourceWorkerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return diag.Errorf("error updating worker: %v", err)
 		}
 	}
-
+	
 	if d.HasChange(NameKey) {
 		if err := d.Set(NameKey, name); err != nil {
 			return diag.FromErr(err)
