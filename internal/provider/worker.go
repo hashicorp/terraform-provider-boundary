@@ -46,9 +46,9 @@ func resourceWorker() *schema.Resource {
 				Computed:    true,
 			},
 			ScopeIdKey: {
-				Description: "The scope for the worker.",
+				Description: "The scope for the worker. Defaults to `global`.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 			},
 			NameKey: {
 				Description: "The name for the worker.",

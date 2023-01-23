@@ -69,6 +69,7 @@ func TestWorkerWorkerLed(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckworkerResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
@@ -103,6 +104,7 @@ func TestWorkerControllerLed(t *testing.T) {
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckworkerResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
