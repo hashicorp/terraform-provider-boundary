@@ -2,9 +2,6 @@ module github.com/hashicorp/terraform-provider-boundary
 
 go 1.19
 
-// TODO REMOVE THIS AFTER THE 0.12.0 RELEASE
-replace github.com/hashicorp/boundary => ../boundary
-
 require (
 	github.com/hashicorp/boundary v0.12.0
 	github.com/hashicorp/boundary/api v0.0.33
@@ -127,6 +124,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
+	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a // indirect
 	github.com/mitchellh/cli v1.1.4 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect

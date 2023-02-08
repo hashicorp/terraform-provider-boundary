@@ -632,6 +632,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFb
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2 h1:BqHID5W5qnMkug0Z8UmL8tN0gAy4jQ+B4WFt8cCgluU=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2/go.mod h1:ZbS3MZTZq/apAfAEHGoB5HbsQQstoqP92SjAqtQ9zeg=
 github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed/go.mod h1:tMWxXQ9wFIaZeTI9F+hmhFiGpFmhOHzyShyFUhRm0H4=
+github.com/hashicorp/boundary v0.12.0 h1:GRghJrzD82AQsfRPYHq2LbKTzV+s35K2L71dMIVHwug=
+github.com/hashicorp/boundary v0.12.0/go.mod h1:A7x+oV7sX7OSxTexUgJBVQO27UaqL4F8eVRvnV9gDu4=
 github.com/hashicorp/boundary/api v0.0.33 h1:BwHehKba7IK7NbBdZAC8h5fEtiRYL30N0VNkZPAS1EY=
 github.com/hashicorp/boundary/api v0.0.33/go.mod h1:yroNrsyCVCSEKnrbyDeyS2iO0aMq7BTYtAptZWgIb60=
 github.com/hashicorp/boundary/sdk v0.0.29 h1:XtgK6+sRQOkpoPfoHaZwRuy/1q0xW4F8X5niZO9fnuA=
@@ -987,6 +989,8 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 h1:I0XW9+e1XWDxdcEniV4rQAIOPUGDq67JSCiRCgGCZLI=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/miekg/pkcs11 v1.0.3/go.mod h1:XsNlhZGX73bx86s2hdc/FuaLm2CPZJemRLMA+WTFxgs=
+github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a h1:eU8j/ClY2Ty3qdHnn0TyW3ivFoPC/0F1gQZz8yTxbbE=
+github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a/go.mod h1:v8eSC2SMp9/7FTKUncp7fH9IwPfw+ysMObcEz5FWheQ=
 github.com/mistifyio/go-zfs v2.1.2-0.20190413222219-f784269be439+incompatible/go.mod h1:8AuVvqP/mXw1px98n46wfvcGfQ4ci2FwoAjKYxuo3Z4=
 github.com/mitchellh/cli v1.0.0/go.mod h1:hNIlj7HEI86fIcpObd7a0FcrxTWetlwJDGcceTlRvqc=
 github.com/mitchellh/cli v1.1.2/go.mod h1:6iaV0fGdElS6dPBx0EApTxHrcWvmJphyh2n8YBLPPZ4=
