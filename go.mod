@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/hashicorp/boundary v0.12.0
 	github.com/hashicorp/boundary/api v0.0.33
-	github.com/hashicorp/boundary/sdk v0.0.29
+	github.com/hashicorp/boundary/sdk v0.0.30
 	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.6-0.20221122211539-47c893099f13
