@@ -15,6 +15,7 @@ import (
 
 const (
 	credentialStoreIdKey                           = "credential_store_id"
+	credentialLibraryVaultType                     = "vault-generic"
 	credentialLibraryVaultHttpMethodKey            = "http_method"
 	credentialLibraryVaultHttpRequestBodyKey       = "http_request_body"
 	credentialLibraryVaultPathKey                  = "path"
@@ -156,7 +157,7 @@ func resourceCredentialLibraryCreateVault(ctx context.Context, d *schema.Resourc
 	}
 
 	client := credentiallibraries.NewClient(md.client)
-	cr, err := client.Create(ctx, credentialStoreId, opts...)
+	cr, err := client.Create(ctx, credentialLibraryVaultType, credentialStoreId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating credential library: %v", err)
 	}
