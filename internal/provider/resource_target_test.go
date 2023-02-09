@@ -100,7 +100,7 @@ resource "boundary_target" "foo" {
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 6000
 	session_connection_limit = 6
-	worker_filter = "type == \"foo\""
+	egress_worker_filter = "type == \"foo\""
 }`, fooTargetDescription)
 
 	fooTargetUpdate = fmt.Sprintf(`
@@ -119,7 +119,7 @@ resource "boundary_target" "foo" {
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 7000
 	session_connection_limit = 7
-	worker_filter = "type == \"bar\""
+	egress_worker_filter = "type == \"bar\""
 }`, fooTargetDescriptionUpdate)
 
 	fooTargetUpdateUnsetHostAndCredSources = fmt.Sprintf(`
@@ -132,7 +132,7 @@ resource "boundary_target" "foo" {
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 7000
 	session_connection_limit = 7
-	worker_filter = "type == \"bar\""
+	egress_worker_filter = "type == \"bar\""
 }`, fooTargetDescriptionUpdate)
 
 	fooTargetPartialSuccess = fmt.Sprintf(`
@@ -183,7 +183,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "6000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "foo"`),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "foo"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
 					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.foo"}),
 				),
@@ -198,7 +198,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "bar"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.bar"}),
 					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", []string{"boundary_credential_library_vault.bar"}),
 				),
@@ -213,7 +213,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "bar"`),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", nil),
 					testAccCheckTargetResourceBrokeredCredSources(provider, "boundary_target.foo", nil),
 				),
@@ -243,7 +243,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
-					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerFilterKey, `type == "bar"`),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "bar"`),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetHostSourceIdsKey+".%", "0"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetInjectedAppCredentialSourceIdsKey+".%", "0"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetBrokeredCredentialSourceIdsKey+".%", "0"),

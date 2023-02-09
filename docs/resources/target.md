@@ -131,7 +131,9 @@ resource "boundary_target" "ssh_foo" {
 - `name` (String) The target name. Defaults to the resource name.
 - `session_connection_limit` (Number)
 - `session_max_seconds` (Number)
-- `worker_filter` (String) Boolean expression to filter the workers for this target
+- `egress_worker_filter` (String) Boolean expression to filter the workers used to access this target
+- `ingress_worker_filter` (String, HCP Only) Boolean expression to filter the workers a user will connect to when initiating a session against this target
+- `worker_filter` (String, Deprecated) Boolean expression to filter the workers for this target. Use `egress_worker_filter` and `ingress_worker_filter` instead.
 
 ### Read-Only
 

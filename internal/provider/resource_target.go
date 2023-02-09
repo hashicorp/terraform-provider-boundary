@@ -22,6 +22,8 @@ const (
 	targetSessionMaxSecondsKey              = "session_max_seconds"
 	targetSessionConnectionLimitKey         = "session_connection_limit"
 	targetWorkerFilterKey                   = "worker_filter"
+	targetWorkerEgressFilterKey             = "egress_worker_filter"
+	targetWorkerIngressFilterKey            = "ingress_worker_filter"
 
 	targetTypeTcp = "tcp"
 	targetTypeSsh = "ssh"
@@ -104,6 +106,17 @@ func resourceTarget() *schema.Resource {
 				Description: "Boolean expression to filter the workers for this target",
 				Type:        schema.TypeString,
 				Optional:    true,
+				Deprecated:  "Deprecated. Use `egress_worker_filter` and `ingress_worker_filter` instead",
+			},
+			targetWorkerEgressFilterKey: {
+				Description: "Boolean expression to filter the workers used to access this target",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			targetWorkerIngressFilterKey: {
+				Description: "HCP Only. Boolean expression to filter the workers a user will connect to when initiating a session against this target",
+				Type:        schema.TypeString,
+				Optional:    true,
 			},
 		},
 	}
@@ -138,6 +151,12 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 		return err
 	}
 	if err := d.Set(targetWorkerFilterKey, raw["worker_filter"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetWorkerEgressFilterKey, raw["egress_worker_filter"]); err != nil {
+		return err
+	}
+	if err := d.Set(targetWorkerIngressFilterKey, raw["ingress_worker_filter"]); err != nil {
 		return err
 	}
 
@@ -256,6 +275,18 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if ok {
 		workerFilterStr := workerFilterVal.(string)
 		opts = append(opts, targets.WithWorkerFilter(workerFilterStr))
+	}
+
+	workerEgressFilterVal, ok := d.GetOk(targetWorkerEgressFilterKey)
+	if ok {
+		workerEgressFilterStr := workerEgressFilterVal.(string)
+		opts = append(opts, targets.WithEgressWorkerFilter(workerEgressFilterStr))
+	}
+
+	workerIngressFilterVal, ok := d.GetOk(targetWorkerIngressFilterKey)
+	if ok {
+		workerIngressFilterStr := workerIngressFilterVal.(string)
+		opts = append(opts, targets.WithIngressWorkerFilter(workerIngressFilterStr))
 	}
 
 	tc := targets.NewClient(md.client)
@@ -436,6 +467,28 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	var workerEgressFilter *string
+	if d.HasChange(targetWorkerEgressFilterKey) {
+		opts = append(opts, targets.DefaultEgressWorkerFilter())
+		workerEgressFilterVal, ok := d.GetOk(targetWorkerEgressFilterKey)
+		if ok {
+			workerEgressFilterStr := workerEgressFilterVal.(string)
+			workerEgressFilter = &workerEgressFilterStr
+			opts = append(opts, targets.WithEgressWorkerFilter(workerEgressFilterStr))
+		}
+	}
+
+	var workerIngressFilter *string
+	if d.HasChange(targetWorkerIngressFilterKey) {
+		opts = append(opts, targets.DefaultIngressWorkerFilter())
+		workerIngressFilterVal, ok := d.GetOk(targetWorkerIngressFilterKey)
+		if ok {
+			workerIngressFilterStr := workerIngressFilterVal.(string)
+			workerIngressFilter = &workerIngressFilterStr
+			opts = append(opts, targets.WithIngressWorkerFilter(workerIngressFilterStr))
+		}
+	}
+
 	if len(opts) > 0 {
 		opts = append(opts, targets.WithAutomaticVersioning(true))
 		_, err := tc.Update(ctx, d.Id(), 0, opts...)
@@ -471,6 +524,16 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange(targetWorkerFilterKey) {
 		if err := d.Set(targetWorkerFilterKey, workerFilter); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange(targetWorkerEgressFilterKey) {
+		if err := d.Set(targetWorkerEgressFilterKey, workerEgressFilter); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange(targetWorkerIngressFilterKey) {
+		if err := d.Set(targetWorkerIngressFilterKey, workerIngressFilter); err != nil {
 			return diag.FromErr(err)
 		}
 	}
