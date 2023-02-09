@@ -19,7 +19,7 @@ The resource allows you to create a self-managed worker object.
 
 - `description` (String) The description for the worker.
 - `name` (String) The name for the worker.
-- `scope_id` (String) The scope for the worker.  Defaults to `global`.
+- `scope_id` (String) The scope for the worker. Defaults to `global`.
 - `worker_generated_auth_token` (String) The worker authentication token required to register the worker for the worker-led authentication flow. Leaving this blank will result in a controller generated token.
 
 ### Read-Only
