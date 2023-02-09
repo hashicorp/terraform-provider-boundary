@@ -137,7 +137,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/ory/dockertest/v3 v3.7.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
