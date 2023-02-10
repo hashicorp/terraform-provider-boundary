@@ -149,6 +149,65 @@ resource "boundary_target" "foo" {
 		boundary_credential_library_vault.bar.id
 	]
 }`, fooTargetDescription)
+
+	fooTargetWithIPAddress = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name         = "test"
+	description  = "%s"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	address      = "127.0.0.1"
+	default_port = 22
+	depends_on  = [boundary_role.proj1_admin]
+}`, fooTargetDescription)
+
+	fooTargetWithDNSAddress = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name         = "test"
+	description  = "%s"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	address      = "localhost"
+	default_port = 22
+	depends_on  = [boundary_role.proj1_admin]
+}`, fooTargetDescription)
+
+	fooTargetUnsetAddress = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name         = "test"
+	description  = "%s"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	default_port = 22
+	depends_on  = [boundary_role.proj1_admin]
+}`, fooTargetDescription)
+
+	fooTargetSetHostSource = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name         = "test"
+	description  = "%s"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	default_port = 22
+	host_source_ids = [
+		boundary_host_set.foo.id
+	]
+	depends_on  = [boundary_role.proj1_admin]
+}`, fooTargetDescription)
+
+	fooTargetWithAddressAndHostSource = fmt.Sprintf(`
+resource "boundary_target" "foo" {
+	name         = "test"
+	description  = "%s"
+	type         = "tcp"
+	scope_id     = boundary_scope.proj1.id
+	address      = "localhost"
+	host_source_ids = [
+		boundary_host_set.foo.id
+	]
+	default_port = 22
+	depends_on  = [boundary_role.proj1_admin]
+}`, fooTargetDescription)
 )
 
 func TestAccTarget(t *testing.T) {
@@ -250,6 +309,130 @@ func TestAccTarget(t *testing.T) {
 				),
 			},
 			importStep("boundary_target.foo"),
+		},
+	})
+}
+
+func TestAccTargetWithAddress(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	t.Cleanup(tc.Shutdown)
+
+	url := tc.ApiAddrs()[0]
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckTargetResourceDestroy(t, provider),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetWithIPAddress),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, "127.0.0.1"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+				),
+			},
+			importStep("boundary_target.foo"),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetWithDNSAddress),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, "localhost"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+				),
+			},
+			importStep("boundary_target.foo"),
+			{
+				// test update to unset address
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetUnsetAddress),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, ""),
+				),
+			},
+			importStep("boundary_target.foo"),
+			{
+				// test set host source
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooBarHostSet, fooTargetSetHostSource),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	t.Cleanup(tc.Shutdown)
+
+	url := tc.ApiAddrs()[0]
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckTargetResourceDestroy(t, provider),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetWithIPAddress),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, "127.0.0.1"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+				),
+			},
+			importStep("boundary_target.foo"),
+			{
+				// test set host source
+				Config: testConfig(url, fooOrg, firstProjectFoo, fooBarHostSet, fooTargetSetHostSource),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
+					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
+					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
+					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTargetWithAddress_HostSourceAndAddressConflict(t *testing.T) {
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckTargetResourceDestroy(t, provider),
+		Steps: []resource.TestStep{
+			{
+				// test create target with address and host source
+				Config:      testConfig("not_required", fooOrg, firstProjectFoo, fooBarHostSet, fooTargetWithAddressAndHostSource),
+				ExpectError: regexp.MustCompile(`"address": conflicts with host_source_ids`),
+			},
 		},
 	})
 }
