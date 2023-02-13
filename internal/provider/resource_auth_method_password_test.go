@@ -50,7 +50,7 @@ func TestAccAuthMethodPassword(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider, ldapAuthMethodType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -102,7 +102,15 @@ func testAccCheckAuthMethodResourceExists(testProvider *schema.Provider, name st
 	}
 }
 
-func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type authMethodType string
+
+const (
+	passwordAuthMethodType authMethodType = "boundary_auth_method_password"
+	ldapAuthMethodType     authMethodType = "boundary_auth_method_ldap"
+	oidcAuthMethodType     authMethodType = "boundary_auth_method_oidc"
+)
+
+func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Provider, typ authMethodType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -111,7 +119,7 @@ func testAccCheckAuthMethodResourceDestroy(t *testing.T, testProvider *schema.Pr
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_auth_method_password":
+			case string(typ):
 				id := rs.Primary.ID
 
 				amClient := authmethods.NewClient(md.client)

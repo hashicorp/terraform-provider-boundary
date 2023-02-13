@@ -6,11 +6,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/testing/controller"
@@ -112,7 +110,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAuthMethodOidcResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider, oidcAuthMethodType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -122,13 +120,13 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, tp.Addr()),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{tpCert}),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAccountClaimMapsKey, []string{"oid=sub"}),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcClaimsScopesKey, []string{"profile"}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{tpCert}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAccountClaimMapsKey, []string{"oid=sub"}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcClaimsScopesKey, []string{"profile"}),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
-					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
 				),
 			},
@@ -142,11 +140,11 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test-update.com"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id_update"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "1"),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
-					testAccCheckAuthMethodOidcAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
-					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
-					testAccCheckAuthMethodOidcResourceExists(provider, "boundary_auth_method_oidc.foo"),
+					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
 			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
@@ -154,58 +152,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthMethodOidcResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		id := rs.Primary.ID
-		if id == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		md := testProvider.Meta().(*metaData)
-
-		amClient := authmethods.NewClient(md.client)
-
-		if _, err := amClient.Read(context.Background(), id); err != nil {
-			return fmt.Errorf("Got an error when reading auth method %q: %w", id, err)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAuthMethodOidcResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_auth_method_oidc":
-				id := rs.Primary.ID
-
-				amClient := authmethods.NewClient(md.client)
-
-				_, err := amClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed auth method %q: %v", id, err)
-				}
-
-			default:
-				continue
-			}
-		}
-		return nil
-	}
-}
-
-func testAccCheckAuthMethodOidcAttrAryValueSet(testProvider *schema.Provider, name string, key string, strAry []string) resource.TestCheckFunc {
+func testAccCheckAuthMethodAttrAryValueSet(testProvider *schema.Provider, name string, key string, strAry []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
