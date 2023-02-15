@@ -3,9 +3,9 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.19
 
 require (
-	github.com/hashicorp/boundary v0.10.1-0.20230213174802-2d293051310f
-	github.com/hashicorp/boundary/api v0.0.34-0.20230213174802-2d293051310f
-	github.com/hashicorp/boundary/sdk v0.0.30-0.20230213174802-2d293051310f
+	github.com/hashicorp/boundary v0.10.1-0.20230215192224-f6acc907bf51
+	github.com/hashicorp/boundary/api v0.0.34-0.20230215183053-218de6441d53
+	github.com/hashicorp/boundary/sdk v0.0.30-0.20230215183053-218de6441d53
 	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.6-0.20221122211539-47c893099f13
@@ -84,7 +84,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/base62 v0.1.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/gatedwriter v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/kv-builder v0.1.1 // indirect
-	github.com/hashicorp/go-secure-stdlib/listenerutil v0.1.5-0.20221130175209-f7789ac19a1f // indirect
+	github.com/hashicorp/go-secure-stdlib/listenerutil v0.1.5 // indirect
 	github.com/hashicorp/go-secure-stdlib/mlock v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/reloadutil v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
