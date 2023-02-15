@@ -136,14 +136,14 @@ resource "boundary_target" "address_foo" {
 - `brokered_credential_source_ids` (Set of String) A list of brokered credential source ID's.
 - `default_port` (Number) The default port for this target.
 - `description` (String) The target description.
+- `egress_worker_filter` (String) Boolean expression to filter the workers used to access this target
 - `host_source_ids` (Set of String) A list of host source ID's. Cannot be used alongside address.
+- `ingress_worker_filter` (String) HCP Only. Boolean expression to filter the workers a user will connect to when initiating a session against this target
 - `injected_application_credential_source_ids` (Set of String) A list of injected application credential source ID's.
 - `name` (String) The target name. Defaults to the resource name.
 - `session_connection_limit` (Number)
 - `session_max_seconds` (Number)
-- `egress_worker_filter` (String) Boolean expression to filter the workers used to access this target
-- `ingress_worker_filter` (String, HCP Only) Boolean expression to filter the workers a user will connect to when initiating a session against this target
-- `worker_filter` (String, Deprecated) Boolean expression to filter the workers for this target. Use `egress_worker_filter` and `ingress_worker_filter` instead.
+- `worker_filter` (String, Deprecated) Boolean expression to filter the workers for this target
 
 ### Read-Only
 
