@@ -15,6 +15,8 @@ import (
 const (
 	testAccountLdapDesc       = "test account"
 	testAccountLdapDescUpdate = "test account update"
+	testAccountLdapName       = "test account name"
+	testAccountLdapNameUpdate = "test account name updated"
 )
 
 var (
@@ -30,12 +32,12 @@ resource "boundary_auth_method_ldap" "foo" {
 }
 
 resource "boundary_account_ldap" "foo" {
-	name           = "test"
+	name           = "%s"
 	description    = "%s"
 	type           = "ldap"
 	login_name     = "foo"
 	auth_method_id = boundary_auth_method_ldap.foo.id
-}`, testAccountLdapDesc)
+}`, testAccountLdapName, testAccountLdapDesc)
 
 	testAccountLdapUpdate = fmt.Sprintf(`
 resource "boundary_auth_method_ldap" "foo" {
@@ -48,12 +50,12 @@ resource "boundary_auth_method_ldap" "foo" {
 }
 
 resource "boundary_account_ldap" "foo" {
-	name           = "test"
+	name           = "%s"
 	description    = "%s"
 	type           = "ldap"
 	login_name     = "foo"
 	auth_method_id = boundary_auth_method_ldap.foo.id
-}`, testAccountLdapDescUpdate)
+}`, testAccountLdapNameUpdate, testAccountLdapDescUpdate)
 )
 
 func TestAccLdapAccount(t *testing.T) {
@@ -72,7 +74,7 @@ func TestAccLdapAccount(t *testing.T) {
 				Config: testConfig(url, fooOrg, testAccountLdap),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDesc),
-					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapName),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "type", "ldap"),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "login_name", "foo"),
 					testAccCheckAccountResourceExists(provider, "boundary_account_ldap.foo"),
@@ -84,7 +86,7 @@ func TestAccLdapAccount(t *testing.T) {
 				Config: testConfig(url, fooOrg, testAccountLdapUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDescUpdate),
-					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapNameUpdate),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "type", "ldap"),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "login_name", "foo"),
 					testAccCheckAccountResourceExists(provider, "boundary_account_ldap.foo"),

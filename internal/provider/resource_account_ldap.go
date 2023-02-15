@@ -61,6 +61,7 @@ func resourceAccountLdap() *schema.Resource {
 				Description: "The login name for this account.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 			},
 		},
 	}
