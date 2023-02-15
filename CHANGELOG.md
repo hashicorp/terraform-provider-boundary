@@ -3,11 +3,11 @@
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
 ## 1.1.4 (February 15, 2023)
+
+### New and Improved
 * Add support for worker egress and ingress filters ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/319))
 * Add support for vault ssh certificate credential libraries ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/320))
 * Add support for targets with address configurations ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/308))
-
-### New and Improved
 
 ## 1.1.3 (November 29, 2022)
 
