@@ -1,0 +1,40 @@
+name: test
+
+on:
+  - push
+  - workflow_dispatch
+  - workflow_call
+
+jobs:
+  setup:
+    runs-on: ${{ fromJSON(vars.RUNNER) }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Determine go version
+        id: get-go-version
+        # We use .go-version as our source of truth for current Go
+        # version, because "goenv" can react to it automatically.
+        run: |
+          echo "Building with Go $(cat .go-version)"
+          echo "go-version=$(cat .go-version)" >> $GITHUB_OUTPUT
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "${{ steps.get-go-version.outputs.go-version }}"
+      - name: Determine Go cache paths
+        id: go-cache-paths
+        run: |
+          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+          echo "go-mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+      - name: Set up Go modules cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ${{ steps.go-cache-paths.outputs.go-build }}
+            ${{ steps.go-cache-paths.outputs.go-mod }}
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go
+      - name: Acceptance Tests
+        run: |
+          make testacc
