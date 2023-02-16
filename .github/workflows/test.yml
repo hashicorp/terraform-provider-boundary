@@ -2,7 +2,7 @@ name: test
 on:
   push:
 env:
-  GOPRIVATE: ${{ secrets.GOPRIVATE }}
+  GOPRIVATE: hashicorp
 jobs:
   build:
     defaults:
@@ -11,10 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # pin@v3.3.0
-      - name: Install go
+      - name: Configure Git
+        env:
+          ELEVATED_GITHUB_TOKEN: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+        run: git config --global url."https://${ELEVATED_GITHUB_TOKEN}@github.com".insteadOf "https://github.com"
+      - uses: actions/setup-go@6edd4406fa81c3da01a34fa6f6343087c207a568 # pin@v3
+        with:
+          go-version: '1.19.1'
+      - name: Download go modules
         run: |-
-          unset GOPATH # ci image has done strange things with GOPATH, unset it so install-go can fix it
-          make install-go
           source ~/.bashrc
           go mod download
       - name: Run Acceptance Tests
