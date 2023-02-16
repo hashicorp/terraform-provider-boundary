@@ -17,9 +17,7 @@ jobs:
           go-version: '1.19.1'
       - name: Download go modules
         run: |-
-          source ~/.bashrc
           go mod download
       - name: Run Acceptance Tests
         run: |-
-          source ~/.bashrc
-          make testacc-ci
+          make testacc
