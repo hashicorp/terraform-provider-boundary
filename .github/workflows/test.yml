@@ -10,14 +10,14 @@ jobs:
         working-directory: "~/terraform-provider-watchtower"
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3.3.0
-    - name: Install go
-      run: |-
-        unset GOPATH # ci image has done strange things with GOPATH, unset it so install-go can fix it
-        make install-go
-        source ~/.bashrc
-        go mod download
-    - name: Run Acceptance Tests
-      run: |-
-        source ~/.bashrc
-        make testacc-ci
+      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # pin@v3.3.0
+      - name: Install go
+        run: |-
+          unset GOPATH # ci image has done strange things with GOPATH, unset it so install-go can fix it
+          make install-go
+          source ~/.bashrc
+          go mod download
+      - name: Run Acceptance Tests
+        run: |-
+          source ~/.bashrc
+          make testacc-ci
