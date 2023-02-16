@@ -18,7 +18,7 @@ The scope data source allows you to discover an existing Boundary scope by name.
 ### Required
 
 - `name` (String) The name of the scope to retrieve.
-- `scope_id` (String) The parent scope ID that will be queried for the scope.
+- `parent_scope_id` (String) The parent scope ID that will be queried for the scope.
 
 ### Read-Only
 
