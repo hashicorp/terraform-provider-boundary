@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const ()
+const (
+	ParentScopeIdKey = "parent_scope_id"
+)
 
 func dataSourceScope() *schema.Resource {
 	return &schema.Resource{
@@ -33,7 +35,7 @@ func dataSourceScope() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			ScopeIdKey: {
+			ParentScopeIdKey: {
 				Description: "The parent scope ID that will be queried for the scope.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -54,10 +56,10 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	var scopeId string
-	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+	if scopeIdVal, ok := d.GetOk(ParentScopeIdKey); ok {
 		scopeId = scopeIdVal.(string)
 	} else {
-		return diag.Errorf("no scope ID provided")
+		return diag.Errorf("no parent scope ID provided")
 	}
 
 	scp := scopes.NewClient(md.client)
@@ -93,9 +95,24 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("scope nil after read")
 	}
 
-	if err := setFromScopeResponseMap(d, srr.GetResponse().Map); err != nil {
+	if err := setFromScopeReadResponseMap(d, srr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
 
+	return nil
+}
+
+func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
+	if err := d.Set(NameKey, raw["name"]); err != nil {
+		return err
+	}
+	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+		return err
+	}
+	if err := d.Set(ParentScopeIdKey, raw["parent_scope_id"]); err != nil {
+		return err
+	}
+
+	d.SetId(raw["id"].(string))
 	return nil
 }
