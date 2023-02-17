@@ -78,6 +78,16 @@ func TestAccScopeRead(t *testing.T) {
 					testAccCheckScopeResourceExists(provider, "boundary_scope.project"),
 					resource.TestCheckResourceAttr("boundary_scope.project", "description", scopeDesc),
 					resource.TestCheckResourceAttr("boundary_scope.project", "name", projectName),
+					// Check attributes on the org datasource
+					resource.TestCheckResourceAttrSet("data.boundary_scope.org", "parent_scope_id"),
+					resource.TestCheckResourceAttrSet("data.boundary_scope.org", "id"),
+					resource.TestCheckResourceAttr("data.boundary_scope.org", "name", orgName),
+					resource.TestCheckResourceAttr("data.boundary_scope.org", "description", scopeDesc),
+					// Check attributes on the project datasource
+					resource.TestCheckResourceAttrSet("data.boundary_scope.project", "parent_scope_id"),
+					resource.TestCheckResourceAttrSet("data.boundary_scope.project", "id"),
+					resource.TestCheckResourceAttr("data.boundary_scope.project", "name", projectName),
+					resource.TestCheckResourceAttr("data.boundary_scope.project", "description", scopeDesc),
 				),
 			},
 		},
