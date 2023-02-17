@@ -47,18 +47,18 @@ resource "boundary_role" "org_admin" {
 
 data "boundary_scope" "org" {
 	depends_on = [boundary_scope.org]
-	scope_id = "global"
+	parent_scope_id = "global"
 	name = "%s"
 }
 
-	data "boundary_scope" "project" {
-		depends_on = [boundary_scope.project]
-		scope_id = data.boundary_scope.org.id
-		name = "%s"
-	}`, orgName, scopeDesc, projectName, scopeDesc, orgName, projectName)
+data "boundary_scope" "project" {
+	depends_on = [boundary_scope.project]
+	parent_scope_id = data.boundary_scope.org.id
+	name = "%s"
+}`, orgName, scopeDesc, projectName, scopeDesc, orgName, projectName)
 )
 
-func TestScopeRead(t *testing.T) {
+func TestAccScopeRead(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
