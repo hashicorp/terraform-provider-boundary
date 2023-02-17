@@ -55,16 +55,16 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("no name provided")
 	}
 
-	var scopeId string
-	if scopeIdVal, ok := d.GetOk(ParentScopeIdKey); ok {
-		scopeId = scopeIdVal.(string)
+	var parentScopeId string
+	if parentScopeIdVal, ok := d.GetOk(ParentScopeIdKey); ok {
+		parentScopeId = parentScopeIdVal.(string)
 	} else {
 		return diag.Errorf("no parent scope ID provided")
 	}
 
 	scp := scopes.NewClient(md.client)
 
-	scpls, err := scp.List(ctx, scopeId, opts...)
+	scpls, err := scp.List(ctx, parentScopeId, opts...)
 	if err != nil {
 		return diag.Errorf("error calling read scope: %v", err)
 	}
