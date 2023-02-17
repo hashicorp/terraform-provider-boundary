@@ -102,6 +102,8 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
+// Adding this function since we are inctroducing parent_scope_id to align with the API. Once this is introduced to the
+// resource_scope it would be optimal to refactor this so both resources use the same set function.
 func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
 	if err := d.Set(NameKey, raw["name"]); err != nil {
 		return err
