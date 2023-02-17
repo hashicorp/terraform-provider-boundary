@@ -76,6 +76,7 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, scopeItem := range scpls.GetItems() {
 		if scopeItem.Name == name {
 			scopeIdRead = scopeItem.Id
+			break
 		}
 	}
 
@@ -109,9 +110,6 @@ func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interfac
 		return err
 	}
 	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
-		return err
-	}
-	if err := d.Set(ParentScopeIdKey, raw["parent_scope_id"]); err != nil {
 		return err
 	}
 
