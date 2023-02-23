@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/boundary/sdk v0.0.30
 	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
-	github.com/hashicorp/go-kms-wrapping/v2 v2.0.6-0.20221122211539-47c893099f13
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.8
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.7
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.3
