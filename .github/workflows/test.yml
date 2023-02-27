@@ -5,6 +5,9 @@ on:
   - workflow_dispatch
   - workflow_call
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     runs-on: ${{ fromJSON(vars.RUNNER) }}

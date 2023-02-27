@@ -9,6 +9,9 @@ on:
 
 name: Jira Sync
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
