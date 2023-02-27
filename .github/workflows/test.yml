@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  setup:
+  test:
     runs-on: ${{ fromJSON(vars.RUNNER) }}
     steps:
       - uses: actions/checkout@v3
@@ -19,7 +19,7 @@ jobs:
         # version, because "goenv" can react to it automatically.
         run: |
           echo "Building with Go $(cat .go-version)"
-          echo "go-version=$(cat .go-version)" >> $GITHUB_OUTPUT
+          echo "go-version=$(cat .go-version)" >> "$GITHUB_OUTPUT"
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
@@ -27,8 +27,8 @@ jobs:
       - name: Determine Go cache paths
         id: go-cache-paths
         run: |
-          echo "go-build=$(go env GOCACHE)" >> $GITHUB_OUTPUT
-          echo "go-mod=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+          echo "go-build=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
+          echo "go-mod=$(go env GOMODCACHE)" >> "$GITHUB_OUTPUT"
       - name: Set up Go modules cache
         uses: actions/cache@v3
         with:

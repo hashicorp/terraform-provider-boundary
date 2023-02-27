@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: go-version
-        run: echo "::set-output name=version::$(cat ./.go-version)"
+        run: echo "name=version::$(cat ./.go-version)" >> "$GITHUB_OUTPUT"
   release-notes:
     runs-on: ubuntu-latest
     steps:

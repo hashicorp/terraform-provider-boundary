@@ -21,14 +21,14 @@ jobs:
       if: github.event.action == 'opened'
       id: boundary-team-role
       run: |
-        TEAM=boundary
+        TEAM="boundary"
         ROLE="$(hub api orgs/hashicorp/teams/${TEAM}/memberships/${{ github.actor }} | jq -r '.role | select(.!=null)')"
-        if [[ -n ${ROLE} ]]; then
+        if [[ -n "${ROLE}" ]]; then
           echo "Actor ${{ github.actor }} is a ${TEAM} team member, skipping ticket creation"
         else
           echo "Actor ${{ github.actor }} is not a ${TEAM} team member"
         fi
-        echo "::set-output name=role::${ROLE}"
+        echo "name=role::${ROLE}" >> "$GITHUB_OUTPUT"
       env:
         GITHUB_TOKEN: ${{ secrets.JIRA_SYNC_GITHUB_TOKEN }}
 
@@ -44,9 +44,9 @@ jobs:
       id: set-ticket-type
       run: |
         if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
-          echo "::set-output name=type::PR"
+          echo "name=type::PR" >> "$GITHUB_OUTPUT"
         else
-          echo "::set-output name=type::ISS"
+          echo "name=type::ISS" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Create ticket
