@@ -52,7 +52,7 @@ func TestAccBaseAuthMethodPassword(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider, passwordAuthMethodType),
 		Steps: []resource.TestStep{
 			{
 				// create

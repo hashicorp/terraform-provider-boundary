@@ -118,7 +118,7 @@ func testAccCheckManagedGroupResourceDestroy(t *testing.T, testProvider *schema.
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_managed_group":
+			case "boundary_managed_group", "boundary_managed_group_ldap":
 				grpClient := managedgroups.NewClient(md.client)
 				id := rs.Primary.ID
 
