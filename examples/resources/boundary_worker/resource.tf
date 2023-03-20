@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "boundary_worker" "controller_led" {
 	scope_id = "global"
 	name = "worker 1"
