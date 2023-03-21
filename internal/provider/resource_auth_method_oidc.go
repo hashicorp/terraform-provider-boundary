@@ -6,12 +6,13 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"net/http"
 )
 
 const (
@@ -114,10 +115,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 			},
 			authmethodOidcMaxAgeKey: {
-				Description: "The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again. A value of 0 sets an immediate requirement to reauthenticate.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     -1,
+				Description: `The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again. ` +
+					`A value of 0 sets an immediate requirement for all users to reauthenticate, and an unset maxAge results in a Terraform value of -1 and the default TTL of the chosen OIDC will be used.`,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  -1,
 			},
 			authmethodOidcSigningAlgorithmsKey: {
 				Description: "Allowed signing algorithms for the provider's issued tokens.",
@@ -166,7 +168,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Computed:    true,
 			},
 			authmethodOidcIsPrimaryAuthMethodForScope: {
-				Description: "When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the the user will be automatically created when they login using an OIDC account.",
+				Description: "When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the user will be automatically created when they login using an OIDC account.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
