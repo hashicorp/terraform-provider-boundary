@@ -10,7 +10,7 @@ project {
   # files or folders should be ignored
   # Default: []
   header_ignore = [
-    "examples/**.tf",
-    "examples/**.sh",
+    "examples/**/*.tf",
+    "examples/**/*.sh",
   ]
 }
