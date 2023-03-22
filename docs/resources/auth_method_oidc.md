@@ -32,9 +32,9 @@ The OIDC auth method resource allows you to configure a Boundary auth_method_oid
 - `description` (String) The auth method description.
 - `disable_discovered_config_validation` (Boolean) Disables validation logic ensuring that the OIDC provider's information from its discovery endpoint matches the information here. The validation is only performed at create or update time.
 - `idp_ca_certs` (List of String) A list of CA certificates to trust when validating the IdP's token signatures.
-- `is_primary_for_scope` (Boolean) When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the the user will be automatically created when they login using an OIDC account.
+- `is_primary_for_scope` (Boolean) When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the user will be automatically created when they login using an OIDC account.
 - `issuer` (String) The issuer corresponding to the provider, which must match the issuer field in generated tokens.
-- `max_age` (Number) The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again.
+- `max_age` (Number) The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again. A value of 0 sets an immediate requirement for all users to reauthenticate, and an unset maxAge results in a Terraform value of -1 and the default TTL of the chosen OIDC will be used.
 - `name` (String) The auth method name. Defaults to the resource name.
 - `signing_algorithms` (List of String) Allowed signing algorithms for the provider's issued tokens.
 - `state` (String) Can be one of 'inactive', 'active-private', or 'active-public'. Currently automatically set to active-public.
