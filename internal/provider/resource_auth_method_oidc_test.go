@@ -56,7 +56,7 @@ resource "boundary_auth_method_oidc" "foo" {
   issuer            = "%s"
   client_id         = "foo_id"
   client_secret     = "foo_secret"
-  max_age           = 10
+  max_age           = 0
   api_url_prefix    = "http://localhost:9200"
   idp_ca_certs   = [
 <<EOT
@@ -80,7 +80,6 @@ resource "boundary_auth_method_oidc" "foo" {
   issuer            = "https://test-update.com"
   client_id         = "foo_id_update"
   client_secret     = "foo_secret_update"
-  max_age           = 1
   api_url_prefix    = "http://localhost:9200"
   idp_ca_certs   = [
 <<EOT
@@ -92,7 +91,7 @@ EOT
   account_claim_maps = ["oid=sub"]
 	claims_scopes = ["profile"]
 
-  // we need to disable this validatin, since the updated issuer isn't discoverable
+  // we need to disable this validation, since the updated issuer isn't discoverable
   disable_discovered_config_validation = true 
 }`
 )
@@ -120,12 +119,12 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, tp.Addr()),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "0"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{tpCert}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAccountClaimMapsKey, []string{"oid=sub"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcClaimsScopesKey, []string{"profile"}),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "10"),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
 				),
@@ -139,7 +138,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test-update.com"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id_update"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "1"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "-1"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
@@ -147,7 +146,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcMaxAgeKey),
 		},
 	})
 }

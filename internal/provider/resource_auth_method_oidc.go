@@ -115,9 +115,11 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional:    true,
 			},
 			authmethodOidcMaxAgeKey: {
-				Description: "The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again.",
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Description: `The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again. ` +
+					`A value of 0 sets an immediate requirement for all users to reauthenticate, and an unset maxAge results in a Terraform value of -1 and the default TTL of the chosen OIDC will be used.`,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  -1,
 			},
 			authmethodOidcSigningAlgorithmsKey: {
 				Description: "Allowed signing algorithms for the provider's issued tokens.",
@@ -166,7 +168,7 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Computed:    true,
 			},
 			authmethodOidcIsPrimaryAuthMethodForScope: {
-				Description: "When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the the user will be automatically created when they login using an OIDC account.",
+				Description: "When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the user will be automatically created when they login using an OIDC account.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
@@ -267,8 +269,12 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 	if clientSecret, ok := d.GetOk(authmethodOidcClientSecretKey); ok {
 		opts = append(opts, authmethods.WithOidcAuthMethodClientSecret(clientSecret.(string)))
 	}
-	if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
+	// null values are not correctly recognized by the Terraform SDK, so we instead check here for maxAge value
+	// if maxAge is unset it will default and set the terraform state to -1 and clear the maxAge param in Boundary
+	if maxAge, _ := d.GetOk(authmethodOidcMaxAgeKey); maxAge.(int) >= 0 {
 		opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(maxAge.(int))))
+	} else {
+		opts = append(opts, authmethods.DefaultOidcAuthMethodMaxAge())
 	}
 	if prefix, ok := d.GetOk(authmethodOidcApiUrlPrefixKey); ok {
 		opts = append(opts, authmethods.WithOidcAuthMethodApiUrlPrefix(prefix.(string)))
@@ -471,8 +477,12 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 	if d.HasChange(authmethodOidcMaxAgeKey) {
-		if maxAge, ok := d.GetOk(authmethodOidcMaxAgeKey); ok {
+		// null values are not correctly recognized by the Terraform SDK, so we instead check here for maxAge value
+		// if maxAge is unset it will default and set the terraform state to -1 and clear the maxAge param in Boundary
+		if maxAge, _ := d.GetOk(authmethodOidcMaxAgeKey); maxAge.(int) >= 0 {
 			opts = append(opts, authmethods.WithOidcAuthMethodMaxAge(uint32(maxAge.(int))))
+		} else {
+			opts = append(opts, authmethods.DefaultOidcAuthMethodMaxAge())
 		}
 	}
 	if d.HasChange(authmethodOidcSigningAlgorithmsKey) {
