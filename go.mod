@@ -3,9 +3,9 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.20
 
 require (
-	github.com/hashicorp/boundary v0.10.1-0.20230315181017-3dc1e2108a38
-	github.com/hashicorp/boundary/api v0.0.34-0.20230315181017-3dc1e2108a38
-	github.com/hashicorp/boundary/sdk v0.0.30-0.20230315181017-3dc1e2108a38
+	github.com/hashicorp/boundary v0.12.1
+	github.com/hashicorp/boundary/api v0.0.34
+	github.com/hashicorp/boundary/sdk v0.0.30
 	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.9-0.20230315135303-7bedb33a2280
@@ -64,7 +64,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2 // indirect
-	github.com/hashicorp/cap/ldap v0.0.0-20230123181313-9c0fb924b0d9 // indirect
 	github.com/hashicorp/dbassert v0.0.0-20210708202608-ecf920cf1ed8 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/eventlogger v0.1.2-0.20230227112545-f26a3bdf6871 // indirect
