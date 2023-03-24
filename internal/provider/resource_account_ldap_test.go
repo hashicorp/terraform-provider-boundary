@@ -67,7 +67,7 @@ func TestAccLdapAccount(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider, baseAccountType),
 		Steps: []resource.TestStep{
 			{
 				// create

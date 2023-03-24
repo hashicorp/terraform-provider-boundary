@@ -70,7 +70,7 @@ func testAccHostCatalog(t *testing.T, static bool) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t, provider, staticHostCatalogType),
 		Steps: []resource.TestStep{
 			{
 				// test create
@@ -119,13 +119,23 @@ func testAccCheckHostCatalogResourceExists(testProvider *schema.Provider, name s
 	}
 }
 
-func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type hostCatalogType string
+
+const (
+	baseHostCatalogType   hostCatalogType = "boundary_host_catalog"
+	staticHostCatalogType hostCatalogType = "boundary_host_catalog_static"
+)
+
+func testAccCheckHostCatalogResourceDestroy(t *testing.T, testProvider *schema.Provider, typ hostCatalogType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		if testProvider.Meta() == nil {
+			t.Fatal("got nil provider metadata")
+		}
 		md := testProvider.Meta().(*metaData)
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_host_catalog", "boundary_host_catalog_static":
+			case string(typ):
 
 				id := rs.Primary.ID
 				hcClient := hostcatalogs.NewClient(md.client)

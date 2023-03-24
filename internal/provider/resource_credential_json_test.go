@@ -70,7 +70,7 @@ func TestAccCredentialJson(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialJsonResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialResourceDestroy(t, provider, jsonCredentialType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -80,8 +80,8 @@ func TestAccCredentialJson(t *testing.T) {
 					resource.TestCheckResourceAttr(jsonCredResc, DescriptionKey, jsonCredDesc),
 					resource.TestCheckResourceAttr(jsonCredResc, credentialJsonObjectKey, `{"password":"password","username":"admin"}`),
 
-					testAccCheckCredentialJsonObjectHmac(provider),
-					testAccCheckCredentialJsonResourceExists(provider, jsonCredResc),
+					testAccCheckCredentialJsonObjectHmac(),
+					testAccCheckCredentialResourceExists(provider, jsonCredResc),
 				),
 			},
 			importStep(jsonCredResc, credentialJsonObjectKey),
@@ -93,8 +93,8 @@ func TestAccCredentialJson(t *testing.T) {
 					resource.TestCheckResourceAttr(jsonCredResc, DescriptionKey, jsonCredDescUpdate),
 					resource.TestCheckResourceAttr(jsonCredResc, credentialJsonObjectKey, `{"password":"password","username":"db-admin"}`),
 
-					testAccCheckCredentialJsonObjectHmac(provider),
-					testAccCheckCredentialJsonResourceExists(provider, jsonCredResc),
+					testAccCheckCredentialJsonObjectHmac(),
+					testAccCheckCredentialResourceExists(provider, jsonCredResc),
 				),
 			},
 			importStep(jsonCredResc, credentialJsonObjectKey),
@@ -114,32 +114,7 @@ func TestAccCredentialJson(t *testing.T) {
 	})
 }
 
-func testAccCheckCredentialJsonResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_credential_json":
-				id := rs.Primary.ID
-
-				c := credentials.NewClient(md.client)
-				_, err := c.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed json credential %q: %v", id, err)
-				}
-			default:
-				continue
-			}
-		}
-		return nil
-	}
-}
-
-func testAccCheckCredentialJsonResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckCredentialResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -162,7 +137,40 @@ func testAccCheckCredentialJsonResourceExists(testProvider *schema.Provider, nam
 	}
 }
 
-func testAccCheckCredentialJsonObjectHmac(testProvider *schema.Provider) resource.TestCheckFunc {
+type credentialType string
+
+const (
+	jsonCredentialType             credentialType = "boundary_credential_json"
+	sshPrivateKeyCredentialType    credentialType = "boundary_credential_ssh_private_key"
+	usernamePasswordCredentialType credentialType = "boundary_credential_username_password"
+)
+
+func testAccCheckCredentialResourceDestroy(t *testing.T, testProvider *schema.Provider, typ credentialType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if testProvider.Meta() == nil {
+			t.Fatal("got nil provider metadata")
+		}
+		md := testProvider.Meta().(*metaData)
+
+		for _, rs := range s.RootModule().Resources {
+			switch rs.Type {
+			case string(typ):
+				id := rs.Primary.ID
+
+				c := credentials.NewClient(md.client)
+				_, err := c.Read(context.Background(), id)
+				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
+					return fmt.Errorf("didn't get a 404 when reading destroyed credential %q: %v", id, err)
+				}
+			default:
+				continue
+			}
+		}
+		return nil
+	}
+}
+
+func testAccCheckCredentialJsonObjectHmac() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[jsonCredResc]
 		if !ok {

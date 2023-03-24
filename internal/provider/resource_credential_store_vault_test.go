@@ -9,11 +9,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"github.com/hashicorp/boundary/api"
 	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentialstores"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
@@ -100,7 +100,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialStoreVaultResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialStoreResourceDestroy(t, provider, vaultStoreCredentialStoreType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -118,7 +118,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKey, ""),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKeyKey, ""),
 
-					testAccCheckCredentialStoreVaultResourceExists(provider, vaultCredStoreResc),
+					testAccCheckCredentialStoreResourceExists(provider, vaultCredStoreResc),
 				),
 			},
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
@@ -138,7 +138,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKey, string(vcUpdate.ClientCert)),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKeyKey, string(vcUpdate.ClientKey)),
 
-					testAccCheckCredentialStoreVaultResourceExists(provider, vaultCredStoreResc),
+					testAccCheckCredentialStoreResourceExists(provider, vaultCredStoreResc),
 				),
 			},
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
@@ -194,7 +194,7 @@ func externalUpdate(t *testing.T, testProvider *schema.Provider) {
 	}
 }
 
-func testAccCheckCredentialStoreVaultResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckCredentialStoreResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -217,7 +217,14 @@ func testAccCheckCredentialStoreVaultResourceExists(testProvider *schema.Provide
 	}
 }
 
-func testAccCheckCredentialStoreVaultResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type credentialDestroyStoreType string
+
+const (
+	staticStoreCredentialStoreType credentialDestroyStoreType = "boundary_credential_store_static"
+	vaultStoreCredentialStoreType  credentialDestroyStoreType = "boundary_credential_store_vault"
+)
+
+func testAccCheckCredentialStoreResourceDestroy(t *testing.T, testProvider *schema.Provider, typ credentialDestroyStoreType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -226,13 +233,13 @@ func testAccCheckCredentialStoreVaultResourceDestroy(t *testing.T, testProvider 
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_credential_store_vault":
+			case string(typ):
 				id := rs.Primary.ID
 
 				c := credentialstores.NewClient(md.client)
 				_, err := c.Read(context.Background(), id)
 				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed Vault credential store %q: %v", id, err)
+					return fmt.Errorf("didn't get a 404 when reading destroyed static credential store %q: %v", id, err)
 				}
 			default:
 				continue

@@ -155,7 +155,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialLibraryVaultResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialLibraryVaultResourceDestroy(t, provider, baseVaultCredentialLibraryType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -296,7 +296,14 @@ func testAccCheckCredentialLibraryVaultResourceExists(testProvider *schema.Provi
 	}
 }
 
-func testAccCheckCredentialLibraryVaultResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type vaultCredentialLibraryType string
+
+const (
+	baseVaultCredentialLibraryType    vaultCredentialLibraryType = "boundary_credential_library_vault"
+	sshCertVaultCredentialLibraryType vaultCredentialLibraryType = "boundary_credential_library_vault_ssh_certificate"
+)
+
+func testAccCheckCredentialLibraryVaultResourceDestroy(t *testing.T, testProvider *schema.Provider, typ vaultCredentialLibraryType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -305,7 +312,7 @@ func testAccCheckCredentialLibraryVaultResourceDestroy(t *testing.T, testProvide
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_credential_library_vault":
+			case string(typ):
 				id := rs.Primary.ID
 
 				c := credentiallibraries.NewClient(md.client)

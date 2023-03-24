@@ -8,10 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -156,7 +154,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckPluginHostCatalogResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t, provider, baseHostCatalogType),
 		Steps: []resource.TestStep{
 			{
 				// test create
@@ -365,30 +363,6 @@ func testAccCheckPluginHostCatalogResourceExists(testProvider *schema.Provider, 
 		}
 
 		testStep++
-		return nil
-	}
-}
-
-func testAccCheckPluginHostCatalogResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_host_catalog":
-
-				id := rs.Primary.ID
-				hcClient := hostcatalogs.NewClient(md.client)
-
-				_, err := hcClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed host catalog %q: %v", id, err)
-				}
-
-			default:
-				continue
-			}
-		}
 		return nil
 	}
 }

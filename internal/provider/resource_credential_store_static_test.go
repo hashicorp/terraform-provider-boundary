@@ -6,15 +6,12 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentialstores"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
@@ -50,7 +47,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialStoreStaticResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialStoreResourceDestroy(t, provider, staticStoreCredentialStoreType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -59,7 +56,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 					resource.TestCheckResourceAttr(staticCredStoreResc, NameKey, staticCredStoreName),
 					resource.TestCheckResourceAttr(staticCredStoreResc, DescriptionKey, staticCredStoreDesc),
 
-					testAccCheckCredentialStoreVaultResourceExists(provider, staticCredStoreResc),
+					testAccCheckCredentialStoreResourceExists(provider, staticCredStoreResc),
 				),
 			},
 			importStep(staticCredStoreResc),
@@ -70,7 +67,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 					resource.TestCheckResourceAttr(staticCredStoreResc, NameKey, staticCredStoreName+staticCredStoreUpdate),
 					resource.TestCheckResourceAttr(staticCredStoreResc, DescriptionKey, staticCredStoreDesc+staticCredStoreUpdate),
 
-					testAccCheckCredentialStoreVaultResourceExists(provider, staticCredStoreResc),
+					testAccCheckCredentialStoreResourceExists(provider, staticCredStoreResc),
 				),
 			},
 			importStep(staticCredStoreResc),
@@ -113,30 +110,5 @@ func staticCredentialStoreExternalUpdate(t *testing.T, testProvider *schema.Prov
 	_, err = c.Update(context.Background(), cr.Item.Id, cr.Item.Version, opts...)
 	if err != nil {
 		t.Fatal(fmt.Errorf("got an error updating %q: %w", cr.Item.Id, err))
-	}
-}
-
-func testAccCheckCredentialStoreStaticResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_credential_store_static":
-				id := rs.Primary.ID
-
-				c := credentialstores.NewClient(md.client)
-				_, err := c.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed static credential store %q: %v", id, err)
-				}
-			default:
-				continue
-			}
-		}
-		return nil
 	}
 }
