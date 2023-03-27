@@ -24,6 +24,7 @@ const (
 	vaultCredUsernamePasswordResc = "boundary_credential_library_vault.username_password_mapping_override"
 	vaultCredSshPrivateKeyResc    = "boundary_credential_library_vault.ssh_private_key_mapping_override"
 	vaultCredLibName              = "foo"
+	vaultCredLibNameOverride      = "base foo"
 	vaultCredLibDesc              = "the foo"
 	vaultCredLibPath              = "/foo/bar"
 	vaultCredLibMethodGet         = "GET"
@@ -83,7 +84,7 @@ resource "boundary_credential_library_vault" "username_password_mapping_override
 		password_attribute = "alternative_password_label"
 		username_attribute = "alternative_username_label"
 	}
-}`, vaultCredLibName,
+}`, vaultCredLibNameOverride,
 	vaultCredLibDesc,
 	vaultCredLibPath,
 	vaultCredLibMethodGet)
@@ -100,7 +101,7 @@ var vaultUsernamePasswordMappingOverrideCredLibResourceUpdate = fmt.Sprintf(`
 			password_attribute = "updated_password_label"
 			username_attribute = "updated_username_label"
 		}
-	}`, vaultCredLibName,
+	}`, vaultCredLibNameOverride,
 	vaultCredLibDesc,
 	vaultCredLibPath,
 	vaultCredLibMethodGet)
@@ -113,7 +114,7 @@ var vaultUsernamePasswordMappingOverrideCredLibResourceRemove = fmt.Sprintf(`
 		path                         = "%s"
 		http_method                  = "%s"
 		credential_type              = "username_password"
-	}`, vaultCredLibName,
+	}`, vaultCredLibNameOverride,
 	vaultCredLibDesc,
 	vaultCredLibPath,
 	vaultCredLibMethodGet)
@@ -167,7 +168,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
 					resource.TestCheckResourceAttr(vaultCredResc, credentialLibraryVaultHttpRequestBodyKey, ""),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -182,7 +183,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodPost),
 					resource.TestCheckResourceAttr(vaultCredResc, credentialLibraryVaultHttpRequestBodyKey, vaultCredLibRequestBody),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -198,7 +199,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryVaultHttpRequestBodyKey, ""),
 					resource.TestCheckResourceAttr(vaultCredTypedResc, credentialLibraryCredentialTypeKey, "ssh_private_key"),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredTypedResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredTypedResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -206,7 +207,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibNameOverride),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultPathKey, vaultCredLibPath),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
@@ -215,7 +216,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.password_attribute", "alternative_password_label"),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.username_attribute", "alternative_username_label"),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredUsernamePasswordResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredUsernamePasswordResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -223,7 +224,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceUpdate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibNameOverride),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultPathKey, vaultCredLibPath),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
@@ -232,7 +233,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.password_attribute", "updated_password_label"),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, "credential_mapping_overrides.username_attribute", "updated_username_label"),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredUsernamePasswordResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredUsernamePasswordResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -240,7 +241,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			{
 				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceRemove),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibName),
+					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibNameOverride),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultPathKey, vaultCredLibPath),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryVaultHttpMethodKey, vaultCredLibMethodGet),
@@ -248,7 +249,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryCredentialTypeKey, "username_password"),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, credentialLibraryCredentialMappingOverridesKey+".%", "0"),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredUsernamePasswordResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredUsernamePasswordResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -266,7 +267,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, "credential_mapping_overrides.private_key_passphrase_attribute", "alternative_passphrase_label"),
 					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, "credential_mapping_overrides.username_attribute", "alternative_username_label"),
 
-					testAccCheckCredentialLibraryVaultResourceExists(provider, vaultCredSshPrivateKeyResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultCredSshPrivateKeyResc),
 				),
 			},
 			importStep(vaultCredResc),
@@ -274,7 +275,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 	})
 }
 
-func testAccCheckCredentialLibraryVaultResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
+func testAccCheckCredentialLibraryResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
