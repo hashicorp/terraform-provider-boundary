@@ -86,7 +86,7 @@ func testAccHostSetStatic(t *testing.T, static bool) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckHostSetStaticResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckHostSetResourceDestroy(t, provider, baseHostSetType),
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
@@ -195,7 +195,11 @@ func testAccCheckHostSetStaticHostIDsSet(testProvider *schema.Provider, name str
 	}
 }
 
-func testAccCheckHostSetStaticResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type hostSetType string
+
+const baseHostSetType hostSetType = "boundary_host_set"
+
+func testAccCheckHostSetResourceDestroy(t *testing.T, testProvider *schema.Provider, typ hostSetType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -204,7 +208,7 @@ func testAccCheckHostSetStaticResourceDestroy(t *testing.T, testProvider *schema
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_host_set":
+			case string(typ):
 
 				id := rs.Primary.ID
 

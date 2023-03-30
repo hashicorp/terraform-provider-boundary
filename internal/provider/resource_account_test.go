@@ -69,7 +69,7 @@ func TestAccAccountBase(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckAccountResourceDestroy(t, provider, baseAccountType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -125,7 +125,14 @@ func testAccCheckAccountResourceExists(testProvider *schema.Provider, name strin
 	}
 }
 
-func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type accountType string
+
+const (
+	baseAccountType     accountType = "boundary_account"
+	passwordAccountType accountType = "boundary_account_password"
+)
+
+func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provider, typ accountType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -134,7 +141,7 @@ func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provi
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_account":
+			case string(typ):
 				id := rs.Primary.ID
 
 				amClient := accounts.NewClient(md.client)

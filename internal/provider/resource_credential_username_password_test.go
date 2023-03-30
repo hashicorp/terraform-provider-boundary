@@ -6,10 +6,8 @@ package provider
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentials"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -69,7 +67,7 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialUsernamePasswordResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialResourceDestroy(t, provider, usernamePasswordCredentialType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -80,8 +78,8 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordUsernameKey, usernamePasswordCredUsername),
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey, usernamePasswordCredPassword),
 
-					testAccCheckCredentialStoreUsernamePasswordHmac(provider),
-					testAccCheckCredentialUsernamePasswordResourceExists(provider, usernamePasswordCredResc),
+					testAccCheckCredentialStoreUsernamePasswordHmac(),
+					testAccCheckCredentialResourceExists(provider, usernamePasswordCredResc),
 				),
 			},
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
@@ -94,8 +92,8 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordUsernameKey, usernamePasswordCredUsername+usernamePasswordCredUpdate),
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey, usernamePasswordCredPassword+usernamePasswordCredUpdate),
 
-					testAccCheckCredentialStoreUsernamePasswordHmac(provider),
-					testAccCheckCredentialUsernamePasswordResourceExists(provider, usernamePasswordCredResc),
+					testAccCheckCredentialStoreUsernamePasswordHmac(),
+					testAccCheckCredentialResourceExists(provider, usernamePasswordCredResc),
 				),
 			},
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
@@ -137,55 +135,7 @@ func usernamePasswordCredExternalUpdate(t *testing.T, testProvider *schema.Provi
 	}
 }
 
-func testAccCheckCredentialUsernamePasswordResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		id := rs.Primary.ID
-		if id == "" {
-			return fmt.Errorf("no ID is set")
-		}
-		storeId = id
-
-		md := testProvider.Meta().(*metaData)
-		c := credentials.NewClient(md.client)
-		if _, err := c.Read(context.Background(), id); err != nil {
-			return fmt.Errorf("got an error reading %q: %w", id, err)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckCredentialUsernamePasswordResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_credential_username_password":
-				id := rs.Primary.ID
-
-				c := credentials.NewClient(md.client)
-				_, err := c.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed username password credential %q: %v", id, err)
-				}
-			default:
-				continue
-			}
-		}
-		return nil
-	}
-}
-
-func testAccCheckCredentialStoreUsernamePasswordHmac(testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckCredentialStoreUsernamePasswordHmac() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[usernamePasswordCredResc]
 		if !ok {

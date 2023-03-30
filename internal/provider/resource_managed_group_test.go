@@ -57,7 +57,7 @@ func TestAccManagedGroup(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider, baseManagedGroupType),
 		Steps: []resource.TestStep{
 			{
 				// test create
@@ -108,7 +108,14 @@ func testAccCheckManagedGroupResourceExists(testProvider *schema.Provider, name 
 	}
 }
 
-func testAccCheckManagedGroupResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
+type managedGroupType string
+
+const (
+	baseManagedGroupType managedGroupType = "boundary_managed_group"
+	ldapManagedGroupType managedGroupType = "boundary_managed_group_ldap"
+)
+
+func testAccCheckManagedGroupResourceDestroy(t *testing.T, testProvider *schema.Provider, typ managedGroupType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if testProvider.Meta() == nil {
 			t.Fatal("got nil provider metadata")
@@ -118,7 +125,7 @@ func testAccCheckManagedGroupResourceDestroy(t *testing.T, testProvider *schema.
 
 		for _, rs := range s.RootModule().Resources {
 			switch rs.Type {
-			case "boundary_managed_group", "boundary_managed_group_ldap":
+			case string(typ):
 				grpClient := managedgroups.NewClient(md.client)
 				id := rs.Primary.ID
 

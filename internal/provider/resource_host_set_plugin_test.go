@@ -8,10 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -89,7 +87,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckHostSetPluginResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckHostSetResourceDestroy(t, provider, baseHostSetType),
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
@@ -252,34 +250,6 @@ func testAccCheckHostSetPluginResourceExists(testProvider *schema.Provider, name
 			currentPluginHostSetAttributesValue = ""
 		}
 
-		return nil
-	}
-}
-
-func testAccCheckHostSetPluginResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_host_set":
-
-				id := rs.Primary.ID
-
-				hostsetsClient := hostsets.NewClient(md.client)
-
-				_, err := hostsetsClient.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed host set %q: %v", id, apiErr)
-				}
-
-			default:
-				continue
-			}
-		}
 		return nil
 	}
 }

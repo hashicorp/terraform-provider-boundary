@@ -4,13 +4,9 @@
 package provider
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/credentials"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -75,7 +71,7 @@ func TestAccCredentialSshPrivateKey(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialSshPrivateKeyResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialResourceDestroy(t, provider, sshPrivateKeyCredentialType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -87,8 +83,8 @@ func TestAccCredentialSshPrivateKey(t *testing.T) {
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, credentialSshPrivateKeyPrivateKeyKey, privKey),
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, credentialSshPrivateKeyPassphraseKey, ""),
 
-					testAccCheckCredentialStoreSshPrivateKeyHmac(provider),
-					testAccCheckCredentialSshPrivateKeyResourceExists(provider, sshPrivateKeyCredResc),
+					testAccCheckCredentialStoreSshPrivateKeyHmac(),
+					testAccCheckCredentialResourceExists(provider, sshPrivateKeyCredResc),
 				),
 			},
 			importStep(sshPrivateKeyCredResc, credentialSshPrivateKeyPrivateKeyKey, credentialSshPrivateKeyPassphraseKey),
@@ -102,63 +98,15 @@ func TestAccCredentialSshPrivateKey(t *testing.T) {
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, credentialSshPrivateKeyPrivateKeyKey, privKeyUpdate),
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, credentialSshPrivateKeyPassphraseKey, privKeyUpdatePassphrase),
 
-					testAccCheckCredentialStoreSshPrivateKeyHmac(provider),
-					testAccCheckCredentialSshPrivateKeyResourceExists(provider, sshPrivateKeyCredResc),
+					testAccCheckCredentialStoreSshPrivateKeyHmac(),
+					testAccCheckCredentialResourceExists(provider, sshPrivateKeyCredResc),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCredentialSshPrivateKeyResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		id := rs.Primary.ID
-		if id == "" {
-			return fmt.Errorf("no ID is set")
-		}
-		storeId = id
-
-		md := testProvider.Meta().(*metaData)
-		c := credentials.NewClient(md.client)
-		if _, err := c.Read(context.Background(), id); err != nil {
-			return fmt.Errorf("got an error reading %q: %w", id, err)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckCredentialSshPrivateKeyResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_credential_ssh_private_key":
-				id := rs.Primary.ID
-
-				c := credentials.NewClient(md.client)
-				_, err := c.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed credential %q: %v", id, err)
-				}
-			default:
-				continue
-			}
-		}
-		return nil
-	}
-}
-
-func testAccCheckCredentialStoreSshPrivateKeyHmac(testProvider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckCredentialStoreSshPrivateKeyHmac() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[sshPrivateKeyCredResc]
 		if !ok {
