@@ -46,7 +46,7 @@ func TestAccManagedGroupLdap(t *testing.T) {
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider, ldapManagedGroupType),
 		Steps: []resource.TestStep{
 			{
 				// test create

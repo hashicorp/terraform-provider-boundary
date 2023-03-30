@@ -4,19 +4,14 @@
 package provider
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/credentiallibraries"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
@@ -39,7 +34,6 @@ resource "boundary_credential_library_vault_ssh_certificate" "example" {
   	path                = "%s"
   	username            = "%s"
 	key_type            = "ed25519"
-
 }`, vaultSshCertCredLibName,
 	vaultSshCertCredLibDesc,
 	vaultSshCertCredLibPath,
@@ -69,11 +63,9 @@ resource "boundary_credential_library_vault_ssh_certificate" "ext_co_example" {
   	path                = "%s"
   	username            = "%s"
 	key_type            = "ed25519"
-
 	extensions = {
 	  permit-pty = ""
     }
-
 	critical_options = {
 	  force-command = "/bin/foo"
 	}
@@ -90,7 +82,6 @@ resource "boundary_credential_library_vault_ssh_certificate" "ext_co_example" {
   	path                = "%s"
   	username            = "%s"
 	key_type            = "ed25519"
-
 	extensions = {
 	  permit-pty            = ""
 	  permit-X11-forwarding = ""
@@ -108,11 +99,9 @@ resource "boundary_credential_library_vault_ssh_certificate" "ext_co_example" {
   	path                = "%s"
   	username            = "%s"
 	key_type            = "ed25519"
-
 	extensions = {
 	  permit-pty = ""
     }
-
 	critical_options = {
 	  force-command  = "/bin/foo"
 	  source-address = "10.10.0.0/16"
@@ -141,7 +130,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:        true,
 		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckCredentialLibraryVaultSshCertificateResourceDestroy(t, provider),
+		CheckDestroy:      testAccCheckCredentialLibraryVaultResourceDestroy(t, provider, sshCertVaultCredentialLibraryType),
 		Steps: []resource.TestStep{
 			{
 				// create
@@ -152,7 +141,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredResc, credentialLibraryVaultPathKey, vaultSshCertCredLibPath),
 					resource.TestCheckResourceAttr(vaultSshCertCredResc, credentialLibraryVaultSshCertificateUsernameKey, vaultSshCertCredUsername),
 
-					testAccCheckCredentialLibraryVaultSshCertificateResourceExists(provider, vaultSshCertCredResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredResc),
 				),
 			},
 			importStep(vaultSshCertCredResc),
@@ -167,7 +156,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredResc, credentialLibraryVaultSshCertificateKeyTypeKey, vaultSshCertCredKeyType),
 					resource.TestCheckResourceAttr(vaultSshCertCredResc, credentialLibraryVaultSshCertificateKeyBitsKey, strconv.Itoa(vaultSshCertCredKeyBits)),
 
-					testAccCheckCredentialLibraryVaultSshCertificateResourceExists(provider, vaultSshCertCredResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredResc),
 				),
 			},
 			importStep(vaultSshCertCredResc),
@@ -180,7 +169,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultPathKey, vaultSshCertCredLibPath),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateUsernameKey, vaultSshCertCredUsername),
 
-					testAccCheckCredentialLibraryVaultSshCertificateResourceExists(provider, vaultSshCertCredExtCOResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredExtCOResc),
 				),
 			},
 			importStep(vaultSshCertCredExtCOResc),
@@ -195,7 +184,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateCriticalOptionsKey+".%", "0"),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateExtensionsKey+".%", "2"),
 
-					testAccCheckCredentialLibraryVaultSshCertificateResourceExists(provider, vaultSshCertCredExtCOResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredExtCOResc),
 				),
 			},
 			importStep(vaultSshCertCredExtCOResc),
@@ -210,58 +199,10 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateCriticalOptionsKey+".%", "2"),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateExtensionsKey+".%", "1"),
 
-					testAccCheckCredentialLibraryVaultSshCertificateResourceExists(provider, vaultSshCertCredExtCOResc),
+					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredExtCOResc),
 				),
 			},
 			importStep(vaultSshCertCredExtCOResc),
 		},
 	})
-}
-
-func testAccCheckCredentialLibraryVaultSshCertificateResourceExists(testProvider *schema.Provider, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("not found: %s", name)
-		}
-
-		id := rs.Primary.ID
-		if id == "" {
-			return fmt.Errorf("no ID is set")
-		}
-
-		md := testProvider.Meta().(*metaData)
-		c := credentiallibraries.NewClient(md.client)
-		if _, err := c.Read(context.Background(), id); err != nil {
-			return fmt.Errorf("got an error reading %q: %w", id, err)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckCredentialLibraryVaultSshCertificateResourceDestroy(t *testing.T, testProvider *schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if testProvider.Meta() == nil {
-			t.Fatal("got nil provider metadata")
-		}
-		md := testProvider.Meta().(*metaData)
-
-		for _, rs := range s.RootModule().Resources {
-			switch rs.Type {
-			case "boundary_credential_library_vault":
-				id := rs.Primary.ID
-
-				c := credentiallibraries.NewClient(md.client)
-				_, err := c.Read(context.Background(), id)
-				if apiErr := api.AsServerError(err); apiErr == nil || apiErr.Response().StatusCode() != http.StatusNotFound {
-					return fmt.Errorf("didn't get a 404 when reading destroyed vault credential library %q: %v", id, err)
-				}
-
-			default:
-				continue
-			}
-		}
-		return nil
-	}
 }
