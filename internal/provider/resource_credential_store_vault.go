@@ -26,6 +26,7 @@ const (
 	credentialStoreVaultClientCertificateKeyKey     = "client_certificate_key"
 	credentialStoreVaultClientCertificateKeyHmacKey = "client_certificate_key_hmac"
 	credentialStoreType                             = "vault"
+	credentialStoreVaultWorkerFilterKey             = "worker_filter"
 )
 
 var storeVaultAttrs = []string{
@@ -123,6 +124,11 @@ func resourceCredentialStoreVault() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
+			credentialStoreVaultWorkerFilterKey: {
+				Description: "HCP Only. A filter used to control which PKI workers can handle Vault requests. This allows the use of private Vault instances with Boundary.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -135,6 +141,9 @@ func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[stri
 		return diag.FromErr(err)
 	}
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set(credentialStoreVaultWorkerFilterKey, raw[credentialStoreVaultWorkerFilterKey]); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -227,6 +236,9 @@ func resourceCredentialStoreVaultCreate(ctx context.Context, d *schema.ResourceD
 	}
 	if v, ok := d.GetOk(credentialStoreVaultTokenKey); ok {
 		opts = append(opts, credentialstores.WithVaultCredentialStoreToken(v.(string)))
+	}
+	if v, ok := d.GetOk(credentialStoreVaultWorkerFilterKey); ok {
+		opts = append(opts, credentialstores.WithVaultCredentialStoreWorkerFilter(v.(string)))
 	}
 
 	var scope string
@@ -356,6 +368,14 @@ func resourceCredentialStoreVaultUpdate(ctx context.Context, d *schema.ResourceD
 		v, ok := d.GetOk(credentialStoreVaultClientCertificateKeyKey)
 		if ok {
 			opts = append(opts, credentialstores.WithVaultCredentialStoreClientCertificateKey(v.(string)))
+		}
+	}
+
+	if d.HasChange(credentialStoreVaultWorkerFilterKey) {
+		opts = append(opts, credentialstores.DefaultVaultCredentialStoreWorkerFilter())
+		v, ok := d.GetOk(credentialStoreVaultWorkerFilterKey)
+		if ok {
+			opts = append(opts, credentialstores.WithVaultCredentialStoreWorkerFilter(v.(string)))
 		}
 	}
 
