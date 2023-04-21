@@ -2,7 +2,7 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## Next
+## 1.1.5 (April 21, 2023)
 
 ### New and Improved
 * Add support for credential store vault worker filters ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/375))
