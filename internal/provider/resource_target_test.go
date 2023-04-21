@@ -97,6 +97,7 @@ resource "boundary_target" "foo" {
 		boundary_credential_library_vault.foo.id
 	]
 	default_port = 22
+	default_client_port = 1022
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 6000
 	session_connection_limit = 6
@@ -116,6 +117,7 @@ resource "boundary_target" "foo" {
 		boundary_credential_library_vault.bar.id
 	]
 	default_port = 80
+	default_client_port = 8022
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 7000
 	session_connection_limit = 7
@@ -129,6 +131,7 @@ resource "boundary_target" "foo" {
 	type         = "tcp"
 	scope_id     = boundary_scope.proj1.id
 	default_port = 80
+	default_client_port = 8022
 	depends_on  = [boundary_role.proj1_admin]
 	session_max_seconds = 7000
 	session_connection_limit = 7
@@ -142,6 +145,7 @@ resource "boundary_target" "foo" {
 	type                                       = "tcp"
 	scope_id                                   = boundary_scope.proj1.id
 	default_port                               = 80
+	default_client_port                        = 8022
 	depends_on                                 = [boundary_role.proj1_admin]
 	session_max_seconds                        = 7000
 	session_connection_limit                   = 7
@@ -152,61 +156,66 @@ resource "boundary_target" "foo" {
 
 	fooTargetWithIPAddress = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-	name         = "test"
-	description  = "%s"
-	type         = "tcp"
-	scope_id     = boundary_scope.proj1.id
-	address      = "127.0.0.1"
-	default_port = 22
-	depends_on  = [boundary_role.proj1_admin]
+	name                = "test"
+	description         = "%s"
+	type                = "tcp"
+	scope_id            = boundary_scope.proj1.id
+	address             = "127.0.0.1"
+	default_port        = 22
+	default_client_port = 1022
+	depends_on          = [boundary_role.proj1_admin]
 }`, fooTargetDescription)
 
 	fooTargetWithDNSAddress = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-	name         = "test"
-	description  = "%s"
-	type         = "tcp"
-	scope_id     = boundary_scope.proj1.id
-	address      = "localhost"
-	default_port = 22
-	depends_on  = [boundary_role.proj1_admin]
+	name                = "test"
+	description         = "%s"
+	type                = "tcp"
+	scope_id            = boundary_scope.proj1.id
+	address             = "localhost"
+	default_port        = 22
+	default_client_port = 1022
+	depends_on          = [boundary_role.proj1_admin]
 }`, fooTargetDescription)
 
 	fooTargetUnsetAddress = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-	name         = "test"
-	description  = "%s"
-	type         = "tcp"
-	scope_id     = boundary_scope.proj1.id
-	default_port = 22
-	depends_on  = [boundary_role.proj1_admin]
+	name                = "test"
+	description         = "%s"
+	type                = "tcp"
+	scope_id            = boundary_scope.proj1.id
+	default_port        = 22
+	default_client_port = 1022
+	depends_on          = [boundary_role.proj1_admin]
 }`, fooTargetDescription)
 
 	fooTargetSetHostSource = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-	name         = "test"
-	description  = "%s"
-	type         = "tcp"
-	scope_id     = boundary_scope.proj1.id
-	default_port = 22
-	host_source_ids = [
+	name                = "test"
+	description         = "%s"
+	type                = "tcp"
+	scope_id            = boundary_scope.proj1.id
+	default_port        = 22
+	default_client_port = 1022
+	host_source_ids     = [
 		boundary_host_set.foo.id
 	]
-	depends_on  = [boundary_role.proj1_admin]
+	depends_on          = [boundary_role.proj1_admin]
 }`, fooTargetDescription)
 
 	fooTargetWithAddressAndHostSource = fmt.Sprintf(`
 resource "boundary_target" "foo" {
-	name         = "test"
-	description  = "%s"
-	type         = "tcp"
-	scope_id     = boundary_scope.proj1.id
-	address      = "localhost"
-	host_source_ids = [
+	name                = "test"
+	description         = "%s"
+	type                = "tcp"
+	scope_id            = boundary_scope.proj1.id
+	address             = "localhost"
+	host_source_ids     = [
 		boundary_host_set.foo.id
 	]
-	default_port = 22
-	depends_on  = [boundary_role.proj1_admin]
+	default_port        = 22
+	default_client_port = 1022
+	depends_on          = [boundary_role.proj1_admin]
 }`, fooTargetDescription)
 )
 
@@ -240,6 +249,7 @@ func TestAccTarget(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "6000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "6"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "foo"`),
@@ -255,6 +265,7 @@ func TestAccTarget(t *testing.T) {
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "8022"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "bar"`),
@@ -270,6 +281,7 @@ func TestAccTarget(t *testing.T) {
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "8022"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "bar"`),
@@ -285,6 +297,7 @@ func TestAccTarget(t *testing.T) {
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, ""),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "8022"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetHostSourceIdsKey+".%", "0"),
@@ -300,6 +313,7 @@ func TestAccTarget(t *testing.T) {
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "80"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "8022"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionMaxSecondsKey, "7000"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetSessionConnectionLimitKey, "7"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetWorkerEgressFilterKey, `type == "bar"`),
@@ -335,6 +349,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, "127.0.0.1"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -348,6 +363,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, "localhost"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -360,6 +376,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
 					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, ""),
 				),
 			},
@@ -373,6 +390,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
 					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
 				),
 			},
@@ -402,6 +420,7 @@ func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetAddressKey, "127.0.0.1"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 				),
 			},
 			importStep("boundary_target.foo"),
@@ -414,6 +433,7 @@ func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
 					resource.TestCheckResourceAttr("boundary_target.foo", TypeKey, "tcp"),
 					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultPortKey, "22"),
+					resource.TestCheckResourceAttr("boundary_target.foo", targetDefaultClientPortKey, "1022"),
 					testAccCheckTargetResourceHostSource(provider, "boundary_target.foo", []string{"boundary_host_set.foo"}),
 				),
 			},

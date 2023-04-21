@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -19,6 +20,7 @@ const (
 	targetBrokeredCredentialSourceIdsKey    = "brokered_credential_source_ids"
 	targetInjectedAppCredentialSourceIdsKey = "injected_application_credential_source_ids"
 	targetDefaultPortKey                    = "default_port"
+	targetDefaultClientPortKey              = "default_client_port"
 	targetSessionMaxSecondsKey              = "session_max_seconds"
 	targetSessionConnectionLimitKey         = "session_connection_limit"
 	targetWorkerFilterKey                   = "worker_filter"
@@ -72,6 +74,11 @@ func resourceTarget() *schema.Resource {
 			},
 			targetDefaultPortKey: {
 				Description: "The default port for this target.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
+			targetDefaultClientPortKey: {
+				Description: "The default client port for this target.",
 				Type:        schema.TypeInt,
 				Optional:    true,
 			},
@@ -175,9 +182,15 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	case targetTypeTcp, targetTypeSsh:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
-			if defPort, ok := attrs["default_port"].(json.Number); ok {
+			if defPort, ok := attrs[targetDefaultPortKey].(json.Number); ok {
 				defPortInt, _ := defPort.Int64()
 				if err := d.Set(targetDefaultPortKey, int(defPortInt)); err != nil {
+					return err
+				}
+			}
+			if defCliPort, ok := attrs[targetDefaultClientPortKey].(json.Number); ok {
+				defCliPortInt, _ := defCliPort.Int64()
+				if err := d.Set(targetDefaultClientPortKey, int(defCliPortInt)); err != nil {
 					return err
 				}
 			}
@@ -226,7 +239,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
 	if ok {
 		defaultPortInt := defaultPortVal.(int)
-		if defaultPortInt < 0 || defaultPortInt > 65535 {
+		if defaultPortInt <= 0 || defaultPortInt > math.MaxUint16 {
 			return diag.Errorf(`"default_port" must be a valid tcp port`)
 		}
 		switch typeStr {
@@ -234,6 +247,20 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			opts = append(opts, targets.WithTcpTargetDefaultPort(uint32(defaultPortInt)))
 		case targetTypeSsh:
 			opts = append(opts, targets.WithSshTargetDefaultPort(uint32(defaultPortInt)))
+		}
+	}
+
+	defaultClientPortVal, ok := d.GetOk(targetDefaultClientPortKey)
+	if ok {
+		defaultClientPortInt := defaultClientPortVal.(int)
+		if defaultClientPortInt <= 0 || defaultClientPortInt > math.MaxUint16 {
+			return diag.Errorf(`"default_client_port" must be a valid tcp port`)
+		}
+		switch typeStr {
+		case targetTypeTcp:
+			opts = append(opts, targets.WithTcpTargetDefaultClientPort(uint32(defaultClientPortInt)))
+		case targetTypeSsh:
+			opts = append(opts, targets.WithSshTargetDefaultClientPort(uint32(defaultClientPortInt)))
 		}
 	}
 
@@ -424,7 +451,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
 			if ok {
 				defaultPortInt := defaultPortVal.(int)
-				if defaultPortInt < 0 || defaultPortInt > 65535 {
+				if defaultPortInt <= 0 || defaultPortInt > math.MaxUint16 {
 					return diag.Errorf(`"default_port" must be a valid tcp port`)
 				}
 				defaultPort = &defaultPortInt
@@ -436,11 +463,40 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
 			if ok {
 				defaultPortInt := defaultPortVal.(int)
-				if defaultPortInt < 0 || defaultPortInt > 65535 {
+				if defaultPortInt <= 0 || defaultPortInt > math.MaxUint16 {
 					return diag.Errorf(`"default_port" must be a valid tcp port`)
 				}
 				defaultPort = &defaultPortInt
 				opts = append(opts, targets.WithSshTargetDefaultPort(uint32(defaultPortInt)))
+			}
+		}
+	}
+
+	var defaultClientPort *int
+	if d.HasChange(targetDefaultClientPortKey) {
+		switch typeStr {
+		case targetTypeTcp:
+			opts = append(opts, targets.DefaultTcpTargetDefaultClientPort())
+			defaultClientPortVal, ok := d.GetOk(targetDefaultClientPortKey)
+			if ok {
+				defaultClientPortInt := defaultClientPortVal.(int)
+				if defaultClientPortInt <= 0 || defaultClientPortInt > math.MaxUint16 {
+					return diag.Errorf(`"default_client_port" must be a valid tcp port`)
+				}
+				defaultClientPort = &defaultClientPortInt
+				opts = append(opts, targets.WithTcpTargetDefaultClientPort(uint32(defaultClientPortInt)))
+			}
+
+		case targetTypeSsh:
+			opts = append(opts, targets.DefaultSshTargetDefaultClientPort())
+			defaultClientPortVal, ok := d.GetOk(targetDefaultClientPortKey)
+			if ok {
+				defaultClientPortInt := defaultClientPortVal.(int)
+				if defaultClientPortInt <= 0 || defaultClientPortInt > math.MaxUint16 {
+					return diag.Errorf(`"default_client_port" must be a valid tcp port`)
+				}
+				defaultClientPort = &defaultClientPortInt
+				opts = append(opts, targets.WithSshTargetDefaultClientPort(uint32(defaultClientPortInt)))
 			}
 		}
 	}
@@ -537,6 +593,11 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange(targetDefaultPortKey) {
 		if err := d.Set(targetDefaultPortKey, defaultPort); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange(targetDefaultClientPortKey) {
+		if err := d.Set(targetDefaultClientPortKey, defaultClientPort); err != nil {
 			return diag.FromErr(err)
 		}
 	}
