@@ -3,12 +3,12 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.20
 
 require (
-	github.com/hashicorp/boundary v0.10.1-0.20230315181017-3dc1e2108a38
-	github.com/hashicorp/boundary/api v0.0.34-0.20230315181017-3dc1e2108a38
-	github.com/hashicorp/boundary/sdk v0.0.30-0.20230315181017-3dc1e2108a38
+	github.com/hashicorp/boundary v0.10.1-0.20230421143835-bc47a60f2f43
+	github.com/hashicorp/boundary/api v0.0.36
+	github.com/hashicorp/boundary/sdk v0.0.32
 	github.com/hashicorp/cap v0.2.0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
-	github.com/hashicorp/go-kms-wrapping/v2 v2.0.9-0.20230315135303-7bedb33a2280
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.9-0.20230316234854-f5e78cca83a8
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.7
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.3
@@ -98,7 +98,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.16.2 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/nodeenrollment v0.1.18 // indirect
+	github.com/hashicorp/nodeenrollment v0.2.0 // indirect
 	github.com/hashicorp/terraform-exec v0.18.1 // indirect
 	github.com/hashicorp/terraform-json v0.16.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.14.3 // indirect
@@ -183,7 +183,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230303212802-e74f57abe488 // indirect
 	google.golang.org/grpc v1.53.0 // indirect
-	google.golang.org/protobuf v1.29.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
