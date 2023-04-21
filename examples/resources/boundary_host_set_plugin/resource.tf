@@ -35,13 +35,13 @@ resource "boundary_host_catalog_plugin" "aws_example" {
 
 resource "boundary_host_set_plugin" "web" {
   name            = "My web host set plugin"
-  host_catalog_id = boundary_host_catalog_plugin.aws_exmaple.id
+  host_catalog_id = boundary_host_catalog_plugin.aws_example.id
   attributes_json = jsonencode({ "filters" = "tag:service-type=web" })
 }
 
 resource "boundary_host_set_plugin" "foobar" {
   name                = "My foobar host set plugin"
-  host_catalog_id     = boundary_host_catalog_plugin.aws_exmaple.id
+  host_catalog_id     = boundary_host_catalog_plugin.aws_example.id
   preferred_endpoints = ["cidr:54.0.0.0/8"]
   attributes_json = jsonencode({
     "filters" = "tag-key=foo",
@@ -51,7 +51,7 @@ resource "boundary_host_set_plugin" "foobar" {
 
 resource "boundary_host_set_plugin" "launch" {
   name                  = "My launch host set plugin"
-  host_catalog_id       = boundary_host_catalog_plugin.aws_exmaple.id
+  host_catalog_id       = boundary_host_catalog_plugin.aws_example.id
   sync_interval_seconds = 60
   attributes_json = jsonencode({
     "filters" = "tag:development=prod,dev",
@@ -87,13 +87,13 @@ resource "boundary_host_catalog_plugin" "azure_example" {
 
 resource "boundary_host_set_plugin" "database" {
   name            = "My database host set plugin"
-  host_catalog_id = boundary_host_catalog_plugin.azure_exmaple.id
+  host_catalog_id = boundary_host_catalog_plugin.azure_example.id
   attributes_json = jsonencode({ "filter" = "tagName eq 'service-type' and tagValue eq 'database'" })
 }
 
 resource "boundary_host_set_plugin" "foodev" {
   name                  = "My foodev host set plugin"
-  host_catalog_id       = boundary_host_catalog_plugin.azure_exmaple.id
+  host_catalog_id       = boundary_host_catalog_plugin.azure_example.id
   preferred_endpoints   = ["cidr:54.0.0.0/8"]
   sync_interval_seconds = 60
   attributes_json = jsonencode({

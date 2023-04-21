@@ -2,6 +2,14 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## Next
+
+### New and Improved
+* Add support for credential store vault worker filters ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/375))
+
+### Bug Fix
+* Allow users to set OIDC maxAge value to 0 to require immediate reauth ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/364))
+
 ## 1.1.4 (February 15, 2023)
 
 ### New and Improved
