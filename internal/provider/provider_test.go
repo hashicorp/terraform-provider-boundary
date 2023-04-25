@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/go-kms-wrapping/v2/aead"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var (
@@ -98,6 +100,42 @@ provider "boundary" {
 	return strings.Join(c, "\n")
 }
 
+func testConfigWithDefaultAuthMethod(url string, res ...string) string {
+	provider := fmt.Sprintf(`
+provider "boundary" {
+	addr  = "%s"
+	password_auth_method_login_name = "%s"
+	password_auth_method_password = "%s"
+}`, url, tcLoginName, tcPassword)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
+}
+
+func testConfigWithOIDCAuthMethod(url string, res ...string) string {
+	provider := fmt.Sprintf(`
+provider "boundary" {
+	addr  = "%s"
+	auth_method_id = "amoidc_0000000000"
+}`, url)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
+}
+
+func testConfigWithoutAMPWCredentials(url string, res ...string) string {
+	provider := fmt.Sprintf(`
+provider "boundary" {
+	addr  = "%s"
+}`, url)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
+}
+
 func testConfigWithRecovery(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
@@ -137,5 +175,73 @@ func importStep(name string, ignore ...string) resource.TestStep {
 func TestProvider(t *testing.T) {
 	if err := New().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
+	}
+}
+
+func TestConfigWithDefaultAuthMethod(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
+		Steps: []resource.TestStep{
+			{
+				Config: testConfigWithDefaultAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
+					testProviderTokenExists(provider),
+				),
+			},
+		},
+	})
+}
+
+func TestConfigWithoutAMPWCredentials(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		Steps: []resource.TestStep{
+			{
+				Config:      testConfigWithoutAMPWCredentials(url, fooOrg, firstProjectFoo, secondProject),
+				ExpectError: regexp.MustCompile("password-style auth method login name not set, please set password_auth_method_login_name on the provider"),
+			},
+		},
+	})
+}
+
+func TestConfigWithOIDCAuthMethod(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		Steps: []resource.TestStep{
+			{
+				Config:      testConfigWithOIDCAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
+				ExpectError: regexp.MustCompile("OIDC auth method is currently not supported by Boundary Terraform Provider. only password auth method is supported at this time"),
+			},
+		},
+	})
+}
+
+func testProviderTokenExists(testProvider *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		md := testProvider.Meta().(*metaData)
+		if md.client.Token() == "" {
+			return fmt.Errorf("token not set")
+		}
+		return nil
 	}
 }
