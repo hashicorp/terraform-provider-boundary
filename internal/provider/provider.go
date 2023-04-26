@@ -127,14 +127,15 @@ type metaData struct {
 
 func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaData) error {
 	var credentials map[string]interface{}
-	providerScope := DEFAULT_PROVIDER_SCOPE
 	amClient := authmethods.NewClient(md.client)
 
-	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
-
+	var providerScope string
 	scopeId, scopeIdOk := d.GetOk("scope_id")
-	if scopeIdOk {
+	switch {
+	case scopeIdOk:
 		providerScope = scopeId.(string)
+	default:
+		providerScope = DEFAULT_PROVIDER_SCOPE
 	}
 
 	recoveryKmsHcl, recoveryKmsHclOk := d.GetOk("recovery_kms_hcl")
@@ -143,6 +144,7 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 	}
 
 	// If auth_method_id is not set, get the default auth method ID for the given scope ID
+	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
 	if !authMethodIdOk {
 		defaultAuthMethodId, err := getDefaultAuthMethodId(ctx, amClient, providerScope, PASSWORD_AUTH_METHOD_PREFIX)
 		if err != nil {
@@ -283,7 +285,7 @@ func getDefaultAuthMethodId(ctx context.Context, client *authmethods.Client, sco
 
 	authMethodItems := authMethodListResult.GetItems()
 
-	// If there is only one auth method that mataches auth method prefix, return it even if it's not the primary auth method
+	// If there is only one auth method that matches the auth method prefix, return it even if it's not the primary auth method
 	if len(authMethodItems) == 1 {
 		authMethod := authMethodItems[0]
 		if !strings.HasPrefix(authMethod.Id, amType) {
