@@ -56,6 +56,7 @@ resource "boundary_credential_store_vault" "example" {
 - `namespace` (String) The namespace within Vault to use.
 - `tls_server_name` (String) Name to use as the SNI host when connecting to Vault via TLS.
 - `tls_skip_verify` (Boolean) Whether or not to skip TLS verification.
+- `worker_filter` (String) HCP Only. A filter used to control which PKI workers can handle Vault requests. This allows the use of private Vault instances with Boundary.
 
 ### Read-Only
 
