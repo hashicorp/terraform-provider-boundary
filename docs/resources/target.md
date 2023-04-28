@@ -134,6 +134,7 @@ resource "boundary_target" "address_foo" {
 
 - `address` (String) Optionally, a valid network address to connect to for this target. Cannot be used alongside host_source_ids.
 - `brokered_credential_source_ids` (Set of String) A list of brokered credential source ID's.
+- `default_client_port` (Number) The default client port for this target.
 - `default_port` (Number) The default port for this target.
 - `description` (String) The target description.
 - `egress_worker_filter` (String) Boolean expression to filter the workers used to access this target
