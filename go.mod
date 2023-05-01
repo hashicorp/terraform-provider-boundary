@@ -3,10 +3,11 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.20
 
 require (
-	github.com/hashicorp/boundary v0.10.1-0.20230421143835-bc47a60f2f43
+	github.com/hashicorp/boundary v0.10.1-0.20230503134529-a2f8d87bfbdf
 	github.com/hashicorp/boundary/api v0.0.36
 	github.com/hashicorp/boundary/sdk v0.0.32
 	github.com/hashicorp/cap v0.2.0
+	github.com/hashicorp/cap/ldap v0.0.0-20230123181313-9c0fb924b0d9
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.9-0.20230316234854-f5e78cca83a8
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.7
@@ -14,7 +15,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
-	github.com/jimlambrt/gldap v0.1.4
+	github.com/jimlambrt/gldap v0.1.6
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.2
@@ -65,12 +66,11 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2 // indirect
-	github.com/hashicorp/cap/ldap v0.0.0-20230123181313-9c0fb924b0d9 // indirect
 	github.com/hashicorp/dbassert v0.0.0-20210708202608-ecf920cf1ed8 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/eventlogger v0.1.2-0.20230227112545-f26a3bdf6871 // indirect
 	github.com/hashicorp/eventlogger/filters/encrypt v0.1.8-0.20230227112545-f26a3bdf6871 // indirect
-	github.com/hashicorp/go-bexpr v0.1.10 // indirect
+	github.com/hashicorp/go-bexpr v0.1.12 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-dbw v0.0.0-20220910135738-ed4505749995 // indirect
@@ -172,7 +172,7 @@ require (
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 // indirect
+	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
