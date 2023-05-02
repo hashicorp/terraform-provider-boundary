@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
-	github.com/jimlambrt/gldap v0.1.4
+	github.com/jimlambrt/gldap v0.1.6
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.2
@@ -172,7 +172,7 @@ require (
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	github.com/zclconf/go-cty v1.13.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 // indirect
+	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53 // indirect
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
