@@ -2,16 +2,16 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## Next
+## 1.1.5 (May 3, 2023)
 
 ### New and Improved
 
 * Add support for credential store vault worker filters
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/375))
 * Add support for target default client port
-  ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/379))
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/379))
 * Add support for using default auth method if no auth method ID is provided for provider
-  ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/385))
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/385))
 
 ### Bug Fixes
 
