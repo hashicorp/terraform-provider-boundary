@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jimlambrt/gldap"
 	"github.com/jimlambrt/gldap/testdirectory"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -313,26 +312,9 @@ func createDefaultLdap(t *testing.T) *testdirectory.Directory {
 
 	groups := []*gldap.Entry{
 		testdirectory.NewGroup(t, "admin", []string{"alice"}),
-		testdirectory.NewGroup(t, "admin", []string{"eve"}, testdirectory.WithDefaults(t, &testdirectory.Defaults{UPNDomain: "example.com"})),
 	}
 
-	tokenGroups := map[string][]*gldap.Entry{
-		"S-1-1": {
-			testdirectory.NewGroup(t, "admin-token-group", []string{"alice"}),
-		},
-	}
-
-	sidBytes, err := ldap.SIDBytes(1, 1)
-	require.NoError(t, err)
-	users := testdirectory.NewUsers(t, []string{"alice", "bob"}, testdirectory.WithMembersOf(t, "admin"), testdirectory.WithTokenGroups(t, sidBytes))
-	users = append(
-		users,
-		testdirectory.NewUsers(
-			t,
-			[]string{"eve"},
-			testdirectory.WithDefaults(t, &testdirectory.Defaults{UPNDomain: "example.com"}),
-			testdirectory.WithMembersOf(t, "admin"))...,
-	)
+	users := testdirectory.NewUsers(t, []string{"alice"}, testdirectory.WithMembersOf(t, "admin"))
 
 	for _, u := range users {
 		u.Attributes = append(u.Attributes,
@@ -344,7 +326,6 @@ func createDefaultLdap(t *testing.T) *testdirectory.Directory {
 
 	td.SetUsers(users...)
 	td.SetGroups(groups...)
-	td.SetTokenGroups(tokenGroups)
 
 	return td
 }
