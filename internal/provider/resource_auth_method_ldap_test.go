@@ -73,6 +73,20 @@ EOT
   ]
 }`
 
+	testPrimaryAuthMethodLdap = `
+resource "boundary_auth_method_ldap" "test-ldap" {
+	name        		 = "test"
+	description 		 = "test auth method ldap"
+	scope_id    		 = "global"
+	is_primary_for_scope = true
+  	urls         	  	 = ["ldap://%s:%d"]
+	user_dn           	 = "%s"
+	group_dn          	 = "%s"
+	discover_dn 	  	 = true
+	enable_groups    	 = true
+	insecure_tls	 	 = true
+}`
+
 	testAuthMethodLdapUpdate = `
 resource "boundary_auth_method_ldap" "test-ldap" {
 	name                 = "test"

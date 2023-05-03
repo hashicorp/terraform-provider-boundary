@@ -23,6 +23,7 @@ import (
 
 const (
 	PASSWORD_AUTH_METHOD_PREFIX = "ampw"
+	LDAP_AUTH_METHOD_PREFIX     = "amldap"
 	DEFAULT_PROVIDER_SCOPE      = "global"
 )
 
@@ -58,11 +59,23 @@ func New() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The auth method login name for password-style auth methods",
+				Deprecated:  "Use auth_method_login_name instead",
 			},
 			"password_auth_method_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The auth method password for password-style auth methods",
+				Deprecated:  "Use auth_method_password instead",
+			},
+			"auth_method_login_name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The auth method login name for password-style or ldap-style auth methods",
+			},
+			"auth_method_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The auth method password for password-style or ldap-style auth methods",
 			},
 			"tls_insecure": {
 				Type:        schema.TypeBool,
@@ -146,7 +159,7 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 	// If auth_method_id is not set, get the default auth method ID for the given scope ID
 	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
 	if !authMethodIdOk {
-		defaultAuthMethodId, err := getDefaultAuthMethodId(ctx, amClient, providerScope, PASSWORD_AUTH_METHOD_PREFIX)
+		defaultAuthMethodId, err := getDefaultAuthMethodId(ctx, amClient, providerScope, "")
 		if err != nil {
 			return err
 		}
@@ -192,15 +205,21 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 	case authMethodIdOk:
 		switch {
-		case strings.HasPrefix(authMethodId.(string), "ampw"):
-			// Password-style
-			authMethodLoginName, ok := d.GetOk("password_auth_method_login_name")
+		case strings.HasPrefix(authMethodId.(string), PASSWORD_AUTH_METHOD_PREFIX) || strings.HasPrefix(authMethodId.(string), LDAP_AUTH_METHOD_PREFIX):
+			// Password-style & LDAP-style
+			authMethodLoginName, ok := d.GetOk("auth_method_login_name")
 			if !ok {
-				return errors.New("password-style auth method login name not set, please set password_auth_method_login_name on the provider")
+				authMethodLoginName, ok = d.GetOk("password_auth_method_login_name")
+				if !ok {
+					return errors.New("auth method login name not set, please set auth_method_login_name on the provider")
+				}
 			}
-			authMethodPassword, ok := d.GetOk("password_auth_method_password")
+			authMethodPassword, ok := d.GetOk("auth_method_password")
 			if !ok {
-				return errors.New("password-style auth method password not set, please set password_auth_method_password on the provider")
+				authMethodPassword, ok = d.GetOk("password_auth_method_password")
+				if !ok {
+					return errors.New("auth method password not set, please set auth_method_password on the provider")
+				}
 			}
 			credentials = map[string]interface{}{
 				"login_name": authMethodLoginName,
