@@ -12,6 +12,8 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
   ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/379))
 * Add support for using default auth method if no auth method ID is provided for provider
   ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/385))
+* Add support for using ldap primary auth method
+  ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/392))  
 
 ### Bug Fixes
 
