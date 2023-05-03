@@ -13,12 +13,19 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 * Add support for using default auth method if no auth method ID is provided for provider
   ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/385))
 * Add support for using ldap primary auth method
-  ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/392))  
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/392))  
 
 ### Bug Fixes
 
 * Allow users to set OIDC maxAge value to 0 to require immediate reauth
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/364))
+
+### Deprecations/Changes
+
+* Deprecate `password_auth_method_login_name` & `password_auth_method_password` for Terraform Provider.
+  `password_auth_method_login_name` & `password_auth_method_password` fields have been set to deprecated 
+  with a recommendation to use `auth_method_login_name` & `auth_method_password` fields instead.
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/392))
 
 ## 1.1.4 (February 15, 2023)
 
