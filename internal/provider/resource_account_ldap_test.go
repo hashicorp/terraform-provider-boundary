@@ -56,6 +56,29 @@ resource "boundary_account_ldap" "foo" {
 	login_name     = "foo"
 	auth_method_id = boundary_auth_method_ldap.foo.id
 }`, testAccountLdapNameUpdate, testAccountLdapDescUpdate)
+
+	testProviderLdapAccountConfig = `
+resource "boundary_account_ldap" "test-ldap" {
+	name           = "alice"
+	description    = "test"
+	type           = "ldap"
+	login_name     = "%s"
+	auth_method_id = boundary_auth_method_ldap.test-ldap.id
+}
+
+resource "boundary_user" "alice" {
+	name        = "alice"
+	description = "test user resource"
+	account_ids = [boundary_account_ldap.test-ldap.id]
+	scope_id = boundary_scope.global.id
+}
+
+resource "boundary_role" "ldap_principal" {
+	scope_id = boundary_scope.global.id
+	grant_scope_id = boundary_scope.global.id
+	grant_strings = ["id=*;type=*;actions=*"]
+	principal_ids = [boundary_user.alice.id]
+}`
 )
 
 func TestAccLdapAccount(t *testing.T) {
