@@ -79,9 +79,10 @@ func resourceCredentialLibraryVault() *schema.Resource {
 				Required:    true,
 			},
 			credentialLibraryCredentialTypeKey: {
-				Description: "The type of credential the library generates.",
+				Description: "The type of credential the library generates. Cannot be updated on an existing resource.",
 				Type:        schema.TypeString,
 				Optional:    true,
+				ForceNew:    true,
 			},
 			credentialLibraryCredentialMappingOverridesKey: {
 				Description: "The credential mapping override.",
