@@ -7,6 +7,8 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 ### New and Improved
 * Add support for using default auth method if no auth method ID is provided for provider
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/385))
+* Fix typo in Managed Group resource page
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/370))  
 
 ## 1.1.5 (April 21, 2023)
 
