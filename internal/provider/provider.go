@@ -21,6 +21,11 @@ import (
 	kms_plugin_assets "github.com/hashicorp/terraform-provider-boundary/plugins/kms"
 )
 
+const (
+	PASSWORD_AUTH_METHOD_PREFIX = "ampw"
+	DEFAULT_PROVIDER_SCOPE      = "global"
+)
+
 func init() {
 	// descriptions are written in markdown for docs
 	schema.DescriptionKind = schema.StringMarkdown
@@ -69,6 +74,11 @@ func New() *schema.Provider {
 				Optional:    true,
 				Description: `Specifies a directory that the Boundary provider can use to write and execute its built-in plugins.`,
 			},
+			"scope_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: `The scope ID for the default auth method.`,
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"boundary_account":                                  resourceAccount(),
@@ -114,11 +124,31 @@ type metaData struct {
 
 func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaData) error {
 	var credentials map[string]interface{}
+	amClient := authmethods.NewClient(md.client)
 
-	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
+	var providerScope string
+	scopeId, scopeIdOk := d.GetOk("scope_id")
+	switch {
+	case scopeIdOk:
+		providerScope = scopeId.(string)
+	default:
+		providerScope = DEFAULT_PROVIDER_SCOPE
+	}
+
 	recoveryKmsHcl, recoveryKmsHclOk := d.GetOk("recovery_kms_hcl")
 	if token, ok := d.GetOk("token"); ok {
 		md.client.SetToken(token.(string))
+	}
+
+	// If auth_method_id is not set, get the default auth method ID for the given scope ID
+	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
+	if !authMethodIdOk {
+		defaultAuthMethodId, err := getDefaultAuthMethodId(ctx, amClient, providerScope, PASSWORD_AUTH_METHOD_PREFIX)
+		if err != nil {
+			return err
+		}
+		authMethodIdOk = true
+		authMethodId = defaultAuthMethodId
 	}
 
 	switch {
@@ -173,14 +203,14 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 				"login_name": authMethodLoginName,
 				"password":   authMethodPassword,
 			}
-
+		case strings.HasPrefix(authMethodId.(string), "amoidc"):
+			// OIDC-style
+			return errors.New("OIDC auth method is currently not supported by Boundary Terraform Provider. only password auth method is supported at this time")
 		default:
 			return errors.New("no suitable typed auth method information found")
 		}
 
-		am := authmethods.NewClient(md.client)
-
-		at, err := am.Authenticate(ctx, authMethodId.(string), "login", credentials)
+		at, err := amClient.Authenticate(ctx, authMethodId.(string), "login", credentials)
 		if err != nil {
 			if apiErr := api.AsServerError(err); apiErr != nil {
 				statusCode := apiErr.Response().StatusCode()
@@ -236,4 +266,41 @@ func providerConfigure(p *schema.Provider) schema.ConfigureContextFunc {
 
 		return md, nil
 	}
+}
+
+// getDefaultAuthMethodId iterates over boundary client.List() to find the default auth method ID for the given scopeId.
+// If there is only one auth method, it'll return it even if it's not the primary auth method
+// If scope ID is empty or no primary auth method is found, it returns an error.
+func getDefaultAuthMethodId(ctx context.Context, client *authmethods.Client, scopeId, amType string) (string, error) {
+	if scopeId == "" {
+		return "", fmt.Errorf("must pass a non empty scope ID string to get default auth method ID")
+	}
+	authMethodListResult, err := client.List(ctx, scopeId)
+	if err != nil {
+		return "", err
+	}
+
+	authMethodItems := authMethodListResult.GetItems()
+
+	// If there is only one auth method that matches the auth method prefix, return it even if it's not the primary auth method
+	if len(authMethodItems) == 1 {
+		authMethod := authMethodItems[0]
+		if !strings.HasPrefix(authMethod.Id, amType) {
+			return "", fmt.Errorf("error looking up default auth method for scope ID: '%s'. got '%s' but the provider requires an auth method prefix of '%s'", scopeId, authMethod.Id, amType)
+		}
+
+		return authMethod.Id, nil
+	}
+
+	// find the primary auth method that matches auth method prefix
+	for _, m := range authMethodItems {
+		if m.IsPrimary {
+			if !strings.HasPrefix(m.Id, amType) {
+				return "", fmt.Errorf("error looking up primary auth method for scope ID: '%s'. got '%s' but the provider requires an auth method prefix of '%s'", scopeId, m.Id, amType)
+			}
+
+			return m.Id, nil
+		}
+	}
+	return "", fmt.Errorf("default auth method not found for scope ID: '%s'. Please set a primary auth method on this scope or pass one explicitly using the `auth_method_id` field", scopeId)
 }
