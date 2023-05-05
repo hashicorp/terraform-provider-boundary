@@ -2,7 +2,7 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## 1.1.6 (May 4, 2023)
+## 1.1.6 (May 5, 2023)
 
 ### New and Improved
 * Add support for using default auth method if no auth method ID is provided for provider
