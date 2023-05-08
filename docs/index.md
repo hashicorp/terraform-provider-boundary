@@ -45,8 +45,10 @@ provider "boundary" {
 ### Optional
 
 - `auth_method_id` (String) The auth method ID e.g. ampw_1234567890
-- `password_auth_method_login_name` (String) The auth method login name for password-style auth methods
-- `password_auth_method_password` (String) The auth method password for password-style auth methods
+- `auth_method_login_name` (String) The auth method login name for password-style or ldap-style auth methods
+- `auth_method_password` (String) The auth method password for password-style or ldap-style auth methods
+- `password_auth_method_login_name` (String, Deprecated) The auth method login name for password-style auth methods
+- `password_auth_method_password` (String, Deprecated) The auth method password for password-style auth methods
 - `plugin_execution_dir` (String) Specifies a directory that the Boundary provider can use to write and execute its built-in plugins.
 - `recovery_kms_hcl` (String) Can be a heredoc string or a path on disk. If set, the string/file will be parsed as HCL and used with the recovery KMS mechanism. While this is set, it will override any other authentication information; the KMS mechanism will always be used. See Boundary's KMS docs for examples: https://boundaryproject.io/docs/configuration/kms
 - `scope_id` (String) The scope ID for the default auth method.
