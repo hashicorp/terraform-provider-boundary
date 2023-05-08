@@ -57,6 +57,23 @@ resource "boundary_account_ldap" "foo" {
 	auth_method_id = boundary_auth_method_ldap.foo.id
 }`, testAccountLdapNameUpdate, testAccountLdapDescUpdate)
 
+	testAccountLdapWithoutTypeField = fmt.Sprintf(`
+resource "boundary_auth_method_ldap" "foo" {
+	name        = "test"
+	description = "test account"
+	type        = "ldap"
+	scope_id    = boundary_scope.org1.id
+	depends_on = [boundary_role.org1_admin]
+	urls         	  = ["ldaps://ldap1", "ldaps://ldap2"]
+}
+
+resource "boundary_account_ldap" "foo" {
+	name           = "%s"
+	description    = "%s"
+	login_name     = "foo"
+	auth_method_id = boundary_auth_method_ldap.foo.id
+}`, testAccountLdapNameUpdate, testAccountLdapDescUpdate)
+
 	testProviderLdapAccountConfig = `
 resource "boundary_account_ldap" "test-ldap" {
 	name           = "alice"
@@ -107,6 +124,18 @@ func TestAccLdapAccount(t *testing.T) {
 			{
 				// update
 				Config: testConfig(url, fooOrg, testAccountLdapUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDescUpdate),
+					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapNameUpdate),
+					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "type", "ldap"),
+					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "login_name", "foo"),
+					testAccCheckAccountResourceExists(provider, "boundary_account_ldap.foo"),
+				),
+			},
+			importStep("boundary_account_ldap.foo", "ldap"),
+			{
+				// update without passing type field
+				Config: testConfig(url, fooOrg, testAccountLdapWithoutTypeField),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapNameUpdate),

@@ -54,7 +54,9 @@ func resourceAccountLdap() *schema.Resource {
 			TypeKey: {
 				Description: "The resource type.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Deprecated:  "The value for this field will be infered since 'ldap' is the only possible value.",
+				Default:     accountTypeLdap,
+				Optional:    true,
 				ForceNew:    true,
 			},
 			accountLoginNameKey: {
