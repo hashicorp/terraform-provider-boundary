@@ -13,7 +13,6 @@ resource "boundary_auth_method" "password" {
 
 resource "boundary_account_password" "jeff" {
   auth_method_id = boundary_auth_method.password.id
-  type           = "password"
   login_name     = "jeff"
   password       = "$uper$ecure"
 }

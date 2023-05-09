@@ -56,7 +56,9 @@ func resourceAccountPassword() *schema.Resource {
 			TypeKey: {
 				Description: "The resource type.",
 				Type:        schema.TypeString,
-				Required:    true,
+				Deprecated:  "The value for this field will be infered since 'password' is the only possible value.",
+				Default:     accountTypePassword,
+				Optional:    true,
 				ForceNew:    true,
 			},
 			accountLoginNameKey: {

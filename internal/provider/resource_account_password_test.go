@@ -53,6 +53,23 @@ resource "boundary_account_password" "foo" {
 	password       = "foofoofoo"
 	auth_method_id = boundary_auth_method.foo.id
 }`, fooAccountPasswordDescUpdate)
+
+	fooAccountPasswordWithoutTypeField = fmt.Sprintf(`
+	resource "boundary_auth_method" "foo" {
+		name        = "test"
+		description = "test account"
+		type        = "password"
+		scope_id    = boundary_scope.org1.id
+		depends_on = [boundary_role.org1_admin]
+	}
+	
+	resource "boundary_account_password" "foo" {
+		name           = "test"
+		description    = "%s"
+		login_name     = "foo"
+		password       = "foofoofoo"
+		auth_method_id = boundary_auth_method.foo.id
+	}`, fooAccountPasswordDescUpdate)
 )
 
 func TestAccAccount(t *testing.T) {
@@ -82,6 +99,19 @@ func TestAccAccount(t *testing.T) {
 			{
 				// update
 				Config: testConfig(url, fooOrg, fooAccountPasswordUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDescUpdate),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "type", "password"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "login_name", "foo"),
+					resource.TestCheckResourceAttr("boundary_account_password.foo", "password", "foofoofoo"),
+					testAccCheckAccountResourceExists(provider, "boundary_account_password.foo"),
+				),
+			},
+			importStep("boundary_account_password.foo", "password"),
+			{
+				// update without passing type field
+				Config: testConfig(url, fooOrg, fooAccountPasswordWithoutTypeField),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),
