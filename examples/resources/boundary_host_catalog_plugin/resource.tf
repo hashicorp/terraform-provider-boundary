@@ -52,7 +52,7 @@ resource "boundary_host_catalog_plugin" "azure_example" {
     "client_id"                   = "ARM_CLIENT_ID"
   })
 
-  # recommended to pass in aws secrets using a file() or using environment variables
+  # recommended to pass in azure secrets using a file() or using environment variables
   # the secrets below must be generated in azure by creating an ad application
   secrets_json = jsonencode({
     "secret_value" = "ARM_CLIENT_SECRET"
