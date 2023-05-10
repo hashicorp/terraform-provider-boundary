@@ -26,6 +26,10 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
   `password_auth_method_login_name` & `password_auth_method_password` fields have been set to deprecated 
   with a recommendation to use `auth_method_login_name` & `auth_method_password` fields instead.
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/392))
+* Deprecate type field for `boundary_account_password`
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/396))
+* Deprecate type field for `boundary_account_ldap`
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/400))  
 
 ## 1.1.4 (February 15, 2023)
 
