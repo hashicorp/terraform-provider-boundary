@@ -142,7 +142,7 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 
 	// If auth_method_id is not set, get the default auth method ID for the given scope ID
 	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
-	if !authMethodIdOk {
+	if !authMethodIdOk && !recoveryKmsHclOk {
 		defaultAuthMethodId, err := getDefaultAuthMethodId(ctx, amClient, providerScope, "")
 		if err != nil {
 			return err
