@@ -140,9 +140,10 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 		md.client.SetToken(token.(string))
 	}
 
-	// If auth_method_id is not set, get the default auth method ID for the given scope ID
+	// If auth_method_id is not set, get the default auth method ID for the given scope ID.
+	// Skip fetching default auth method when recovery_kms_hcl is set or the client token isn't null.
 	authMethodId, authMethodIdOk := d.GetOk("auth_method_id")
-	if !authMethodIdOk && !recoveryKmsHclOk {
+	if !authMethodIdOk && !recoveryKmsHclOk && md.client.Token() == "" {
 		defaultAuthMethodId, err := getDefaultAuthMethodId(ctx, amClient, providerScope, "")
 		if err != nil {
 			return err
