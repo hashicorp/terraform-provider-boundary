@@ -2,7 +2,7 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## 1.1.7 (May 11, 2023)
+## 1.1.7 (May 12, 2023)
 
 ### Bug Fix
 * Fix default auth method with recovery kms
