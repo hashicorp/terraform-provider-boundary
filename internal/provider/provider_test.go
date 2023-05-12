@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/cap/ldap"
+	"github.com/hashicorp/cap/oidc"
 	wrapping "github.com/hashicorp/go-kms-wrapping/v2"
 	"github.com/hashicorp/go-kms-wrapping/v2/aead"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -143,9 +144,6 @@ func testConfigWithRecovery(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
 	addr             = "%s"
-	auth_method_id       = "%s"
-	password_auth_method_login_name = "%s"
-	password_auth_method_password = "%s"
 	recovery_kms_hcl = <<DOC
 	kms "aead" {
 		purpose = ["recovery", "config"]
@@ -154,7 +152,7 @@ provider "boundary" {
 		key_id = "global_recovery"
 	}
 	DOC
-}`, url, tcPAUM, tcLoginName, tcPassword)
+}`, url)
 
 	c := []string{provider}
 	c = append(c, res...)
@@ -290,6 +288,55 @@ func TestConfigWithOIDCAuthMethod(t *testing.T) {
 				Config:      testConfigWithOIDCAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
 				ExpectError: regexp.MustCompile("OIDC auth method is currently not supported by Boundary Terraform Provider. only password auth method is supported at this time"),
 			},
+		},
+	})
+}
+
+// Create OIDC auth method and set it as the primary auth method.
+// Attempt to authenticate with recovery to test checks for default auth method
+func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
+	tp := oidc.StartTestProvider(t)
+	wrapper := testWrapper(context.Background(), t, tcRecoveryKey)
+	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	tpCert := strings.TrimSpace(tp.CACert())
+	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
+	updateConfig := fmt.Sprintf(fooAuthMethodOidcUpdate, fooAuthMethodOidcDescUpdate, fooAuthMethodOidcCaCerts)
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider, oidcAuthMethodType),
+		Steps: []resource.TestStep{
+			{
+				// create auth method
+				Config: testConfig(url, fooOrg, createConfig),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDesc),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, tp.Addr()),
+				),
+			},
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
+			{
+				// set auth method as primary auth method
+				Config: testConfig(url, fooOrg, updateConfig),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
+					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
+				),
+			},
+			{
+				// authenticate provider with recovery kms with unsupported OIDC primary auth method
+				Config: testConfigWithRecovery(url, fooOrg, updateConfig),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
+					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
+				),
+			},
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcMaxAgeKey),
 		},
 	})
 }

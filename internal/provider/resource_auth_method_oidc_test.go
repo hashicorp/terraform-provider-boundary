@@ -50,7 +50,7 @@ var (
 resource "boundary_auth_method_oidc" "foo" {
 	name        = "test"
 	description = "%s"
-	scope_id    = boundary_scope.org1.id
+	scope_id    = "global"
 	depends_on  = [boundary_role.org1_admin]
 
   issuer            = "%s"
@@ -73,7 +73,7 @@ EOT
 resource "boundary_auth_method_oidc" "foo" {
 	name                 = "test"
 	description          = "%s"
-	scope_id             = boundary_scope.org1.id
+	scope_id             = "global"
 	is_primary_for_scope = true
 	depends_on           = [boundary_role.org1_admin]
 
