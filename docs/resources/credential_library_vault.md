@@ -96,7 +96,7 @@ resource "boundary_credential_library_vault" "quz" {
 ### Optional
 
 - `credential_mapping_overrides` (Map of String) The credential mapping override.
-- `credential_type` (String) The type of credential the library generates.
+- `credential_type` (String) The type of credential the library generates. Cannot be updated on an existing resource.
 - `description` (String) The Vault credential library description.
 - `http_method` (String) The HTTP method the library uses when requesting credentials from Vault. Defaults to 'GET'
 - `http_request_body` (String) The body of the HTTP request the library sends to Vault when requesting credentials. Only valid if `http_method` is set to `POST`.
