@@ -44,7 +44,7 @@ provider "boundary" {
 
 ### Optional
 
-- `auth_method_id` (String) The auth method ID e.g. ampw_1234567890
+- `auth_method_id` (String) The auth method ID e.g. ampw_1234567890. If not set, the default auth method for the given scope ID will be used.
 - `auth_method_login_name` (String) The auth method login name for password-style or ldap-style auth methods
 - `auth_method_password` (String) The auth method password for password-style or ldap-style auth methods
 - `password_auth_method_login_name` (String, Deprecated) The auth method login name for password-style auth methods
