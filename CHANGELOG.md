@@ -6,19 +6,10 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ### New and Improved
 
-* Add support for credential store vault worker filters
-  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/375))
 * Add support for target default client port
-  ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/379))
-* Add support for using default auth method if no auth method ID is provided for provider
-  ([PR])(https://github.com/hashicorp/terraform-provider-boundary/pull/385))
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/379))
 * Add support for using ldap primary auth method
-  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/392))  
-
-### Bug Fixes
-
-* Allow users to set OIDC maxAge value to 0 to require immediate reauth
-  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/364))
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/392))
 
 ### Deprecations/Changes
 
@@ -29,7 +20,33 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 * Deprecate type field for `boundary_account_password`
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/396))
 * Deprecate type field for `boundary_account_ldap`
-  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/400))  
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/400))
+
+## 1.1.7 (May 12, 2023)
+
+### Bug Fix
+* Fix default auth method with recovery kms
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/406))  
+
+## 1.1.6 (May 5, 2023)
+
+### New and Improved
+* Add support for using default auth method if no auth method ID is provided for provider
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/385))
+* Fix typo in Managed Group resource page
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/370))
+
+### Bug Fix
+* Force new resource on credential_type change
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/389))
+
+## 1.1.5 (April 21, 2023)
+
+### New and Improved
+* Add support for credential store vault worker filters ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/375))
+
+### Bug Fix
+* Allow users to set OIDC maxAge value to 0 to require immediate reauth ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/364))
 
 ## 1.1.4 (February 15, 2023)
 
