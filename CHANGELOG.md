@@ -22,6 +22,12 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 * Deprecate type field for `boundary_account_ldap`
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/400))
 
+## 1.1.7 (May 12, 2023)
+
+### Bug Fix
+* Fix default auth method with recovery kms
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/406))  
+
 ## 1.1.6 (May 5, 2023)
 
 ### New and Improved
