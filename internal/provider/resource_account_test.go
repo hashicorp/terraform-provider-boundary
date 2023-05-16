@@ -130,6 +130,7 @@ type accountType string
 const (
 	baseAccountType     accountType = "boundary_account"
 	passwordAccountType accountType = "boundary_account_password"
+	oidcAccountType     accountType = "boundary_account_oidc"
 )
 
 func testAccCheckAccountResourceDestroy(t *testing.T, testProvider *schema.Provider, typ accountType) resource.TestCheckFunc {
