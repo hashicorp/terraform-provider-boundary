@@ -18,13 +18,13 @@ The account resource allows you to configure a Boundary account.
 ### Required
 
 - `auth_method_id` (String) The resource ID for the auth method.
-- `type` (String) The resource type.
 
 ### Optional
 
 - `description` (String) The account description.
 - `login_name` (String) The login name for this account.
 - `name` (String) The account name. Defaults to the resource name.
+- `type` (String, Deprecated) The resource type.
 
 ### Read-Only
 

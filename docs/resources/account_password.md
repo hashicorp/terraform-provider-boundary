@@ -28,7 +28,6 @@ resource "boundary_auth_method" "password" {
 
 resource "boundary_account_password" "jeff" {
   auth_method_id = boundary_auth_method.password.id
-  type           = "password"
   login_name     = "jeff"
   password       = "$uper$ecure"
 }
@@ -40,7 +39,6 @@ resource "boundary_account_password" "jeff" {
 ### Required
 
 - `auth_method_id` (String) The resource ID for the auth method.
-- `type` (String) The resource type.
 
 ### Optional
 
@@ -48,6 +46,7 @@ resource "boundary_account_password" "jeff" {
 - `login_name` (String) The login name for this account.
 - `name` (String) The account name. Defaults to the resource name.
 - `password` (String, Sensitive) The account password. Only set on create, changes will not be reflected when updating account.
+- `type` (String, Deprecated) The resource type.
 
 ### Read-Only
 
