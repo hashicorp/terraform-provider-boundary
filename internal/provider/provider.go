@@ -53,7 +53,7 @@ func New() *schema.Provider {
 			"auth_method_id": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The auth method ID e.g. ampw_1234567890",
+				Description: "The auth method ID e.g. ampw_1234567890. If not set, the default auth method for the given scope ID will be used.",
 			},
 			"password_auth_method_login_name": {
 				Type:        schema.TypeString,
