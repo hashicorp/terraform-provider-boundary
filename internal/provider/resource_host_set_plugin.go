@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
@@ -131,6 +132,25 @@ func setFromHostSetPluginResponseMap(d *schema.ResourceData, raw map[string]inte
 		attrRaw, ok := raw["attributes"]
 		switch ok {
 		case true:
+			if attrMap, ok := attrRaw.(map[string]interface{}); ok {
+				for attrKey := range attrMap {
+					// Flatten attribute filters data structure from Boundary SDK to match terraform input data structure
+					// This sets the value which is used for `attributes_json` diff checker
+					if attrKey == "filters" {
+						if filters, ok := attrMap[attrKey].([]interface{}); ok {
+							var flattenedFilters []string
+							for _, f := range filters {
+								if filter, ok := f.(string); ok {
+									flattenedFilters = append(flattenedFilters, filter)
+								}
+							}
+							attrMap[attrKey] = strings.Join(flattenedFilters, ",")
+						}
+					}
+				}
+				attrRaw = attrMap
+			}
+
 			encodedAttributes, err := json.Marshal(attrRaw)
 			if err != nil {
 				return err
