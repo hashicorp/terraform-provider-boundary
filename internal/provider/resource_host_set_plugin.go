@@ -133,19 +133,19 @@ func setFromHostSetPluginResponseMap(d *schema.ResourceData, raw map[string]inte
 		switch ok {
 		case true:
 			if attrMap, ok := attrRaw.(map[string]interface{}); ok {
-				for attrKey := range attrMap {
-					// Flatten attribute filters data structure from Boundary SDK to match terraform input data structure
-					// This sets the value which is used for `attributes_json` diff checker
-					if attrKey == "filters" {
-						if filters, ok := attrMap[attrKey].([]interface{}); ok {
-							var flattenedFilters []string
-							for _, f := range filters {
-								if filter, ok := f.(string); ok {
-									flattenedFilters = append(flattenedFilters, filter)
-								}
+				// The data structure for AWS Host Set Plugin filter is different from the terraform input data structure
+				// This causes diffs even if there as been no change to the filters
+				// Flatten attribute filters data structure from Boundary SDK to match terraform input data structure
+				// This sets the value which is used for `attributes_json` diff checker
+				if filtersInt, ok := attrMap["filters"]; ok {
+					if filters, ok := filtersInt.([]interface{}); ok {
+						var flattenedFilters []string
+						for _, f := range filters {
+							if filter, ok := f.(string); ok {
+								flattenedFilters = append(flattenedFilters, filter)
 							}
-							attrMap[attrKey] = strings.Join(flattenedFilters, ",")
 						}
+						attrMap["filters"] = strings.Join(flattenedFilters, ",")
 					}
 				}
 				attrRaw = attrMap
