@@ -134,7 +134,7 @@ func setFromHostSetPluginResponseMap(d *schema.ResourceData, raw map[string]inte
 		case true:
 			if attrMap, ok := attrRaw.(map[string]interface{}); ok {
 				// The data structure for AWS Host Set Plugin filter is different from the terraform input data structure
-				// This causes diffs even if there as been no change to the filters
+				// This causes diffs even if there has not been any change to the filters
 				// Flatten attribute filters data structure from Boundary SDK to match terraform input data structure
 				// This sets the value which is used for `attributes_json` diff checker
 				if filtersInt, ok := attrMap["filters"]; ok {
