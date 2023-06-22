@@ -4,6 +4,11 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+### New and Improved
+
+* Add support for a storage bucket as a resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/417))
+
 ## 1.1.8 (June 13, 2023)
 
 ### New and Improved
