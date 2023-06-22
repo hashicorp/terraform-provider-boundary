@@ -66,7 +66,6 @@ func resourceStorageBucket() *schema.Resource {
 				Type:          schema.TypeString,
 				ConflictsWith: []string{PluginIdKey},
 				ExactlyOneOf:  []string{PluginIdKey, PluginNameKey},
-				Default:       defaultStorageBucketPluginName,
 				Optional:      true,
 				ForceNew:      true,
 			},
@@ -87,7 +86,6 @@ func resourceStorageBucket() *schema.Resource {
 			SecretsHmacKey: {
 				Description: "The HMAC'd secrets value returned from the server.",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 			},
 			storageBucketNameKey: {
@@ -103,13 +101,11 @@ func resourceStorageBucket() *schema.Resource {
 			internalSecretsConfigHmacKey: {
 				Description: "Internal only. HMAC of (serverSecretsHmac + config secrets). Used for proper secrets handling.",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 			},
 			internalHmacUsedForSecretsConfigHmacKey: {
 				Description: "Internal only. The Boundary-provided HMAC used to calculate the current value of the HMAC'd config. Used for drift detection.",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 			},
 			AttributesJsonKey: {
@@ -145,7 +141,6 @@ func resourceStorageBucket() *schema.Resource {
 			internalForceUpdateKey: {
 				Description: "Internal only. Used to force update so that we can always check the value of secrets.",
 				Type:        schema.TypeString,
-				Optional:    true,
 				Computed:    true,
 			},
 		},
@@ -248,12 +243,19 @@ func resourceStorageBucketCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("no scope ID provided")
 	}
 
-	if pluginIdVal, ok := d.GetOk(PluginIdKey); ok {
+	pluginIdVal, pluginIdValOk := d.GetOk(PluginIdKey)
+	pluginNameVal, pluginNameValOk := d.GetOk(PluginNameKey)
+
+	if pluginIdValOk {
 		opts = append(opts, storagebuckets.WithPluginId(pluginIdVal.(string)))
 	}
 
-	if pluginNameVal, ok := d.GetOk(PluginNameKey); ok {
+	if pluginNameValOk {
 		opts = append(opts, storagebuckets.WithPluginName(pluginNameVal.(string)))
+	}
+
+	if !pluginIdValOk && !pluginNameValOk {
+		opts = append(opts, storagebuckets.WithPluginName(defaultStorageBucketPluginName))
 	}
 
 	if nameVal, ok := d.GetOk(NameKey); ok {

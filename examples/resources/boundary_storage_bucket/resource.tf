@@ -6,17 +6,10 @@ resource "boundary_scope" "org" {
   auto_create_default_role = true
 }
 
-resource "boundary_scope" "project" {
-  name                   = "project_one"
-  description            = "My first scope!"
-  scope_id               = boundary_scope.org.id
-  auto_create_admin_role = true
-}
-
 resource "boundary_storage_bucket" "aws_example" {
   name            = "My aws catalog"
   description     = "My first host catalog!"
-  scope_id        = boundary_scope.project.id
+  scope_id        = boundary_scope.org.id
   plugin_name     = "aws"
   bucket_name     = "mybucket"
   attributes_json = jsonencode({ "region" = "us-east-1" })

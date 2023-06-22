@@ -21,17 +21,10 @@ resource "boundary_scope" "org" {
   auto_create_default_role = true
 }
 
-resource "boundary_scope" "project" {
-  name                   = "project_one"
-  description            = "My first scope!"
-  scope_id               = boundary_scope.org.id
-  auto_create_admin_role = true
-}
-
 resource "boundary_storage_bucket" "aws_example" {
   name            = "My aws catalog"
   description     = "My first host catalog!"
-  scope_id        = boundary_scope.project.id
+  scope_id        = boundary_scope.org.id
   plugin_name     = "aws"
   bucket_name     = "mybucket"
   attributes_json = jsonencode({ "region" = "us-east-1" })
@@ -61,17 +54,17 @@ resource "boundary_storage_bucket" "aws_example" {
 - `attributes_json` (String) The attributes for the storage bucket. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.
 - `bucket_prefix` (String) The prefix used to organize the data held within the external object store.
 - `description` (String) The storage bucket description.
-- `internal_force_update` (String) Internal only. Used to force update so that we can always check the value of secrets.
-- `internal_hmac_used_for_secrets_config_hmac` (String) Internal only. The Boundary-provided HMAC used to calculate the current value of the HMAC'd config. Used for drift detection.
-- `internal_secrets_config_hmac` (String) Internal only. HMAC of (serverSecretsHmac + config secrets). Used for proper secrets handling.
 - `name` (String) The storage bucket name. Defaults to the resource name.
 - `plugin_id` (String) The ID of the plugin that should back the resource. This or plugin_name must be defined.
 - `plugin_name` (String) The name of the plugin that should back the resource. This or plugin_id must be defined.
-- `secrets_hmac` (String) The HMAC'd secrets value returned from the server.
 
 ### Read-Only
 
 - `id` (String) The ID of the storage bucket.
+- `internal_force_update` (String) Internal only. Used to force update so that we can always check the value of secrets.
+- `internal_hmac_used_for_secrets_config_hmac` (String) Internal only. The Boundary-provided HMAC used to calculate the current value of the HMAC'd config. Used for drift detection.
+- `internal_secrets_config_hmac` (String) Internal only. HMAC of (serverSecretsHmac + config secrets). Used for proper secrets handling.
+- `secrets_hmac` (String) The HMAC'd secrets value returned from the server.
 
 ## Import
 
