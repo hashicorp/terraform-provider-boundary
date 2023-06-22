@@ -20,9 +20,8 @@ import (
 )
 
 const (
-	storageBucketNameKey           = "bucket_name"
-	storageBucketPrefixKey         = "bucket_prefix"
-	defaultStorageBucketPluginName = "aws"
+	storageBucketNameKey   = "bucket_name"
+	storageBucketPrefixKey = "bucket_prefix"
 )
 
 func resourceStorageBucket() *schema.Resource {
@@ -243,19 +242,12 @@ func resourceStorageBucketCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("no scope ID provided")
 	}
 
-	pluginIdVal, pluginIdValOk := d.GetOk(PluginIdKey)
-	pluginNameVal, pluginNameValOk := d.GetOk(PluginNameKey)
-
-	if pluginIdValOk {
+	if pluginIdVal, ok := d.GetOk(PluginIdKey); ok {
 		opts = append(opts, storagebuckets.WithPluginId(pluginIdVal.(string)))
 	}
 
-	if pluginNameValOk {
+	if pluginNameVal, ok := d.GetOk(PluginNameKey); ok {
 		opts = append(opts, storagebuckets.WithPluginName(pluginNameVal.(string)))
-	}
-
-	if !pluginIdValOk && !pluginNameValOk {
-		opts = append(opts, storagebuckets.WithPluginName(defaultStorageBucketPluginName))
 	}
 
 	if nameVal, ok := d.GetOk(NameKey); ok {
