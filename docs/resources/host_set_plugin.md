@@ -51,7 +51,7 @@ resource "boundary_host_catalog_plugin" "aws_example" {
 resource "boundary_host_set_plugin" "web" {
   name            = "My web host set plugin"
   host_catalog_id = boundary_host_catalog_plugin.aws_example.id
-  attributes_json = jsonencode({ "filters" = "tag:service-type=web" })
+  attributes_json = jsonencode({ "filters" = ["tag:service-type=web"] })
 }
 
 resource "boundary_host_set_plugin" "foobar" {
@@ -59,8 +59,7 @@ resource "boundary_host_set_plugin" "foobar" {
   host_catalog_id     = boundary_host_catalog_plugin.aws_example.id
   preferred_endpoints = ["cidr:54.0.0.0/8"]
   attributes_json = jsonencode({
-    "filters" = "tag-key=foo",
-    "filters" = "tag-key=bar"
+    "filters" = ["tag-key=foo", "tag-key=bar"]
   })
 }
 
@@ -69,8 +68,7 @@ resource "boundary_host_set_plugin" "launch" {
   host_catalog_id       = boundary_host_catalog_plugin.aws_example.id
   sync_interval_seconds = 60
   attributes_json = jsonencode({
-    "filters" = "tag:development=prod,dev",
-    "filters" = "launch-time=2022-01-04T*"
+    "filters" = ["tag:development=prod,dev", "launch-time=2022-01-04T*"]
   })
 }
 
