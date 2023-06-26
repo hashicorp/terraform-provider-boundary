@@ -26,7 +26,9 @@ const (
 
 func resourceStorageBucket() *schema.Resource {
 	return &schema.Resource{
-		Description:   "The storage bucket resource allows you to configure a Boundary storage bucket. A storage bucket can only belong to the Global scope or an Org scope.",
+		Description: "The storage bucket resource allows you to configure a Boundary storage bucket. " +
+			"A storage bucket can only belong to the Global scope or an Org scope. " +
+			"This feature requires Boundary Enterprise or Boundary HCP.",
 		CreateContext: resourceStorageBucketCreate,
 		ReadContext:   resourceStorageBucketRead,
 		UpdateContext: resourceStorageBucketUpdate,

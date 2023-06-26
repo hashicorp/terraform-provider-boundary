@@ -3,12 +3,12 @@
 page_title: "boundary_storage_bucket Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The storage bucket resource allows you to configure a Boundary storage bucket. A storage bucket can only belong to the Global scope or an Org scope.
+  The storage bucket resource allows you to configure a Boundary storage bucket. A storage bucket can only belong to the Global scope or an Org scope. This feature requires Boundary Enterprise or Boundary HCP.
 ---
 
 # boundary_storage_bucket (Resource)
 
-The storage bucket resource allows you to configure a Boundary storage bucket. A storage bucket can only belong to the Global scope or an Org scope.
+The storage bucket resource allows you to configure a Boundary storage bucket. A storage bucket can only belong to the Global scope or an Org scope. This feature requires Boundary Enterprise or Boundary HCP.
 
 ## Example Usage
 
