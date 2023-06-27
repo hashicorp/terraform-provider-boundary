@@ -51,7 +51,7 @@ resource "boundary_storage_bucket" "aws_example" {
 
 ### Optional
 
-- `attributes_json` (String) The attributes for the storage bucket. The "region" attribute field is required when creating AWS storage buckets. Values are either encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.
+- `attributes_json` (String) The attributes for the storage bucket. The "region" attribute field is required when creating an AWS storage bucket. Values are either encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.
 - `bucket_prefix` (String) The prefix used to organize the data held within the external object store.
 - `description` (String) The storage bucket description.
 - `name` (String) The storage bucket name. Defaults to the resource name.
