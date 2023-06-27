@@ -44,7 +44,6 @@ resource "boundary_storage_bucket" "aws_example" {
 
 ### Required
 
-- `attributes_json` (String) The attributes for the storage bucket. The "region" attribute field is the only required attribute for this field. Values are either encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.
 - `bucket_name` (String) The name of the bucket within the external object store service.
 - `scope_id` (String) The scope for this storage bucket.
 - `secrets_json` (String, Sensitive) The secrets for the storage bucket. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the storage bucket; this allows injecting secrets for one call, then removing them for storage.
@@ -52,6 +51,7 @@ resource "boundary_storage_bucket" "aws_example" {
 
 ### Optional
 
+- `attributes_json` (String) The attributes for the storage bucket. The "region" attribute field is required when creating AWS storage buckets. Values are either encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.
 - `bucket_prefix` (String) The prefix used to organize the data held within the external object store.
 - `description` (String) The storage bucket description.
 - `name` (String) The storage bucket name. Defaults to the resource name.
