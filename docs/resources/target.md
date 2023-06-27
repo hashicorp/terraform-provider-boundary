@@ -168,14 +168,14 @@ resource "boundary_target" "address_foo" {
 - `default_port` (Number) The default port for this target.
 - `description` (String) The target description.
 - `egress_worker_filter` (String) Boolean expression to filter the workers used to access this target
-- `enable_session_recording` (Boolean) HCP/Ent Only. Enable sessions recording for this target
+- `enable_session_recording` (Boolean) HCP/Ent Only. Enable sessions recording for this target. Only applicable for SSH targets.
 - `host_source_ids` (Set of String) A list of host source ID's. Cannot be used alongside address.
 - `ingress_worker_filter` (String) HCP Only. Boolean expression to filter the workers a user will connect to when initiating a session against this target
 - `injected_application_credential_source_ids` (Set of String) A list of injected application credential source ID's.
 - `name` (String) The target name. Defaults to the resource name.
 - `session_connection_limit` (Number)
 - `session_max_seconds` (Number)
-- `storage_bucket_id` (String) HCP/Ent Only. Storage bucket for this target
+- `storage_bucket_id` (String) HCP/Ent Only. Storage bucket for this target. Only applicable for SSH targets.
 - `worker_filter` (String, Deprecated) Boolean expression to filter the workers for this target
 
 ### Read-Only

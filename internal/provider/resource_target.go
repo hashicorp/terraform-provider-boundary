@@ -136,12 +136,12 @@ func resourceTarget() *schema.Resource {
 				ConflictsWith: []string{targetHostSourceIdsKey},
 			},
 			targetEnableSessionRecordingKey: {
-				Description: "HCP/Ent Only. Enable sessions recording for this target",
+				Description: "HCP/Ent Only. Enable sessions recording for this target. Only applicable for SSH targets.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
 			targetStorageBucketIdKey: {
-				Description: "HCP/Ent Only. Storage bucket for this target",
+				Description: "HCP/Ent Only. Storage bucket for this target. Only applicable for SSH targets.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
