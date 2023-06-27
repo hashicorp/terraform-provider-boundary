@@ -21,8 +21,10 @@ const (
 	targetInjectedAppCredentialSourceIdsKey = "injected_application_credential_source_ids"
 	targetDefaultPortKey                    = "default_port"
 	targetDefaultClientPortKey              = "default_client_port"
+	targetEnableSessionRecordingKey         = "enable_session_recording"
 	targetSessionMaxSecondsKey              = "session_max_seconds"
 	targetSessionConnectionLimitKey         = "session_connection_limit"
+	targetStorageBucketIdKey                = "storage_bucket_id"
 	targetWorkerFilterKey                   = "worker_filter"
 	targetWorkerEgressFilterKey             = "egress_worker_filter"
 	targetWorkerIngressFilterKey            = "ingress_worker_filter"
@@ -133,6 +135,16 @@ func resourceTarget() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{targetHostSourceIdsKey},
 			},
+			targetEnableSessionRecordingKey: {
+				Description: "HCP/Ent Only. Enable sessions recording for this target",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
+			targetStorageBucketIdKey: {
+				Description: "HCP/Ent Only. Storage bucket for this target",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -178,7 +190,9 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 		return err
 	}
 
-	switch raw["type"].(string) {
+	typeStr := raw["type"].(string)
+
+	switch typeStr {
 	case targetTypeTcp, targetTypeSsh:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
@@ -192,6 +206,20 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 				defCliPortInt, _ := defCliPort.Int64()
 				if err := d.Set(targetDefaultClientPortKey, int(defCliPortInt)); err != nil {
 					return err
+				}
+			}
+
+			// SSH only features
+			if typeStr == targetTypeSsh {
+				if sessionRecordingVal, ok := attrs[targetEnableSessionRecordingKey].(bool); ok {
+					if err := d.Set(targetEnableSessionRecordingKey, sessionRecordingVal); err != nil {
+						return err
+					}
+				}
+				if targetStorageBucketIdVal, ok := attrs[targetStorageBucketIdKey]; ok {
+					if err := d.Set(targetStorageBucketIdKey, targetStorageBucketIdVal); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -262,6 +290,18 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		case targetTypeSsh:
 			opts = append(opts, targets.WithSshTargetDefaultClientPort(uint32(defaultClientPortInt)))
 		}
+	}
+
+	enableSessionRecordingVal, ok := d.GetOk(targetEnableSessionRecordingKey)
+	if ok {
+		enableSessionRecordingBool := enableSessionRecordingVal.(bool)
+		opts = append(opts, targets.WithSshTargetEnableSessionRecording(enableSessionRecordingBool))
+	}
+
+	storageBucketIdVal, ok := d.GetOk(targetStorageBucketIdKey)
+	if ok {
+		storageBucketIdStr := storageBucketIdVal.(string)
+		opts = append(opts, targets.WithSshTargetStorageBucketId(storageBucketIdStr))
 	}
 
 	sessionMaxSecondsVal, ok := d.GetOk(targetSessionMaxSecondsKey)
@@ -440,6 +480,34 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			descStr := descVal.(string)
 			desc = &descStr
 			opts = append(opts, targets.WithDescription(descStr))
+		}
+	}
+
+	var enableSessionRecording *bool
+	if d.HasChange(targetEnableSessionRecordingKey) {
+		switch typeStr {
+		case targetTypeSsh:
+			opts = append(opts, targets.WithSshTargetEnableSessionRecording(false))
+			enableSessionRecordingVal, ok := d.GetOk(targetEnableSessionRecordingKey)
+			if ok {
+				enableSessionRecordingBool := enableSessionRecordingVal.(bool)
+				enableSessionRecording = &enableSessionRecordingBool
+				opts = append(opts, targets.WithSshTargetEnableSessionRecording(enableSessionRecordingBool))
+			}
+		}
+	}
+
+	var storageBucket *string
+	if d.HasChange(targetStorageBucketIdKey) {
+		switch typeStr {
+		case targetTypeSsh:
+			opts = append(opts, targets.DefaultSshTargetStorageBucketId())
+			storageBucketVal, ok := d.GetOk(targetStorageBucketIdKey)
+			if ok {
+				storageBucketStr := storageBucketVal.(string)
+				storageBucket = &storageBucketStr
+				opts = append(opts, targets.WithSshTargetStorageBucketId(storageBucketStr))
+			}
 		}
 	}
 
@@ -628,6 +696,16 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if d.HasChange(targetAddressKey) {
 		if err := d.Set(targetAddressKey, addr); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange(targetEnableSessionRecordingKey) {
+		if err := d.Set(targetEnableSessionRecordingKey, enableSessionRecording); err != nil {
+			return diag.FromErr(err)
+		}
+	}
+	if d.HasChange(targetStorageBucketIdKey) {
+		if err := d.Set(targetStorageBucketIdKey, storageBucket); err != nil {
 			return diag.FromErr(err)
 		}
 	}

@@ -69,6 +69,20 @@ resource "boundary_host_set" "foo" {
   ]
 }
 
+resource "boundary_storage_bucket" "aws_example" {
+  name            = "My aws storage bucket"
+  description     = "My first storage bucket!"
+  scope_id        = boundary_scope.org.id
+  plugin_name     = "aws"
+  bucket_name     = "mybucket"
+  attributes_json = jsonencode({ "region" = "us-east-1" })
+  secrets_json = jsonencode({
+    "access_key_id"     = "aws_access_key_id_value",
+    "secret_access_key" = "aws_secret_access_key_value"
+  })
+  worker_filter = "\"pki\" in \"/tags/type\""
+}
+
 resource "boundary_target" "foo" {
   name         = "foo"
   description  = "Foo target"
@@ -95,6 +109,22 @@ resource "boundary_target" "ssh_foo" {
   injected_application_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
+}
+
+resource "boundary_target" "ssh_session_recording_foo" {
+  name         = "ssh_foo"
+  description  = "Ssh target"
+  type         = "ssh"
+  default_port = "22"
+  scope_id     = boundary_scope.project.id
+  host_source_ids = [
+    boundary_host_set.foo.id
+  ]
+  injected_application_credential_source_ids = [
+    boundary_credential_library_vault.foo.id
+  ]
+  enable_session_recording = true
+  storage_bucket_id        = boundary_storage_bucket.aws_example
 }
 
 resource "boundary_target" "address_foo" {

@@ -84,6 +84,20 @@ resource "boundary_host_set" "foo" {
   ]
 }
 
+resource "boundary_storage_bucket" "aws_example" {
+  name            = "My aws storage bucket"
+  description     = "My first storage bucket!"
+  scope_id        = boundary_scope.org.id
+  plugin_name     = "aws"
+  bucket_name     = "mybucket"
+  attributes_json = jsonencode({ "region" = "us-east-1" })
+  secrets_json = jsonencode({
+    "access_key_id"     = "aws_access_key_id_value",
+    "secret_access_key" = "aws_secret_access_key_value"
+  })
+  worker_filter = "\"pki\" in \"/tags/type\""
+}
+
 resource "boundary_target" "foo" {
   name         = "foo"
   description  = "Foo target"
@@ -112,6 +126,22 @@ resource "boundary_target" "ssh_foo" {
   ]
 }
 
+resource "boundary_target" "ssh_session_recording_foo" {
+  name         = "ssh_foo"
+  description  = "Ssh target"
+  type         = "ssh"
+  default_port = "22"
+  scope_id     = boundary_scope.project.id
+  host_source_ids = [
+    boundary_host_set.foo.id
+  ]
+  injected_application_credential_source_ids = [
+    boundary_credential_library_vault.foo.id
+  ]
+  enable_session_recording = true
+  storage_bucket_id        = boundary_storage_bucket.aws_example
+}
+
 resource "boundary_target" "address_foo" {
   name         = "address_foo"
   description  = "Foo target with an address"
@@ -138,12 +168,14 @@ resource "boundary_target" "address_foo" {
 - `default_port` (Number) The default port for this target.
 - `description` (String) The target description.
 - `egress_worker_filter` (String) Boolean expression to filter the workers used to access this target
+- `enable_session_recording` (Boolean) HCP/Ent Only. Enable sessions recording for this target
 - `host_source_ids` (Set of String) A list of host source ID's. Cannot be used alongside address.
 - `ingress_worker_filter` (String) HCP Only. Boolean expression to filter the workers a user will connect to when initiating a session against this target
 - `injected_application_credential_source_ids` (Set of String) A list of injected application credential source ID's.
 - `name` (String) The target name. Defaults to the resource name.
 - `session_connection_limit` (Number)
 - `session_max_seconds` (Number)
+- `storage_bucket_id` (String) HCP/Ent Only. Storage bucket for this target
 - `worker_filter` (String, Deprecated) Boolean expression to filter the workers for this target
 
 ### Read-Only
