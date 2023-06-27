@@ -26,9 +26,10 @@ const (
 
 func resourceStorageBucket() *schema.Resource {
 	return &schema.Resource{
-		Description: "The storage bucket resource allows you to configure a Boundary storage bucket. " +
-			"A storage bucket can only belong to the Global scope or an Org scope. " +
-			"This feature requires Boundary Enterprise or Boundary HCP.",
+		Description: `The storage bucket resource allows you to configure a Boundary storage bucket. ` +
+			`A storage bucket can only belong to the Global scope or an Org scope. ` +
+			`At this time, the only supported storage for storage buckets is AWS S3. ` +
+			`This feature requires Boundary Enterprise or Boundary HCP.`,
 		CreateContext: resourceStorageBucketCreate,
 		ReadContext:   resourceStorageBucketRead,
 		UpdateContext: resourceStorageBucketUpdate,
@@ -113,7 +114,7 @@ func resourceStorageBucket() *schema.Resource {
 				Description: `The attributes for the storage bucket. Either values encoded with the "jsonencode" function, pre-escaped JSON string, ` +
 					`or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.`,
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				// If set to null in config and nothing comes from API, consider
 				// it the same. Same if config changes from empty to null.
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -135,9 +136,10 @@ func resourceStorageBucket() *schema.Resource {
 				},
 			},
 			WorkerFilterKey: {
-				Description: "Filters to the worker(s) that can handle requests for this storage bucket.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description: `Filters to the worker(s) that can handle requests for this storage bucket. The filter must match an existing ` +
+					`worker in order to create a storage bucket.`,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			internalForceUpdateKey: {
 				Description: "Internal only. Used to force update so that we can always check the value of secrets.",
