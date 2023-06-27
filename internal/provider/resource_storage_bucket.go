@@ -111,7 +111,8 @@ func resourceStorageBucket() *schema.Resource {
 				Computed:    true,
 			},
 			AttributesJsonKey: {
-				Description: `The attributes for the storage bucket. Either values encoded with the "jsonencode" function, pre-escaped JSON string, ` +
+				Description: `The attributes for the storage bucket. The "region" attribute field is the only required attribute for this field. ` +
+					`Values are either encoded with the "jsonencode" function, pre-escaped JSON string, ` +
 					`or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the storage bucket.`,
 				Type:     schema.TypeString,
 				Required: true,
