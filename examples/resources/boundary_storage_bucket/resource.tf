@@ -7,8 +7,8 @@ resource "boundary_scope" "org" {
 }
 
 resource "boundary_storage_bucket" "aws_example" {
-  name            = "My aws catalog"
-  description     = "My first host catalog!"
+  name            = "My aws storage bucket"
+  description     = "My first storage bucket!"
   scope_id        = boundary_scope.org.id
   plugin_name     = "aws"
   bucket_name     = "mybucket"
