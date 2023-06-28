@@ -44,4 +44,6 @@ const (
 	// internalForceUpdateKey is used to force updates so we can always check
 	// the value of secrets
 	internalForceUpdateKey = "internal_force_update"
+	// workerFilter is used for common "worker_filter" resource attribute
+	WorkerFilterKey = "worker_filter"
 )
