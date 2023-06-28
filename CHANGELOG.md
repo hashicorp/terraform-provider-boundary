@@ -8,6 +8,8 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 * Add support for a storage bucket as a resource
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/417))
+* Add option to enable session recording on a target resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/421))  
 
 ## 1.1.8 (June 13, 2023)
 
