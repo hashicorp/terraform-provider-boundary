@@ -449,7 +449,7 @@ func resourceStorageBucketUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChange(WorkerFilterKey) {
-		opts = append(opts, storagebuckets.DefaultBucketName())
+		opts = append(opts, storagebuckets.DefaultWorkerFilter())
 		workerFilterVal, ok := d.GetOk(WorkerFilterKey)
 		if ok {
 			workerFilterStr := workerFilterVal.(string)
