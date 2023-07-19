@@ -2,14 +2,16 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## Next
+## 1.1.9 (July 19, 2023)
 
 ### New and Improved
 
 * Add support for a storage bucket as a resource
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/417))
 * Add option to enable session recording on a target resource
-  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/421))  
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/421))
+* Update docs for host set plugin filters examples
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/420))  
 
 ## 1.1.8 (June 13, 2023)
 
