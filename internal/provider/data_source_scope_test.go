@@ -47,13 +47,13 @@ resource "boundary_role" "org_admin" {
 
 data "boundary_scope" "org" {
 	depends_on = [boundary_scope.org]
-	parent_scope_id = "global"
+	scope_id = "global"
 	name = "%s"
 }
 
 data "boundary_scope" "project" {
 	depends_on = [boundary_scope.project]
-	parent_scope_id = data.boundary_scope.org.id
+	scope_id = data.boundary_scope.org.id
 	name = "%s"
 }`, orgName, scopeDesc, projectName, scopeDesc, orgName, projectName)
 )
@@ -79,12 +79,12 @@ func TestAccScopeRead(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_scope.project", "description", scopeDesc),
 					resource.TestCheckResourceAttr("boundary_scope.project", "name", projectName),
 					// Check attributes on the org datasource
-					resource.TestCheckResourceAttrSet("data.boundary_scope.org", "parent_scope_id"),
+					resource.TestCheckResourceAttrSet("data.boundary_scope.org", "scope_id"),
 					resource.TestCheckResourceAttrSet("data.boundary_scope.org", "id"),
 					resource.TestCheckResourceAttr("data.boundary_scope.org", "name", orgName),
 					resource.TestCheckResourceAttr("data.boundary_scope.org", "description", scopeDesc),
 					// Check attributes on the project datasource
-					resource.TestCheckResourceAttrSet("data.boundary_scope.project", "parent_scope_id"),
+					resource.TestCheckResourceAttrSet("data.boundary_scope.project", "scope_id"),
 					resource.TestCheckResourceAttrSet("data.boundary_scope.project", "id"),
 					resource.TestCheckResourceAttr("data.boundary_scope.project", "name", projectName),
 					resource.TestCheckResourceAttr("data.boundary_scope.project", "description", scopeDesc),

@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	ParentScopeIdKey = "parent_scope_id"
-)
+// const (
+// 	scopeIdKey = "parent_scope_id"
+// )
 
 func dataSourceScope() *schema.Resource {
 	return &schema.Resource{
@@ -21,7 +21,7 @@ func dataSourceScope() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			IDKey: {
-				Description: "The ID of the scope.",
+				Description: "The ID of the retrieved scope.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -31,11 +31,11 @@ func dataSourceScope() *schema.Resource {
 				Required:    true,
 			},
 			DescriptionKey: {
-				Description: "The scope description.",
+				Description: "The description of the retrieved scope.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			ParentScopeIdKey: {
+			ScopeIdKey: {
 				Description: "The parent scope ID that will be queried for the scope.",
 				Type:        schema.TypeString,
 				Required:    true,
@@ -55,16 +55,16 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("no name provided")
 	}
 
-	var parentScopeId string
-	if parentScopeIdVal, ok := d.GetOk(ParentScopeIdKey); ok {
-		parentScopeId = parentScopeIdVal.(string)
+	var scopeId string
+	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
+		scopeId = scopeIdVal.(string)
 	} else {
 		return diag.Errorf("no parent scope ID provided")
 	}
 
 	scp := scopes.NewClient(md.client)
 
-	scpls, err := scp.List(ctx, parentScopeId, opts...)
+	scpls, err := scp.List(ctx, scopeId, opts...)
 	if err != nil {
 		return diag.Errorf("error calling read scope: %v", err)
 	}
@@ -116,3 +116,5 @@ func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interfac
 	d.SetId(raw["id"].(string))
 	return nil
 }
+
+
