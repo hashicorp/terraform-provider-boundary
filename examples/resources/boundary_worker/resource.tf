@@ -4,7 +4,7 @@ resource "boundary_worker" "controller_led" {
   description = "self managed worker with controller led auth"
 }
 
-resource "boundary_self_managed_worker" "worker_led" {
+resource "boundary_worker" "worker_led" {
   scope_id                    = "global"
   name                        = "worker 2"
   description                 = "self managed worker with worker led auth"
