@@ -10,10 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// const (
-// 	scopeIdKey = "parent_scope_id"
-// )
-
 func dataSourceScope() *schema.Resource {
 	return &schema.Resource{
 		Description: "The scope data source allows you to discover an existing Boundary scope by name.",
@@ -103,8 +99,6 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-// Adding this function since we are inctroducing parent_scope_id to align with the API. Once this is introduced to the
-// resource_scope it would be optimal to refactor this so both resources use the same set function.
 func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
 	if err := d.Set(NameKey, raw["name"]); err != nil {
 		return err
@@ -116,5 +110,3 @@ func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interfac
 	d.SetId(raw["id"].(string))
 	return nil
 }
-
-
