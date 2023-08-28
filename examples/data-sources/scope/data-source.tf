@@ -1,3 +1,4 @@
+# Retrieve the ID of a Boundary project
 data "boundary_scope" "org" {
   name     = "SecOps"
   parent_scope_id = "global"
