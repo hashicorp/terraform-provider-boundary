@@ -27,7 +27,10 @@ resource "boundary_storage_bucket" "aws_example" {
   scope_id        = boundary_scope.org.id
   plugin_name     = "aws"
   bucket_name     = "mybucket"
-  attributes_json = jsonencode({ "region" = "us-east-1" })
+  attributes_json = jsonencode({
+    "region" = "us-east-1",
+    "disable_credential_rotation" = false
+  })
 
   # recommended to pass in aws secrets using a file() or using environment variables
   # the secrets below must be generated in aws by creating a aws iam user with programmatic access
