@@ -65,6 +65,8 @@ resource "boundary_auth_method_ldap" "test-ldap" {
 	group_filter      = "group-filter"
 	bind_dn           = "bind-dn"
 	bind_password     = "bind-password"
+	maximum_page_size = 10
+	dereference_aliases = "DerefAlways"
 	use_token_groups  = true
   	certificates 	  = [
 <<EOT
@@ -112,6 +114,8 @@ resource "boundary_auth_method_ldap" "test-ldap" {
 	bind_password        = "bind-password-updated" 
 	use_token_groups     = false
 	state                = "inactive"
+	maximum_page_size = 100
+	dereference_aliases = "NeverDerefAliases"
   	certificates         = [
 <<EOT
 %s
@@ -160,6 +164,8 @@ func TestAccAuthMethodLdap(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapBindDnField, "bind-dn"),
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapBindPasswordField, "bind-password"),
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapUseTokenGrpsField, "true"),
+					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapMaxPageSizeField, "10"),
+					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapDerefAliasesField, "DerefAlways"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_ldap.test-ldap", authMethodLdapCertificatesField, []string{tdCert}),
 				),
 			},
@@ -187,6 +193,8 @@ func TestAccAuthMethodLdap(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapBindDnField, "bind-dn-updated"),
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapBindPasswordField, "bind-password-updated"),
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapUseTokenGrpsField, "false"),
+					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapMaxPageSizeField, "100"),
+					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapDerefAliasesField, "NeverDerefAliases"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_ldap.test-ldap", authMethodLdapCertificatesField, []string{testAuthMethodLdapCert}),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_ldap.test-ldap"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_ldap.test-ldap", true),
