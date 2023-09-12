@@ -30,5 +30,3 @@ Deprecated: use `boundary_account_password` instead.
 ### Read-Only
 
 - `id` (String) The ID of the account.
-
-

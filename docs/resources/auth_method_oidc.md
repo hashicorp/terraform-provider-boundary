@@ -43,5 +43,3 @@ The OIDC auth method resource allows you to configure a Boundary auth_method_oid
 ### Read-Only
 
 - `id` (String) The ID of the auth method.
-
-

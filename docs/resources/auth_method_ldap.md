@@ -52,5 +52,3 @@ The LDAP auth method resource allows you to configure a Boundary auth_method_lda
 ### Read-Only
 
 - `id` (String) The ID of the auth method.
-
-
