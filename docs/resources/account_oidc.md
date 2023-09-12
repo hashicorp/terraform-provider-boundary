@@ -29,5 +29,3 @@ The account resource allows you to configure a Boundary account.
 ### Read-Only
 
 - `id` (String) The ID of the account.
-
-

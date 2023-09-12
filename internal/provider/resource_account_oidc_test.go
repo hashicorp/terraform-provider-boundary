@@ -19,8 +19,7 @@ const (
 	fooAccountOidcDescUpdate = "test account oidc update"
 )
 
-var (
-	fooAccountOidc = `
+var fooAccountOidc = `
 resource "boundary_auth_method_oidc" "foo" {
 	name        = "test"
 	description = "test account oidc auth method"
@@ -50,7 +49,6 @@ resource "boundary_account_oidc" "foo" {
 	issuer		   = "%s"
 	auth_method_id = boundary_auth_method_oidc.foo.id
 }`
-)
 
 func TestAccOidcAccount(t *testing.T) {
 	tp := oidc.StartTestProvider(t)

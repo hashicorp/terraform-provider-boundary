@@ -9,11 +9,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"github.com/hashicorp/boundary/api"
 	"net/http"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentialstores"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
