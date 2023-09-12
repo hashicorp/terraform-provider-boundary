@@ -28,5 +28,3 @@ The managed group resource allows you to configure a Boundary group.
 ### Read-Only
 
 - `id` (String) The ID of the group.
-
-

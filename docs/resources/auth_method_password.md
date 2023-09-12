@@ -30,5 +30,3 @@ The auth method resource allows you to configure a Boundary auth_method_password
 ### Read-Only
 
 - `id` (String) The ID of the account.
-
-
