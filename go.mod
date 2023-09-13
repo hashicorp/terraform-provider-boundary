@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/hashicorp/boundary v0.13.0
-	github.com/hashicorp/boundary/api v0.0.39
+	github.com/hashicorp/boundary/api v0.0.40
 	github.com/hashicorp/boundary/sdk v0.0.35
 	github.com/hashicorp/cap v0.3.1
 	github.com/hashicorp/cap/ldap v0.0.0-20230420150311-6d1e00a6c5e0
