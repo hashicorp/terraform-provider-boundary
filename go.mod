@@ -3,10 +3,10 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.20
 
 require (
-	github.com/hashicorp/boundary v0.13.0
+	github.com/hashicorp/boundary v0.13.1
 	github.com/hashicorp/boundary/api v0.0.39
 	github.com/hashicorp/boundary/sdk v0.0.35
-	github.com/hashicorp/cap v0.3.1
+	github.com/hashicorp/cap v0.3.2
 	github.com/hashicorp/cap/ldap v0.0.0-20230420150311-6d1e00a6c5e0
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.13
@@ -97,7 +97,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.18.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/nodeenrollment v0.2.4 // indirect
+	github.com/hashicorp/nodeenrollment v0.2.6 // indirect
 	github.com/hashicorp/terraform-exec v0.19.0 // indirect
 	github.com/hashicorp/terraform-json v0.17.1 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.19.0 // indirect
