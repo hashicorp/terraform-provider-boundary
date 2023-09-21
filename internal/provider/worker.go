@@ -99,7 +99,6 @@ func setFromWorkerResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	d.Set(NameKey, raw["name"])
 	d.Set(DescriptionKey, raw["description"])
 	d.Set(address, raw["address"])
-	d.Set(workerGeneratedAuthToken, raw["worker_generated_auth_token"])
 	d.Set(controllerGeneratedActivationToken, raw["controller_generated_activation_token"])
 	d.Set(releaseVersion, raw["release_version"])
 	d.Set(authorizedActions, raw["authorized_actions"])
