@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -38,6 +39,8 @@ const (
 	authMethodLdapAccountAttrMapsField           = "account_attribute_maps"
 	authMethodLdapPrimaryAuthMethodForScopeField = "is_primary_for_scope"
 	authMethodLdapStateField                     = "state"
+	authMethodLdapMaxPageSizeField               = "maximum_page_size"
+	authMethodLdapDerefAliasesField              = "dereference_aliases"
 
 	// computed-only parameters
 	authMethodLdapClientCertKeyHmacKey = "client_certificate_key_hmac"
@@ -191,6 +194,17 @@ func resourceAuthMethodLdap() *schema.Resource {
 			},
 			authMethodLdapStateField: {
 				Description: "Can be one of 'inactive', 'active-private', or 'active-public'. Defaults to active-public.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+			},
+			authMethodLdapMaxPageSizeField: {
+				Description: "MaximumPageSize specifies a maximum search result size to use when retrieving the authenticated user's groups (optional).",
+				Type:        schema.TypeInt,
+				Optional:    true,
+			},
+			authMethodLdapDerefAliasesField: {
+				Description: "Control how aliases are dereferenced when performing the search. Can be one of: NeverDerefAliases, DerefInSearching, DerefFindingBaseObj, and DerefAlways (optional).",
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
@@ -401,6 +415,18 @@ func setFromLdapAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 				return err
 			}
 		}
+
+		if v, ok := attrs[authMethodLdapMaxPageSizeField]; ok {
+			if err := d.Set(authMethodLdapMaxPageSizeField, v.(json.Number)); err != nil {
+				return err
+			}
+		}
+
+		if v, ok := attrs[authMethodLdapDerefAliasesField]; ok {
+			if err := d.Set(authMethodLdapDerefAliasesField, v.(string)); err != nil {
+				return err
+			}
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -504,6 +530,14 @@ func resourceAuthMethodLdapCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if useTokenGrps, ok := d.GetOk(authMethodLdapUseTokenGrpsField); ok {
 		opts = append(opts, authmethods.WithLdapAuthMethodUseTokenGroups(useTokenGrps.(bool)))
+	}
+
+	if maxPageSize, ok := d.GetOk(authMethodLdapMaxPageSizeField); ok {
+		opts = append(opts, authmethods.WithLdapAuthMethodMaximumPageSize(uint32(maxPageSize.(int))))
+	}
+
+	if derefAliases, ok := d.GetOk(authMethodLdapDerefAliasesField); ok {
+		opts = append(opts, authmethods.WithLdapAuthMethodDereferenceAliases(derefAliases.(string)))
 	}
 
 	if rawAccountAttrMaps, ok := d.GetOk(authMethodLdapAccountAttrMapsField); ok {
@@ -782,6 +816,20 @@ func resourceAuthMethodLdapUpdate(ctx context.Context, d *schema.ResourceData, m
 		opts = append(opts, authmethods.DefaultLdapAuthMethodState())
 		if state, ok := d.GetOk(authMethodLdapStateField); ok {
 			opts = append(opts, authmethods.WithLdapAuthMethodState(state.(string)))
+		}
+	}
+
+	if d.HasChange(authMethodLdapMaxPageSizeField) {
+		opts = append(opts, authmethods.DefaultLdapAuthMethodMaximumPageSize())
+		if maxPageSize, ok := d.GetOk(authMethodLdapMaxPageSizeField); ok {
+			opts = append(opts, authmethods.WithLdapAuthMethodMaximumPageSize(uint32(maxPageSize.(int))))
+		}
+	}
+
+	if d.HasChange(authMethodLdapDerefAliasesField) {
+		opts = append(opts, authmethods.DefaultLdapAuthMethodDereferenceAliases())
+		if derefAliases, ok := d.GetOk(authMethodLdapDerefAliasesField); ok {
+			opts = append(opts, authmethods.WithLdapAuthMethodDereferenceAliases(derefAliases.(string)))
 		}
 	}
 

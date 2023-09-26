@@ -30,6 +30,7 @@ The LDAP auth method resource allows you to configure a Boundary auth_method_lda
 - `client_certificate` (String) PEM-encoded X.509 client certificate in ASN.1 DER form that can be used to authenticate against an LDAP server(optional).
 - `client_certificate_key` (String) PEM-encoded X.509 client certificate key in PKCS #8, ASN.1 DER form used with the client certificate (optional).
 - `client_certificate_key_hmac` (String) The HMAC of the client certificate key returned by the Boundary controller, which is used for comparison after initial setting of the value.
+- `dereference_aliases` (String) Control how aliases are dereferenced when performing the search. Can be one of: NeverDerefAliases, DerefInSearching, DerefFindingBaseObj, and DerefAlways (optional).
 - `description` (String) The auth method description.
 - `discover_dn` (Boolean) Use anon bind to discover the bind DN of a user (optional).
 - `enable_groups` (Boolean) Find the authenticated user's groups during authentication (optional).
@@ -38,6 +39,7 @@ The LDAP auth method resource allows you to configure a Boundary auth_method_lda
 - `group_filter` (String) A go template used to construct a LDAP group search filter (optional).
 - `insecure_tls` (Boolean) Skip the LDAP server SSL certificate validation (optional) - insecure and use with caution.
 - `is_primary_for_scope` (Boolean) When true, makes this auth method the primary auth method for the scope in which it resides. The primary auth method for a scope means the the user will be automatically created when they login using an LDAP account.
+- `maximum_page_size` (Number) MaximumPageSize specifies a maximum search result size to use when retrieving the authenticated user's groups (optional).
 - `name` (String) The auth method name. Defaults to the resource name.
 - `start_tls` (Boolean) Issue StartTLS command after connecting (optional).
 - `state` (String) Can be one of 'inactive', 'active-private', or 'active-public'. Defaults to active-public.
