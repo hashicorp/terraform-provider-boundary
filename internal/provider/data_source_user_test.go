@@ -57,7 +57,7 @@ data "boundary_user" "admin" {
 
 // NOTE: this test also tests out the direct token auth mechanism.
 
-func TestAccUserDataSource(t *testing.T) {
+func TestAccUserDataSource_basic(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
@@ -95,7 +95,7 @@ func TestAccUserDataSource(t *testing.T) {
 	})
 }
 
-func TestAccUserGlobalUserDataSource(t *testing.T) {
+func TestAccUserDataSource_global(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
