@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,13 +27,12 @@ data "boundary_user" "org1" {
 	depends_on  = [boundary_user.org1]
 }`, fooDescription)
 
-// 	orgUserUpdate = fmt.Sprintf(`
-// resource "boundary_user" "org1" {
-// 	name        = "test"
-// 	description = "%s"
-// 	scope_id    = boundary_scope.org1.id
-// 	depends_on  = [boundary_role.org1_admin]
-// }`, fooDescriptionUpdate)
+	globalUserDataSource = `
+data "boundary_user" "admin" {
+	name        = "admin"
+	scope_id    = "global"
+	depends_on  = [boundary_role.org1_admin]
+}`
 
 // 	orgUserWithAccts = `
 // resource "boundary_user" "org1" {
@@ -78,6 +78,41 @@ func TestAccUserDataSource(t *testing.T) {
 					testAccCheckUserResourceExists(provider, resourceName),
 					resource.TestCheckResourceAttr(dataSourceName, DescriptionKey, fooDescription),
 					resource.TestCheckResourceAttr(dataSourceName, NameKey, "test"),
+				),
+			},
+			// importStep("boundary_user.org1"),
+			// {
+			// 	// test update description
+			// 	Config: testConfigWithToken(url, token, fooOrg, orgUserUpdate),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckUserResourceExists(provider, "boundary_user.org1"),
+			// 		resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescriptionUpdate),
+			// 		resource.TestCheckResourceAttr("boundary_user.org1", NameKey, "test"),
+			// 	),
+			// },
+			// importStep("boundary_user.org1"),
+		},
+	})
+}
+
+func TestAccUserGlobalUserDataSource(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+	token := tc.Token().Token
+
+	dataSourceName := "data.boundary_user.admin"
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories(&provider),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfigWithToken(url, token, fooOrg, globalUserDataSource),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, NameKey, "admin"),
+					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^u_.+`)),
 				),
 			},
 			// importStep("boundary_user.org1"),

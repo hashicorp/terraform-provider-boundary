@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -84,7 +85,8 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get("name").(string)
 	scopeID := d.Get("scope_id").(string)
 
-	opts = append(opts, users.WithName(name))
+	// opts = append(opts, users.WithName(name))
+	opts = append(opts, users.WithFilter(fmt.Sprintf("\"/item/name\" matches \"%s\"", name)))
 
 	usersList, err := usrs.List(ctx, scopeID, opts...)
 
