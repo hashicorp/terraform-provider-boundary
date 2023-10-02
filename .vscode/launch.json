@@ -10,7 +10,6 @@
             "request": "launch",
             "mode": "auto",
             "program": "${fileDirname}",
-            "env": {"PKG_NAME": "${relativeFileDirname}"},
             "args": [
                 "-test.v",
                 "-test.run",
