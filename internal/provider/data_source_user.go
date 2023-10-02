@@ -19,7 +19,7 @@ import (
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		Description: "The user data source allows you to find a Boundary user.",
-		ReadContext: resourceUserRead,
+		ReadContext: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			IDKey: {
