@@ -24,7 +24,7 @@ func dataSourceUser() *schema.Resource {
 				Computed:    true,
 			},
 			NameKey: {
-				Description: "The username.",
+				Description: "The username to search for.",
 				Type:        schema.TypeString,
 				Required:    true,
 			},
