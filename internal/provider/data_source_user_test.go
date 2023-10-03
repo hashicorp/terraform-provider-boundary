@@ -30,7 +30,6 @@ data "boundary_user" "org1" {
 	globalUserDataSource = `
 data "boundary_user" "admin" {
 	name        = "admin"
-	scope_id    = "global"
 	depends_on  = [boundary_role.org1_admin]
 }`
 )
