@@ -5,17 +5,12 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-// const (
-// 	loginNameKey     = "login_name"
-// 	primaryAccountID = "primary_account_id"
-// )
 
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
@@ -51,26 +46,52 @@ func dataSourceUser() *schema.Resource {
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			// TODO: add after basic functionality works
-
-			// authorizedActions: {
-			// 	Description: "A list of actions that the worker is entitled to perform.",
-			// 	Type:        schema.TypeList,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// 	Computed: true,
-			// },
-			// loginNameKey: {
-			// 	Description: "Login name for user.",
-			// 	Type:        schema.TypeString,
-			// 	Computed:    true,
-			// },
-			// primaryAccountID: {
-			// 	Description: "Primary account ID.",
-			// 	Type:        schema.TypeString,
-			// 	Computed:    true,
-			// },
+			ScopeKey: {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						IDKey: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						NameKey: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						TypeKey: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						DescriptionKey: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						ParentScopeId: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			authorizedActions: {
+				Description: "A list of actions that the worker is entitled to perform.",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed: true,
+			},
+			LoginNameKey: {
+				Description: "Login name for user.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			PrimaryAccountID: {
+				Description: "Primary account ID.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -85,8 +106,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get("name").(string)
 	scopeID := d.Get("scope_id").(string)
 
-	// opts = append(opts, users.WithName(name))
-	opts = append(opts, users.WithFilter(fmt.Sprintf("\"/item/name\" matches \"%s\"", name)))
+	opts = append(opts, users.WithFilter(FilterWithItemNameMatches(name)))
 
 	usersList, err := usrs.List(ctx, scopeID, opts...)
 
@@ -124,6 +144,44 @@ func setFromUserItem(d *schema.ResourceData, user users.User) error {
 	if err := d.Set(userAccountIDsKey, user.AccountIds); err != nil {
 		return err
 	}
+	if err := d.Set(authorizedActions, user.AuthorizedActions); err != nil {
+		return err
+	}
+	if err := d.Set(LoginNameKey, user.LoginName); err != nil {
+		return err
+	}
+	if err := d.Set(PrimaryAccountID, user.PrimaryAccountId); err != nil {
+		return err
+	}
+
+	d.Set(ScopeKey, flattenScopeInfo(user.Scope))
+
 	d.SetId(user.Id)
 	return nil
+}
+
+func flattenScopeInfo(scope *scopes.ScopeInfo) []interface{} {
+	if scope == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if v := scope.Id; v != "" {
+		m[IDKey] = v
+	}
+	if v := scope.Type; v != "" {
+		m[TypeKey] = v
+	}
+	if v := scope.Description; v != "" {
+		m[DescriptionKey] = v
+	}
+	if v := scope.ParentScopeId; v != "" {
+		m[ParentScopeId] = v
+	}
+	if v := scope.Name; v != "" {
+		m[NameKey] = v
+	}
+
+	return []interface{}{m}
 }
