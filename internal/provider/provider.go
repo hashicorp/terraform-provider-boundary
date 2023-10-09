@@ -127,6 +127,9 @@ func New() *schema.Provider {
 			"boundary_user":                                     resourceUser(),
 			"boundary_worker":                                   resourceWorker(),
 		},
+		DataSourcesMap: map[string]*schema.Resource{
+			"boundary_scope": dataSourceScope(),
+		},
 	}
 
 	p.ConfigureContextFunc = providerConfigure(p)
