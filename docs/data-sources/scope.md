@@ -9,6 +9,7 @@ description: |-
 # boundary_scope (Data Source)
 
 The scope data source allows you to discover an existing Boundary scope by name.
+Please note that the Global scope will always have an id of "global", and does not need to be discovered with this data source.
 
 ## Example Usage
 
