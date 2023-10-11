@@ -16,8 +16,7 @@ const (
 	scopeDesc      = "created to test the scope datasource"
 )
 
-var (
-	scopeCreateAndRead = fmt.Sprintf(`
+var scopeCreateAndRead = fmt.Sprintf(`
 resource "boundary_scope" "global" {
 	global_scope = true
 	name = "global"
@@ -56,7 +55,6 @@ data "boundary_scope" "project" {
 	scope_id = data.boundary_scope.org.id
 	name = "%s"
 }`, orgName, scopeDesc, projectName, scopeDesc, orgName, projectName)
-)
 
 func TestAccScopeRead(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)

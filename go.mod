@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	github.com/hashicorp/boundary v0.13.1-0.20230926190735-857be69f27d9
+	github.com/hashicorp/boundary v0.14.0
 	github.com/hashicorp/boundary/api v0.0.41
 	github.com/hashicorp/boundary/sdk v0.0.37
 	github.com/hashicorp/cap v0.4.0

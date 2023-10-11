@@ -2,6 +2,16 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## 1.1.10 (October 11, 2023)
+
+### New and Improved
+
+* Add support for Scope datasource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/474))
+* LDAP: Add support for maximum_page_size and dereference_aliases
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/453))
+
+
 ## 1.1.9 (July 19, 2023)
 
 ### New and Improved
