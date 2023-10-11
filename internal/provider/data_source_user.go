@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceUser() *schema.Resource {
@@ -24,9 +25,10 @@ func dataSourceUser() *schema.Resource {
 				Computed:    true,
 			},
 			NameKey: {
-				Description: "The username to search for.",
-				Type:        schema.TypeString,
-				Required:    true,
+				Description:  "The username to search for.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			DescriptionKey: {
 				Description: "The user description.",
@@ -34,11 +36,12 @@ func dataSourceUser() *schema.Resource {
 				Computed:    true,
 			},
 			ScopeIdKey: {
-				Description: "The scope ID in which the resource is created. Defaults to the provider's `default_scope` if unset.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Default:     "global",
+				Description:  "The scope ID in which the resource is created. Defaults `global` if unset.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      "global",
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			userAccountIDsKey: {
 				Description: "Account ID's to associate with this user resource.",
@@ -103,8 +106,8 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	opts := []users.Option{}
 
 	// Get user ID using name
-	name := d.Get("name").(string)
-	scopeID := d.Get("scope_id").(string)
+	name := d.Get(NameKey).(string)
+	scopeID := d.Get(ScopeIdKey).(string)
 
 	opts = append(opts, users.WithFilter(FilterWithItemNameMatches(name)))
 
@@ -116,7 +119,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	users := usersList.GetItems()
 
 	// check length, 0 means no user, > 1 means too many
-	if len(users) == 0 || users[0] == nil {
+	if len(users) == 0 {
 		return diag.Errorf("no matching user found: %v", err)
 	}
 
