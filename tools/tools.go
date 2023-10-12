@@ -7,8 +7,10 @@
 package tools
 
 //go:generate go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+//go:generate go install mvdan.cc/gofumpt
 
 import (
 	// docs generator
 	_ "github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs"
+	_ "mvdan.cc/gofumpt"
 )
