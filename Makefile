@@ -89,4 +89,4 @@ fmt:
 	gofumpt -w $$(find . -name '*.go')
 
 .PHONY: gen
-gen: docs copywrite
+gen: docs copywrite fmt
