@@ -1,0 +1,1 @@
+terraform import boundary_auth_method_oidc.foo <my-id>
