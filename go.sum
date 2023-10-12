@@ -289,8 +289,8 @@ github.com/grpc-ecosystem/go-grpc-middleware v1.3.0/go.mod h1:z0ButlSOZa5vEBq9m2
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 h1:YBftPWNWd4WwGqtY2yeZL2ef8rHAxPBD8KFhJpmcqms=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0/go.mod h1:YN5jB8ie0yfIUg6VvR9Kz84aCaG7AsGZnLjhHbUqwPg=
-github.com/hashicorp/boundary v0.14.0 h1:6GNyufiEL8heiACLFXwosAyJRYI5gLK/xh+7OaNgY5M=
-github.com/hashicorp/boundary v0.14.0/go.mod h1:uvkddC6faCuWJm+X5WxZZD2K2NXTAB/lOIlzjDFRTqg=
+github.com/hashicorp/boundary v0.13.1-0.20231012004550-1ed0a13004b9 h1:XMz92IUDuRTOKCEHt1mKqLKNQhorIpLiuZR59ujlzD0=
+github.com/hashicorp/boundary v0.13.1-0.20231012004550-1ed0a13004b9/go.mod h1:l702HZsPDsSt29xismb6d0cip2TLu1uTb4vpFQoT3UM=
 github.com/hashicorp/boundary/api v0.0.41 h1:HfeB/L6q2RneYvRj5ETCi/9BuXFOmhDoPlEnafoNAag=
 github.com/hashicorp/boundary/api v0.0.41/go.mod h1:WnI0eRlP03Kw3wlW+z5va2vvG1OAupZHPsPuEm4pLiQ=
 github.com/hashicorp/boundary/sdk v0.0.37 h1:efuNqw9+u+VsUY1/rBHBgQqTCmWsxMR4aa9k1Fh+aSs=
@@ -393,8 +393,8 @@ github.com/hashicorp/hcl/v2 v2.18.0 h1:wYnG7Lt31t2zYkcquwgKo6MWXzRUDIeIVU5naZwHL
 github.com/hashicorp/hcl/v2 v2.18.0/go.mod h1:ThLC89FV4p9MPW804KVbe/cEXoQ8NZEh+JtMeeGErHE=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
-github.com/hashicorp/nodeenrollment v0.2.6 h1:zGKOkQaudYSopknZAr8T5ySrBqB2DloyRnSGhg660ks=
-github.com/hashicorp/nodeenrollment v0.2.6/go.mod h1:Do2FvaFHgnnMaqhdSTBX+TkQP0ep8VVQ0rOr+ZjUbJU=
+github.com/hashicorp/nodeenrollment v0.2.7 h1:/KbTJzGddWpre0qYp7+hvw07523IslR07Ib0j1TziPs=
+github.com/hashicorp/nodeenrollment v0.2.7/go.mod h1:LDKlFH9HHCX/seb30zHjYr3qvsrAAYCbzPNDrA2xe2Q=
 github.com/hashicorp/terraform-exec v0.19.0 h1:FpqZ6n50Tk95mItTSS9BjeOVUb4eg81SpgVtZNNtFSM=
 github.com/hashicorp/terraform-exec v0.19.0/go.mod h1:tbxUpe3JKruE9Cuf65mycSIT8KiNPZ0FkuTE3H4urQg=
 github.com/hashicorp/terraform-json v0.17.1 h1:eMfvh/uWggKmY7Pmb3T85u86E2EQg6EQHgyRwf3RkyA=
