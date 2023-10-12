@@ -39,7 +39,6 @@ func dataSourceUser() *schema.Resource {
 				Description:  "The scope ID in which the resource is created. Defaults `global` if unset.",
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				Default:      "global",
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
