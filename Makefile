@@ -23,9 +23,7 @@ GOMODCACHE ?= $(GOPATH)/pkg/mod
 
 tools:
 	go generate -tags tools tools/tools.go
-
-fmtcheck:
-	echo "Placeholder"
+	go install github.com/hashicorp/copywrite@v0.15.0
 
 test:
 	echo "Placeholder"
@@ -81,3 +79,14 @@ test-database-down:
 	docker rm -v boundary-sql-tests || true
 
 .PHONY: testacc tools docs test-database-up test-database-down
+
+.PHONY: copywrite
+copywrite:
+	copywrite headers
+
+.PHONY: fmt
+fmt:
+	gofumpt -w $$(find . -name '*.go')
+
+.PHONY: gen
+gen: docs copywrite
