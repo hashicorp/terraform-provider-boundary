@@ -64,3 +64,11 @@ resource "boundary_auth_method_oidc" "vault" {
 ### Read-Only
 
 - `id` (String) The ID of the auth method.
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+terraform import boundary_auth_method_oidc.foo <my-id>
+```
