@@ -6,8 +6,8 @@ Available in the [Terraform Registry](https://registry.terraform.io/providers/ha
 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) >= 0.12.x
--	[Go](https://golang.org/doc/install) >= 1.20
+-	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
+-	[Go](https://golang.org/doc/install) >= 1.21
 
 ## Building The Provider
 
