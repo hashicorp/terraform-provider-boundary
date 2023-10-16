@@ -30,7 +30,7 @@ func dataSourceCredentialStoreStatic() *schema.Resource {
 				Required:    true,
 			},
 			DescriptionKey: {
-				Description: "The description of the retrieved scope",
+				Description: "The description of the retrieved credential store",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
