@@ -3,6 +3,7 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.21
 
 require (
+	github.com/YakDriver/regexache v0.23.0
 	github.com/hashicorp/boundary v0.13.1-0.20231012004550-1ed0a13004b9
 	github.com/hashicorp/boundary/api v0.0.41
 	github.com/hashicorp/boundary/sdk v0.0.37

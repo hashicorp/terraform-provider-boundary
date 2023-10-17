@@ -1,0 +1,17 @@
+---
+page_title: "boundary_scope Data Source - terraform-provider-boundary"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# boundary_scope (Data Source)
+
+{{ .Description | trimspace }}
+Please note that the Global scope will always have an id of "global", and does not need to be discovered with this data source.
+
+## Example Usage
+
+{{tffile "examples/data-sources/boundary_scope/data-source.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}

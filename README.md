@@ -1,18 +1,15 @@
 ![](boundary.png)
 
-Terraform Provider Boundary
-==================
+# Terraform Provider Boundary
 
 Available in the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/boundary/latest).
 
-Requirements
-------------
+## Requirements
 
 -	[Terraform](https://www.terraform.io/downloads.html) >= 0.12.x
 -	[Go](https://golang.org/doc/install) >= 1.20
 
-Building The Provider
----------------------
+## Building The Provider
 
 1. Clone the repository
 1. Enter the repository directory
@@ -22,32 +19,30 @@ You'll need to ensure that your Terraform file contains the information necessar
 
 ```hcl
 terraform {
-        required_providers {
-                boundary = {
-                        source = "localhost/providers/boundary"
-                        version = "0.0.1"
-                }
-        }
+  required_providers {
+    boundary = {
+      source = "localhost/providers/boundary"
+      version = "0.0.1"
+    }
+  }
 }
 ```
 
-Adding Dependencies
----------------------
+## Adding Dependencies
 
 This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
 Please see the Go documentation for the most up to date information about using Go modules.
 
 To add a new dependency `github.com/author/dependency` to your Terraform provider:
 
-```
+```shell
 go get github.com/author/dependency
 go mod tidy
 ```
 
 Then commit the changes to `go.mod` and `go.sum`.
 
-Developing the Provider
----------------------------
+## Developing the Provider
 
 If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
 
@@ -72,17 +67,32 @@ $ make testacc
 For more details on the docker image and troubleshooting see the
 [boundary testing doc](https://github.com/hashicorp/boundary/blob/main/CONTRIBUTING.md#testing).
 
-Generating Docs
-----------------------
+## Debugging the provider
+
+If you're using vscode, this provider has delve debugging baked into the [.vscode](https://github.com/hashicorp/terraform-provider-boundary/tree/main/.vscode) directory. To debug you can find instructions [here.](https://dev.to/drewmullen/vscode-terraform-provider-development-setup-debugging-6bn#usage)
+
+## Generating Docs
+
+This provider uses the [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs/) tool to generate documentation. Each resource and data source requires a [templates](https://github.com/hashicorp/terraform-provider-boundary/tree/main/templates) and [examples](https://github.com/hashicorp/terraform-provider-boundary/tree/main/examples) then you execute a binary generate the docs which are placed in [./docs](https://github.com/hashicorp/terraform-provider-boundary/tree/main/docs).
+
+### New Resources & Data Sources (documentation templates)
+
+If you're adding a new resource or a data source, you must include a documentation template for your new R/DS in [./templates](https://github.com/hashicorp/terraform-provider-boundary/tree/main/templates) directory. This provider uses the [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs/) tool to generate documentation. For full details see the link.
+
+### Documentation Examples for Resources & Data Sources
+
+Examples are required for all resources and data sources. This provider uses the [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs/) tool to generate documentation. To add examples, add a new file to the [./examples](https://github.com/hashicorp/terraform-provider-boundary/tree/main/examples) directory or update the existing files. Next make sure the corresponding template in [./templates](https://github.com/hashicorp/terraform-provider-boundary/tree/main/templates) directory references this example.
+
+### Generating
 
 From the root of the repo run:
 
-```
+```shell
 go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
 ```
 
-Using the provider
-----------------------
+## Using the provider
+
 Please see our detailed docs for individual resource usage. Below is a complex example using the Boundary provider to configure all resource types available:
 
 ```hcl
@@ -140,7 +150,7 @@ resource "boundary_user" "users" {
   scope_id    = boundary_scope.corp.id
 }
 
-// organization level group for readonly users 
+// organization level group for readonly users
 resource "boundary_group" "readonly" {
   name        = "readonly"
   description = "Organization group for readonly users"
