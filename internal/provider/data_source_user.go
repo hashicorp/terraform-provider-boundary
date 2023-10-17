@@ -111,7 +111,6 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	opts = append(opts, users.WithFilter(FilterWithItemNameMatches(name)))
 
 	usersList, err := usrs.List(ctx, scopeID, opts...)
-
 	if err != nil {
 		return diag.Errorf("error calling list user: %v", err)
 	}
