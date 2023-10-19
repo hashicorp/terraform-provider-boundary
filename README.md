@@ -73,7 +73,7 @@ If you're using vscode, this provider has delve debugging baked into the [.vscod
 
 ## Generating Docs
 
-This provider uses the [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs/) tool to generate documentation. Each resource and data source requires a [templates](https://github.com/hashicorp/terraform-provider-boundary/tree/main/templates) and [examples](https://github.com/hashicorp/terraform-provider-boundary/tree/main/examples) then you execute a binary generate the docs which are placed in [./docs](https://github.com/hashicorp/terraform-provider-boundary/tree/main/docs).
+This provider uses the [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs/) tool to generate documentation. Each resource and data source requires a set of examples [examples](https://github.com/hashicorp/terraform-provider-boundary/tree/main/examples) then you execute a binary generate the docs which are placed in [./docs](https://github.com/hashicorp/terraform-provider-boundary/tree/main/docs). Optionally you can specify your own a [templates](https://github.com/hashicorp/terraform-provider-boundary/tree/main/templates) and for a resource or data source if you want to add custom information (example: [data "boundary_scope"](https://github.com/hashicorp/terraform-provider-boundary/blob/main/templates/data-sources/scope.md.tmpl#L11))
 
 ### New Resources & Data Sources (documentation templates)
 
