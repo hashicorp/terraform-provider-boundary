@@ -69,7 +69,7 @@ func dataSourceUser() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						ParentScopeId: {
+						ParentScopeIdKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -89,7 +89,7 @@ func dataSourceUser() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			PrimaryAccountID: {
+			PrimaryAccountIdKey: {
 				Description: "Primary account ID.",
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -151,7 +151,7 @@ func setFromUserItem(d *schema.ResourceData, user users.User) error {
 	if err := d.Set(LoginNameKey, user.LoginName); err != nil {
 		return err
 	}
-	if err := d.Set(PrimaryAccountID, user.PrimaryAccountId); err != nil {
+	if err := d.Set(PrimaryAccountIdKey, user.PrimaryAccountId); err != nil {
 		return err
 	}
 
@@ -178,7 +178,7 @@ func flattenScopeInfo(scope *scopes.ScopeInfo) []interface{} {
 		m[DescriptionKey] = v
 	}
 	if v := scope.ParentScopeId; v != "" {
-		m[ParentScopeId] = v
+		m[ParentScopeIdKey] = v
 	}
 	if v := scope.Name; v != "" {
 		m[NameKey] = v
