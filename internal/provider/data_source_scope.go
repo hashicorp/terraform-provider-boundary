@@ -65,7 +65,7 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	scpls, err := scp.List(ctx, scopeId, opts...)
 	if err != nil {
-		return diag.Errorf("error calling read scope: %v", err)
+		return diag.Errorf("error calling list scope: %v", err)
 	}
 	if scpls == nil {
 		return diag.Errorf("no scopes found")

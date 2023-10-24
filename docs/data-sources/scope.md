@@ -15,13 +15,13 @@ Please note that the Global scope will always have an id of "global", and does n
 ```terraform
 # Retrieve the ID of a Boundary project
 data "boundary_scope" "org" {
-  name            = "SecOps"
-  parent_scope_id = "global"
+  name     = "SecOps"
+  scope_id = "global"
 }
 
 data "boundary_scope" "project" {
-  name            = "2111"
-  parent_scope_id = data.boundary_scope.id
+  name     = "2111"
+  scope_id = data.boundary_scope.id
 }
 ```
 

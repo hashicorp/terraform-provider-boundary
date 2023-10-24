@@ -82,7 +82,7 @@ func TestAccUserDataSource_globalAdminUser(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, DescriptionKey, "Initial admin user within the \"global\" scope"),
 					resource.TestCheckResourceAttr(dataSourceName, LoginNameKey, "testuser"),
 					resource.TestMatchResourceAttr(dataSourceName, IDKey, regexache.MustCompile(`^u_.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, PrimaryAccountID, regexache.MustCompile(`^acctpw_.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, PrimaryAccountIdKey, regexache.MustCompile(`^acctpw_.+`)),
 					resource.TestCheckResourceAttr(dataSourceName, "authorized_actions.#", "7"),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.name", "global"),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.id", "global"),

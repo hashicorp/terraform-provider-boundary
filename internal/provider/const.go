@@ -47,8 +47,8 @@ const (
 	// workerFilter is used for common "worker_filter" resource attribute
 	WorkerFilterKey = "worker_filter"
 	// common User arguments
-	LoginNameKey     = "login_name"
-	PrimaryAccountID = "primary_account_id"
-	ScopeKey         = "scope"
-	ParentScopeId    = "parent_scope_id"
+	LoginNameKey        = "login_name"
+	PrimaryAccountIdKey = "primary_account_id"
+	ScopeKey            = "scope"
+	ParentScopeIdKey    = "parent_scope_id"
 )
