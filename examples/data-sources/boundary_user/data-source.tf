@@ -12,6 +12,6 @@ data "boundary_user" "org_user" {
 }
 
 data "boundary_scope" "org" {
-  name            = "my-org"
-  parent_scope_id = data.boundary_scope.org.id
+  name     = "my-org"
+  scope_id = data.boundary_scope.org.id
 }
