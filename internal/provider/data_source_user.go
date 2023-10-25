@@ -6,7 +6,6 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -159,30 +158,4 @@ func setFromUserItem(d *schema.ResourceData, user users.User) error {
 
 	d.SetId(user.Id)
 	return nil
-}
-
-func flattenScopeInfo(scope *scopes.ScopeInfo) []interface{} {
-	if scope == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if v := scope.Id; v != "" {
-		m[IDKey] = v
-	}
-	if v := scope.Type; v != "" {
-		m[TypeKey] = v
-	}
-	if v := scope.Description; v != "" {
-		m[DescriptionKey] = v
-	}
-	if v := scope.ParentScopeId; v != "" {
-		m[ParentScopeIdKey] = v
-	}
-	if v := scope.Name; v != "" {
-		m[NameKey] = v
-	}
-
-	return []interface{}{m}
 }

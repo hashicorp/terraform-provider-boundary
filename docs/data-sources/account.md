@@ -32,3 +32,16 @@ data "boundary_account" "admin" {
 
 - `description` (String) The description of the retrieved account.
 - `id` (String) The ID of the retrieved account.
+- `scope` (List of Object) (see [below for nested schema](#nestedatt--scope))
+- `type` (String) The type of the account
+
+<a id="nestedatt--scope"></a>
+### Nested Schema for `scope`
+
+Read-Only:
+
+- `description` (String)
+- `id` (String)
+- `name` (String)
+- `parent_scope_id` (String)
+- `type` (String)
