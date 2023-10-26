@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceScope() *schema.Resource {
@@ -19,25 +20,27 @@ func dataSourceScope() *schema.Resource {
 		ReadContext: dataSourceScopeRead,
 
 		Schema: map[string]*schema.Schema{
+			NameKey: {
+				Description:  "The name of the scope to retrieve.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
+			ScopeIdKey: {
+				Description:  "The parent scope ID that will be queried for the scope.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
+			},
 			IDKey: {
 				Description: "The ID of the retrieved scope.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			NameKey: {
-				Description: "The name of the scope to retrieve.",
-				Type:        schema.TypeString,
-				Required:    true,
-			},
 			DescriptionKey: {
 				Description: "The description of the retrieved scope.",
 				Type:        schema.TypeString,
 				Computed:    true,
-			},
-			ScopeIdKey: {
-				Description: "The parent scope ID that will be queried for the scope.",
-				Type:        schema.TypeString,
-				Required:    true,
 			},
 		},
 	}
@@ -45,45 +48,29 @@ func dataSourceScope() *schema.Resource {
 
 func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	opts := []scopes.Option{}
 
-	var name string
-	if v, ok := d.GetOk(NameKey); ok {
-		name = v.(string)
-	} else {
-		return diag.Errorf("no name provided")
-	}
+	name := d.Get(NameKey).(string)
+	scopeId := d.Get(ScopeIdKey).(string)
 
-	var scopeId string
-	if scopeIdVal, ok := d.GetOk(ScopeIdKey); ok {
-		scopeId = scopeIdVal.(string)
-	} else {
-		return diag.Errorf("no parent scope ID provided")
-	}
-
-	scp := scopes.NewClient(md.client)
-
-	scpls, err := scp.List(ctx, scopeId, opts...)
+	scl := scopes.NewClient(md.client)
+	scopesList, err := scl.List(ctx, scopeId,
+		scopes.WithFilter(FilterWithItemNameMatches(name)),
+	)
 	if err != nil {
 		return diag.Errorf("error calling list scope: %v", err)
 	}
-	if scpls == nil {
+	scopes := scopesList.GetItems()
+	if scopes == nil {
 		return diag.Errorf("no scopes found")
 	}
-
-	var scopeIdRead string
-	for _, scopeItem := range scpls.GetItems() {
-		if scopeItem.Name == name {
-			scopeIdRead = scopeItem.Id
-			break
-		}
+	if len(scopes) == 0 {
+		return diag.Errorf("no matching scope found")
+	}
+	if len(scopes) > 1 {
+		return diag.Errorf("error found more than 1 scope")
 	}
 
-	if scopeIdRead == "" {
-		return diag.Errorf("scope name %v not found in scope list", err)
-	}
-
-	srr, err := scp.Read(ctx, scopeIdRead)
+	srr, err := scl.Read(ctx, scopes[0].Id)
 	if err != nil {
 		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
@@ -95,21 +82,21 @@ func dataSourceScopeRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("scope nil after read")
 	}
 
-	if err := setFromScopeReadResponseMap(d, srr.GetResponse().Map); err != nil {
+	if err := setFromScopeRead(d, *srr.Item); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func setFromScopeReadResponseMap(d *schema.ResourceData, raw map[string]interface{}) error {
-	if err := d.Set(NameKey, raw["name"]); err != nil {
+func setFromScopeRead(d *schema.ResourceData, scope scopes.Scope) error {
+	if err := d.Set(NameKey, scope.Name); err != nil {
 		return err
 	}
-	if err := d.Set(DescriptionKey, raw["description"]); err != nil {
+	if err := d.Set(DescriptionKey, scope.Description); err != nil {
 		return err
 	}
 
-	d.SetId(raw["id"].(string))
+	d.SetId(scope.Id)
 	return nil
 }

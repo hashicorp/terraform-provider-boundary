@@ -5,7 +5,9 @@ package provider
 
 import (
 	"context"
+	"net/http"
 
+	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/users"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,21 +20,11 @@ func dataSourceUser() *schema.Resource {
 		ReadContext: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			IDKey: {
-				Description: "The ID of the user.",
-				Type:        schema.TypeString,
-				Computed:    true,
-			},
 			NameKey: {
 				Description:  "The username to search for.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
-			},
-			DescriptionKey: {
-				Description: "The user description.",
-				Type:        schema.TypeString,
-				Computed:    true,
 			},
 			ScopeIdKey: {
 				Description:  "The scope ID in which the resource is created. Defaults `global` if unset.",
@@ -40,6 +32,16 @@ func dataSourceUser() *schema.Resource {
 				Optional:     true,
 				Default:      "global",
 				ValidateFunc: validation.StringIsNotEmpty,
+			},
+			IDKey: {
+				Description: "The ID of the user.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			DescriptionKey: {
+				Description: "The user description.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			UserAccountIdsKey: {
 				Description: "Account ID's to associate with this user resource.",
@@ -99,39 +101,48 @@ func dataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	md := meta.(*metaData)
-	usrs := users.NewClient(md.client)
 
-	opts := []users.Option{}
-
-	// Get user ID using name
 	name := d.Get(NameKey).(string)
 	scopeID := d.Get(ScopeIdKey).(string)
 
-	opts = append(opts, users.WithFilter(FilterWithItemNameMatches(name)))
-
-	usersList, err := usrs.List(ctx, scopeID, opts...)
+	ucl := users.NewClient(md.client)
+	usersList, err := ucl.List(ctx, scopeID,
+		users.WithFilter(FilterWithItemNameMatches(name)),
+	)
 	if err != nil {
 		return diag.Errorf("error calling list user: %v", err)
 	}
 	users := usersList.GetItems()
-
-	// check length, 0 means no user, > 1 means too many
+	if users == nil {
+		return diag.Errorf("no users found")
+	}
 	if len(users) == 0 {
-		return diag.Errorf("no matching user found: %v", err)
+		return diag.Errorf("no matching user found")
 	}
-
 	if len(users) > 1 {
-		return diag.Errorf("error found more than 1 user: %v", err)
+		return diag.Errorf("error found more than 1 user")
 	}
 
-	if err := setFromUserItem(d, *users[0]); err != nil {
+	urr, err := ucl.Read(ctx, users[0].Id)
+	if err != nil {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("error calling read scope: %v", err)
+	}
+	if urr == nil {
+		return diag.Errorf("scope nil after read")
+	}
+
+	if err := setFromUserRead(d, *urr.Item); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func setFromUserItem(d *schema.ResourceData, user users.User) error {
+func setFromUserRead(d *schema.ResourceData, user users.User) error {
 	if err := d.Set(NameKey, user.Name); err != nil {
 		return err
 	}
