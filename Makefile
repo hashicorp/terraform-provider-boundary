@@ -18,7 +18,7 @@ DOCKER_ARGS ?= -d
 PG_OPTS ?=
 TEST_DB_PORT ?= 5432
 BOUNDARY_VERSION = $(shell go mod edit -json | jq -r '.["Require"][] | select(.Path=="github.com/hashicorp/boundary") | .["Version"]')
-GOPATH ?= ~/go
+GOPATH ?= $(abspath ~/go)
 GOMODCACHE ?= $(GOPATH)/pkg/mod
 
 tools:
