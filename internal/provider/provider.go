@@ -128,8 +128,9 @@ func New() *schema.Provider {
 			"boundary_worker":                                   resourceWorker(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"boundary_scope": dataSourceScope(),
-			"boundary_user":  dataSourceUser(),
+			"boundary_account": dataSourceAccount(),
+			"boundary_scope":   dataSourceScope(),
+			"boundary_user":    dataSourceUser(),
 		},
 	}
 
