@@ -46,7 +46,6 @@ resource "boundary_host" "foo" {
   type            = "static"
   name            = "foo"
   host_catalog_id = boundary_host_catalog.foo.id
-  scope_id        = boundary_scope.project.id
   address         = "10.0.0.1"
 }
 
@@ -54,7 +53,6 @@ resource "boundary_host" "bar" {
   type            = "static"
   name            = "bar"
   host_catalog_id = boundary_host_catalog.foo.id
-  scope_id        = boundary_scope.project.id
   address         = "10.0.0.1"
 }
 

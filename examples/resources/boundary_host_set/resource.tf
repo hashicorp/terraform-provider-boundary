@@ -24,7 +24,6 @@ resource "boundary_host" "first" {
   description     = "My first host!"
   address         = "10.0.0.1"
   host_catalog_id = boundary_host_catalog.static.id
-  scope_id        = boundary_scope.project.id
 }
 
 resource "boundary_host" "second" {
@@ -33,7 +32,6 @@ resource "boundary_host" "second" {
   description     = "My second host!"
   address         = "10.0.0.2"
   host_catalog_id = boundary_host_catalog.static.id
-  scope_id        = boundary_scope.project.id
 }
 
 resource "boundary_host_set" "web" {
