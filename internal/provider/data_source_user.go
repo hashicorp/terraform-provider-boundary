@@ -41,7 +41,7 @@ func dataSourceUser() *schema.Resource {
 				Default:      "global",
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			userAccountIDsKey: {
+			UserAccountIdsKey: {
 				Description: "Account ID's to associate with this user resource.",
 				Type:        schema.TypeSet,
 				Computed:    true,
@@ -141,7 +141,7 @@ func setFromUserItem(d *schema.ResourceData, user users.User) error {
 	if err := d.Set(ScopeIdKey, user.ScopeId); err != nil {
 		return err
 	}
-	if err := d.Set(userAccountIDsKey, user.AccountIds); err != nil {
+	if err := d.Set(UserAccountIdsKey, user.AccountIds); err != nil {
 		return err
 	}
 	if err := d.Set(authorizedActions, user.AuthorizedActions); err != nil {

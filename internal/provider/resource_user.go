@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const userAccountIDsKey = "account_ids"
-
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		Description: "The user resource allows you to configure a Boundary user.",
@@ -49,7 +47,7 @@ func resourceUser() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			userAccountIDsKey: {
+			UserAccountIdsKey: {
 				Description: "Account ID's to associate with this user resource.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -69,7 +67,7 @@ func setFromUserResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
 		return err
 	}
-	if err := d.Set(userAccountIDsKey, raw["account_ids"]); err != nil {
+	if err := d.Set(UserAccountIdsKey, raw["account_ids"]); err != nil {
 		return err
 	}
 	d.SetId(raw["id"].(string))
@@ -116,7 +114,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}()
 
-	if val, ok := d.GetOk(userAccountIDsKey); ok {
+	if val, ok := d.GetOk(UserAccountIdsKey); ok {
 		list := val.(*schema.Set).List()
 		acctIds := make([]string, 0, len(list))
 		for _, i := range list {
@@ -205,9 +203,9 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange(userAccountIDsKey) {
+	if d.HasChange(UserAccountIdsKey) {
 		var accountIds []string
-		if accountsVal, ok := d.GetOk(userAccountIDsKey); ok {
+		if accountsVal, ok := d.GetOk(UserAccountIdsKey); ok {
 			accounts := accountsVal.(*schema.Set).List()
 			for _, account := range accounts {
 				accountIds = append(accountIds, account.(string))
@@ -218,7 +216,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if err != nil {
 			return diag.Errorf("error updating accounts on user: %v", err)
 		}
-		if err := d.Set(userAccountIDsKey, accountIds); err != nil {
+		if err := d.Set(UserAccountIdsKey, accountIds); err != nil {
 			return diag.FromErr(err)
 		}
 	}

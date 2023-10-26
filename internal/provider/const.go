@@ -56,4 +56,6 @@ const (
 	ParentScopeIdKey = "parent_scope_id"
 	// GroupMemberIdsKey is used for common "member_ids" resource attribute
 	GroupMemberIdsKey = "member_ids"
+	// UserAccountIdsKey is used for common "account_ids" resource attribute
+	UserAccountIdsKey = "account_ids"
 )
