@@ -51,5 +51,6 @@ const (
 	PrimaryAccountIdKey = "primary_account_id"
 	ScopeKey            = "scope"
 	ParentScopeIdKey    = "parent_scope_id"
-	GroupMemberIdsKey   = "member_ids"
+
+	GroupMemberIdsKey = "member_ids"
 )
