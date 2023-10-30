@@ -89,6 +89,7 @@ resource "boundary_credential_library_vault_ssh_certificate" "baz" {
 
 ### Optional
 
+- `additional_valid_principals` (List of String) Principals to be signed as "valid_principles" in addition to username.
 - `critical_options` (Map of String) Specifies a map of the critical options that the certificate should be signed for.
 - `description` (String) The Vault credential library description.
 - `extensions` (Map of String) Specifies a map of the extensions that the certificate should be signed for.

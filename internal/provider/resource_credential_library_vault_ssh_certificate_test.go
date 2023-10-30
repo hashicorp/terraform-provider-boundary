@@ -69,6 +69,9 @@ resource "boundary_credential_library_vault_ssh_certificate" "ext_co_example" {
 	critical_options = {
 	  force-command = "/bin/foo"
 	}
+	additional_valid_principals = [
+	  "principal-1"
+	]
 }`, vaultSshCertCredLibName,
 	vaultSshCertCredLibDesc,
 	vaultSshCertCredLibPath,
@@ -86,6 +89,10 @@ resource "boundary_credential_library_vault_ssh_certificate" "ext_co_example" {
 	  permit-pty            = ""
 	  permit-X11-forwarding = ""
     }
+	additional_valid_principals = [
+	  "principal-2",
+	  "principal-3"
+	]
 }`, vaultSshCertCredLibName,
 	vaultSshCertCredLibDesc,
 	vaultSshCertCredLibPath,
@@ -161,13 +168,14 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 			},
 			importStep(vaultSshCertCredResc),
 			{
-				// create with extensions and critical options
+				// create with extensions, critical options, and additional valid principals
 				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultSshCertCredLibResourceExtensionsCriticalOpts),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, NameKey, vaultSshCertCredLibName),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, DescriptionKey, vaultSshCertCredLibDesc),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultPathKey, vaultSshCertCredLibPath),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateUsernameKey, vaultSshCertCredUsername),
+					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey+".#", "1"),
 
 					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredExtCOResc),
 				),
@@ -183,6 +191,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateUsernameKey, vaultSshCertCredUsername),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateCriticalOptionsKey+".%", "0"),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateExtensionsKey+".%", "2"),
+					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey+".#", "2"),
 
 					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredExtCOResc),
 				),
@@ -198,6 +207,7 @@ func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateUsernameKey, vaultSshCertCredUsername),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateCriticalOptionsKey+".%", "2"),
 					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateExtensionsKey+".%", "1"),
+					resource.TestCheckResourceAttr(vaultSshCertCredExtCOResc, credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey+".#", "0"),
 
 					testAccCheckCredentialLibraryResourceExists(provider, vaultSshCertCredExtCOResc),
 				),

@@ -14,15 +14,16 @@ import (
 )
 
 const (
-	credentialLibraryVaultSshCertificateType               = "vault-ssh-certificate"
-	credentialLibraryVaultSshCertificatePathKey            = "path"
-	credentialLibraryVaultSshCertificateUsernameKey        = "username"
-	credentialLibraryVaultSshCertificateKeyTypeKey         = "key_type"
-	credentialLibraryVaultSshCertificateKeyBitsKey         = "key_bits"
-	credentialLibraryVaultSshCertificateTtlKey             = "ttl"
-	credentialLibraryVaultSshCertificateKeyIdKey           = "key_id"
-	credentialLibraryVaultSshCertificateCriticalOptionsKey = "critical_options"
-	credentialLibraryVaultSshCertificateExtensionsKey      = "extensions"
+	credentialLibraryVaultSshCertificateType                         = "vault-ssh-certificate"
+	credentialLibraryVaultSshCertificatePathKey                      = "path"
+	credentialLibraryVaultSshCertificateUsernameKey                  = "username"
+	credentialLibraryVaultSshCertificateKeyTypeKey                   = "key_type"
+	credentialLibraryVaultSshCertificateKeyBitsKey                   = "key_bits"
+	credentialLibraryVaultSshCertificateTtlKey                       = "ttl"
+	credentialLibraryVaultSshCertificateKeyIdKey                     = "key_id"
+	credentialLibraryVaultSshCertificateCriticalOptionsKey           = "critical_options"
+	credentialLibraryVaultSshCertificateExtensionsKey                = "extensions"
+	credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey = "additional_valid_principals"
 )
 
 var libraryVaultSshCertificateAttrs = []string{
@@ -34,6 +35,7 @@ var libraryVaultSshCertificateAttrs = []string{
 	credentialLibraryVaultSshCertificateKeyIdKey,
 	credentialLibraryVaultSshCertificateCriticalOptionsKey,
 	credentialLibraryVaultSshCertificateExtensionsKey,
+	credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey,
 }
 
 func resourceCredentialLibraryVaultSshCertificate() *schema.Resource {
@@ -110,6 +112,14 @@ func resourceCredentialLibraryVaultSshCertificate() *schema.Resource {
 				Type:        schema.TypeMap,
 				Optional:    true,
 			},
+			credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey: {
+				Description: "Principals to be signed as \"valid_principles\" in addition to username.",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
 		},
 	}
 }
@@ -184,6 +194,13 @@ func resourceCredentialLibraryCreateVaultSshCertificate(ctx context.Context, d *
 			}
 			opts = append(opts, credentiallibraries.WithVaultSSHCertificateCredentialLibraryExtensions(e))
 		}
+	}
+	if v, ok := d.GetOk(credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey); ok {
+		avp := []string{}
+		for _, vv := range v.([]interface{}) {
+			avp = append(avp, vv.(string))
+		}
+		opts = append(opts, credentiallibraries.WithVaultSSHCertificateCredentialLibraryAdditionalValidPrincipals(avp))
 	}
 
 	var credentialStoreId string
@@ -374,6 +391,17 @@ func resourceCredentialLibraryUpdateVaultSshCertificate(ctx context.Context, d *
 			e = nil
 		}
 		opts = append(opts, credentiallibraries.WithVaultSSHCertificateCredentialLibraryExtensions(e))
+	}
+	if d.HasChange(credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey) {
+		// set defaults first in case the value was omitted and we want to remove it
+		opts = append(opts, credentiallibraries.DefaultVaultSSHCertificateCredentialLibraryAdditionalValidPrincipals())
+		if v, ok := d.GetOk(credentialLibraryVaultSshCertificateAdditionalValidPrincipalsKey); ok {
+			avp := []string{}
+			for _, vv := range v.([]interface{}) {
+				avp = append(avp, vv.(string))
+			}
+			opts = append(opts, credentiallibraries.WithVaultSSHCertificateCredentialLibraryAdditionalValidPrincipals(avp))
+		}
 	}
 
 	if len(opts) > 0 {

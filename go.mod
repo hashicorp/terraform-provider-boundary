@@ -4,9 +4,9 @@ go 1.21
 
 require (
 	github.com/YakDriver/regexache v0.23.0
-	github.com/hashicorp/boundary v0.13.1-0.20231012004550-1ed0a13004b9
-	github.com/hashicorp/boundary/api v0.0.41
-	github.com/hashicorp/boundary/sdk v0.0.37
+	github.com/hashicorp/boundary v0.14.2
+	github.com/hashicorp/boundary/api v0.0.42
+	github.com/hashicorp/boundary/sdk v0.0.38
 	github.com/hashicorp/cap v0.4.0
 	github.com/hashicorp/cap/ldap v0.0.0-20230918191608-899e3f8e8cd6
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
@@ -51,7 +51,7 @@ require (
 	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/cli v23.0.1+incompatible // indirect
-	github.com/docker/docker v23.0.3+incompatible // indirect
+	github.com/docker/docker v24.0.7+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
@@ -187,7 +187,7 @@ require (
 	google.golang.org/genproto v0.0.0-20230711160842-782d3b101e98 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230711160842-782d3b101e98 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230711160842-782d3b101e98 // indirect
-	google.golang.org/grpc v1.58.2 // indirect
+	google.golang.org/grpc v1.58.3 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
