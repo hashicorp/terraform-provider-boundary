@@ -13,10 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const (
-	groupMemberIdsKey = "member_ids"
-)
-
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		Description: "The group resource allows you to configure a Boundary group.",
@@ -51,7 +47,7 @@ func resourceGroup() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
-			groupMemberIdsKey: {
+			GroupMemberIdsKey: {
 				Description: "Resource IDs for group members, these are most likely boundary users.",
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -71,7 +67,7 @@ func setFromGroupResponseMap(d *schema.ResourceData, raw map[string]interface{})
 	if err := d.Set(ScopeIdKey, raw["scope_id"]); err != nil {
 		return err
 	}
-	if err := d.Set(groupMemberIdsKey, raw["member_ids"]); err != nil {
+	if err := d.Set(GroupMemberIdsKey, raw["member_ids"]); err != nil {
 		return err
 	}
 	d.SetId(raw["id"].(string))
@@ -118,7 +114,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}()
 
-	if val, ok := d.GetOk(groupMemberIdsKey); ok {
+	if val, ok := d.GetOk(GroupMemberIdsKey); ok {
 		list := val.(*schema.Set).List()
 		memberIds := make([]string, 0, len(list))
 		for _, i := range list {
@@ -209,9 +205,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// The above call may not actually happen, so we use d.Id() and automatic
 	// versioning here
-	if d.HasChange(groupMemberIdsKey) {
+	if d.HasChange(GroupMemberIdsKey) {
 		var memberIds []string
-		if membersVal, ok := d.GetOk(groupMemberIdsKey); ok {
+		if membersVal, ok := d.GetOk(GroupMemberIdsKey); ok {
 			members := membersVal.(*schema.Set).List()
 			for _, member := range members {
 				memberIds = append(memberIds, member.(string))
@@ -222,7 +218,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if err != nil {
 			return diag.Errorf("error updating members in group: %v", err)
 		}
-		if err := d.Set(groupMemberIdsKey, memberIds); err != nil {
+		if err := d.Set(GroupMemberIdsKey, memberIds); err != nil {
 			return diag.FromErr(err)
 		}
 
