@@ -7,7 +7,7 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 ### New and Improved
 
 * Add support for OIDC prompt. Prompts are optional OIDC parameters that determine the behavior of the authentication server.
-  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/))
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/519))
 
 ## 1.1.10 (October 11, 2023)
 
