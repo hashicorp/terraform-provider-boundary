@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.13
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.10
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
-	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.4
+	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.6
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
 	github.com/jimlambrt/gldap v0.1.8
@@ -81,7 +81,7 @@ require (
 	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20230902160534-7a966e6313fd // indirect
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.4 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-plugin v1.5.1 // indirect
+	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/base62 v0.1.2 // indirect
