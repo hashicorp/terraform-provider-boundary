@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.13
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.10
-	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.7
+	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.8
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.4
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
