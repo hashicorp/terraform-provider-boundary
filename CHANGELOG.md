@@ -2,6 +2,13 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## Next
+
+### New and Improved
+
+* Add support for OIDC prompt. Prompts are optional OIDC parameters that determine the behavior of the authentication server.
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/))
+
 ## 1.1.10 (October 11, 2023)
 
 ### New and Improved

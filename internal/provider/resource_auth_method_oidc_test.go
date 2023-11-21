@@ -67,6 +67,7 @@ EOT
 	signing_algorithms = ["ES256"]
 	account_claim_maps = ["oid=sub"]
 	claims_scopes = ["profile"]
+	prompts = ["select_account"]
 }`
 
 	fooAuthMethodOidcUpdate = `
@@ -90,6 +91,7 @@ EOT
   signing_algorithms = ["ES256"]
   account_claim_maps = ["oid=sub"]
 	claims_scopes = ["profile"]
+  prompts = ["consent", "select_account"]
 
   // we need to disable this validation, since the updated issuer isn't discoverable
   disable_discovered_config_validation = true 
@@ -125,6 +127,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAccountClaimMapsKey, []string{"oid=sub"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcClaimsScopesKey, []string{"profile"}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcPromptsKey, []string{"select_account"}),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
 				),
@@ -141,6 +144,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "-1"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
+					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcPromptsKey, []string{"consent", "select_account"}),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
