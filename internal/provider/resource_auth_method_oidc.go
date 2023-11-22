@@ -149,8 +149,8 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Optional: true,
 			},
 			authmethodOidcPromptsKey: {
-				Description: `The prompts passed to the identity provider to determine whether to prompt the end-user for reauthentication, account selection or consent. ` +
-					`Please note the values passed are case-sensitive.`,
+				Description: "The prompts passed to the identity provider to determine whether to prompt the end-user for reauthentication, account selection or consent. " +
+					"Please note the values passed are case-sensitive. The valid values are: `none`, `login`, `consent` and `select_account`. ",
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -337,8 +337,8 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if prompts, ok := d.GetOk(authmethodOidcPromptsKey); ok {
 		promptList := []string{}
-		for _, c := range prompts.([]interface{}) {
-			promptList = append(promptList, c.(string))
+		for _, p := range prompts.([]interface{}) {
+			promptList = append(promptList, p.(string))
 		}
 		opts = append(opts, authmethods.WithOidcAuthMethodPrompts(promptList))
 	}
@@ -561,8 +561,8 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange(authmethodOidcPromptsKey) {
 		if prompts, ok := d.GetOk(authmethodOidcPromptsKey); ok {
 			var promptsList []string
-			for _, alg := range prompts.([]interface{}) {
-				promptsList = append(promptsList, alg.(string))
+			for _, prompt := range prompts.([]interface{}) {
+				promptsList = append(promptsList, prompt.(string))
 			}
 			opts = append(opts, authmethods.WithOidcAuthMethodPrompts(promptsList))
 		}

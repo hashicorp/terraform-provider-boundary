@@ -81,7 +81,7 @@ resource "boundary_auth_method_oidc" "oidc_with_multiple_prompts" {
 - `issuer` (String) The issuer corresponding to the provider, which must match the issuer field in generated tokens.
 - `max_age` (Number) The max age to provide to the provider, indicating how much time is allowed to have passed since the last authentication before the user is challenged again. A value of 0 sets an immediate requirement for all users to reauthenticate, and an unset maxAge results in a Terraform value of -1 and the default TTL of the chosen OIDC will be used.
 - `name` (String) The auth method name. Defaults to the resource name.
-- `prompts` (List of String) The prompts passed to the identity provider to determine whether to prompt the end-user for reauthentication, account selection or consent. Please note the values passed are case-sensitive.
+- `prompts` (List of String) The prompts passed to the identity provider to determine whether to prompt the end-user for reauthentication, account selection or consent. Please note the values passed are case-sensitive. The valid values are: `none`, `login`, `consent` and `select_account`.
 - `signing_algorithms` (List of String) Allowed signing algorithms for the provider's issued tokens.
 - `state` (String) Can be one of 'inactive', 'active-private', or 'active-public'. Currently automatically set to active-public.
 - `type` (String) The type of auth method; hardcoded.
