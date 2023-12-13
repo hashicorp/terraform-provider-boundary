@@ -118,7 +118,7 @@ func TestWorkerControllerLed(t *testing.T) {
 					resource.TestCheckResourceAttrSet("boundary_worker.controller_led", "controller_generated_activation_token"),
 				),
 			},
-			importStep("boundary_worker.controller_led"),
+			importStep("boundary_worker.controller_led", authorizedActions),
 			{
 				// update
 				Config: testConfig(url, controllerLedUpdate),
@@ -128,7 +128,7 @@ func TestWorkerControllerLed(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_worker.controller_led", "name", workerNameUpdate),
 				),
 			},
-			importStep("boundary_worker.controller_led"),
+			importStep("boundary_worker.controller_led", authorizedActions),
 		},
 	})
 }
