@@ -86,7 +86,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		token,
 		true)
 
-	vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestServerTLS))
+	vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
 	secret, tokenUpdate := vcUpdate.CreateToken(t)
 	tHmacUpdate := tokenHmac(tokenUpdate, secret.Auth.Accessor)
 	resUpdate := vaultCredStoreResource(vcUpdate,
@@ -96,6 +96,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		"www.updated.com",
 		tokenUpdate,
 		false)
+	fmt.Println("vcUpdate--->", vcUpdate.Addr)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
