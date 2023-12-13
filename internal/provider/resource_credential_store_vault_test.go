@@ -112,7 +112,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultNamespaceKey, vaultCredStoreNamespace),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultCaCertKey, ""),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsServerNameKey, "www.original.com"),
-					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "true"),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "false"),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenKey, token),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenHmacKey, tHmac),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKey, ""),
