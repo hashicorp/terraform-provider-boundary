@@ -75,7 +75,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
 
-	vc := vault.NewTestVaultServer(t)
+	vc := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
 	secret, token := vc.CreateToken(t)
 	tHmac := tokenHmac(token, secret.Auth.Accessor)
 	res := vaultCredStoreResource(vc,
@@ -84,7 +84,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		vaultCredStoreNamespace,
 		"www.original.com",
 		token,
-		false)
+		true)
 
 	vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
 	secret, tokenUpdate := vcUpdate.CreateToken(t)
@@ -112,7 +112,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultNamespaceKey, vaultCredStoreNamespace),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultCaCertKey, ""),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsServerNameKey, "www.original.com"),
-					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "false"),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "true"),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenKey, token),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenHmacKey, tHmac),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKey, ""),
