@@ -84,7 +84,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		vaultCredStoreNamespace,
 		"www.original.com",
 		token,
-		true)
+		false)
 
 	vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
 	secret, tokenUpdate := vcUpdate.CreateToken(t)
