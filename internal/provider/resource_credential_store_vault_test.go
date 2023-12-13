@@ -121,7 +121,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					testAccCheckCredentialStoreResourceExists(provider, vaultCredStoreResc),
 				),
 			},
-			// importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
+			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 			// {
 			// 	// update
 			// 	Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
