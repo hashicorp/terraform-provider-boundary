@@ -86,16 +86,16 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		token,
 		true)
 
-	// vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
-	// secret, tokenUpdate := vcUpdate.CreateToken(t)
-	// tHmacUpdate := tokenHmac(tokenUpdate, secret.Auth.Accessor)
-	// resUpdate := vaultCredStoreResource(vcUpdate,
-	// 	vaultCredStoreName+vaultCredStoreUpdate,
-	// 	vaultCredStoreDesc+vaultCredStoreUpdate,
-	// 	vaultCredStoreNamespace+vaultCredStoreUpdate,
-	// 	"www.updated.com",
-	// 	tokenUpdate,
-	// 	false)
+	vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
+	secret, tokenUpdate := vcUpdate.CreateToken(t)
+	tHmacUpdate := tokenHmac(tokenUpdate, secret.Auth.Accessor)
+	resUpdate := vaultCredStoreResource(vcUpdate,
+		vaultCredStoreName+vaultCredStoreUpdate,
+		vaultCredStoreDesc+vaultCredStoreUpdate,
+		vaultCredStoreNamespace+vaultCredStoreUpdate,
+		"www.updated.com",
+		tokenUpdate,
+		false)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -122,25 +122,25 @@ func TestAccCredentialStoreVault(t *testing.T) {
 				),
 			},
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
-			// {
-			// 	// update
-			// 	Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, NameKey, vaultCredStoreName+vaultCredStoreUpdate),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, DescriptionKey, vaultCredStoreDesc+vaultCredStoreUpdate),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultAddressKey, vcUpdate.Addr),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultNamespaceKey, vaultCredStoreNamespace+vaultCredStoreUpdate),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultCaCertKey, string(vcUpdate.CaCert)),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsServerNameKey, "www.updated.com"),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "false"),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenKey, tokenUpdate),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenHmacKey, tHmacUpdate),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKey, string(vcUpdate.ClientCert)),
-			// 		resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKeyKey, string(vcUpdate.ClientKey)),
+			{
+				// update
+				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(vaultCredStoreResc, NameKey, vaultCredStoreName+vaultCredStoreUpdate),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, DescriptionKey, vaultCredStoreDesc+vaultCredStoreUpdate),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultAddressKey, vcUpdate.Addr),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultNamespaceKey, vaultCredStoreNamespace+vaultCredStoreUpdate),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultCaCertKey, string(vcUpdate.CaCert)),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsServerNameKey, "www.updated.com"),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "false"),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenKey, tokenUpdate),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenHmacKey, tHmacUpdate),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKey, string(vcUpdate.ClientCert)),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultClientCertificateKeyKey, string(vcUpdate.ClientKey)),
 
-			// 		testAccCheckCredentialStoreResourceExists(provider, vaultCredStoreResc),
-			// 	),
-			// },
+					testAccCheckCredentialStoreResourceExists(provider, vaultCredStoreResc),
+				),
+			},
 			// importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 			// {
 			// 	// Run a plan only update and verify no changes
