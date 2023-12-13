@@ -62,6 +62,37 @@ resource "boundary_credential_store_vault" "example" {
 		clientKey)
 }
 
+func vaultCredStoreResource2(vc *vault.TestVaultServer, name, description, namespace, tlsServer, token string, skipVerify bool) string {
+	caCert := fmt.Sprintf("\"%s\"", strings.Replace(string(vc.CaCert), "\n", `\n`, -1))
+	clientCert := fmt.Sprintf("\"%s\"", strings.Replace(string(vc.ClientCert), "\n", `\n`, -1))
+	clientKey := fmt.Sprintf("\"%s\"", strings.Replace(string(vc.ClientKey), "\n", `\n`, -1))
+
+	return fmt.Sprintf(`
+resource "boundary_credential_store_vault" "example" {
+	name  = "%s"
+	description = "%s"
+	scope_id = boundary_scope.proj1.id
+	address = "%s"
+	namespace = "%s"
+	ca_cert = %s
+	tls_server_name = "%s"
+	tls_skip_verify = "%v"
+	token = "%s"
+	client_certificate = %s
+	client_certificate_key = %s
+	depends_on  = [boundary_role.proj1_admin]
+}`, name,
+		description,
+		vc.Addr,
+		namespace,
+		caCert,
+		tlsServer,
+		skipVerify,
+		token,
+		clientCert,
+		clientKey)
+}
+
 func tokenHmac(token, accessor string) string {
 	key := blake2b.Sum256([]byte(accessor))
 	mac := hmac.New(sha256.New, key[:])
@@ -89,14 +120,13 @@ func TestAccCredentialStoreVault(t *testing.T) {
 	vcUpdate := vault.NewTestVaultServer(t, vault.WithTestVaultTLS(vault.TestClientTLS))
 	secret, tokenUpdate := vcUpdate.CreateToken(t)
 	tHmacUpdate := tokenHmac(tokenUpdate, secret.Auth.Accessor)
-	resUpdate := vaultCredStoreResource(vcUpdate,
+	resUpdate := vaultCredStoreResource2(vcUpdate,
 		vaultCredStoreName+vaultCredStoreUpdate,
 		vaultCredStoreDesc+vaultCredStoreUpdate,
 		vaultCredStoreNamespace+vaultCredStoreUpdate,
 		"www.updated.com",
 		tokenUpdate,
 		false)
-	fmt.Println("vcUpdate--->", vcUpdate.Addr)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
