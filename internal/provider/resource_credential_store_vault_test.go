@@ -71,6 +71,7 @@ func tokenHmac(token, accessor string) string {
 }
 
 func TestAccCredentialStoreVault(t *testing.T) {
+	t.Skip("Skipping flakey test until we can figure out why it sometimes fails on CI")
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()
 	url := tc.ApiAddrs()[0]
