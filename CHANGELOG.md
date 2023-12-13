@@ -6,8 +6,24 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ### New and Improved
 
+## 1.1.11 (December 13, 2023)
+
+### New and Improved
+
 * Add support for OIDC prompts. Using prompts, the Relying Party (RP) can customize the authentication and authorization flow to suit their specific needs and improve the user experience. [OIDC Authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) server.
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/519))
+* Add boundary_auth_method data source
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/505))
+* Add boundary_group data source
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/503))
+* Add boundary_account data source
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/493))
+* Add boundary_user data source
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/468))
+
+### Bug Fix
+* Fix boundary_worker overwriting worker generated auth token during
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/461)) 
 
 ## 1.1.10 (October 11, 2023)
 
