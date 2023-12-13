@@ -16,3 +16,27 @@ resource "boundary_auth_method_oidc" "vault" {
   signing_algorithms = ["RS256"]
   type               = "oidc"
 }
+
+resource "boundary_auth_method_oidc" "oidc_with_one_prompt" {
+  api_url_prefix     = "https://XO-XO-XO-XO-XOXOXO.boundary.hashicorp.cloud:9200"
+  client_id          = "eieio"
+  client_secret      = "hvo_secret_XO"
+  description        = "My Boundary OIDC Auth Method With Prompt"
+  issuer             = "https://sts.windows.net/TENANT_ID/"
+  scope_id           = "global"
+  signing_algorithms = ["RS256"]
+  prompts            = ["select_account"]
+  type               = "oidc"
+}
+
+resource "boundary_auth_method_oidc" "oidc_with_multiple_prompts" {
+  api_url_prefix     = "https://XO-XO-XO-XO-XOXOXO.boundary.hashicorp.cloud:9200"
+  client_id          = "eieio"
+  client_secret      = "hvo_secret_XO"
+  description        = "My Boundary OIDC Auth Method With Multiple Prompts"
+  issuer             = "https://sts.windows.net/TENANT_ID/"
+  scope_id           = "global"
+  signing_algorithms = ["RS256"]
+  prompts            = ["consent", "select_account"]
+  type               = "oidc"
+}

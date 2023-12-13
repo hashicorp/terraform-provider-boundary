@@ -2,6 +2,13 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## Next
+
+### New and Improved
+
+* Add support for OIDC prompts. Using prompts, the Relying Party (RP) can customize the authentication and authorization flow to suit their specific needs and improve the user experience. [OIDC Authentication request](https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest) server.
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/519))
+
 ## 1.1.10 (October 11, 2023)
 
 ### New and Improved

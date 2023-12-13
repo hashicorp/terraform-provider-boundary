@@ -29,6 +29,7 @@ const (
 	authmethodOidcIsPrimaryAuthMethodForScope          = "is_primary_for_scope"
 	authmethodOidcAccountClaimMapsKey                  = "account_claim_maps"
 	authmethodOidcClaimsScopesKey                      = "claims_scopes"
+	authmethodOidcPromptsKey                           = "prompts"
 
 	// computed-only parameters
 	authmethodOidcCallbackUrlKey      = "callback_url"
@@ -147,6 +148,15 @@ func resourceAuthMethodOidc() *schema.Resource {
 				},
 				Optional: true,
 			},
+			authmethodOidcPromptsKey: {
+				Description: "The prompts passed to the identity provider to determine whether to prompt the end-user for reauthentication, account selection or consent. " +
+					"Please note the values passed are case-sensitive. The valid values are: `none`, `login`, `consent` and `select_account`. ",
+				Type: schema.TypeList,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+			},
 
 			// OIDC specific immutable and computed parameters
 			authmethodOidcClientSecretHmacKey: {
@@ -239,6 +249,10 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		if p, ok := attrs[authmethodOidcClaimsScopesKey]; ok {
 			d.Set(authmethodOidcClaimsScopesKey, p.([]interface{}))
 		}
+
+		if val, ok := attrs[authmethodOidcPromptsKey]; ok {
+			d.Set(authmethodOidcPromptsKey, val.([]interface{}))
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -319,6 +333,14 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 			cList = append(cList, c.(string))
 		}
 		opts = append(opts, authmethods.WithOidcAuthMethodClaimsScopes(cList))
+	}
+
+	if prompts, ok := d.GetOk(authmethodOidcPromptsKey); ok {
+		promptList := []string{}
+		for _, p := range prompts.([]interface{}) {
+			promptList = append(promptList, p.(string))
+		}
+		opts = append(opts, authmethods.WithOidcAuthMethodPrompts(promptList))
 	}
 
 	nameVal, ok := d.GetOk(NameKey)
@@ -534,6 +556,15 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 				claimsScopes = append(claimsScopes, c.(string))
 			}
 			opts = append(opts, authmethods.WithOidcAuthMethodClaimsScopes(claimsScopes))
+		}
+	}
+	if d.HasChange(authmethodOidcPromptsKey) {
+		if prompts, ok := d.GetOk(authmethodOidcPromptsKey); ok {
+			var promptsList []string
+			for _, prompt := range prompts.([]interface{}) {
+				promptsList = append(promptsList, prompt.(string))
+			}
+			opts = append(opts, authmethods.WithOidcAuthMethodPrompts(promptsList))
 		}
 	}
 
