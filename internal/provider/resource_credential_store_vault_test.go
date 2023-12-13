@@ -141,7 +141,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					testAccCheckCredentialStoreResourceExists(provider, vaultCredStoreResc),
 				),
 			},
-			// importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
+			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 			// {
 			// 	// Run a plan only update and verify no changes
 			// 	PlanOnly: true,
