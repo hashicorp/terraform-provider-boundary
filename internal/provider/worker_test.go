@@ -80,7 +80,13 @@ func TestWorkerWorkerLed(t *testing.T) {
 					testAccCheckworkerResourceExists(provider, "boundary_worker.worker_led"),
 					resource.TestCheckResourceAttr("boundary_worker.worker_led", "description", workerDesc),
 					resource.TestCheckResourceAttr("boundary_worker.worker_led", "name", workerName),
+					resource.TestCheckResourceAttr("boundary_worker.worker_led", "worker_generated_auth_token", workerToken),
 				),
+			},
+			{
+				// create
+				Config:   testConfig(url, workerLedCreate),
+				PlanOnly: true,
 			},
 			importStep("boundary_worker.worker_led"),
 			{
@@ -90,6 +96,7 @@ func TestWorkerWorkerLed(t *testing.T) {
 					testAccCheckworkerResourceExists(provider, "boundary_worker.worker_led"),
 					resource.TestCheckResourceAttr("boundary_worker.worker_led", "description", workerDescUpdate),
 					resource.TestCheckResourceAttr("boundary_worker.worker_led", "name", workerNameUpdate),
+					resource.TestCheckResourceAttr("boundary_worker.worker_led", "worker_generated_auth_token", workerToken),
 				),
 			},
 			importStep("boundary_worker.worker_led"),
