@@ -46,9 +46,14 @@ const (
 	internalForceUpdateKey = "internal_force_update"
 	// workerFilter is used for common "worker_filter" resource attribute
 	WorkerFilterKey = "worker_filter"
-	// common User arguments
-	LoginNameKey        = "login_name"
+	// LoginNameKey is used for common "login_name" resource attribute
+	LoginNameKey = "login_name"
+	// PrimaryAccountIdKey is used for common "primary_account_id" resource attribute
 	PrimaryAccountIdKey = "primary_account_id"
-	ScopeKey            = "scope"
-	ParentScopeIdKey    = "parent_scope_id"
+	// ScopeKey is used for common "scope" resource attribute
+	ScopeKey = "scope"
+	// ParentScopeKey is used for common "parent_scope_id" resource attribute
+	ParentScopeIdKey = "parent_scope_id"
+	// GroupMemberIdsKey is used for common "member_ids" resource attribute
+	GroupMemberIdsKey = "member_ids"
 )

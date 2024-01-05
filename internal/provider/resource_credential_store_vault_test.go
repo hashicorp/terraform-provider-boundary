@@ -93,7 +93,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		vaultCredStoreName+vaultCredStoreUpdate,
 		vaultCredStoreDesc+vaultCredStoreUpdate,
 		vaultCredStoreNamespace+vaultCredStoreUpdate,
-		"www.updated.com",
+		"localhost",
 		tokenUpdate,
 		false)
 
@@ -131,7 +131,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultAddressKey, vcUpdate.Addr),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultNamespaceKey, vaultCredStoreNamespace+vaultCredStoreUpdate),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultCaCertKey, string(vcUpdate.CaCert)),
-					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsServerNameKey, "www.updated.com"),
+					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsServerNameKey, "localhost"),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTlsSkipVerifyKey, "false"),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenKey, tokenUpdate),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, credentialStoreVaultTokenHmacKey, tHmacUpdate),
