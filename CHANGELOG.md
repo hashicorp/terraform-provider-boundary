@@ -4,6 +4,7 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+### New and Improved  
 ## 1.1.12 (January 8, 2024)
 ### New and Improved
 
