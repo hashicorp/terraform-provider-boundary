@@ -4,7 +4,11 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+## 1.1.12 (January 8, 2024)
 ### New and Improved
+
+* Add support to configure valid_principals with Vault SSH Certificate Credential Library
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/512))
 
 ## 1.1.11 (December 13, 2023)
 
