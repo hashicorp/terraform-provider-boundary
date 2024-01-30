@@ -82,7 +82,7 @@ func resourceStorageBucket() *schema.Resource {
 					`or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing ` +
 					`this block will NOT clear secrets from the storage bucket; this allows injecting secrets for one call, then removing them for storage.`,
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 			},
 			SecretsHmacKey: {
