@@ -24,16 +24,16 @@ resource "boundary_storage_bucket" "aws_static_credentials_example" {
 }
 
 resource "boundary_storage_bucket" "aws_dynamic_credentials_example" {
-  name            = "My aws storage bucket with dynamic credentials"
-  description     = "My first storage bucket!"
-  scope_id        = boundary_scope.org.id
-  plugin_name     = "aws"
-  bucket_name     = "mybucket"
-  
+  name        = "My aws storage bucket with dynamic credentials"
+  description = "My first storage bucket!"
+  scope_id    = boundary_scope.org.id
+  plugin_name = "aws"
+  bucket_name = "mybucket"
+
   # the role_arn value should be the same arn used as the instance profile that is attached to the ec2 instance
   # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html
   attributes_json = jsonencode({
-    "region" = "us-east-1" 
+    "region"   = "us-east-1"
     "role_arn" = "arn:aws:iam::123456789012:role/S3Access"
   })
   worker_filter = "\"pki\" in \"/tags/type\""
