@@ -163,7 +163,7 @@ resource "boundary_role" "organization_readonly" {
   name        = "readonly"
   description = "Read-only role"
   principal_ids = [boundary_group.readonly_users.id]
-  grant_strings = ["id=*;type=*;actions=read"]
+  grant_strings = ["ids=*;type=*;actions=read"]
   scope_id    = boundary_scope.corp.id
 }
 
@@ -174,7 +174,7 @@ resource "boundary_role" "organization_admin" {
   principal_ids = concat(
     [for user in boundary_user.user: user.id]
   )
-  grant_strings   = ["id=*;type=*;actions=create,read,update,delete"]
+  grant_strings   = ["ids=*;type=*;actions=create,read,update,delete"]
   scope_id = boundary_scope.corp.id
 }
 

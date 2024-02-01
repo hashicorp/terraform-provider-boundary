@@ -93,7 +93,7 @@ resource "boundary_user" "alice" {
 resource "boundary_role" "ldap_principal" {
 	scope_id = boundary_scope.global.id
 	grant_scope_id = boundary_scope.global.id
-	grant_strings = ["id=*;type=*;actions=*"]
+	grant_strings = ["ids=*;type=*;actions=*"]
 	principal_ids = [boundary_user.alice.id]
 }`
 )

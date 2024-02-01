@@ -7,6 +7,6 @@ resource "boundary_scope" "org" {
 resource "boundary_role" "org_admin" {
   scope_id       = boundary_scope.global.id
   grant_scope_id = boundary_scope.org.id
-  grant_strings  = ["id=*;type=*;actions=*"]
+  grant_strings  = ["ids=*;type=*;actions=*"]
   principal_ids  = ["u_auth"]
 }
