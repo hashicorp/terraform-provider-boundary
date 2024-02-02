@@ -16,7 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - id: go-version
-        run: echo "name=version::$(cat ./.go-version)" >> "$GITHUB_OUTPUT"
+        # We use .go-version as our source of truth for current Go
+        # version, because "goenv" can react to it automatically.
+        run: |
+          echo "Building with Go $(cat .go-version)"
+          echo "go-version=$(cat .go-version)" >> "$GITHUB_OUTPUT"
   release-notes:
     runs-on: ubuntu-latest
     steps:
