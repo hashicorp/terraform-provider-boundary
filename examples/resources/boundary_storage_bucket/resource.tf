@@ -33,8 +33,9 @@ resource "boundary_storage_bucket" "aws_dynamic_credentials_example" {
   # the role_arn value should be the same arn used as the instance profile that is attached to the ec2 instance
   # https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html
   attributes_json = jsonencode({
-    "region"   = "us-east-1"
-    "role_arn" = "arn:aws:iam::123456789012:role/S3Access"
+    "region"                      = "us-east-1"
+    "role_arn"                    = "arn:aws:iam::123456789012:role/S3Access"
+    "disable_credential_rotation" = "true"
   })
   worker_filter = "\"pki\" in \"/tags/type\""
 }
