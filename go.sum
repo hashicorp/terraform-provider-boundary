@@ -237,8 +237,8 @@ github.com/hashicorp/boundary/api v0.0.45 h1:N4ZIjsYf4cwVfcW5sv0WitWiFr8UyudjA/o
 github.com/hashicorp/boundary/api v0.0.45/go.mod h1:UrsSgLDpFmG6Eq+OIdpC8BSwbHwklsxL/ZCWklr0g5A=
 github.com/hashicorp/boundary/sdk v0.0.42 h1:iRDdnM6/6q9qLtBP7/cpq/FWQGf69TFSsBQFxgGK8Jw=
 github.com/hashicorp/boundary/sdk v0.0.42/go.mod h1:QJhm4rky2YMtk9DS5Rj8QJhDKB/6zQbVrm3R0QgdYmQ=
-github.com/hashicorp/cap v0.4.1 h1:LVYrTLbPV8W6DPwIm/zC/fbc4UTpCQ7nJhCAPshLuG4=
-github.com/hashicorp/cap v0.4.1/go.mod h1:oOoohCNd2JAgfvLz2NpFJTZiZ6CqH9dW8dZ2js52lGA=
+github.com/hashicorp/cap v0.5.0 h1:YIlAYxdXXtx2IL1JDvP2OyEl55Ooi0yl573kSB9Orlw=
+github.com/hashicorp/cap v0.5.0/go.mod h1:IAy00Er+ZFpMo+5x6B4bkO2HgpzgrkfsuDWMmHAuKUE=
 github.com/hashicorp/cap/ldap v0.0.0-20231012003312-273118a6e3b8 h1:IKSRg1IONHl9ouMwx/Un1OVwdnlqVGWXRjUEg6VQZuY=
 github.com/hashicorp/cap/ldap v0.0.0-20231012003312-273118a6e3b8/go.mod h1:EywAf3IOjdKgFT/mK1YQhHcNXuwDvG4FOuLs1L1odh0=
 github.com/hashicorp/cli v1.1.6 h1:CMOV+/LJfL1tXCOKrgAX0uRKnzjj/mpmqNXloRSy2K8=
