@@ -60,7 +60,7 @@ func resourceRole() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			roleGrantStringsKey: {
-				Description: " A list of stringified grants for the role.",
+				Description: "A list of stringified grants for the role.",
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
