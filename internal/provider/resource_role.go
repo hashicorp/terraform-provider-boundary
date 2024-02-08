@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	roleGrantScopeIdKey = "grant_scope_id"
-	rolePrincipalIdsKey = "principal_ids"
-	roleGrantStringsKey = "grant_strings"
+	roleGrantScopeIdKey  = "grant_scope_id"
+	roleGrantScopeIdsKey = "grant_scope_ids"
+	rolePrincipalIdsKey  = "principal_ids"
+	roleGrantStringsKey  = "grant_strings"
 )
 
 func resourceRole() *schema.Resource {
@@ -66,9 +67,18 @@ func resourceRole() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			roleGrantScopeIdKey: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Description: "For Boundary 0.15+, use `grant_scope_ids` instead. The scope for which the grants in the role should apply.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Deprecated:  "In Boundary 0.15+, please use `grant_scope_ids` instead. This field will be removed in a future release.",
+			},
+			roleGrantScopeIdsKey: {
+				Description: `A list of scopes for which the grants in this role should apply, which can include the special values "this", "children", or "descendants"`,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Computed:    true,
 			},
 		},
 	}
@@ -90,9 +100,13 @@ func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	if err := d.Set(roleGrantStringsKey, raw["grant_strings"]); err != nil {
 		return err
 	}
+	if err := d.Set(roleGrantScopeIdsKey, raw["grant_scope_ids"]); err != nil {
+		return err
+	}
 	if err := d.Set(roleGrantScopeIdKey, raw["grant_scope_id"]); err != nil {
 		return err
 	}
+
 	d.SetId(raw["id"].(string))
 	return nil
 }
@@ -121,10 +135,18 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		opts = append(opts, roles.WithDescription(descStr))
 	}
 
-	grantScopeIdVal, ok := d.GetOk(roleGrantScopeIdKey)
-	if ok {
+	grantScopeIdVal := d.Get(roleGrantScopeIdKey)
+	if grantScopeIdVal != "" {
 		grantScopeIdStr := grantScopeIdVal.(string)
 		opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
+	}
+	var grantScopeIds []string
+	if grantScopeIdsVal, ok := d.GetOk(roleGrantScopeIdsKey); ok {
+		list := grantScopeIdsVal.(*schema.Set).List()
+		grantScopeIds = make([]string, 0, len(list))
+		for _, i := range list {
+			grantScopeIds = append(grantScopeIds, i.(string))
+		}
 	}
 
 	var principalIds []string
@@ -180,6 +202,18 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
 		case tsgr == nil:
 			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grants"})
+		default:
+			apiResponse = tsgr.GetResponse().Map
+		}
+	}
+
+	if grantScopeIds != nil {
+		tsgr, err := rc.SetGrantScopes(ctx, tcr.Item.Id, 0, grantScopeIds, roles.WithAutomaticVersioning(true))
+		switch {
+		case err != nil:
+			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grant scopes", Detail: err.Error()})
+		case tsgr == nil:
+			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grant scope ids"})
 		default:
 			apiResponse = tsgr.GetResponse().Map
 		}
@@ -241,12 +275,17 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	var grantScopeId *string
 	if d.HasChange(roleGrantScopeIdKey) {
-		opts = append(opts, roles.DefaultGrantScopeId())
-		grantScopeIdVal, ok := d.GetOk(roleGrantScopeIdKey)
-		if ok {
-			grantScopeIdStr := grantScopeIdVal.(string)
-			grantScopeId = &grantScopeIdStr
-			opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
+		// If it is an update to use the multi-value grant_scope_ids, and this
+		// has changed to "", then don't set it on the API. Instead let it fall
+		// through and below it'll be updated to be "".
+		if !d.HasChange(roleGrantScopeIdsKey) {
+			opts = append(opts, roles.DefaultGrantScopeId())
+			grantScopeIdVal, ok := d.GetOk(roleGrantScopeIdKey)
+			if ok {
+				grantScopeIdStr := grantScopeIdVal.(string)
+				grantScopeId = &grantScopeIdStr
+				opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
+			}
 		}
 	}
 
@@ -306,6 +345,24 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
 		} else {
 			if err := d.Set(rolePrincipalIdsKey, principalIds); err != nil {
+				return diag.FromErr(err)
+			}
+		}
+	}
+
+	if d.HasChange(roleGrantScopeIdsKey) {
+		var grantScopeIds []string
+		if grantScopeIdsVal, ok := d.GetOk(roleGrantScopeIdsKey); ok {
+			grantScopes := grantScopeIdsVal.(*schema.Set).List()
+			for _, grantScope := range grantScopes {
+				grantScopeIds = append(grantScopeIds, grantScope.(string))
+			}
+		}
+		_, err := rc.SetGrantScopes(ctx, d.Id(), 0, grantScopeIds, roles.WithAutomaticVersioning(true))
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grant scopes", Detail: err.Error()})
+		} else {
+			if err := d.Set(roleGrantScopeIdsKey, grantScopeIds); err != nil {
 				return diag.FromErr(err)
 			}
 		}

@@ -33,7 +33,7 @@ resource "boundary_scope" "org1" {
 
 resource "boundary_role" "org1_admin" {
 	scope_id = boundary_scope.global.id
-	grant_scope_id = boundary_scope.org1.id
+	grant_scope_ids = [boundary_scope.org1.id]
 	grant_strings = ["ids=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
@@ -49,7 +49,7 @@ resource "boundary_scope" "proj1" {
 
 resource "boundary_role" "proj1_admin" {
 	scope_id = boundary_scope.org1.id
-	grant_scope_id = boundary_scope.proj1.id
+	grant_scope_ids = [boundary_scope.proj1.id]
 	grant_strings = ["ids=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
@@ -65,7 +65,7 @@ resource "boundary_scope" "proj1" {
 
 resource "boundary_role" "proj1_admin" {
 	scope_id = boundary_scope.org1.id
-	grant_scope_id = boundary_scope.proj1.id
+	grant_scope_ids = [boundary_scope.proj1.id]
 	grant_strings = ["ids=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }
@@ -80,7 +80,7 @@ resource "boundary_scope" "proj2" {
 
 resource "boundary_role" "proj2_admin" {
 	scope_id = boundary_scope.org1.id
-	grant_scope_id = boundary_scope.proj2.id
+	grant_scope_ids = [boundary_scope.proj2.id]
 	grant_strings = ["ids=*;type=*;actions=*"]
 	principal_ids = ["u_auth"]
 }

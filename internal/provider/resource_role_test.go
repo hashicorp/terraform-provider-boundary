@@ -189,7 +189,7 @@ resource "boundary_role" "with_grants" {
 
 func TestAccRoleToOrgToProject(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
+	t.Cleanup(tc.Shutdown)
 	url := tc.ApiAddrs()[0]
 
 	var provider *schema.Provider
@@ -243,7 +243,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 
 func TestAccRoleWithGrants(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
+	t.Cleanup(tc.Shutdown)
 	url := tc.ApiAddrs()[0]
 
 	var provider *schema.Provider
@@ -302,7 +302,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 
 func TestAccRoleWithPrincipals(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
+	t.Cleanup(tc.Shutdown)
 	url := tc.ApiAddrs()[0]
 
 	var provider *schema.Provider
@@ -365,7 +365,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 
 func TestAccRoleWithGroups(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
+	t.Cleanup(tc.Shutdown)
 	url := tc.ApiAddrs()[0]
 
 	var provider *schema.Provider

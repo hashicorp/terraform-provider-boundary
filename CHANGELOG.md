@@ -2,11 +2,18 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## Next
+
+### New and Improved
+
+* Support the multi-value `grant_scope_ids` field in the role provider
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/562))
+
 ## 1.1.13 (February 1, 2024)
 
 ### New and Improved
 
-* Allow dynamic credentials when configuring storage buckets.
+* Allow dynamic credentials when configuring storage buckets
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/549))
 
 ## 1.1.12 (January 8, 2024)
