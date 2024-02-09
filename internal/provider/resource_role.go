@@ -5,7 +5,12 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
+	"unicode"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
@@ -280,6 +285,13 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if grantStringsVal, ok := d.GetOk(roleGrantStringsKey); ok {
 			grants := grantStringsVal.(*schema.Set).List()
 			for _, grant := range grants {
+				deprecationNotice, err := checkGrantForDeprecation(grant.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if deprecationNotice != "" {
+					diags = append(diags, diag.Diagnostic{Severity: diag.Warning, Summary: "deprecated field found in grant", Detail: deprecationNotice})
+				}
 				grantStrings = append(grantStrings, grant.(string))
 			}
 		}
@@ -324,4 +336,36 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return nil
+}
+
+func checkGrantForDeprecation(grantString string) (string, error) {
+	if len(grantString) == 0 {
+		return "", errors.New("missing grant string")
+	}
+	grantString = strings.ToValidUTF8(grantString, string(unicode.ReplacementChar))
+
+	switch {
+	case grantString[0] == '{':
+		raw := make(map[string]any, 4)
+		if err := json.Unmarshal([]byte(grantString), &raw); err != nil {
+			return "", fmt.Errorf("error json unmarshalling grant string: %w", err)
+		}
+		if raw["id"] != nil {
+			return `Grant contains an "id" field which is deprecated and will not be accepted from Boundary 0.15+. Please use "ids" instead.`, nil
+		}
+
+	default:
+		parts := strings.Split(grantString, ";")
+		for _, part := range parts {
+			splitPart := strings.Split(part, "=")
+			if len(splitPart) < 2 {
+				return "", fmt.Errorf("invalid grant part: %s", part)
+			}
+			if splitPart[0] == "id" {
+				return `Grant contains an "id" field which is deprecated and will not be accepted from Boundary 0.15+. Please use "ids" instead.`, nil
+			}
+		}
+	}
+
+	return "", nil
 }
