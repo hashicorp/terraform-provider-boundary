@@ -5,7 +5,12 @@ package provider
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"strings"
+	"unicode"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
@@ -97,7 +102,7 @@ func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	return nil
 }
 
-func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
+func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -141,6 +146,16 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		list := grantStringsVal.(*schema.Set).List()
 		grantStrings = make([]string, 0, len(list))
 		for _, i := range list {
+			for _, grant := range list {
+				deprecationNotice, err := checkGrantForDeprecation(grant.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if deprecationNotice != "" {
+					diags = append(diags, diag.Diagnostic{Severity: diag.Warning, Summary: "deprecated field found in grant", Detail: deprecationNotice})
+				}
+				grantStrings = append(grantStrings, grant.(string))
+			}
 			grantStrings = append(grantStrings, i.(string))
 		}
 	}
@@ -157,7 +172,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	apiResponse := tcr.GetResponse().Map
 	defer func() {
 		if err := setFromRoleResponseMap(d, apiResponse); err != nil {
-			errs = append(errs, diag.FromErr(err)...)
+			diags = append(diags, diag.FromErr(err)...)
 		}
 	}()
 
@@ -165,9 +180,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
 		switch {
 		case err != nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
 		case tspr == nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principals"})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principals"})
 		default:
 			apiResponse = tspr.GetResponse().Map
 		}
@@ -177,15 +192,15 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		tsgr, err := rc.SetGrants(ctx, tcr.Item.Id, 0, grantStrings, roles.WithAutomaticVersioning(true))
 		switch {
 		case err != nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
 		case tsgr == nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grants"})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grants"})
 		default:
 			apiResponse = tsgr.GetResponse().Map
 		}
 	}
 
-	return errs
+	return diags
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -280,6 +295,13 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if grantStringsVal, ok := d.GetOk(roleGrantStringsKey); ok {
 			grants := grantStringsVal.(*schema.Set).List()
 			for _, grant := range grants {
+				deprecationNotice, err := checkGrantForDeprecation(grant.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if deprecationNotice != "" {
+					diags = append(diags, diag.Diagnostic{Severity: diag.Warning, Summary: "deprecated field found in grant", Detail: deprecationNotice})
+				}
 				grantStrings = append(grantStrings, grant.(string))
 			}
 		}
@@ -324,4 +346,36 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return nil
+}
+
+func checkGrantForDeprecation(grantString string) (string, error) {
+	if len(grantString) == 0 {
+		return "", errors.New("missing grant string")
+	}
+	grantString = strings.ToValidUTF8(grantString, string(unicode.ReplacementChar))
+
+	switch {
+	case grantString[0] == '{':
+		raw := make(map[string]any, 4)
+		if err := json.Unmarshal([]byte(grantString), &raw); err != nil {
+			return "", fmt.Errorf("error json unmarshalling grant string: %w", err)
+		}
+		if raw["id"] != nil {
+			return `Grant contains an "id" field which is deprecated and will not be accepted from Boundary 0.15+. Please use "ids" instead.`, nil
+		}
+
+	default:
+		parts := strings.Split(grantString, ";")
+		for _, part := range parts {
+			splitPart := strings.Split(part, "=")
+			if len(splitPart) < 2 {
+				return "", fmt.Errorf("invalid grant part: %s", part)
+			}
+			if splitPart[0] == "id" {
+				return `Grant contains an "id" field which is deprecated and will not be accepted from Boundary 0.15+. Please use "ids" instead.`, nil
+			}
+		}
+	}
+
+	return "", nil
 }
