@@ -102,7 +102,7 @@ func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 	return nil
 }
 
-func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (errs diag.Diagnostics) {
+func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	md := meta.(*metaData)
 
 	var scopeId string
@@ -146,6 +146,16 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		list := grantStringsVal.(*schema.Set).List()
 		grantStrings = make([]string, 0, len(list))
 		for _, i := range list {
+			for _, grant := range list {
+				deprecationNotice, err := checkGrantForDeprecation(grant.(string))
+				if err != nil {
+					return diag.FromErr(err)
+				}
+				if deprecationNotice != "" {
+					diags = append(diags, diag.Diagnostic{Severity: diag.Warning, Summary: "deprecated field found in grant", Detail: deprecationNotice})
+				}
+				grantStrings = append(grantStrings, grant.(string))
+			}
 			grantStrings = append(grantStrings, i.(string))
 		}
 	}
@@ -162,7 +172,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	apiResponse := tcr.GetResponse().Map
 	defer func() {
 		if err := setFromRoleResponseMap(d, apiResponse); err != nil {
-			errs = append(errs, diag.FromErr(err)...)
+			diags = append(diags, diag.FromErr(err)...)
 		}
 	}()
 
@@ -170,9 +180,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		tspr, err := rc.SetPrincipals(ctx, tcr.Item.Id, 0, principalIds, roles.WithAutomaticVersioning(true))
 		switch {
 		case err != nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting principals", Detail: err.Error()})
 		case tspr == nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principals"})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting principals"})
 		default:
 			apiResponse = tspr.GetResponse().Map
 		}
@@ -182,15 +192,15 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		tsgr, err := rc.SetGrants(ctx, tcr.Item.Id, 0, grantStrings, roles.WithAutomaticVersioning(true))
 		switch {
 		case err != nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "error setting grants", Detail: err.Error()})
 		case tsgr == nil:
-			errs = append(errs, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grants"})
+			diags = append(diags, diag.Diagnostic{Severity: diag.Error, Summary: "nil role after setting grants"})
 		default:
 			apiResponse = tsgr.GetResponse().Map
 		}
 	}
 
-	return errs
+	return diags
 }
 
 func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
