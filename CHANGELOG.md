@@ -2,12 +2,15 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## Next
+## 1.1.14 (February 14, 2024)
 
 ### New and Improved
 
 * Support the multi-value `grant_scope_ids` field in the role provider
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/562))
+
+* Support Boundary [Storage Policies](https://developer.hashicorp.com/boundary/docs/configuration/session-recording/configure-storage-policy)
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/558))
 
 ## 1.1.13 (February 1, 2024)
 
