@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.6
 	github.com/hashicorp/terraform-plugin-docs v0.18.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.32.0
-	github.com/jimlambrt/gldap v0.1.9
+	github.com/jimlambrt/gldap v0.1.11
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.8.4
@@ -70,7 +70,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/google/uuid v1.4.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
 	github.com/hashicorp/cli v1.1.6 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-dbw v0.1.1 // indirect
-	github.com/hashicorp/go-hclog v1.5.0 // indirect
+	github.com/hashicorp/go-hclog v1.6.2 // indirect
 	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20231124110655-4315424d22d0 // indirect
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.5 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -183,7 +183,7 @@ require (
 	github.com/zalando/go-keyring v0.2.3 // indirect
 	github.com/zclconf/go-cty v1.14.2 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
+	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/oauth2 v0.14.0 // indirect
