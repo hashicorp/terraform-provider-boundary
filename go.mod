@@ -5,7 +5,7 @@ go 1.21.5
 require (
 	github.com/YakDriver/regexache v0.23.0
 	github.com/hashicorp/boundary v0.15.0
-	github.com/hashicorp/boundary/api v0.0.46-0.20240209231500-1b1c8b3bf9a6
+	github.com/hashicorp/boundary/api v0.0.46-0.20240229235227-d5ae3d8dc61f
 	github.com/hashicorp/boundary/sdk v0.0.43-0.20240209231500-1b1c8b3bf9a6
 	github.com/hashicorp/cap v0.5.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
