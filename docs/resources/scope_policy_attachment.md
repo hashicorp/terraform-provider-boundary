@@ -3,12 +3,63 @@
 page_title: "boundary_scope_policy_attachment Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
+The storage policy attachment resource attaches to a Boundary storage policy to the global scope or org scope.
   
 ---
 
 # boundary_scope_policy_attachment (Resource)
 
+## Example Usage
 
+```terraform
+resource "boundary_scope" "global" {
+  global_scope = true
+  scope_id     = "global"
+}
+
+resource "boundary_scope" "org" {
+  name                     = "organization_one"
+  description              = "My first scope!"
+  scope_id                 = boundary_scope.global.id
+  auto_create_admin_role   = true
+  auto_create_default_role = true
+}
+
+resource "boundary_scope" "project" {
+  name                   = "project_one"
+  description            = "My first scope!"
+  scope_id               = boundary_scope.org.id
+  auto_create_admin_role = true
+}
+
+resource "boundary_target" "ssh_session_recording_foo" {
+  name         = "ssh_foo"
+  description  = "SSH target"
+  type         = "ssh"
+  default_port = "22"
+  scope_id     = boundary_scope.project.id
+  host_source_ids = [
+    boundary_host_set.foo.id
+  ]
+  injected_application_credential_source_ids = [
+    boundary_credential_library_vault.foo.id
+  ]
+  enable_session_recording = true
+  storage_bucket_id        = boundary_storage_bucket.aws_example
+}
+
+resource "boundary_policy_storage" "storage_policy_example" {
+  scope_id = boundary_scope.project.id
+  delete_after_days = 1
+  retain_for_days = 0
+  name = storagepolicyexample
+}
+
+resource "boundary_scope_policy_attachement" "storage_policy_attachment_example" {
+    policy_id = boundary_policy_storage.storage_policy_example.id
+    scope_id = boundary_scope.org.id
+}
+```
 
 
 
