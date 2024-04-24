@@ -52,7 +52,7 @@ resource "boundary_policy_storage" "storage_policy_example" {
   scope_id = boundary_scope.project.id
   delete_after_days = 1
   retain_for_days = 0
-  name = storagepolicyexample
+  name = "storagepolicyexample"
 }
 
 resource "boundary_scope_policy_attachment" "storage_policy_attachment_example" {
