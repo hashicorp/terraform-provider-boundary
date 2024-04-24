@@ -55,7 +55,7 @@ resource "boundary_policy_storage" "storage_policy_example" {
   name = storagepolicyexample
 }
 
-resource "boundary_scope_policy_attachement" "storage_policy_attachment_example" {
+resource "boundary_scope_policy_attachment" "storage_policy_attachment_example" {
     policy_id = boundary_policy_storage.storage_policy_example.id
     scope_id = boundary_scope.org.id
 }
