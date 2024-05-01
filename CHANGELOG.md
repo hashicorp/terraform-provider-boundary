@@ -4,6 +4,8 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+## 1.1.15 (May 1, 2024)
+
 ### New and Improved
 
 * Add support for a target alias as a resource
