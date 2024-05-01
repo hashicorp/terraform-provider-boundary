@@ -98,6 +98,7 @@ func New() *schema.Provider {
 			"boundary_account_password":                         resourceAccountPassword(),
 			"boundary_account_oidc":                             resourceAccountOidc(),
 			"boundary_account_ldap":                             resourceAccountLdap(),
+			"boundary_alias_target":                             resourceAliasTarget(),
 			"boundary_auth_method":                              resourceAuthMethod(),
 			"boundary_auth_method_password":                     resourceAuthMethodPassword(),
 			"boundary_auth_method_oidc":                         resourceAuthMethodOidc(),

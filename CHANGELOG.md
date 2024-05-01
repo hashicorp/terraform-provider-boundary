@@ -6,7 +6,8 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ### New and Improved
 
-* new things here
+* Add support for a target alias as a resource
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/571))
 
 ## 1.1.14 (February 14, 2024)
 
