@@ -78,6 +78,9 @@ test-database-down:
 	docker stop boundary-sql-tests || true
 	docker rm -v boundary-sql-tests || true
 
+data-sources:
+	go run scripts/generate_data_sources.go
+
 .PHONY: testacc tools docs test-database-up test-database-down
 
 .PHONY: copywrite
@@ -89,4 +92,4 @@ fmt:
 	gofumpt -w $$(find . -name '*.go')
 
 .PHONY: gen
-gen: docs copywrite fmt
+gen: docs copywrite fmt data-sources
