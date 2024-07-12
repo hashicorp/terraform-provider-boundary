@@ -54,3 +54,4 @@ provider "boundary" {
 - `scope_id` (String) The scope ID for the default auth method.
 - `tls_insecure` (Boolean) When set to true, does not validate the Boundary API endpoint certificate
 - `token` (String) The Boundary token to use, as a string or path on disk containing just the string. If set, the token read here will be used in place of authenticating with the auth method specified in "auth_method_id", although the recovery KMS mechanism will still override this. Can also be set with the BOUNDARY_TOKEN environment variable.
+
