@@ -108,6 +108,19 @@ func testConfigWithDefaultAuthMethod(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
 	addr  = "%s"
+	auth_method_login_name = "%s"
+	auth_method_password = "%s"
+}`, url, tcLoginName, tcPassword)
+
+	c := []string{provider}
+	c = append(c, res...)
+	return strings.Join(c, "\n")
+}
+
+func testConfigWithDeprecatedAuthMethod(url string, res ...string) string {
+	provider := fmt.Sprintf(`
+provider "boundary" {
+	addr  = "%s"
 	password_auth_method_login_name = "%s"
 	password_auth_method_password = "%s"
 }`, url, tcLoginName, tcPassword)
@@ -247,6 +260,28 @@ func TestConfigWithDefaultAuthMethod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testConfigWithDefaultAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
+					testProviderTokenExists(provider),
+				),
+			},
+		},
+	})
+}
+
+func TestConfigWithDeprecatedAuthMethod(t *testing.T) {
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:        true,
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
+		Steps: []resource.TestStep{
+			{
+				Config: testConfigWithDeprecatedAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testProviderTokenExists(provider),
