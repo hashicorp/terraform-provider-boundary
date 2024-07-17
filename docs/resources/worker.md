@@ -5,7 +5,7 @@ description: |-
   The resource allows you to create a self-managed worker object.
 ---
 
-# Resource `boundary_worker`
+# boundary_worker (Resource)
 
 The resource allows you to create a self-managed worker object.
 
