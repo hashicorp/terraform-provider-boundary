@@ -1,0 +1,26 @@
+---
+page_title: "boundary_worker Resource - terraform-provider-boundary"
+subcategory: ""
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+# Resource `boundary_worker`
+
+{{ .Description | trimspace }}
+
+## Controller-led worker
+
+{{tffile "examples/resources/boundary_worker/controller_led.tf"}}
+
+## Worker-led worker
+
+{{tffile "examples/resources/boundary_worker/worker_led.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{codefile "shell" "examples/resources/boundary_worker/import.sh" }}
