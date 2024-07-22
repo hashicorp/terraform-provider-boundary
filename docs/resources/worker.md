@@ -9,22 +9,24 @@ description: |-
 
 The resource allows you to create a self-managed worker object.
 
-## Controller-led worker
+## Example Usage
+
+### Controller-led worker
 
 ```terraform
 resource "boundary_worker" "controller_led" {
   scope_id    = "global"
-  name        = "worker 1"
+  name        = "controller-led-worker-1"
   description = "self managed worker with controller led auth"
 }
 ```
 
-## Worker-led worker
+### Worker-led worker
 
 ```terraform
 resource "boundary_worker" "worker_led" {
   scope_id                    = "global"
-  name                        = "worker 1"
+  name                        = "worker-led-worker-1"
   description                 = "self managed worker with worker led auth"
   worker_generated_auth_token = var.worker_generated_auth_token
 }
