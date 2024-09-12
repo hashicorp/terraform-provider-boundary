@@ -246,6 +246,7 @@ func NewResourceFromSwagger(swagger *spec.Swagger, root, path string) (*Resource
 		parts[i] = cases.Title(language.English, cases.Compact).String(part)
 	}
 	resourceName := strings.Join(parts, "")
+	log.Printf("Resource name: %s", resourceName)
 
 	// Find the field that is used to list the items for this resource. This
 	// is done by finding a parameter that is a also a field in the items list
@@ -686,4 +687,19 @@ func write(data string, filename string) error {
 
 	f.Write([]byte(data))
 	return nil
+}
+
+// Check if terraform resource exists
+func resourceExists(resourceFilePath string) bool {
+	// Assuming the resource files are in the internal/provider directory
+	if _, err := os.Stat(resourceFilePath); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func getResourceFileFromPath(path string) string {
+	resourceFilePath := fmt.Sprintf("../internal/provider/resource_%s.go", resourceName)
+
+	return resourceFilePath
 }
