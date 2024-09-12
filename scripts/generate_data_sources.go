@@ -109,6 +109,11 @@ func Main() error {
 	var rs []string
 	if r == "" {
 		for path := range swagger.Paths.Paths {
+			resourceName := strings.Split(path, "/")[2]
+			log.Printf("Resource: %s", resourceName)
+			if !resourceExist(resourceName) {
+				continue
+			}
 			if strings.HasSuffix(path, "{id}") {
 				rs = append(rs, strings.Split(path, "/")[2])
 			}
@@ -246,7 +251,6 @@ func NewResourceFromSwagger(swagger *spec.Swagger, root, path string) (*Resource
 		parts[i] = cases.Title(language.English, cases.Compact).String(part)
 	}
 	resourceName := strings.Join(parts, "")
-	log.Printf("Resource name: %s", resourceName)
 
 	// Find the field that is used to list the items for this resource. This
 	// is done by finding a parameter that is a also a field in the items list
@@ -690,16 +694,21 @@ func write(data string, filename string) error {
 }
 
 // Check if terraform resource exists
-func resourceExists(resourceFilePath string) bool {
+func resourceExist(rs string) bool {
+	// Format resource properly to match the file name
+	name := strings.ReplaceAll(rs, "-", "_")
+
+	if !strings.HasPrefix(name, "credentials") {
+		name = strings.TrimSuffix(name, "s")
+	}
+
+	resourceFilePath := fmt.Sprintf("internal/provider/resource_%s*.go", name)
+
 	// Assuming the resource files are in the internal/provider directory
-	if _, err := os.Stat(resourceFilePath); os.IsNotExist(err) {
+	// Utilize glob as some resources are not matched 1-1 such as credential_stores data sources vs credential_store_static resource
+	matches, err := filepath.Glob(resourceFilePath)
+	if err != nil || len(matches) == 0 {
 		return false
 	}
 	return true
-}
-
-func getResourceFileFromPath(path string) string {
-	resourceFilePath := fmt.Sprintf("../internal/provider/resource_%s.go", resourceName)
-
-	return resourceFilePath
 }
