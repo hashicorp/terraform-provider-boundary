@@ -109,6 +109,11 @@ func Main() error {
 	var rs []string
 	if r == "" {
 		for path := range swagger.Paths.Paths {
+			resourceName := strings.Split(path, "/")[2]
+			log.Printf("Resource: %s", resourceName)
+			if !resourceExist(resourceName) {
+				continue
+			}
 			if strings.HasSuffix(path, "{id}") {
 				rs = append(rs, strings.Split(path, "/")[2])
 			}
@@ -686,4 +691,24 @@ func write(data string, filename string) error {
 
 	f.Write([]byte(data))
 	return nil
+}
+
+// Check if terraform resource exists
+func resourceExist(rs string) bool {
+	// Format resource properly to match the file name
+	name := strings.ReplaceAll(rs, "-", "_")
+
+	if !strings.HasPrefix(name, "credentials") {
+		name = strings.TrimSuffix(name, "s")
+	}
+
+	resourceFilePath := fmt.Sprintf("internal/provider/resource_%s*.go", name)
+
+	// Assuming the resource files are in the internal/provider directory
+	// Utilize glob as some resources are not matched 1-1 such as credential_stores data sources vs credential_store_static resource
+	matches, err := filepath.Glob(resourceFilePath)
+	if err != nil || len(matches) == 0 {
+		return false
+	}
+	return true
 }
