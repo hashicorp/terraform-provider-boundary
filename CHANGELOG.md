@@ -4,6 +4,11 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+### New and Improved
+
+* Introduces support for specifying a worker filter in dynamic host catalogs
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/626))
+
 ### Deprecations/Changes
 
 * With Boundary 0.15, a deprecation notice was put under the `grant_scope_id`
