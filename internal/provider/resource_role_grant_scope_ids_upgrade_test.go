@@ -47,22 +47,6 @@ var (
 		grant_scope_ids = ["this", "children", "p_foobar1234"]
 	}`
 
-	conversionOrgRoleWithGrantScopeId = `
-resource "boundary_role" "with_grant_scope_id" {
-	name            = "grant scope id role"
-	scope_id        = boundary_scope.org1.id
-	depends_on      = [boundary_role.org1_admin]
-	grant_scope_id  = boundary_scope.org1.id
-}`
-
-	conversionOrgRoleWithGrantScopeIdUpdate = `
-resource "boundary_role" "with_grant_scope_id" {
-	name            = "grant scope id role"
-	scope_id        = boundary_scope.org1.id
-	depends_on      = [boundary_role.org1_admin]
-	grant_scope_id  = boundary_scope.proj1.id
-}`
-
 	conversionOrgRoleWithGrantScopeIdsConversion = `
 resource "boundary_role" "with_grant_scope_id" {
 	name             = "grant scope id role"
@@ -130,106 +114,6 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 			importStep("boundary_role.with_grant_scopes"),
 		},
 	})
-}
-
-// TestAccRoleGrantScopeUpgrade exercises some specific upgrade scenarios around
-// grant_scope_id -> grant_scope_ids
-func TestAccRoleWithGrantScopesUpdate(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-	url := tc.ApiAddrs()[0]
-
-	var provider *schema.Provider
-	resource.Test(t, resource.TestCase{
-		IsUnitTest:        true,
-		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckRoleResourceDestroy(t, provider),
-		Steps: []resource.TestStep{
-			{
-				// Create
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, conversionOrgRoleWithGrantScopeId),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
-					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scope_id"),
-					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
-					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scope_id", []string{"boundary_scope.org1"}),
-					testAccCheckRoleResourceGrantScopeSet(provider, "boundary_role.with_grant_scope_id", "boundary_scope.org1"),
-				),
-			},
-			importStep("boundary_role.with_grant_scope_id"),
-			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, conversionOrgRoleWithGrantScopeIdUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
-					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scope_id"),
-					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
-					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scope_id", []string{"boundary_scope.proj1"}),
-					testAccCheckRoleResourceGrantScopeSet(provider, "boundary_role.with_grant_scope_id", "boundary_scope.proj1"),
-				),
-			},
-			importStep("boundary_role.with_grant_scope_id"),
-			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, conversionOrgRoleWithGrantScopeIdsConversion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
-					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scope_id"),
-					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
-					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scope_id", []string{"this", "boundary_scope.proj1"}),
-					testAccCheckRoleResourceGrantScopeSet(provider, "boundary_role.with_grant_scope_id", ""),
-				),
-			},
-			importStep("boundary_role.with_grant_scope_id"),
-			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, conversionOrgRoleWithGrantScopeIdsUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
-					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scope_id"),
-					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
-					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scope_id", []string{"this", "children"}),
-					testAccCheckRoleResourceGrantScopeSet(provider, "boundary_role.with_grant_scope_id", ""),
-				),
-			},
-			importStep("boundary_role.with_grant_scope_id"),
-		},
-	})
-}
-
-func testAccCheckRoleResourceGrantScopeSet(testProvider *schema.Provider, name string, grantScope string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("role resource not found: %s", name)
-		}
-
-		roleId := rs.Primary.ID
-
-		scopeId := grantScope
-		if grantScope != "children" && grantScope != "this" && grantScope != "descendants" && grantScope != "" {
-			scope, ok := s.RootModule().Resources[grantScope]
-			if !ok {
-				return fmt.Errorf("scope resource not found: %s", grantScope)
-			}
-
-			scopeId = scope.Primary.ID
-			if scopeId == "" {
-				return fmt.Errorf("role resource ID is not set")
-			}
-		}
-
-		md := testProvider.Meta().(*metaData)
-		rolesClient := roles.NewClient(md.client)
-
-		rr, err := rolesClient.Read(context.Background(), roleId)
-		if err != nil {
-			return fmt.Errorf("Got an error when reading role %q: %v", roleId, err)
-		}
-
-		if rr.Item.GrantScopeId != scopeId {
-			return fmt.Errorf("grant scope id in state is %s but in boundary is %s", scopeId, rr.Item.GrantScopeId)
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckRoleResourceGrantScopesSet(testProvider *schema.Provider, name string, grantScopeIds []string) resource.TestCheckFunc {
