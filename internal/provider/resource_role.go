@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	roleGrantScopeIdKey  = "grant_scope_id"
 	roleGrantScopeIdsKey = "grant_scope_ids"
 	rolePrincipalIdsKey  = "principal_ids"
 	roleGrantStringsKey  = "grant_strings"
@@ -71,13 +70,6 @@ func resourceRole() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
-			roleGrantScopeIdKey: {
-				Description: "For Boundary 0.15+, use `grant_scope_ids` instead. The scope for which the grants in the role should apply.",
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Deprecated:  "In Boundary 0.15+, please use `grant_scope_ids` instead. This field will be removed in a future release.",
-			},
 			roleGrantScopeIdsKey: {
 				Description: `A list of scopes for which the grants in this role should apply, which can include the special values "this", "children", or "descendants"`,
 				Type:        schema.TypeSet,
@@ -106,9 +98,6 @@ func setFromRoleResponseMap(d *schema.ResourceData, raw map[string]interface{}) 
 		return err
 	}
 	if err := d.Set(roleGrantScopeIdsKey, raw["grant_scope_ids"]); err != nil {
-		return err
-	}
-	if err := d.Set(roleGrantScopeIdKey, raw["grant_scope_id"]); err != nil {
 		return err
 	}
 
@@ -140,11 +129,6 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		opts = append(opts, roles.WithDescription(descStr))
 	}
 
-	grantScopeIdVal := d.Get(roleGrantScopeIdKey)
-	if grantScopeIdVal != "" {
-		grantScopeIdStr := grantScopeIdVal.(string)
-		opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
-	}
 	var grantScopeIds []string
 	if grantScopeIdsVal, ok := d.GetOk(roleGrantScopeIdsKey); ok {
 		list := grantScopeIdsVal.(*schema.Set).List()
@@ -288,22 +272,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	var grantScopeId *string
-	if d.HasChange(roleGrantScopeIdKey) {
-		// If it is an update to use the multi-value grant_scope_ids, and this
-		// has changed to "", then don't set it on the API. Instead let it fall
-		// through and below it'll be updated to be "".
-		if !d.HasChange(roleGrantScopeIdsKey) {
-			opts = append(opts, roles.DefaultGrantScopeId())
-			grantScopeIdVal, ok := d.GetOk(roleGrantScopeIdKey)
-			if ok {
-				grantScopeIdStr := grantScopeIdVal.(string)
-				grantScopeId = &grantScopeIdStr
-				opts = append(opts, roles.WithGrantScopeId(grantScopeIdStr))
-			}
-		}
-	}
-
 	if len(opts) > 0 {
 		opts = append(opts, roles.WithAutomaticVersioning(true))
 		_, err := rc.Update(ctx, d.Id(), 0, opts...)
@@ -319,11 +287,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if d.HasChange(DescriptionKey) {
 		if err := d.Set(DescriptionKey, desc); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	if d.HasChange(roleGrantScopeIdKey) {
-		if err := d.Set(roleGrantScopeIdKey, grantScopeId); err != nil {
 			return diag.FromErr(err)
 		}
 	}

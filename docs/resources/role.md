@@ -127,7 +127,6 @@ resource "boundary_role" "readonly" {
 ### Optional
 
 - `description` (String) The role description.
-- `grant_scope_id` (String, Deprecated) For Boundary 0.15+, use `grant_scope_ids` instead. The scope for which the grants in the role should apply.
 - `grant_scope_ids` (Set of String) A list of scopes for which the grants in this role should apply, which can include the special values "this", "children", or "descendants"
 - `grant_strings` (Set of String) A list of stringified grants for the role.
 - `name` (String) The role name. Defaults to the resource name.

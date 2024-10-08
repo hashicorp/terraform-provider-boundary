@@ -4,6 +4,14 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+### Deprecations/Changes
+
+* With Boundary 0.15, a deprecation notice was put under the `grant_scope_id`
+  field, and a new `grant_scope_ids` field was introduced to replace it. With
+  Boundary v0.17.1 and Boundary API v0.0.52, `grant_scope_id` support was
+  entirely removed. `grant_scope_id` support has now been removed from this TF
+  provider.
+
 ## 1.1.15 (May 1, 2024)
 
 ### New and Improved
