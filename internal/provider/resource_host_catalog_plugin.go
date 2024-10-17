@@ -118,6 +118,11 @@ func resourceHostCatalogPlugin() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+			WorkerFilterKey: {
+				Description: "HCP Only. A filter used to control which PKI workers can handle dynamic host catalog requests.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
 			internalSecretsConfigHmacKey: {
 				Description: "Internal only. HMAC of (serverSecretsHmac + config secrets). Used for proper secrets handling.",
 				Type:        schema.TypeString,
@@ -294,6 +299,9 @@ func setFromHostCatalogPluginResponseMap(d *schema.ResourceData, raw map[string]
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
 		return err
 	}
+	if err := d.Set(WorkerFilterKey, raw[WorkerFilterKey]); err != nil {
+		return err
+	}
 	// Plugin stuff
 	{
 		if err := d.Set(PluginIdKey, raw[PluginIdKey]); err != nil {
@@ -397,6 +405,12 @@ func resourceHostCatalogPluginCreate(ctx context.Context, d *schema.ResourceData
 	if ok {
 		descStr := descVal.(string)
 		opts = append(opts, hostcatalogs.WithDescription(descStr))
+	}
+
+	workerFilterVal, ok := d.GetOk(WorkerFilterKey)
+	if ok {
+		workerFilterStr := workerFilterVal.(string)
+		opts = append(opts, hostcatalogs.WithWorkerFilter(workerFilterStr))
 	}
 
 	attrsVal, ok := d.GetOk(AttributesJsonKey)
@@ -553,6 +567,15 @@ func resourceHostCatalogPluginUpdate(ctx context.Context, d *schema.ResourceData
 		if ok {
 			descStr := descVal.(string)
 			opts = append(opts, hostcatalogs.WithDescription(descStr))
+		}
+	}
+
+	if d.HasChange(WorkerFilterKey) {
+		opts = append(opts, hostcatalogs.DefaultWorkerFilter())
+		workerFilterVal, ok := d.GetOk(WorkerFilterKey)
+		if ok {
+			workerFilterStr := workerFilterVal.(string)
+			opts = append(opts, hostcatalogs.WithWorkerFilter(workerFilterStr))
 		}
 	}
 

@@ -94,6 +94,7 @@ resource "boundary_host_catalog_plugin" "azure_example" {
 - `plugin_name` (String) The name of the plugin that should back the resource. This or plugin_id must be defined.
 - `secrets_hmac` (String) The HMAC'd secrets value returned from the server.
 - `secrets_json` (String, Sensitive) The secrets for the host catalog. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" to clear any existing values. NOTE: Unlike "attributes_json", removing this block will NOT clear secrets from the host catalog; this allows injecting secrets for one call, then removing them for storage.
+- `worker_filter` (String) HCP Only. A filter used to control which PKI workers can handle dynamic host catalog requests.
 
 ### Read-Only
 

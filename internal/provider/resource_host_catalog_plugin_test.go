@@ -22,6 +22,9 @@ const (
 	testPluginHostCatalogDescription        = "bar"
 	testPluginHostCatalogDescriptionUpdate  = "bar foo"
 	testPluginHostCatalogDescriptionUpdate2 = "bar foo foo"
+
+	testPluginHostCatalogWorkerFilterUpdate  = "\"dev\" in \"/tags/type\""
+	testPluginHostCatalogWorkerFilterUpdate2 = "\"pki\" in \"/tags/type\""
 )
 
 // expectedAttributesState is used here and in plugin host sets to control how
@@ -236,6 +239,212 @@ func TestAccPluginHostCatalog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+		},
+	})
+}
+
+func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
+	t.Skip("Skipping test until Boundary Terraform Provider can unit tests for Boundary Enterprise only features")
+
+	tc := controller.NewTestController(t, tcConfig...)
+	defer tc.Shutdown()
+	url := tc.ApiAddrs()[0]
+
+	resName := "boundary_host_catalog_plugin.foo"
+	initialValuesStr := fmt.Sprintf(`
+	description = "%s"
+	attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zap"
+	})
+	secrets_json = jsonencode({
+		hush = "puppies"
+	})
+	`,
+		testPluginHostCatalogDescription,
+	)
+
+	// Changed description, secrets and added worker filter.
+	valuesStrUpdate1 := fmt.Sprintf(`
+	description = "%s"
+	worker_filter = %q
+	attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zoop"
+	})
+	secrets_json = jsonencode({
+		flush = "fluppies"
+	})
+	`,
+		testPluginHostCatalogDescriptionUpdate,
+		testPluginHostCatalogWorkerFilterUpdate,
+	)
+
+	// Changed description, no secrets update, nullify worker filter.
+	valuesStrUpdate2 := fmt.Sprintf(`
+	description = "%s"
+	worker_filter = null
+	attributes_json = jsonencode({
+		foo = "bar"
+		zip = "zoop"
+	})
+	secrets_json = jsonencode({
+		flush = "fluppies"
+	})
+	`,
+		testPluginHostCatalogDescriptionUpdate2,
+	)
+
+	// Same description and set a worker filter again, now empty secrets.
+	valuesStrUpdate3 := fmt.Sprintf(`
+		description = "%s"
+		worker_filter = %q
+		attributes_json = jsonencode({
+			foo = "bar"
+			zip = "zoop"
+		})
+		`,
+		testPluginHostCatalogDescriptionUpdate2,
+		testPluginHostCatalogWorkerFilterUpdate2,
+	)
+
+	// Same description, now explicitly unset secrets and blankify attrs and
+	// worker filter.
+	valuesStrUpdate4 := fmt.Sprintf(`
+		description = "%s"
+		secrets_json = "null"
+		`,
+		testPluginHostCatalogDescriptionUpdate2,
+	)
+
+	// Set values again
+	valuesStrUpdate5 := fmt.Sprintf(`
+		description = "%s"
+		worker_filter = %q
+		attributes_json = jsonencode({
+			foo = "bar"
+			zip = "zoop"
+		})
+		secrets_json = jsonencode({
+			flush = "fluppies"
+		})
+		`,
+		testPluginHostCatalogDescriptionUpdate2,
+		testPluginHostCatalogWorkerFilterUpdate2,
+	)
+
+	// Explicitly set both secrets and attributes to null
+	valuesStrUpdate6 := fmt.Sprintf(`
+		description = "%s"
+		worker_filter = %q
+		attributes_json = "null"
+		secrets_json = "null"
+		`,
+		testPluginHostCatalogDescriptionUpdate2,
+		testPluginHostCatalogWorkerFilterUpdate2,
+	)
+
+	initialHcl := fmt.Sprintf(projPluginHostCatalogBase, initialValuesStr)
+	update1Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate1)
+	update2Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate2)
+	update3Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate3)
+	update4Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate4)
+	update5Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate5)
+	update6Hcl := fmt.Sprintf(projPluginHostCatalogBase, valuesStrUpdate6)
+
+	var provider *schema.Provider
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: providerFactories(&provider),
+		CheckDestroy:      testAccCheckHostCatalogResourceDestroy(t, provider, baseHostCatalogType),
+		Steps: []resource.TestStep{
+			{
+				// test create
+				Config: testConfig(url, fooOrg, firstProjectFoo, initialHcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
+					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescription),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
+					resource.TestCheckResourceAttr(resName, WorkerFilterKey, testPluginHostCatalogWorkerFilterUpdate),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// this runs the same HCL; mostly used in some manual checking
+				// to ensure update is still called even when nothing has
+				// changed (as we need for secrets)
+				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+					resource.TestCheckResourceAttr(resName, WorkerFilterKey, testPluginHostCatalogWorkerFilterUpdate2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+					resource.TestCheckResourceAttr(resName, WorkerFilterKey, testPluginHostCatalogWorkerFilterUpdate2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
+			{
+				// test update
+				Config: testConfig(url, fooOrg, firstProjectFoo, update6Hcl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
+					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
+					resource.TestCheckResourceAttr(resName, WorkerFilterKey, testPluginHostCatalogWorkerFilterUpdate2),
 				),
 				ExpectNonEmptyPlan: true,
 			},
