@@ -2,7 +2,7 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
-## Next
+## 1.2.0 (October 21, 2024)
 
 ### New and Improved
 
