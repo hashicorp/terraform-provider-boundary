@@ -8,7 +8,7 @@ jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Check workflow files
         uses: docker://docker.mirror.hashicorp.services/rhysd/actionlint@sha256:02ccb6d91e4cb4a7b21eb99d5274d257e81ae667688d730e89d7ea0d6d35db91
         with:
