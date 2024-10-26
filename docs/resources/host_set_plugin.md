@@ -3,7 +3,7 @@
 page_title: "boundary_host_set_plugin Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The hostsetplugin resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
+  The host_set_plugin resource allows you to configure a Boundary host set. Host sets are always part of a host catalog, so a host catalog resource should be used inline or you should have the host catalog ID in hand to successfully configure a host set.
 ---
 
 # boundary_host_set_plugin (Resource)

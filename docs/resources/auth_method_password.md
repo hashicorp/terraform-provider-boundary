@@ -3,7 +3,7 @@
 page_title: "boundary_auth_method_password Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The auth method resource allows you to configure a Boundary authmethodpassword.
+  The auth method resource allows you to configure a Boundary auth_method_password.
 ---
 
 # boundary_auth_method_password (Resource)

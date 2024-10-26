@@ -3,7 +3,7 @@
 page_title: "boundary_auth_method_ldap Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The LDAP auth method resource allows you to configure a Boundary authmethodldap.
+  The LDAP auth method resource allows you to configure a Boundary auth_method_ldap.
 ---
 
 # boundary_auth_method_ldap (Resource)
