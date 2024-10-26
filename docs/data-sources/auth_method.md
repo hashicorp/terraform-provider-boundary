@@ -3,7 +3,7 @@
 page_title: "boundary_auth_method Data Source - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The boundaryauthmethod data source allows you to find a Boundary auth method.
+  The boundary_auth_method data source allows you to find a Boundary auth method.
 ---
 
 # boundary_auth_method (Data Source)

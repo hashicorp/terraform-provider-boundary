@@ -3,7 +3,7 @@
 page_title: "boundary_auth_method_oidc Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The OIDC auth method resource allows you to configure a Boundary authmethodoidc.
+  The OIDC auth method resource allows you to configure a Boundary auth_method_oidc.
 ---
 
 # boundary_auth_method_oidc (Resource)
