@@ -19,7 +19,7 @@ require (
 	github.com/jimlambrt/gldap v0.1.14
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.29.0
 	mvdan.cc/gofumpt v0.7.0
 )
