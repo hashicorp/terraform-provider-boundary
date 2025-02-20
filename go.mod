@@ -15,7 +15,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.1.9
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.7
 	github.com/hashicorp/terraform-plugin-docs v0.20.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
 	github.com/jimlambrt/gldap v0.1.14
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
