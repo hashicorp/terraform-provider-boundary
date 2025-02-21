@@ -1,10 +1,12 @@
 module github.com/hashicorp/terraform-provider-boundary
 
-go 1.23.1
+go 1.23.3
+
+toolchain go1.23.5
 
 require (
 	github.com/YakDriver/regexache v0.24.0
-	github.com/hashicorp/boundary v0.18.0
+	github.com/hashicorp/boundary v0.19.0
 	github.com/hashicorp/boundary/api v0.0.53
 	github.com/hashicorp/boundary/sdk v0.0.49
 	github.com/hashicorp/cap v0.8.0
@@ -87,7 +89,7 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-dbw v0.1.5-0.20240909162114-6cee92b3da36 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
-	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20231219183231-6bac757bb482 // indirect
+	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20241126174344-f3b1a41a15fd // indirect
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.7 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.2 // indirect
@@ -99,6 +101,7 @@ require (
 	github.com/hashicorp/go-secure-stdlib/kv-builder v0.1.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/listenerutil v0.1.9 // indirect
 	github.com/hashicorp/go-secure-stdlib/mlock v0.1.3 // indirect
+	github.com/hashicorp/go-secure-stdlib/permitpool v1.0.0 // indirect
 	github.com/hashicorp/go-secure-stdlib/reloadutil v0.1.1 // indirect
 	github.com/hashicorp/go-secure-stdlib/strutil v0.1.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/tlsutil v0.1.3 // indirect
