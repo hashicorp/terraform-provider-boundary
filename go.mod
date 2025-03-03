@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/boundary v0.19.0
 	github.com/hashicorp/boundary/api v0.0.53
 	github.com/hashicorp/boundary/sdk v0.0.49
-	github.com/hashicorp/cap v0.8.0
+	github.com/hashicorp/cap v0.9.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.4.1-0.20200723130312-85980079f637
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.18
