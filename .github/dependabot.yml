@@ -9,11 +9,36 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      # Check for updates to GitHub Actions every weekday
-      interval: "daily"
-  # Maintain dependencies for Go modules
+      # Check for updates to GitHub Actions every Sunday
+      interval: "weekly"
+      day: "sunday"
+    groups:
+      # Group all GitHub Actions updates into a single PR
+      actions:
+        patterns:
+          - "*"
+
   - package-ecosystem: "gomod"
-    directory: "/"
+    directories: 
+      - "/"
+      - "/plugins/kms/mains/alicloudkms"
+      - "/plugins/kms/mains/awskms"
+      - "/plugins/kms/mains/azurekeyvault"
+      - "/plugins/kms/mains/gcpckms"
+      - "/plugins/kms/mains/ocikms"
+      - "/plugins/kms/mains/transit"
     schedule:
-      # Check for updates to Go modules every weekday
-      interval: "daily"
+      # Check for updates to Go modules every Sunday
+      interval: "weekly"
+      day: "sunday"
+    groups:
+      # Group all Go module updates into one PR for version updates
+      # and one for security updates.
+      go:
+        patterns:
+          - "*"
+        applies-to: "version-updates"
+      go-security:
+        patterns:
+          - "*"
+        applies-to: "security-updates"
