@@ -1,14 +1,12 @@
 module github.com/hashicorp/terraform-provider-boundary
 
-go 1.23.3
-
-toolchain go1.23.5
+go 1.24.0
 
 require (
 	github.com/YakDriver/regexache v0.24.0
-	github.com/hashicorp/boundary v0.19.0
-	github.com/hashicorp/boundary/api v0.0.53
-	github.com/hashicorp/boundary/sdk v0.0.49
+	github.com/hashicorp/boundary v0.19.2
+	github.com/hashicorp/boundary/api v0.0.56
+	github.com/hashicorp/boundary/sdk v0.0.52
 	github.com/hashicorp/cap v0.9.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
@@ -90,7 +88,7 @@ require (
 	github.com/hashicorp/go-dbw v0.1.5-0.20240909162114-6cee92b3da36 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20241126174344-f3b1a41a15fd // indirect
-	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.7 // indirect
+	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.8 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.6.3 // indirect
 	github.com/hashicorp/go-rate v0.0.0-20231204194614-cc8d401f70ab // indirect
@@ -191,16 +189,16 @@ require (
 	github.com/zclconf/go-cty v1.16.2 // indirect
 	go.abhg.dev/goldmark/frontmatter v0.2.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
+	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
 	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/oauth2 v0.26.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
+	golang.org/x/time v0.11.0 // indirect
+	golang.org/x/tools v0.33.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250218202821-56aae31c358a // indirect
