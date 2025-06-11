@@ -1,0 +1,1 @@
+terraform import boundary_credential_username_password_domain.example_username_password_domain <my-id>

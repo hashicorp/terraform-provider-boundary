@@ -140,9 +140,10 @@ func testAccCheckCredentialResourceExists(testProvider *schema.Provider, name st
 type credentialType string
 
 const (
-	jsonCredentialType             credentialType = "boundary_credential_json"
-	sshPrivateKeyCredentialType    credentialType = "boundary_credential_ssh_private_key"
-	usernamePasswordCredentialType credentialType = "boundary_credential_username_password"
+	jsonCredentialType                   credentialType = "boundary_credential_json"
+	sshPrivateKeyCredentialType          credentialType = "boundary_credential_ssh_private_key"
+	usernamePasswordCredentialType       credentialType = "boundary_credential_username_password"
+	usernamePasswordDomainCredentialType credentialType = "boundary_credential_username_password_domain"
 )
 
 func testAccCheckCredentialResourceDestroy(t *testing.T, testProvider *schema.Provider, typ credentialType) resource.TestCheckFunc {
