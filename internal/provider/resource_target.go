@@ -32,6 +32,7 @@ const (
 
 	targetTypeTcp = "tcp"
 	targetTypeSsh = "ssh"
+	targetTypeRdp = "rdp"
 )
 
 func resourceTarget() *schema.Resource {
@@ -193,7 +194,7 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 	typeStr := raw["type"].(string)
 
 	switch typeStr {
-	case targetTypeTcp, targetTypeSsh:
+	case targetTypeTcp, targetTypeSsh, targetTypeRdp:
 		if attrsVal, ok := raw["attributes"]; ok {
 			attrs := attrsVal.(map[string]interface{})
 			if defPort, ok := attrs[targetDefaultPortKey].(json.Number); ok {
@@ -246,7 +247,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("no type provided")
 	}
 	switch typeStr {
-	case targetTypeTcp, targetTypeSsh:
+	case targetTypeTcp, targetTypeSsh, targetTypeRdp:
 	default:
 		return diag.Errorf("invalid type provided")
 	}
@@ -275,6 +276,8 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			opts = append(opts, targets.WithTcpTargetDefaultPort(uint32(defaultPortInt)))
 		case targetTypeSsh:
 			opts = append(opts, targets.WithSshTargetDefaultPort(uint32(defaultPortInt)))
+		case targetTypeRdp:
+			opts = append(opts, targets.WithRdpTargetDefaultPort(uint32(defaultPortInt)))
 		}
 	}
 
@@ -289,19 +292,27 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			opts = append(opts, targets.WithTcpTargetDefaultClientPort(uint32(defaultClientPortInt)))
 		case targetTypeSsh:
 			opts = append(opts, targets.WithSshTargetDefaultClientPort(uint32(defaultClientPortInt)))
+		case targetTypeRdp:
+			opts = append(opts, targets.WithRdpTargetDefaultClientPort(uint32(defaultClientPortInt)))
 		}
 	}
 
 	enableSessionRecordingVal, ok := d.GetOk(targetEnableSessionRecordingKey)
 	if ok {
 		enableSessionRecordingBool := enableSessionRecordingVal.(bool)
-		opts = append(opts, targets.WithSshTargetEnableSessionRecording(enableSessionRecordingBool))
+		switch typeStr {
+		case targetTypeSsh:
+			opts = append(opts, targets.WithSshTargetEnableSessionRecording(enableSessionRecordingBool))
+		}
 	}
 
 	storageBucketIdVal, ok := d.GetOk(targetStorageBucketIdKey)
 	if ok {
 		storageBucketIdStr := storageBucketIdVal.(string)
-		opts = append(opts, targets.WithSshTargetStorageBucketId(storageBucketIdStr))
+		switch typeStr {
+		case targetTypeSsh:
+			opts = append(opts, targets.WithSshTargetStorageBucketId(storageBucketIdStr))
+		}
 	}
 
 	sessionMaxSecondsVal, ok := d.GetOk(targetSessionMaxSecondsKey)
@@ -456,7 +467,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		typeStr = typeVal.(string)
 	}
 	switch typeStr {
-	case targetTypeTcp, targetTypeSsh:
+	case targetTypeTcp, targetTypeSsh, targetTypeRdp:
 	default:
 		return diag.Errorf("invalid type provided")
 	}
@@ -537,6 +548,18 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				defaultPort = &defaultPortInt
 				opts = append(opts, targets.WithSshTargetDefaultPort(uint32(defaultPortInt)))
 			}
+
+		case targetTypeRdp:
+			opts = append(opts, targets.DefaultRdpTargetDefaultPort())
+			defaultPortVal, ok := d.GetOk(targetDefaultPortKey)
+			if ok {
+				defaultPortInt := defaultPortVal.(int)
+				if defaultPortInt <= 0 || defaultPortInt > math.MaxUint16 {
+					return diag.Errorf(`"default_port" must be a valid tcp port`)
+				}
+				defaultPort = &defaultPortInt
+				opts = append(opts, targets.WithRdpTargetDefaultPort(uint32(defaultPortInt)))
+			}
 		}
 	}
 
@@ -565,6 +588,18 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				}
 				defaultClientPort = &defaultClientPortInt
 				opts = append(opts, targets.WithSshTargetDefaultClientPort(uint32(defaultClientPortInt)))
+			}
+
+		case targetTypeRdp:
+			opts = append(opts, targets.DefaultRdpTargetDefaultClientPort())
+			defaultClientPortVal, ok := d.GetOk(targetDefaultClientPortKey)
+			if ok {
+				defaultClientPortInt := defaultClientPortVal.(int)
+				if defaultClientPortInt <= 0 || defaultClientPortInt > math.MaxUint16 {
+					return diag.Errorf(`"default_client_port" must be a valid tcp port`)
+				}
+				defaultClientPort = &defaultClientPortInt
+				opts = append(opts, targets.WithRdpTargetDefaultClientPort(uint32(defaultClientPortInt)))
 			}
 		}
 	}
