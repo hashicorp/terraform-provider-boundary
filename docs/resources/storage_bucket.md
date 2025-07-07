@@ -87,6 +87,8 @@ resource "boundary_storage_bucket" "aws_dynamic_credentials_example" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import boundary_storage_bucket.foo <my-id>
 ```

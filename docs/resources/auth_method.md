@@ -50,6 +50,8 @@ resource "boundary_auth_method" "password" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import boundary_auth_method.foo <my-id>
 ```
