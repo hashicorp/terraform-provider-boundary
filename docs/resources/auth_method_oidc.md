@@ -94,6 +94,8 @@ resource "boundary_auth_method_oidc" "oidc_with_multiple_prompts" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import boundary_auth_method_oidc.foo <my-id>
 ```

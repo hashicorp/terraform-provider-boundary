@@ -66,6 +66,8 @@ resource "boundary_credential_username_password" "example" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import boundary_credential_username_password.example_username_password <my-id>
 ```

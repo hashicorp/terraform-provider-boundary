@@ -64,6 +64,8 @@ resource "boundary_managed_group_ldap" "forumsys_scientists" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 terraform import boundary_managed_group_ldap.foo <my-id>
 ```
