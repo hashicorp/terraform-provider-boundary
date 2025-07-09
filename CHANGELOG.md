@@ -2,6 +2,13 @@
 
 Canonical reference for changes, improvements, and bugfixes for the Boundary Terraform provider.
 
+## 1.3.0 (July 9th, 2025)
+
+### New and Improved
+
+* Updates various dependencies across the provider
+  ([Example PR](https://github.com/hashicorp/terraform-provider-boundary/pull/708))
+
 ## 1.2.0 (October 21, 2024)
 
 ### New and Improved
