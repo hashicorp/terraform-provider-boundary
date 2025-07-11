@@ -11,6 +11,13 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## 1.3.0 (July 9th, 2025)
 
+### Known Issues
+
+* `Error configuring kms: plugin is nil`: This error message may occur when you
+  attempt to use KMS plugin functionality. The [KMS plugins](plugins/kms/mains)
+  were not bundled in this Terraform provider release and thus any functionality
+  related to this will not work.
+
 ### New and Improved
 
 * Updates various dependencies across the provider
