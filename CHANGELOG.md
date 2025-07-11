@@ -4,6 +4,11 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+### Bug Fix
+
+* Fixes a problem where the KMS plugins were not being bundled in the provider's
+  binary ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/717))
+
 ## 1.3.0 (July 9th, 2025)
 
 ### New and Improved
