@@ -164,6 +164,7 @@ jobs:
           arch: ${{ matrix.goarch }}
           reproducible: report
           instructions: |
+            go mod download && ./scripts/plugins-all.sh
             go build \
               -o "$BIN_PATH" \
               -trimpath \
