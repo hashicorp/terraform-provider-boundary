@@ -1,0 +1,80 @@
+name: test-e2e
+
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+  - workflow_call
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      ENOS_VAR_boundary_edition: "oss"
+      ENOS_VAR_e2e_debug_no_run: true
+      # ENOS_VAR_boundary_license_path: "./license.hclic"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+
+      - name: Set up Enos
+        uses: hashicorp/action-setup-enos@b9fa53484a1e8fdcc7b02a118bcf01d65b9414c9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install Vault CLI
+        run: |
+          wget https://releases.hashicorp.com/vault/1.12.2/vault_1.12.2_linux_amd64.zip -O /tmp/vault.zip
+          unzip /tmp/vault.zip -d /usr/local/bin
+
+      - name: Checkout boundary
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: hashicorp/boundary
+          #          ref: ${{ github.event.inputs.boundary-enterprise-branch }}
+          path: support/src/boundary
+          # token: ${{ secrets.ELEVATED_GITHUB_TOKEN }}
+
+      - name: GH fix for localhost resolution
+        run: |
+          cat /etc/hosts && echo "-----------"
+          sudo sed -i 's/::1 *localhost ip6-localhost ip6-loopback/::1 ip6 -localhost ip6-loopback/g' /etc/hosts
+          cat /etc/hosts
+          ssh -V
+
+          echo "127.0.0.1 localhost boundary" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 localhost worker" | sudo tee -a /etc/hosts
+          echo "127.0.0.1 localhost vault" | sudo tee -a /etc/hosts
+
+      # TODO: Build image ourselves in case we don't want to use latest?
+      - name: Get Boundary docker image
+        run: |
+          docker pull hashicorp/boundary:latest
+          docker save hashicorp/boundary:latest | gzip > /tmp/boundary.zip
+
+      # TODO: Set up license in a better way? Use directly rather than writing to file and pull from secrets manager
+      - name: Set up test infra
+        id: infra
+        run: |
+          # echo "${{ secrets.BOUNDARY_ENT_LICENSE }}" > ./support/src/boundary-enterprise/enos/license.hclic
+          ssh-keygen -N '' -t ed25519 -f ~/.ssh/github_enos
+          mkdir -p ./enos/terraform-plugin-cache
+          export ENOS_VAR_enos_user=$GITHUB_ACTOR && \
+          export ENOS_VAR_aws_ssh_private_key_path=~/.ssh/github_enos && \
+          export ENOS_VAR_boundary_docker_image_name=hashicorp/boundary:latest && \
+          export ENOS_VAR_boundary_docker_image_file=/tmp/boundary.zip && \
+          enos scenario launch --timeout 60m0s --chdir ./support/src/boundary/enos e2e_ui_docker builder:crt
+
+      # run tests
+
+      - name: Clean up test infra
+        if: ${{ always() }}
+        run: |
+          export ENOS_VAR_enos_user=$GITHUB_ACTOR && \
+          export ENOS_VAR_aws_ssh_private_key_path=~/.ssh/github_enos && \
+          enos scenario destroy --timeout 60m0s --chdir ./support/src/boundary/enos e2e_ui_docker builder:crt
