@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.18
-	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.12
+	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.13
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.8
 	github.com/hashicorp/terraform-plugin-docs v0.22.0
