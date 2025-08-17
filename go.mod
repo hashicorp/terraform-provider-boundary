@@ -4,9 +4,9 @@ go 1.24.4
 
 require (
 	github.com/YakDriver/regexache v0.24.0
-	github.com/hashicorp/boundary v0.19.2
+	github.com/hashicorp/boundary v0.19.3
 	github.com/hashicorp/boundary/api v0.0.56
-	github.com/hashicorp/boundary/sdk v0.0.52
+	github.com/hashicorp/boundary/sdk v0.0.53
 	github.com/hashicorp/cap v0.10.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
@@ -50,8 +50,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/containerd/continuity v0.4.5 // indirect
-	github.com/containerd/errdefs v1.0.0 // indirect
-	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/coreos/go-oidc/v3 v3.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
