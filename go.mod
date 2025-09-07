@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/YakDriver/regexache v0.24.0
-	github.com/hashicorp/boundary v0.18.1-0.20250903234307-95c267cdfc71 // Boundary CE @ main 09/04/2025; TODO: Pin to version after Boundary release.
+	github.com/hashicorp/boundary v0.19.3 // Boundary CE @ main 09/04/2025; TODO: Pin to version after Boundary release.
 	github.com/hashicorp/boundary/api v0.0.58
 	github.com/hashicorp/boundary/sdk v0.0.55
 	github.com/hashicorp/cap v0.10.0
@@ -21,7 +21,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.41.0
-	mvdan.cc/gofumpt v0.8.0
+	mvdan.cc/gofumpt v0.9.0
 )
 
 require (
