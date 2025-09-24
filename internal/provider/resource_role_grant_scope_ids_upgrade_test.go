@@ -24,7 +24,7 @@ var (
 		principal_ids   = [boundary_user.foo.id]
 		scope_id        = boundary_scope.org1.id
 		depends_on      = [boundary_role.org1_admin]
-		grant_scope_ids = ["this", "children", boundary_scope.proj1.id]
+		grant_scope_ids = ["this", boundary_scope.proj1.id]
 	}`
 
 	orgRoleWithGrantScopesUpdate = `
@@ -34,7 +34,7 @@ var (
 		principal_ids   = [boundary_user.foo.id]
 		scope_id        = boundary_scope.org1.id
 		depends_on      = [boundary_role.org1_admin]
-		grant_scope_ids = ["this"]
+		grant_scope_ids = ["this", "children"]
 	}`
 
 	orgRoleWithInvalidGrantScopesUpdate = `
@@ -61,7 +61,7 @@ resource "boundary_role" "with_grant_scope_id" {
 	scope_id         = boundary_scope.org1.id
 	depends_on       = [boundary_role.org1_admin]
 	grant_scope_ids  = ["this", "children"]
-}`
+	}`
 )
 
 // TestAccRoleWithGrantScopes exercises creation and update with valid and
@@ -84,7 +84,7 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scopes"),
 					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
-					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scopes", []string{"this", "children", "boundary_scope.proj1"}),
+					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scopes", []string{"this", "boundary_scope.proj1"}),
 					resource.TestCheckResourceAttr("boundary_role.with_grant_scopes", DescriptionKey, "with grant scopes"),
 					resource.TestCheckResourceAttr("boundary_role.with_grant_scopes", NameKey, "with_grant_scopes"),
 				),
@@ -106,7 +106,7 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, orgRoleWithGrantScopesUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scopes"),
-					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scopes", []string{"this"}),
+					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scopes", []string{"this", "children"}),
 					resource.TestCheckResourceAttr("boundary_role.with_grant_scopes", DescriptionKey, "with grant scopes update"),
 					resource.TestCheckResourceAttr("boundary_role.with_grant_scopes", NameKey, "with_grant_scopes_update"),
 				),
