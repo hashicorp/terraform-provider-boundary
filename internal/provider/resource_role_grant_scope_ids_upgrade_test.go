@@ -46,22 +46,6 @@ var (
 		depends_on      = [boundary_role.org1_admin]
 		grant_scope_ids = ["this", "children", "p_foobar1234"]
 	}`
-
-	conversionOrgRoleWithGrantScopeIdsConversion = `
-resource "boundary_role" "with_grant_scope_id" {
-	name             = "grant scope id role"
-	scope_id         = boundary_scope.org1.id
-	depends_on       = [boundary_role.org1_admin]
-	grant_scope_ids  = ["this", boundary_scope.proj1.id]
-}`
-
-	conversionOrgRoleWithGrantScopeIdsUpdate = `
-resource "boundary_role" "with_grant_scope_id" {
-	name             = "grant scope id role"
-	scope_id         = boundary_scope.org1.id
-	depends_on       = [boundary_role.org1_admin]
-	grant_scope_ids  = ["this", "children"]
-	}`
 )
 
 // TestAccRoleWithGrantScopes exercises creation and update with valid and
