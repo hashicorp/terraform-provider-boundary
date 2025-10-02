@@ -88,7 +88,7 @@ resource "boundary_storage_bucket" "aws_example" {
     "access_key_id"     = "aws_access_key_id_value",
     "secret_access_key" = "aws_secret_access_key_value"
   })
-  egress_worker_filter = "\"pki\" in \"/tags/type\""
+  egress_worker_filter = "\"egress\" in \"/tags/type\""
 }
 
 resource "boundary_target" "foo" {
