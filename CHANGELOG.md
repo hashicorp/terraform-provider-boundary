@@ -4,6 +4,13 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+## 1.4.0 (September 25th, 2025)
+
+### New and Improved
+
+* Adds support for new RDP target type and Username, Password, and Domain credentials.
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/735))
+
 ## 1.3.1 (July 11th, 2025)
 
 ### Bug Fix
