@@ -35,35 +35,30 @@ resource "boundary_credential_library_vault" "foo" {
   credential_type     = "username_password"
 }
 
-resource "boundary_host_catalog" "foo" {
+resource "boundary_host_catalog_static" "foo" {
   name        = "test"
   description = "test catalog"
   scope_id    = boundary_scope.project.id
-  type        = "static"
 }
 
-resource "boundary_host" "foo" {
-  type            = "static"
+resource "boundary_host_static" "foo" {
   name            = "foo"
-  host_catalog_id = boundary_host_catalog.foo.id
+  host_catalog_id = boundary_host_catalog_static.foo.id
   address         = "10.0.0.1"
 }
 
-resource "boundary_host" "bar" {
-  type            = "static"
+resource "boundary_host_static" "bar" {
   name            = "bar"
-  host_catalog_id = boundary_host_catalog.foo.id
+  host_catalog_id = boundary_host_catalog_static.foo.id
   address         = "10.0.0.1"
 }
 
-resource "boundary_host_set" "foo" {
-  type            = "static"
+resource "boundary_host_set_static" "foo" {
   name            = "foo"
-  host_catalog_id = boundary_host_catalog.foo.id
-
+  host_catalog_id = boundary_host_catalog_static.foo.id
   host_ids = [
-    boundary_host.foo.id,
-    boundary_host.bar.id,
+    boundary_host_static.foo.id,
+    boundary_host_static.bar.id,
   ]
 }
 
@@ -78,7 +73,7 @@ resource "boundary_storage_bucket" "aws_example" {
     "access_key_id"     = "aws_access_key_id_value",
     "secret_access_key" = "aws_secret_access_key_value"
   })
-  worker_filter = "\"pki\" in \"/tags/type\""
+  egress_worker_filter = "\"egress\" in \"/tags/type\""
 }
 
 resource "boundary_target" "foo" {
@@ -88,7 +83,7 @@ resource "boundary_target" "foo" {
   default_port = "22"
   scope_id     = boundary_scope.project.id
   host_source_ids = [
-    boundary_host_set.foo.id
+    boundary_host_set_static.foo.id
   ]
   brokered_credential_source_ids = [
     boundary_credential_library_vault.foo.id
@@ -97,12 +92,12 @@ resource "boundary_target" "foo" {
 
 resource "boundary_target" "ssh_foo" {
   name         = "ssh_foo"
-  description  = "Ssh target"
+  description  = "SSH target"
   type         = "ssh"
   default_port = "22"
   scope_id     = boundary_scope.project.id
   host_source_ids = [
-    boundary_host_set.foo.id
+    boundary_host_set_static.foo.id
   ]
   injected_application_credential_source_ids = [
     boundary_credential_library_vault.foo.id
@@ -111,18 +106,33 @@ resource "boundary_target" "ssh_foo" {
 
 resource "boundary_target" "ssh_session_recording_foo" {
   name         = "ssh_foo"
-  description  = "Ssh target"
+  description  = "SSH target"
   type         = "ssh"
   default_port = "22"
   scope_id     = boundary_scope.project.id
   host_source_ids = [
-    boundary_host_set.foo.id
+    boundary_host_set_static.foo.id
   ]
   injected_application_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
   enable_session_recording = true
   storage_bucket_id        = boundary_storage_bucket.aws_example
+}
+
+resource "boundary_target" "rdp_foo" {
+  name         = "rdp_foo"
+  description  = "RDP target"
+  type         = "rdp"
+  default_port = "3389"
+  scope_id     = boundary_scope.project.id
+  host_source_ids = [
+    boundary_host_set_static.foo.id
+  ]
+  injected_application_credential_source_ids = [
+    boundary_credential_library_vault.foo.id
+  ]
+  egress_worker_filter     = "\"egress\" in \"/tags/type\""
 }
 
 resource "boundary_target" "address_foo" {
