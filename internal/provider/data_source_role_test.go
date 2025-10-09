@@ -17,6 +17,11 @@ const (
 )
 
 var roleReadGlobal = fmt.Sprintf(`
+resource "boundary_user" "user" {
+  name     = "my_user"
+  scope_id    = "global"
+}
+
 resource "boundary_role" "role" {
   name        = "%s"
   description = "test role global"
@@ -24,6 +29,7 @@ resource "boundary_role" "role" {
   grant_strings = [
     "ids=*;type=*;actions=read"
   ]
+  principal_ids = [ boundary_user.user.id ]
 }
 
 data "boundary_role" "role" {
@@ -33,6 +39,11 @@ data "boundary_role" "role" {
 `, testRoleName, testRoleName)
 
 var roleReadOrg = fmt.Sprintf(`
+resource "boundary_user" "user" {
+  name     = "my_user"
+  scope_id    = "global"
+}
+
 resource "boundary_role" "role" {
   name        = "%s"
   description = "test role org"
@@ -40,6 +51,7 @@ resource "boundary_role" "role" {
   grant_strings = [
     "ids=*;type=*;actions=read"
   ]
+  principal_ids = [ boundary_user.user.id ]
 }
 
 data "boundary_role" "role" {
@@ -67,10 +79,13 @@ func TestAccRoleReadGlobal(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, ScopeIdKey),
 					resource.TestCheckResourceAttr(dataSourceName, NameKey, testRoleName),
 					resource.TestCheckResourceAttrSet(dataSourceName, DescriptionKey),
-					resource.TestCheckResourceAttrSet(dataSourceName, fmt.Sprintf("%s.#", roleGrantStringsKey)),
+					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", roleGrantStringsKey), "1"),
+					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.0", roleGrantStringsKey), "ids=*;type=*;actions=read"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "scope.0.id"),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.name", "global"),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.type", "global"),
+					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", rolePrincipalIdsKey), "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, fmt.Sprintf("%s.0", rolePrincipalIdsKey), "boundary_user.user", "id"),
 				),
 			},
 		},
@@ -95,10 +110,13 @@ func TestAccRoleReadOrg(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, ScopeIdKey),
 					resource.TestCheckResourceAttr(dataSourceName, NameKey, testRoleName),
 					resource.TestCheckResourceAttrSet(dataSourceName, DescriptionKey),
-					resource.TestCheckResourceAttrSet(dataSourceName, fmt.Sprintf("%s.#", roleGrantStringsKey)),
+					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", roleGrantStringsKey), "1"),
+					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.0", roleGrantStringsKey), "ids=*;type=*;actions=read"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "scope.0.id"),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.name", "org1"),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.type", "org"),
+					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", rolePrincipalIdsKey), "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, fmt.Sprintf("%s.0", rolePrincipalIdsKey), "boundary_user.user", "id"),
 				),
 			},
 		},
