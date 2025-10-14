@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	authmethodTypePassword          = "password"
-	authmethodMinLoginNameLengthKey = "min_login_name_length"
-	authmethodMinPasswordLengthKey  = "min_password_length"
+	authmethodTypePassword                   = "password"
+	authmethodMinLoginNameLengthKey          = "min_login_name_length"
+	authmethodMinPasswordLengthKey           = "min_password_length"
+	authmethodIsPrimaryAuthMethodForScopeKey = "is_primary_for_scope"
 )
 
 func resourceAuthMethodPassword() *schema.Resource {
@@ -72,6 +73,11 @@ func resourceAuthMethodPassword() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 			},
+			authmethodIsPrimaryAuthMethodForScopeKey: {
+				Description: "When true, makes this auth method the primary auth method for the scope in which it resides.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -81,6 +87,10 @@ func setFromPasswordAuthMethodResponseMap(d *schema.ResourceData, raw map[string
 	d.Set(DescriptionKey, raw[DescriptionKey])
 	d.Set(ScopeIdKey, raw[ScopeIdKey])
 	d.Set(TypeKey, raw[TypeKey])
+
+	if p, ok := raw[authmethodIsPrimaryAuthMethodForScopeKey]; ok {
+		d.Set(authmethodIsPrimaryAuthMethodForScopeKey, p.(bool))
+	}
 
 	if attrsVal, ok := raw["attributes"]; ok {
 		attrs := attrsVal.(map[string]interface{})
@@ -158,6 +168,19 @@ func resourceAuthMethodPasswordCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("nil auth method after create")
 	}
 
+	amid := amcr.GetResponse().Map["id"].(string)
+
+	// update scope when set to primary
+	if p, ok := d.GetOk(authmethodIsPrimaryAuthMethodForScopeKey); ok {
+		if p.(bool) {
+			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, amid, meta); err != nil {
+				return diag.Errorf("%v", err)
+			}
+
+			amcr.GetResponse().Map[authmethodIsPrimaryAuthMethodForScopeKey] = true
+		}
+	}
+
 	return setFromPasswordAuthMethodResponseMap(d, amcr.GetResponse().Map)
 }
 
@@ -176,6 +199,13 @@ func resourceAuthMethodPasswordRead(ctx context.Context, d *schema.ResourceData,
 	if amrr == nil {
 		return diag.Errorf("auth method nil after read")
 	}
+
+	serr, isPrimary := readScopeIsPrimaryAuthMethodId(ctx, amrr.GetResponse().Map["scope_id"].(string), amrr.GetResponse().Map["id"].(string), meta)
+	if serr != nil {
+		return diag.Errorf("%v", serr)
+	}
+
+	amrr.GetResponse().Map[authmethodIsPrimaryAuthMethodForScopeKey] = isPrimary
 
 	return setFromPasswordAuthMethodResponseMap(d, amrr.GetResponse().Map)
 }
@@ -218,6 +248,28 @@ func resourceAuthMethodPasswordUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
+	if d.HasChange(authmethodIsPrimaryAuthMethodForScopeKey) {
+		amrr, err := amClient.Read(ctx, d.Id())
+		if err != nil {
+			return diag.Errorf("error updating auth method: %v", err)
+		}
+		if amrr == nil {
+			return diag.Errorf("error updating auth method: nil resource")
+		}
+		scopeId := amrr.GetResponse().Map["scope_id"].(string)
+		authMethodId := amrr.GetResponse().Map["id"].(string)
+
+		if d.Get(authmethodIsPrimaryAuthMethodForScopeKey).(bool) {
+			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, authMethodId, meta); err != nil {
+				return diag.Errorf("%v", err)
+			}
+		} else {
+			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, "", meta); err != nil {
+				return diag.Errorf("%v", err)
+			}
+		}
+	}
+
 	if len(opts) > 0 {
 		opts = append(opts, authmethods.WithAutomaticVersioning(true))
 		amur, err := amClient.Update(ctx, d.Id(), 0, opts...)
@@ -225,8 +277,18 @@ func resourceAuthMethodPasswordUpdate(ctx context.Context, d *schema.ResourceDat
 			return diag.Errorf("error updating auth method: %v", err)
 		}
 
+		if d.HasChange(authmethodIsPrimaryAuthMethodForScopeKey) {
+			amur.GetResponse().Map[authmethodIsPrimaryAuthMethodForScopeKey] = d.Get(authmethodIsPrimaryAuthMethodForScopeKey).(bool)
+		}
+
 		return setFromPasswordAuthMethodResponseMap(d, amur.GetResponse().Map)
 	}
+
+	// If only is_primary_for_scope changed
+	if d.HasChange(authmethodIsPrimaryAuthMethodForScopeKey) {
+		return resourceAuthMethodPasswordRead(ctx, d, meta)
+	}
+
 	return nil
 }
 
