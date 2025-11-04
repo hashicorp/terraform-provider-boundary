@@ -115,35 +115,8 @@ func resourceCredentialPasswordCreate(ctx context.Context, d *schema.ResourceDat
 		opts = append(opts, credentials.WithDescription(v.(string)))
 	}
 
-	// Username and Domain can be set separately, but can also be set together
-	// in the form of "username@domain" or "domain\\username".
-	// We need to parse them out in order to set them correctly.
-	usernameKey, domainKey := "", ""
-	if v, ok := d.GetOk(credentialUsernamePasswordDomainUsernameKey); ok {
-		usernameKey = v.(string)
-	}
-	if v, ok := d.GetOk(credentialUsernamePasswordDomainDomainKey); ok {
-		domainKey = v.(string)
-	}
-
-	username, domain, err := credentials.ParseUsernameDomain(usernameKey, domainKey)
-	if err != nil {
-		return diag.Errorf("error parsing username and domain: %v", err)
-	}
-
-	switch username {
-	case "":
-	default:
-		opts = append(opts, credentials.WithUsernamePasswordDomainCredentialUsername(username))
-	}
-	switch domain {
-	case "":
-	default:
-		opts = append(opts, credentials.WithUsernamePasswordDomainCredentialDomain(domain))
-	}
-
-	if v, ok := d.GetOk(credentialUsernamePasswordDomainPasswordKey); ok {
-		opts = append(opts, credentials.WithUsernamePasswordDomainCredentialPassword(v.(string)))
+	if v, ok := d.GetOk(credentialPasswordKey); ok {
+		opts = append(opts, credentials.WithPasswordCredentialPassword(v.(string)))
 	}
 
 	var credentialStoreId string
@@ -155,7 +128,7 @@ func resourceCredentialPasswordCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	client := credentials.NewClient(md.client)
-	cr, err := client.Create(ctx, credentialUsernamePasswordDomainCredentialType, credentialStoreId, opts...)
+	cr, err := client.Create(ctx, credentialPasswordCredentialType, credentialStoreId, opts...)
 	if err != nil {
 		return diag.Errorf("error creating credential: %v", err)
 	}
