@@ -147,7 +147,7 @@ resource "boundary_target" "rdp_foo" {
   injected_application_credential_source_ids = [
     boundary_credential_library_vault.foo.id
   ]
-  egress_worker_filter     = "\"egress\" in \"/tags/type\""
+  egress_worker_filter = "\"egress\" in \"/tags/type\""
 }
 
 resource "boundary_target" "address_foo" {

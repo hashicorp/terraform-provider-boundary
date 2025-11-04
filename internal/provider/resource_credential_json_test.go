@@ -144,6 +144,7 @@ const (
 	sshPrivateKeyCredentialType          credentialType = "boundary_credential_ssh_private_key"
 	usernamePasswordCredentialType       credentialType = "boundary_credential_username_password"
 	usernamePasswordDomainCredentialType credentialType = "boundary_credential_username_password_domain"
+	passwordCredentialType               credentialType = "boundary_credential_password"
 )
 
 func testAccCheckCredentialResourceDestroy(t *testing.T, testProvider *schema.Provider, typ credentialType) resource.TestCheckFunc {
