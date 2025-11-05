@@ -5,9 +5,7 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentials"
@@ -29,7 +27,6 @@ func resourceCredentialPassword() *schema.Resource {
 		ReadContext:   resourceCredentialPasswordRead,
 		UpdateContext: resourceCredentialPasswordUpdate,
 		DeleteContext: resourceCredentialPasswordDelete,
-		CustomizeDiff: resourceCredentialPasswordCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -187,40 +184,10 @@ func resourceCredentialPasswordUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	// Username and Domain can be set separately, but can also be set together
-	// in the form of "username@domain" or "domain\\username".
-	// Since we do not know if they were originally set together or separately,
-	// we need to check if either of them has changed.
-	if d.HasChange(credentialUsernamePasswordDomainUsernameKey) || d.HasChange(credentialUsernamePasswordDomainDomainKey) {
-		usernameKey, domainKey := "", ""
-		if v, ok := d.GetOk(credentialUsernamePasswordDomainUsernameKey); ok {
-			usernameKey = v.(string)
-		}
-		if v, ok := d.GetOk(credentialUsernamePasswordDomainDomainKey); ok {
-			domainKey = v.(string)
-		}
-
-		username, domain, err := credentials.ParseUsernameDomain(usernameKey, domainKey)
-		if err != nil {
-			return diag.Errorf("error parsing username and domain: %v", err)
-		}
-
-		switch username {
-		case "":
-		default:
-			opts = append(opts, credentials.WithUsernamePasswordDomainCredentialUsername(username))
-		}
-		switch domain {
-		case "":
-		default:
-			opts = append(opts, credentials.WithUsernamePasswordDomainCredentialDomain(domain))
-		}
-	}
-
-	if d.HasChange(credentialUsernamePasswordDomainPasswordKey) {
-		passwordVal, ok := d.GetOk(credentialUsernamePasswordDomainPasswordKey)
+	if d.HasChange(credentialPasswordKey) {
+		passwordVal, ok := d.GetOk(credentialPasswordKey)
 		if ok {
-			opts = append(opts, credentials.WithUsernamePasswordDomainCredentialPassword(passwordVal.(string)))
+			opts = append(opts, credentials.WithPasswordCredentialPassword(passwordVal.(string)))
 		}
 	}
 
@@ -249,54 +216,6 @@ func resourceCredentialPasswordDelete(ctx context.Context, d *schema.ResourceDat
 	_, err := client.Delete(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error deleting credential: %v", err)
-	}
-
-	return nil
-}
-
-func resourceCredentialPasswordCustomizeDiff(ctx context.Context, rd *schema.ResourceDiff, _ interface{}) error {
-	usernameRaw := rd.Get(credentialUsernamePasswordDomainUsernameKey).(string)
-	domainRaw := rd.Get(credentialUsernamePasswordDomainDomainKey).(string)
-
-	if usernameRaw != "" && domainRaw != "" {
-		if strings.Contains(usernameRaw, "@") || strings.Contains(usernameRaw, "\\") {
-			// This is an error condition for ParseUsernameDomain, so handle it
-			// here by blanking the domain input. We've already asserted that
-			// the username appears to contain a domain, so we'll extract it
-			// below.
-			domainRaw = ""
-		}
-	}
-
-	username, domain, err := credentials.ParseUsernameDomain(usernameRaw, domainRaw)
-	if err != nil {
-		return fmt.Errorf("error parsing username and domain: %w", err)
-	}
-	// We can't set the fields as Required in the config (because we
-	// have to set Computed), so enforce it here.
-	if username == "" {
-		return fmt.Errorf("username field is required")
-	}
-	if domain == "" {
-		return fmt.Errorf("domain field is required")
-	}
-
-	err = rd.Clear(credentialUsernamePasswordDomainUsernameKey)
-	if err != nil {
-		return fmt.Errorf("failed to clear username field: %w", err)
-	}
-	err = rd.SetNew(credentialUsernamePasswordDomainUsernameKey, username)
-	if err != nil {
-		return fmt.Errorf("failed to set new username: %w", err)
-	}
-
-	err = rd.Clear(credentialUsernamePasswordDomainDomainKey)
-	if err != nil {
-		return fmt.Errorf("failed to clear domain field: %w", err)
-	}
-	err = rd.SetNew(credentialUsernamePasswordDomainDomainKey, domain)
-	if err != nil {
-		return fmt.Errorf("failed to set new domain: %w", err)
 	}
 
 	return nil

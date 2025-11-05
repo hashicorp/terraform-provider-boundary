@@ -27,3 +27,11 @@ resource "boundary_credential_username_password_domain" "example" {
   password            = "my-password"
   domain              = "my-domain"
 }
+
+resource "boundary_credential_password" "example" {
+  name                = "example_password"
+  description         = "My first password credential!"
+  credential_store_id = boundary_credential_store_static.example.id
+  password            = "my-password"
+}
+
