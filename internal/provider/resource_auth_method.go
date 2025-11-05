@@ -73,7 +73,7 @@ func resourceAuthMethod() *schema.Resource {
 				Computed:    true,
 				Deprecated:  "Will be removed in favor of using attributes parameter",
 			},
-			authmethodIsPrimaryAuthMethodForScopeKey: {
+			authmethodIsPrimaryForScopeKey: {
 				Description: "When true, makes this auth method the primary auth method for the scope in which it resides.",
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -96,8 +96,8 @@ func setFromAuthMethodResponseMap(d *schema.ResourceData, raw map[string]interfa
 		return err
 	}
 
-	if p, ok := raw[authmethodIsPrimaryAuthMethodForScopeKey]; ok {
-		d.Set(authmethodIsPrimaryAuthMethodForScopeKey, p.(bool))
+	if p, ok := raw[authmethodIsPrimaryForScopeKey]; ok {
+		d.Set(authmethodIsPrimaryForScopeKey, p.(bool))
 	}
 
 	switch raw["type"].(string) {
@@ -172,13 +172,13 @@ func resourceAuthMethodCreate(ctx context.Context, d *schema.ResourceData, meta 
 	amid := amcr.GetResponse().Map["id"].(string)
 
 	// update scope when set to primary
-	if p, ok := d.GetOk(authmethodIsPrimaryAuthMethodForScopeKey); ok {
+	if p, ok := d.GetOk(authmethodIsPrimaryForScopeKey); ok {
 		if p.(bool) {
 			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, amid, meta); err != nil {
 				return diag.Errorf("%v", err)
 			}
 
-			amcr.GetResponse().Map[authmethodIsPrimaryAuthMethodForScopeKey] = true
+			amcr.GetResponse().Map[authmethodIsPrimaryForScopeKey] = true
 		}
 	}
 
@@ -210,7 +210,9 @@ func resourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("%v", serr)
 	}
 
-	amrr.GetResponse().Map[authmethodIsPrimaryAuthMethodForScopeKey] = isPrimary
+	if isPrimary {
+		amrr.GetResponse().Map[authmethodIsPrimaryForScopeKey] = true
+	}
 
 	if err := setFromAuthMethodResponseMap(d, amrr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
@@ -254,7 +256,7 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange(authmethodIsPrimaryAuthMethodForScopeKey) {
+	if d.HasChange(authmethodIsPrimaryForScopeKey) {
 		amrr, err := amClient.Read(ctx, d.Id())
 		if err != nil {
 			return diag.Errorf("error updating auth method: %v", err)
@@ -265,7 +267,7 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		scopeId := amrr.GetResponse().Map["scope_id"].(string)
 		authMethodId := amrr.GetResponse().Map["id"].(string)
 
-		isPrimary := d.Get(authmethodIsPrimaryAuthMethodForScopeKey).(bool)
+		isPrimary := d.Get(authmethodIsPrimaryForScopeKey).(bool)
 
 		if isPrimary {
 			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, authMethodId, meta); err != nil {
@@ -285,15 +287,15 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return diag.Errorf("error updating auth method: %v", err)
 		}
 
-		if d.HasChange(authmethodIsPrimaryAuthMethodForScopeKey) {
-			amu.GetResponse().Map[authmethodIsPrimaryAuthMethodForScopeKey] = d.Get(authmethodIsPrimaryAuthMethodForScopeKey).(bool)
+		if d.HasChange(authmethodIsPrimaryForScopeKey) {
+			amu.GetResponse().Map[authmethodIsPrimaryForScopeKey] = d.Get(authmethodIsPrimaryForScopeKey).(bool)
 		}
 
 		setFromAuthMethodResponseMap(d, amu.GetResponse().Map)
 	}
 
 	// If only is_primary_for_scope changed
-	if d.HasChange(authmethodIsPrimaryAuthMethodForScopeKey) {
+	if d.HasChange(authmethodIsPrimaryForScopeKey) {
 		return resourceAuthMethodPasswordRead(ctx, d, meta)
 	}
 

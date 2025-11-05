@@ -118,7 +118,7 @@ func TestAccAuthMethodPasswordIsPrimary(t *testing.T) {
 			},
 			importStep("boundary_auth_method_password.foo"),
 			{
-				// update with no other change
+				// update is_primary_for_scope only
 				Config: testConfig(url, fooOrg, fooAuthMethodIsPrimaryUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
@@ -140,7 +140,7 @@ func TestAccAuthMethodPasswordIsPrimary(t *testing.T) {
 				),
 			},
 			{
-				// update with an other change
+				// update is_primary_for_scope along with an other change
 				Config: testConfig(url, fooOrg, fooAuthMethodIsPrimaryUpdateWithOtherChange),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDescUpdate),
