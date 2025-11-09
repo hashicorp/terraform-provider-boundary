@@ -3,8 +3,8 @@ module github.com/hashicorp/terraform-provider-boundary
 go 1.25.0
 
 require (
-	github.com/YakDriver/regexache v0.24.0
-	github.com/hashicorp/boundary v0.20.0
+	github.com/YakDriver/regexache v0.25.0
+	github.com/hashicorp/boundary v0.20.1
 	github.com/hashicorp/boundary/api v0.0.58
 	github.com/hashicorp/boundary/sdk v0.0.55
 	github.com/hashicorp/cap v0.11.0
@@ -205,7 +205,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.75.1 // indirect
-	google.golang.org/protobuf v1.36.9 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
