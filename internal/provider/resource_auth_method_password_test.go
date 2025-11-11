@@ -45,16 +45,6 @@ resource "boundary_auth_method_password" "foo" {
 	is_primary_for_scope = true
 	depends_on  = [boundary_role.org1_admin]
 }`, fooAuthMethodDesc)
-
-	fooAuthMethodIsPrimaryUpdateWithOtherChange = fmt.Sprintf(`
-resource "boundary_auth_method_password" "foo" {
-	name        = "test"
-	description = "%s"
-	type        = "password"
-	scope_id    = boundary_scope.org1.id
-	is_primary_for_scope = true
-	depends_on  = [boundary_role.org1_admin]
-}`, fooAuthMethodDescUpdate)
 )
 
 func TestAccAuthMethodPassword(t *testing.T) {
@@ -118,32 +108,10 @@ func TestAccAuthMethodPasswordIsPrimary(t *testing.T) {
 			},
 			importStep("boundary_auth_method_password.foo"),
 			{
-				// update is_primary_for_scope only
+				// update
 				Config: testConfig(url, fooOrg, fooAuthMethodIsPrimaryUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
-					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
-					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),
-					testAccIsPrimaryForScope(provider, "boundary_auth_method_password.foo", true),
-				),
-			},
-			{
-				// delete
-				Config: testConfig(url, fooOrg, fooAuthMethod),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
-					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
-					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),
-					testAccIsPrimaryForScope(provider, "boundary_auth_method_password.foo", false),
-				),
-			},
-			{
-				// update is_primary_for_scope along with an other change
-				Config: testConfig(url, fooOrg, fooAuthMethodIsPrimaryUpdateWithOtherChange),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "type", "password"),
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_password.foo"),

@@ -405,12 +405,7 @@ func updateScopeWithPrimaryAuthMethodId(ctx context.Context, scopeId, authmethod
 
 	opts := []scopes.Option{}
 	opts = append(opts, scopes.WithAutomaticVersioning(true))
-
-	if authmethodId != "" {
-		opts = append(opts, scopes.WithPrimaryAuthMethodId(authmethodId))
-	} else {
-		opts = append(opts, scopes.DefaultPrimaryAuthMethodId())
-	}
+	opts = append(opts, scopes.WithPrimaryAuthMethodId(authmethodId))
 
 	_, err := scp.Update(ctx, scopeId, 0, opts...)
 	if err != nil {

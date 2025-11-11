@@ -273,10 +273,6 @@ func resourceAuthMethodUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, authMethodId, meta); err != nil {
 				return diag.Errorf("%v", err)
 			}
-		} else {
-			if err := updateScopeWithPrimaryAuthMethodId(ctx, scopeId, "", meta); err != nil {
-				return diag.Errorf("%v", err)
-			}
 		}
 	}
 
