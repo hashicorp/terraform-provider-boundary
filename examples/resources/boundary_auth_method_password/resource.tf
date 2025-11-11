@@ -6,13 +6,11 @@ resource "boundary_scope" "org" {
   auto_create_default_role = true
 }
 
-resource "boundary_auth_method" "password" {
+resource "boundary_auth_method_password" "password" {
   scope_id = boundary_scope.org.id
-  type     = "password"
 }
 
-resource "boundary_auth_method" "password_is_primary" {
+resource "boundary_auth_method_password" "password_is_primary" {
   scope_id = boundary_scope.org.id
-  type     = "password"
   is_primary_for_scope = true
 }
