@@ -24,8 +24,8 @@ github.com/hashicorp/go-hclog v1.6.3 h1:Qr2kF+eVWjTiYmU7Y31tYlP1h0q/X3Nl3tPGdaB1
 github.com/hashicorp/go-hclog v1.6.3/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.8 h1:/GIUjn9GkFXMk/8/irRdbdtmx8CcyeyWdVy/E5LvzyA=
 github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.8/go.mod h1:JDc9UOD4EVRDIwPVethJcT5Ibi/Nas6eQDPtA60iwP0=
-github.com/hashicorp/go-kms-wrapping/v2 v2.0.18 h1:DLfC677GfKEpSAFpEWvl1vXsGpEcSHmbhBaPLrdDQHc=
-github.com/hashicorp/go-kms-wrapping/v2 v2.0.18/go.mod h1:t/eaR/mi2mw3klfl1WEAuiLKrlZ/Q8cosmsT+RIPLu0=
+github.com/hashicorp/go-kms-wrapping/v2 v2.0.19 h1:FX7HrkfkYomf4SlMrwzOP32FXuFltq34Qy/gXk1Tp5Y=
+github.com/hashicorp/go-kms-wrapping/v2 v2.0.19/go.mod h1:wpZygQlPUUGt4Klgg+RlCaq/KRe8XinEzqTf7QmvrNo=
 github.com/hashicorp/go-kms-wrapping/wrappers/ibmkp/v2 v2.0.0 h1:M2dN1Hd4BhAdJf9k07+I0vsSwuaOQ236lRYqSzUGZnE=
 github.com/hashicorp/go-kms-wrapping/wrappers/ibmkp/v2 v2.0.0/go.mod h1:q7YuFP0xds3wMWJW1ouoLCcp9rVwO1Qf1ewM9MP9AKI=
 github.com/hashicorp/go-plugin v1.5.2 h1:aWv8eimFqWlsEiMrYZdPYl+FdHaBJSN4AWwGWfT1G2Y=
