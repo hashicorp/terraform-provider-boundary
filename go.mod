@@ -6,7 +6,7 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/hashicorp/boundary v0.21.0
 	github.com/hashicorp/boundary/api v0.0.58
-	github.com/hashicorp/boundary/sdk v0.0.55
+	github.com/hashicorp/boundary/sdk v0.0.56
 	github.com/hashicorp/cap v0.12.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
