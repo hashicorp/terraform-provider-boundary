@@ -5,7 +5,7 @@ go 1.25.1
 require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/hashicorp/boundary v0.21.0
-	github.com/hashicorp/boundary/api v0.0.58
+	github.com/hashicorp/boundary/api v0.0.59
 	github.com/hashicorp/boundary/sdk v0.0.56
 	github.com/hashicorp/cap v0.12.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
@@ -20,7 +20,7 @@ require (
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.45.0
+	golang.org/x/crypto v0.46.0
 	mvdan.cc/gofumpt v0.9.2
 )
 
@@ -194,10 +194,10 @@ require (
 	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/term v0.38.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
