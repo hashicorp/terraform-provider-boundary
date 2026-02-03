@@ -4,6 +4,13 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+## 1.5.1 (Feb 2nd, 2026)
+
+### New and Improved
+
+* Adds support for Vault LDAP Credential Store.
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/778))
+
 ## 1.5.0 (December 19th, 2025)
 
 ### New and Improved
