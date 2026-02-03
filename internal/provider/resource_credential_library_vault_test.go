@@ -302,6 +302,7 @@ type vaultCredentialLibraryType string
 const (
 	baseVaultCredentialLibraryType    vaultCredentialLibraryType = "boundary_credential_library_vault"
 	sshCertVaultCredentialLibraryType vaultCredentialLibraryType = "boundary_credential_library_vault_ssh_certificate"
+	ldapVaultCredentialLibraryType    vaultCredentialLibraryType = "boundary_credential_library_vault_ldap"
 )
 
 func testAccCheckCredentialLibraryVaultResourceDestroy(t *testing.T, testProvider *schema.Provider, typ vaultCredentialLibraryType) resource.TestCheckFunc {

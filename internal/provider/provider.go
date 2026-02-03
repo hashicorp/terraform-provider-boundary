@@ -105,6 +105,7 @@ func New() *schema.Provider {
 			"boundary_auth_method_ldap":                         resourceAuthMethodLdap(),
 			"boundary_credential_library_vault":                 resourceCredentialLibraryVault(),
 			"boundary_credential_library_vault_ssh_certificate": resourceCredentialLibraryVaultSshCertificate(),
+			"boundary_credential_library_vault_ldap":            resourceCredentialLibraryVaultLdap(),
 			"boundary_credential_store_vault":                   resourceCredentialStoreVault(),
 			"boundary_credential_store_static":                  resourceCredentialStoreStatic(),
 			"boundary_credential_username_password":             resourceCredentialUsernamePassword(),
