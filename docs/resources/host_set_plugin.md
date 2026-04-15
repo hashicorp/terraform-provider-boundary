@@ -57,7 +57,10 @@ resource "boundary_host_set_plugin" "web" {
 resource "boundary_host_set_plugin" "foobar" {
   name                = "My foobar host set plugin"
   host_catalog_id     = boundary_host_catalog_plugin.aws_example.id
-  preferred_endpoints = ["cidr:54.0.0.0/8"]
+  preferred_endpoints = [
+    "cidr:54.0.0.0/8",
+    "dns:*.internal"
+  ]
   attributes_json = jsonencode({
     "filters" = ["tag-key=foo", "tag-key=bar"]
   })
