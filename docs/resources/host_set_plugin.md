@@ -128,7 +128,7 @@ resource "boundary_host_set_plugin" "foodev" {
 - `attributes_json` (String) The attributes for the host set. Either values encoded with the "jsonencode" function, pre-escaped JSON string, or a file:// or env:// path. Set to a string "null" or remove the block to clear all attributes in the host set.
 - `description` (String) The host set description.
 - `name` (String) The host set name. Defaults to the resource name.
-- `preferred_endpoints` (List of String) The ordered list of preferred endpoints.
+- `preferred_endpoints` (List of String) The ordered list of preferred endpoints. Specifies which IP address or DNS name is your preferred endpoint for when Boundary establishes a session with a target. CIDR strings should follow the `cidr:<valid IPv4/6 CIDR>` format, for example, `cidr:10.0.0.0/16`. DNS strings should follow the `dns:<globbed name>` format, for example `dns:*.internal`.
 - `sync_interval_seconds` (Number) The value to set for the sync interval seconds.
 - `type` (String) The type of host set
 
