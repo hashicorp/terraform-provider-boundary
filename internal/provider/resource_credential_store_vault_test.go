@@ -70,6 +70,37 @@ func tokenHmac(token, accessor string) string {
 	return base64.RawURLEncoding.EncodeToString(hmac)
 }
 
+func TestSetFromVaultCredentialStoreResponseMapReadsWorkerFilterFromAttributes(t *testing.T) {
+	data := schema.TestResourceDataRaw(t, resourceCredentialStoreVault().Schema, map[string]interface{}{})
+
+	raw := map[string]interface{}{
+		"id":           "cs_1234567890",
+		NameKey:        vaultCredStoreName,
+		DescriptionKey: vaultCredStoreDesc,
+		ScopeIdKey:     "p_1234567890",
+		"attributes": map[string]interface{}{
+			credentialStoreVaultAddressKey:                  "https://vault.example.com",
+			credentialStoreVaultNamespaceKey:                vaultCredStoreNamespace,
+			credentialStoreVaultCaCertKey:                   "ca-cert",
+			credentialStoreVaultTlsServerNameKey:            "vault.example.com",
+			credentialStoreVaultTlsSkipVerifyKey:            false,
+			credentialStoreVaultClientCertificateKey:        "client-cert",
+			credentialStoreVaultWorkerFilterKey:             "\"prod\" in \"/tags/env\"",
+			credentialStoreVaultTokenHmacKey:                "token-hmac",
+			credentialStoreVaultClientCertificateKeyHmacKey: "client-key-hmac",
+		},
+	}
+
+	diags := setFromVaultCredentialStoreResponseMap(data, raw, false)
+	if diags.HasError() {
+		t.Fatalf("unexpected diagnostics: %#v", diags)
+	}
+
+	if got := data.Get(credentialStoreVaultWorkerFilterKey); got != raw["attributes"].(map[string]interface{})[credentialStoreVaultWorkerFilterKey] {
+		t.Fatalf("worker_filter mismatch: got %v want %v", got, raw["attributes"].(map[string]interface{})[credentialStoreVaultWorkerFilterKey])
+	}
+}
+
 func TestAccCredentialStoreVault(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
 	defer tc.Shutdown()

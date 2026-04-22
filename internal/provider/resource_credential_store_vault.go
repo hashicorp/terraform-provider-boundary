@@ -36,6 +36,7 @@ var storeVaultAttrs = []string{
 	credentialStoreVaultTlsServerNameKey,
 	credentialStoreVaultTlsSkipVerifyKey,
 	credentialStoreVaultClientCertificateKey,
+	credentialStoreVaultWorkerFilterKey,
 }
 
 func resourceCredentialStoreVault() *schema.Resource {
@@ -141,9 +142,6 @@ func setFromVaultCredentialStoreResponseMap(d *schema.ResourceData, raw map[stri
 		return diag.FromErr(err)
 	}
 	if err := d.Set(ScopeIdKey, raw[ScopeIdKey]); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set(credentialStoreVaultWorkerFilterKey, raw[credentialStoreVaultWorkerFilterKey]); err != nil {
 		return diag.FromErr(err)
 	}
 
