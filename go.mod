@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/cap v0.12.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
-	github.com/hashicorp/go-kms-wrapping/v2 v2.0.20
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.21
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.13
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.8
@@ -20,7 +20,7 @@ require (
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.49.0
+	golang.org/x/crypto v0.50.0
 	mvdan.cc/gofumpt v0.9.2
 )
 
@@ -92,7 +92,7 @@ require (
 	github.com/hashicorp/go-dbw v0.1.5 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-kms-wrapping/extras/kms/v2 v2.0.0-20241126174344-f3b1a41a15fd // indirect
-	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.8 // indirect
+	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.9 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-plugin v1.7.0 // indirect
 	github.com/hashicorp/go-rate v0.0.0-20231204194614-cc8d401f70ab // indirect
@@ -203,8 +203,8 @@ require (
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/term v0.41.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/term v0.42.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
