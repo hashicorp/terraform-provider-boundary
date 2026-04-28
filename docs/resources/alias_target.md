@@ -83,7 +83,7 @@ resource "boundary_alias_target" "example_alias_target" {
 ### Required
 
 - `scope_id` (String) The scope ID.
-- `value` (String) The value of the alias.
+- `value` (String) The value of the alias. Boundary may append a suffix; the returned value is stored in state.
 
 ### Optional
 
@@ -95,6 +95,7 @@ resource "boundary_alias_target" "example_alias_target" {
 
 ### Read-Only
 
+- `base_value` (String) The base value of the alias returned by Boundary.
 - `id` (String) The ID of the account.
 
 ## Import
