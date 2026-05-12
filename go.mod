@@ -4,24 +4,24 @@ go 1.25.8
 
 require (
 	github.com/YakDriver/regexache v0.25.0
-	github.com/hashicorp/boundary v0.21.2
+	github.com/hashicorp/boundary v0.21.3
 	github.com/hashicorp/boundary/api v0.0.61
 	github.com/hashicorp/boundary/sdk v0.0.58
-	github.com/hashicorp/cap v0.12.0
+	github.com/hashicorp/cap v0.13.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
-	github.com/hashicorp/go-kms-wrapping/v2 v2.0.21
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.22
 	github.com/hashicorp/go-secure-stdlib/configutil/v2 v2.0.13
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0
 	github.com/hashicorp/go-secure-stdlib/pluginutil/v2 v2.0.8
 	github.com/hashicorp/terraform-plugin-docs v0.25.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
 	github.com/jimlambrt/gldap v0.1.14
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.50.0
-	mvdan.cc/gofumpt v0.9.2
+	golang.org/x/crypto v0.51.0
+	mvdan.cc/gofumpt v0.10.0
 )
 
 require (
@@ -29,7 +29,7 @@ require (
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
-	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
+	github.com/Azure/go-ntlmssp v0.1.1 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/DATA-DOG/go-sqlmock v1.5.2 // indirect
 	github.com/Kunde21/markdownfmt/v3 v3.1.0 // indirect
@@ -114,8 +114,8 @@ require (
 	github.com/hashicorp/hcl v1.0.1-vault-7 // indirect
 	github.com/hashicorp/hcl/v2 v2.24.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
-	github.com/hashicorp/nodeenrollment v0.2.14 // indirect
-	github.com/hashicorp/terraform-exec v0.25.0 // indirect
+	github.com/hashicorp/nodeenrollment v0.2.15 // indirect
+	github.com/hashicorp/terraform-exec v0.25.1 // indirect
 	github.com/hashicorp/terraform-json v0.27.3-0.20260213134036-298b8f6b673a // indirect
 	github.com/hashicorp/terraform-plugin-go v0.31.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.10.0 // indirect
@@ -200,14 +200,14 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
 	golang.org/x/mod v0.35.0 // indirect
-	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
-	golang.org/x/term v0.42.0 // indirect
-	golang.org/x/text v0.36.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
+	golang.org/x/term v0.43.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
