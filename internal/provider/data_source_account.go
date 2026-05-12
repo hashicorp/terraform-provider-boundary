@@ -86,7 +86,8 @@ func dataSourceAccountRead(ctx context.Context, d *schema.ResourceData, meta int
 	authMethodId := d.Get(AuthMethodIdKey).(string)
 
 	acl := accounts.NewClient(md.client)
-	accountsList, err := acl.List(ctx, authMethodId,
+	accountsList, err := acl.List(
+		ctx, authMethodId,
 		accounts.WithFilter(FilterWithItemNameMatches(name)),
 	)
 	if err != nil {

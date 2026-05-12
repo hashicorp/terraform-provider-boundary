@@ -88,7 +88,8 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	scopeId := d.Get(ScopeIdKey).(string)
 
 	gcl := groups.NewClient(md.client)
-	groupsList, err := gcl.List(ctx, scopeId,
+	groupsList, err := gcl.List(
+		ctx, scopeId,
 		groups.WithFilter(FilterWithItemNameMatches(name)),
 	)
 	if err != nil {

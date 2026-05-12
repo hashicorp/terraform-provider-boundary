@@ -847,7 +847,8 @@ func resourceAuthMethodLdapUpdate(ctx context.Context, d *schema.ResourceData, m
 						ctx,
 						amur.GetResponse().Map["scope_id"].(string),
 						amur.GetResponse().Map["id"].(string),
-						meta); err != nil {
+						meta,
+					); err != nil {
 						return diag.Errorf("%v", err)
 					}
 
