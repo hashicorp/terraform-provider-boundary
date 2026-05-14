@@ -387,7 +387,8 @@ func testProviderTokenExists(testProvider *schema.Provider) resource.TestCheckFu
 }
 
 func createDefaultLdap(t *testing.T) *testdirectory.Directory {
-	td := testdirectory.Start(t,
+	td := testdirectory.Start(
+		t,
 		testdirectory.WithDefaults(t, &testdirectory.Defaults{AllowAnonymousBind: true}),
 		testdirectory.WithNoTLS(t),
 	)
@@ -399,7 +400,8 @@ func createDefaultLdap(t *testing.T) *testdirectory.Directory {
 	users := testdirectory.NewUsers(t, []string{"alice"}, testdirectory.WithMembersOf(t, "admin"))
 
 	for _, u := range users {
-		u.Attributes = append(u.Attributes,
+		u.Attributes = append(
+			u.Attributes,
 			gldap.NewEntryAttribute(ldap.DefaultADUserPasswordAttribute, []string{"password"}),
 			gldap.NewEntryAttribute(ldap.DefaultOpenLDAPUserPasswordAttribute, []string{"password"}),
 			gldap.NewEntryAttribute("fullName", []string{"test-full-name"}),

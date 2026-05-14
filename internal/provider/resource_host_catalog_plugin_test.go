@@ -63,7 +63,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resName := "boundary_host_catalog_plugin.foo"
-	initialValuesStr := fmt.Sprintf(`
+	initialValuesStr := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -77,7 +78,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	)
 
 	// Changed description and secrets
-	valuesStrUpdate1 := fmt.Sprintf(`
+	valuesStrUpdate1 := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -91,7 +93,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	)
 
 	// Changed description, no secrets update
-	valuesStrUpdate2 := fmt.Sprintf(`
+	valuesStrUpdate2 := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -105,7 +108,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	)
 
 	// Same description, now empty secrets
-	valuesStrUpdate3 := fmt.Sprintf(`
+	valuesStrUpdate3 := fmt.Sprintf(
+		`
 		description = "%s"
 		attributes_json = jsonencode({
 			foo = "bar"
@@ -116,7 +120,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	)
 
 	// Same description, now explicitly unset secrets and blankify attrs
-	valuesStrUpdate4 := fmt.Sprintf(`
+	valuesStrUpdate4 := fmt.Sprintf(
+		`
 		description = "%s"
 		secrets_json = "null"
 		`,
@@ -124,7 +129,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	)
 
 	// Set values again
-	valuesStrUpdate5 := fmt.Sprintf(`
+	valuesStrUpdate5 := fmt.Sprintf(
+		`
 		description = "%s"
 		attributes_json = jsonencode({
 			foo = "bar"
@@ -138,7 +144,8 @@ func TestAccPluginHostCatalog(t *testing.T) {
 	)
 
 	// Explicitly set both secrets and attributes to null
-	valuesStrUpdate6 := fmt.Sprintf(`
+	valuesStrUpdate6 := fmt.Sprintf(
+		`
 		description = "%s"
 		attributes_json = "null"
 		secrets_json = "null"
@@ -255,7 +262,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	url := tc.ApiAddrs()[0]
 
 	resName := "boundary_host_catalog_plugin.foo"
-	initialValuesStr := fmt.Sprintf(`
+	initialValuesStr := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -269,7 +277,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	)
 
 	// Changed description, secrets and added worker filter.
-	valuesStrUpdate1 := fmt.Sprintf(`
+	valuesStrUpdate1 := fmt.Sprintf(
+		`
 	description = "%s"
 	worker_filter = %q
 	attributes_json = jsonencode({
@@ -285,7 +294,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	)
 
 	// Changed description, no secrets update, nullify worker filter.
-	valuesStrUpdate2 := fmt.Sprintf(`
+	valuesStrUpdate2 := fmt.Sprintf(
+		`
 	description = "%s"
 	worker_filter = null
 	attributes_json = jsonencode({
@@ -300,7 +310,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	)
 
 	// Same description and set a worker filter again, now empty secrets.
-	valuesStrUpdate3 := fmt.Sprintf(`
+	valuesStrUpdate3 := fmt.Sprintf(
+		`
 		description = "%s"
 		worker_filter = %q
 		attributes_json = jsonencode({
@@ -314,7 +325,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 
 	// Same description, now explicitly unset secrets and blankify attrs and
 	// worker filter.
-	valuesStrUpdate4 := fmt.Sprintf(`
+	valuesStrUpdate4 := fmt.Sprintf(
+		`
 		description = "%s"
 		secrets_json = "null"
 		`,
@@ -322,7 +334,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	)
 
 	// Set values again
-	valuesStrUpdate5 := fmt.Sprintf(`
+	valuesStrUpdate5 := fmt.Sprintf(
+		`
 		description = "%s"
 		worker_filter = %q
 		attributes_json = jsonencode({
@@ -338,7 +351,8 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	)
 
 	// Explicitly set both secrets and attributes to null
-	valuesStrUpdate6 := fmt.Sprintf(`
+	valuesStrUpdate6 := fmt.Sprintf(
+		`
 		description = "%s"
 		worker_filter = %q
 		attributes_json = "null"

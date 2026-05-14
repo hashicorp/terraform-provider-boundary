@@ -87,7 +87,8 @@ func dataSourceAuthMethodRead(ctx context.Context, d *schema.ResourceData, meta 
 	scopeId := d.Get(ScopeIdKey).(string)
 
 	amcl := authmethods.NewClient(md.client)
-	authMethodsList, err := amcl.List(ctx, scopeId,
+	authMethodsList, err := amcl.List(
+		ctx, scopeId,
 		authmethods.WithFilter(FilterWithItemNameMatches(name)),
 	)
 	if err != nil {

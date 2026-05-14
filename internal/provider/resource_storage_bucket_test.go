@@ -50,7 +50,8 @@ func TestAccStorageBucket(t *testing.T) {
 
 	resName := "boundary_storage_bucket.foo"
 	workerFilter := "\"pki\" in \"/tags/type\""
-	initialValuesStr := fmt.Sprintf(`
+	initialValuesStr := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -66,7 +67,8 @@ func TestAccStorageBucket(t *testing.T) {
 	)
 
 	// Changed description and secrets
-	valuesStrUpdate1 := fmt.Sprintf(`
+	valuesStrUpdate1 := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -82,7 +84,8 @@ func TestAccStorageBucket(t *testing.T) {
 	)
 
 	// Changed description, no secrets update
-	valuesStrUpdate2 := fmt.Sprintf(`
+	valuesStrUpdate2 := fmt.Sprintf(
+		`
 	description = "%s"
 	attributes_json = jsonencode({
 		foo = "bar"
@@ -98,7 +101,8 @@ func TestAccStorageBucket(t *testing.T) {
 	)
 
 	// Same description, now explicitly unset secrets and blankify attrs
-	valuesStrUpdate3 := fmt.Sprintf(`
+	valuesStrUpdate3 := fmt.Sprintf(
+		`
 		description = "%s"
 		secrets_json = jsonencode({
 			flush = "fluppies"
@@ -108,7 +112,8 @@ func TestAccStorageBucket(t *testing.T) {
 	)
 
 	// Set values again
-	valuesStrUpdate4 := fmt.Sprintf(`
+	valuesStrUpdate4 := fmt.Sprintf(
+		`
 		description = "%s"
 		attributes_json = jsonencode({
 			foo = "bar"
@@ -122,7 +127,8 @@ func TestAccStorageBucket(t *testing.T) {
 	)
 
 	// Explicitly set both secrets and attributes to null
-	valuesStrUpdate5 := fmt.Sprintf(`
+	valuesStrUpdate5 := fmt.Sprintf(
+		`
 		description = "%s"
 		attributes_json = "null"
 		secrets_json = "null"

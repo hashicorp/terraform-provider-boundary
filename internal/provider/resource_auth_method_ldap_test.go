@@ -125,7 +125,8 @@ EOT
 )
 
 func TestAccAuthMethodLdap(t *testing.T) {
-	td := testdirectory.Start(t,
+	td := testdirectory.Start(
+		t,
 		testdirectory.WithDefaults(t, &testdirectory.Defaults{AllowAnonymousBind: true}),
 	)
 	tc := controller.NewTestController(t, tcConfig...)

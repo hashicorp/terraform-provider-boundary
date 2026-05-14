@@ -204,7 +204,8 @@ func providerAuthenticate(ctx context.Context, d *schema.ResourceData, md *metaD
 			ctx,
 			recoveryHclStr,
 			"recovery",
-			configutil.WithPluginOptions(opts...))
+			configutil.WithPluginOptions(opts...),
+		)
 		if err != nil {
 			return fmt.Errorf(`error reading wrappers from "recovery_kms_hcl": %v`, err)
 		}

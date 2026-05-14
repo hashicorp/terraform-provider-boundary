@@ -100,7 +100,8 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	scopeId := d.Get(ScopeIdKey).(string)
 
 	rcl := roles.NewClient(md.client)
-	rolesList, err := rcl.List(ctx, scopeId,
+	rolesList, err := rcl.List(
+		ctx, scopeId,
 		roles.WithFilter(FilterWithItemNameMatches(name)),
 	)
 	if err != nil {

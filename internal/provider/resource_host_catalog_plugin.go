@@ -285,7 +285,8 @@ func calculateConfigHmacPlan(serverHmac, secretsJson string, d *schema.ResourceD
 	default:
 		return false, false, nil, fmt.Errorf(
 			"unhandled secrets state; server hmac is found: %t; secrets detected in config: %t; existing hmac'd config: %t",
-			serverHmac != "", secretsJson != "", stateConfigHmac != "")
+			serverHmac != "", secretsJson != "", stateConfigHmac != "",
+		)
 	}
 }
 
