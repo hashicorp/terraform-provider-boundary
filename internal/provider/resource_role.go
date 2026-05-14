@@ -151,18 +151,15 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	if grantStringsVal, ok := d.GetOk(roleGrantStringsKey); ok {
 		list := grantStringsVal.(*schema.Set).List()
 		grantStrings = make([]string, 0, len(list))
-		for _, i := range list {
-			for _, grant := range list {
-				deprecationNotice, err := checkGrantForDeprecation(grant.(string))
-				if err != nil {
-					return diag.FromErr(err)
-				}
-				if deprecationNotice != "" {
-					diags = append(diags, diag.Diagnostic{Severity: diag.Warning, Summary: "deprecated field found in grant", Detail: deprecationNotice})
-				}
-				grantStrings = append(grantStrings, grant.(string))
+		for _, grant := range list {
+			deprecationNotice, err := checkGrantForDeprecation(grant.(string))
+			if err != nil {
+				return diag.FromErr(err)
 			}
-			grantStrings = append(grantStrings, i.(string))
+			if deprecationNotice != "" {
+				diags = append(diags, diag.Diagnostic{Severity: diag.Warning, Summary: "deprecated field found in grant", Detail: deprecationNotice})
+			}
+			grantStrings = append(grantStrings, grant.(string))
 		}
 	}
 
@@ -174,6 +171,9 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	if tcr == nil {
 		return diag.Errorf("nil role after create")
+	}
+	if tcr.Item == nil {
+		return diag.Errorf("nil role item after create")
 	}
 	apiResponse := tcr.GetResponse().Map
 	defer func() {
