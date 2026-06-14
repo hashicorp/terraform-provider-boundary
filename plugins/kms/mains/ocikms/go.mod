@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.9
-	github.com/hashicorp/go-kms-wrapping/wrappers/ocikms/v2 v2.0.9
+	github.com/hashicorp/go-kms-wrapping/wrappers/ocikms/v2 v2.0.10
 )
 
 require (
@@ -12,7 +12,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
-	github.com/hashicorp/go-kms-wrapping/v2 v2.0.22 // indirect
+	github.com/hashicorp/go-kms-wrapping/v2 v2.0.23 // indirect
 	github.com/hashicorp/go-plugin v1.5.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/base62 v0.1.2 // indirect
 	github.com/hashicorp/go-secure-stdlib/parseutil v0.2.0 // indirect
