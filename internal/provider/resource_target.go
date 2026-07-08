@@ -137,12 +137,12 @@ func resourceTarget() *schema.Resource {
 				ConflictsWith: []string{targetHostSourceIdsKey},
 			},
 			targetEnableSessionRecordingKey: {
-				Description: "HCP/Ent Only. Enable sessions recording for this target. Only applicable for SSH targets.",
+				Description: "HCP/Ent Only. Enable sessions recording for this target. Only applicable for SSH and RDP targets.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 			},
 			targetStorageBucketIdKey: {
-				Description: "HCP/Ent Only. Storage bucket for this target. Only applicable for SSH targets.",
+				Description: "HCP/Ent Only. Storage bucket for this target. Only applicable for SSH and RDP targets.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -210,8 +210,8 @@ func setFromTargetResponseMap(d *schema.ResourceData, raw map[string]interface{}
 				}
 			}
 
-			// SSH only features
-			if typeStr == targetTypeSsh {
+			// Session recording features (SSH and RDP)
+			if typeStr == targetTypeSsh || typeStr == targetTypeRdp {
 				if sessionRecordingVal, ok := attrs[targetEnableSessionRecordingKey].(bool); ok {
 					if err := d.Set(targetEnableSessionRecordingKey, sessionRecordingVal); err != nil {
 						return err
@@ -303,6 +303,8 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		switch typeStr {
 		case targetTypeSsh:
 			opts = append(opts, targets.WithSshTargetEnableSessionRecording(enableSessionRecordingBool))
+		case targetTypeRdp:
+			opts = append(opts, targets.WithRdpTargetEnableSessionRecording(enableSessionRecordingBool))
 		}
 	}
 
@@ -312,6 +314,8 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		switch typeStr {
 		case targetTypeSsh:
 			opts = append(opts, targets.WithSshTargetStorageBucketId(storageBucketIdStr))
+		case targetTypeRdp:
+			opts = append(opts, targets.WithRdpTargetStorageBucketId(storageBucketIdStr))
 		}
 	}
 
@@ -505,6 +509,14 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				enableSessionRecording = &enableSessionRecordingBool
 				opts = append(opts, targets.WithSshTargetEnableSessionRecording(enableSessionRecordingBool))
 			}
+		case targetTypeRdp:
+			opts = append(opts, targets.WithRdpTargetEnableSessionRecording(false))
+			enableSessionRecordingVal, ok := d.GetOk(targetEnableSessionRecordingKey)
+			if ok {
+				enableSessionRecordingBool := enableSessionRecordingVal.(bool)
+				enableSessionRecording = &enableSessionRecordingBool
+				opts = append(opts, targets.WithRdpTargetEnableSessionRecording(enableSessionRecordingBool))
+			}
 		}
 	}
 
@@ -518,6 +530,14 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				storageBucketStr := storageBucketVal.(string)
 				storageBucket = &storageBucketStr
 				opts = append(opts, targets.WithSshTargetStorageBucketId(storageBucketStr))
+			}
+		case targetTypeRdp:
+			opts = append(opts, targets.DefaultRdpTargetStorageBucketId())
+			storageBucketVal, ok := d.GetOk(targetStorageBucketIdKey)
+			if ok {
+				storageBucketStr := storageBucketVal.(string)
+				storageBucket = &storageBucketStr
+				opts = append(opts, targets.WithRdpTargetStorageBucketId(storageBucketStr))
 			}
 		}
 	}
