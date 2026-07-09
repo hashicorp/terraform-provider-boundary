@@ -4,6 +4,14 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
+## 1.5.2 (Jul 8th, 2026)
+
+### New and Improved
+
+* Adds support to enable Session Recording for RDP Targets
+  ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/818))
+
+
 ## 1.5.1 (Feb 2nd, 2026)
 
 ### New and Improved
