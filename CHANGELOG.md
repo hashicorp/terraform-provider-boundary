@@ -4,7 +4,7 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ## Next
 
-## 1.6.1 (Jul 8th, 2026)
+## 1.6.0 (Jul 8th, 2026)
 
 ### New and Improved
 
