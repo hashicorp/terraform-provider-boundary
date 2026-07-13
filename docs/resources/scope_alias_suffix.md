@@ -3,17 +3,12 @@
 page_title: "boundary_scope_alias_suffix Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The scope alias suffix resource allows you to set an alias suffix for an org or project scope. This feature requires Boundary Enterprise or Boundary HCP.
+  The scope alias suffix resource allows you to set an alias suffix for an org or project scope. Global scopes are not valid for alias suffix operations.
 ---
 
 # boundary_scope_alias_suffix (Resource)
 
-The scope alias suffix resource allows you to set an alias suffix for an org or project scope. This feature requires Boundary Enterprise or Boundary HCP.
-
-Setting alias suffixes is supported only for org and project scopes (not global).
-When creating project-scoped aliases, both the org scope suffix and the project scope suffix must be configured.
-Updating `alias_suffix` updates the suffix in place.
-Removing a suffix will fail if aliases still depend on that suffix path according to Boundary API rules.
+The scope alias suffix resource allows you to set an alias suffix for an org or project scope. Global scopes are not valid for alias suffix operations.
 
 ## Example Usage
 
@@ -54,8 +49,8 @@ resource "boundary_scope_alias_suffix" "project_suffix" {
 
 ### Required
 
-- `alias_suffix` (String)
-- `scope_id` (String)
+- `alias_suffix` (String) The alias suffix value for this scope.
+- `scope_id` (String) The scope ID. Alias suffixes are supported for org and project scopes.
 
 ### Read-Only
 
@@ -64,6 +59,8 @@ resource "boundary_scope_alias_suffix" "project_suffix" {
 ## Import
 
 Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
 terraform import boundary_scope_alias_suffix.org_suffix <scope-id>
