@@ -5,6 +5,47 @@ package provider
 
 import "testing"
 
+func TestValidateAliasSuffixScope(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		scopeId   string
+		wantError bool
+	}{
+		{
+			name:      "global scope rejected",
+			scopeId:   globalScopeId,
+			wantError: true,
+		},
+		{
+			name:      "org scope allowed",
+			scopeId:   "o_1234567890",
+			wantError: false,
+		},
+		{
+			name:      "project scope allowed",
+			scopeId:   "p_1234567890",
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validateAliasSuffixScope(tt.scopeId)
+			if tt.wantError && err == nil {
+				t.Fatal("expected error but got nil")
+			}
+			if !tt.wantError && err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestAliasSuffixFromScopeResponseMap(t *testing.T) {
 	t.Parallel()
 

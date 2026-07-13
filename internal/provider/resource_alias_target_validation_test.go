@@ -5,7 +5,7 @@ package provider
 
 import "testing"
 
-func TestValidateTargetAliasScopeAndValue(t *testing.T) {
+func TestValidateTargetAliasScope(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

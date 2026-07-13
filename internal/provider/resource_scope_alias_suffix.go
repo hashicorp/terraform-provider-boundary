@@ -59,6 +59,10 @@ func resourceScopeAliasSuffixCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
+	if err := validateAliasSuffixScope(scopeId); err != nil {
+		return diag.FromErr(err)
+	}
+
 	var aliasSuffix string
 	if aliasSuffixVal, ok := d.GetOk(aliasSuffixKey); ok {
 		aliasSuffix = aliasSuffixVal.(string)
@@ -130,6 +134,10 @@ func resourceScopeAliasSuffixUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
+	if err := validateAliasSuffixScope(scopeId); err != nil {
+		return diag.FromErr(err)
+	}
+
 	var aliasSuffix string
 	if aliasSuffixVal, ok := d.GetOk(aliasSuffixKey); ok {
 		aliasSuffix = aliasSuffixVal.(string)
@@ -194,6 +202,13 @@ func setScopeAliasSuffixState(d *schema.ResourceData, scopeId, aliasSuffix strin
 	// One alias suffix may be set per scope, so scope ID is the stable TF ID.
 	d.SetId(scopeId)
 
+	return nil
+}
+
+func validateAliasSuffixScope(scopeId string) error {
+	if scopeId == globalScopeId {
+		return fmt.Errorf("alias suffixes are not supported for the global scope; use an org or project scope ID")
+	}
 	return nil
 }
 
