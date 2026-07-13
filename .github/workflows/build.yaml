@@ -24,6 +24,8 @@ on: [workflow_dispatch, push]
 env:
   PKG_NAME: "terraform-provider-boundary"
 
+permissions: read-all
+
 jobs:
   # Detects the Go version to use for builds.
   get-go-version:
