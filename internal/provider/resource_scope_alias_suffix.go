@@ -166,6 +166,10 @@ func resourceScopeAliasSuffixDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
+	if err := validateAliasSuffixScope(scopeId); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if _, err := scp.RemoveAliasSuffix(ctx, scopeId, 0, opts...); err != nil {
 		return diag.FromErr(err)
 	}

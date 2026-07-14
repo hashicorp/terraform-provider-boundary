@@ -3,12 +3,12 @@
 page_title: "boundary_alias_target Resource - terraform-provider-boundary"
 subcategory: ""
 description: |-
-  The target alias resource allows you to configure a Boundary target alias. Org scopes are not valid alias scopes.
+  The target alias resource allows you to configure a Boundary target alias at project and global scopes.
 ---
 
 # boundary_alias_target (Resource)
 
-The target alias resource allows you to configure a Boundary target alias. Org scopes are not valid alias scopes.
+The target alias resource allows you to configure a Boundary target alias at project and global scopes.
 
 ## Example Usage
 
@@ -106,7 +106,7 @@ resource "boundary_alias_target" "example_alias_target_project" {
 ### Required
 
 - `scope_id` (String) The scope ID. Org scopes are not supported for aliases.
-- `value` (String) The value of the alias. For project scopes, values must be in the form {alias}.{project_suffix}.{org_suffix}.
+- `value` (String) The value of the alias.
 
 ### Optional
 
