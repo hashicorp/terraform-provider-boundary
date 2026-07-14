@@ -28,6 +28,11 @@ func TestValidateAliasSuffixScope(t *testing.T) {
 			scopeId:   "p_1234567890",
 			wantError: false,
 		},
+		{
+			name:      "unknown scope type rejected",
+			scopeId:   "s_1234567890",
+			wantError: true,
+		},
 	}
 
 	for _, tt := range tests {

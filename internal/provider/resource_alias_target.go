@@ -284,17 +284,14 @@ func resourceTargetAliasDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func validateTargetAliasScope(scopeId string) error {
-	if strings.HasPrefix(scopeId, orgScopePrefix) {
+	switch {
+	case scopeId == globalScopeId:
+		return nil
+	case strings.HasPrefix(scopeId, projectScopePrefix):
+		return nil
+	case strings.HasPrefix(scopeId, orgScopePrefix):
 		return fmt.Errorf("target aliases are not supported for org scopes; use a project or global scope ID")
+	default:
+		return fmt.Errorf("target aliases are supported only for project and global scopes")
 	}
-
-	if scopeId == globalScopeId {
-		return nil
-	}
-
-	if strings.HasPrefix(scopeId, projectScopePrefix) {
-		return nil
-	}
-
-	return nil
 }

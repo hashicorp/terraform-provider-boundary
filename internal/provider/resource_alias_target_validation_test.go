@@ -29,9 +29,9 @@ func TestValidateTargetAliasScope(t *testing.T) {
 			wantError: false,
 		},
 		{
-			name:      "unknown scope type left to api",
+			name:      "unknown scope type rejected",
 			scopeId:   "s_1234567890",
-			wantError: false,
+			wantError: true,
 		},
 	}
 

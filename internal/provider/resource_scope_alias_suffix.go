@@ -210,10 +210,16 @@ func setScopeAliasSuffixState(d *schema.ResourceData, scopeId, aliasSuffix strin
 }
 
 func validateAliasSuffixScope(scopeId string) error {
-	if scopeId == globalScopeId {
+	switch {
+	case strings.HasPrefix(scopeId, orgScopePrefix):
+		return nil
+	case strings.HasPrefix(scopeId, projectScopePrefix):
+		return nil
+	case scopeId == globalScopeId:
 		return fmt.Errorf("alias suffixes are not supported for the global scope; use an org or project scope ID")
+	default:
+		return fmt.Errorf("alias suffixes are supported only for org and project scopes")
 	}
-	return nil
 }
 
 func scopeIdFromAliasSuffixResourceData(d *schema.ResourceData) (string, error) {
