@@ -5,7 +5,9 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/aliases"
@@ -17,11 +19,15 @@ const (
 	aliasTypeTarget = "target"
 
 	aliasTargetAuthorizeSessionHostIdKey = "authorize_session_host_id"
+
+	globalScopeId      = "global"
+	orgScopePrefix     = "o_"
+	projectScopePrefix = "p_"
 )
 
 func resourceAliasTarget() *schema.Resource {
 	return &schema.Resource{
-		Description: "The target alias resource allows you to configure a Boundary target alias.",
+		Description: "The target alias resource allows you to configure a Boundary target alias at project and global scopes.",
 
 		CreateContext: resourceTargetAliasCreate,
 		ReadContext:   resourceTargetAliasRead,
@@ -48,7 +54,7 @@ func resourceAliasTarget() *schema.Resource {
 				Optional:    true,
 			},
 			ScopeIdKey: {
-				Description: "The scope ID.",
+				Description: "The scope ID. Org scopes are not supported for aliases.",
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -144,6 +150,10 @@ func resourceTargetAliasCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("no alias value provided")
 	}
 
+	if err := validateTargetAliasScope(scopeId); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if nameVal, ok := d.GetOk(NameKey); ok {
 		opts = append(opts, aliases.WithName(nameVal.(string)))
 	}
@@ -221,7 +231,12 @@ func resourceTargetAliasUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange(ValueKey) {
 		if valVal, ok := d.GetOk(ValueKey); ok {
-			opts = append(opts, aliases.WithValue(valVal.(string)))
+			aliasValue := valVal.(string)
+			scopeId := d.Get(ScopeIdKey).(string)
+			if err := validateTargetAliasScope(scopeId); err != nil {
+				return diag.FromErr(err)
+			}
+			opts = append(opts, aliases.WithValue(aliasValue))
 		} else {
 			return diag.Errorf("no value provided")
 		}
@@ -266,4 +281,17 @@ func resourceTargetAliasDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func validateTargetAliasScope(scopeId string) error {
+	switch {
+	case scopeId == globalScopeId:
+		return nil
+	case strings.HasPrefix(scopeId, projectScopePrefix):
+		return nil
+	case strings.HasPrefix(scopeId, orgScopePrefix):
+		return fmt.Errorf("target aliases are not supported for org scopes; use a project or global scope ID")
+	default:
+		return fmt.Errorf("target aliases are supported only for project and global scopes")
+	}
 }
