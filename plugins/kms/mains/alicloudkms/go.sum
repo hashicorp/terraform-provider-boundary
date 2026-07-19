@@ -26,10 +26,10 @@ github.com/hashicorp/go-hclog v1.5.0 h1:bI2ocEMgcVlz55Oj1xZNBsVi900c7II+fWDyV9o+
 github.com/hashicorp/go-hclog v1.5.0/go.mod h1:W4Qnvbt70Wk/zYJryRzDRU/4r0kIg0PVHBcfoyhpF5M=
 github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.9 h1:8Of1hlBVUGZqC3TBoVRaD6a2h9XaPhDuEAUHRZGPhnk=
 github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.9/go.mod h1:7egilz8lAcTD4oTAmfh/yV6RK+nI3XXNO1FyVb765Ig=
-github.com/hashicorp/go-kms-wrapping/v2 v2.0.22 h1:/W0xCNX/b9ZDtukAlHrLeI3fROHweX15/+7y2mUdQw4=
-github.com/hashicorp/go-kms-wrapping/v2 v2.0.22/go.mod h1:NeK2Ul15t1zutp/dZzt28XQrGZHosbxE/QLNNfaWObM=
-github.com/hashicorp/go-kms-wrapping/wrappers/alicloudkms/v2 v2.0.4 h1:8XgCt3ZDfE0MPBLJsUE4ZnPkFAF4K13Zxqyjx1lA22A=
-github.com/hashicorp/go-kms-wrapping/wrappers/alicloudkms/v2 v2.0.4/go.mod h1:Inx0DLGr58Un5TerS8je0SGZwKKihotqaxqoAKHpSmk=
+github.com/hashicorp/go-kms-wrapping/v2 v2.0.23 h1:HZOdsAP0hZMIF/61v4B31DBbKx7NbtWmgBS6WEUOZvU=
+github.com/hashicorp/go-kms-wrapping/v2 v2.0.23/go.mod h1:NeK2Ul15t1zutp/dZzt28XQrGZHosbxE/QLNNfaWObM=
+github.com/hashicorp/go-kms-wrapping/wrappers/alicloudkms/v2 v2.0.5 h1:UOENdzA3ujoRA4d3MT8JIWqZfNIcODhbsAkO00WDCZY=
+github.com/hashicorp/go-kms-wrapping/wrappers/alicloudkms/v2 v2.0.5/go.mod h1:nOIu0/qjII/pmeCqrAuqklFS99fKJT2AjKiPSoxP7vU=
 github.com/hashicorp/go-plugin v1.5.2 h1:aWv8eimFqWlsEiMrYZdPYl+FdHaBJSN4AWwGWfT1G2Y=
 github.com/hashicorp/go-plugin v1.5.2/go.mod h1:w1sAEES3g3PuV/RzUrgow20W2uErMly84hhD3um1WL4=
 github.com/hashicorp/go-secure-stdlib/base62 v0.1.2 h1:ET4pqyjiGmY09R5y+rSd70J2w45CtbWDNvGqWp/R3Ng=
