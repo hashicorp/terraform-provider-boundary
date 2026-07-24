@@ -7,7 +7,7 @@ Canonical reference for changes, improvements, and bugfixes for the Boundary Ter
 
 ### New and Improved
 
-* Adds support to enable Session Recording for RDP Targets
+* Adds support to enable set/remove alias suffix and aliases at project scope
   ([PR](https://github.com/hashicorp/terraform-provider-boundary/pull/824))
 
 ## 1.6.0 (Jul 8th, 2026)
