@@ -13,6 +13,16 @@ resource "boundary_scope" "project" {
   auto_create_admin_role = true
 }
 
+resource "boundary_scope_alias_suffix" "org" {
+  scope_id     = boundary_scope.org.id
+  alias_suffix = "org"
+}
+
+resource "boundary_scope_alias_suffix" "project" {
+  scope_id     = boundary_scope.project.id
+  alias_suffix = "projectone"
+}
+
 resource "boundary_host_catalog_static" "foo" {
   name        = "test"
   description = "test catalog"
@@ -59,4 +69,17 @@ resource "boundary_alias_target" "example_alias_target" {
   value                     = "example.bar.foo.boundary"
   destination_id            = boundary_target.foo.id
   authorize_session_host_id = boundary_host_static.bar.id
+}
+
+resource "boundary_alias_target" "example_alias_target_project" {
+  name                      = "example_alias_target_project"
+  description               = "Example project-scoped alias to target foo"
+  scope_id                  = boundary_scope.project.id
+  value                     = "prodops.projectone.org"
+  destination_id            = boundary_target.foo.id
+  authorize_session_host_id = boundary_host_static.bar.id
+  depends_on = [
+    boundary_scope_alias_suffix.org,
+    boundary_scope_alias_suffix.project,
+  ]
 }

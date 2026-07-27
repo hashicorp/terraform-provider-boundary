@@ -125,6 +125,7 @@ func New() *schema.Provider {
 			"boundary_host_set_static":                          resourceHostSetStatic(),
 			"boundary_host_set_plugin":                          resourceHostSetPlugin(),
 			"boundary_policy_storage":                           resourcePolicyStorage(),
+			"boundary_scope_alias_suffix":                       resourceScopeAliasSuffix(),
 			"boundary_scope_policy_attachment":                  resourceScopePolicyAttachment(),
 			"boundary_role":                                     resourceRole(),
 			"boundary_scope":                                    resourceScope(),
