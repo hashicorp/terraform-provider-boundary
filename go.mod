@@ -4,7 +4,7 @@ go 1.26.4
 
 require (
 	github.com/YakDriver/regexache v0.25.0
-	github.com/hashicorp/boundary v0.18.1-0.20260708165146-a1e2c87b8a14
+	github.com/hashicorp/boundary v0.19.5
 	github.com/hashicorp/boundary/api v0.0.62
 	github.com/hashicorp/boundary/sdk v0.0.60
 	github.com/hashicorp/cap v0.13.0
@@ -20,7 +20,7 @@ require (
 	github.com/kr/pretty v0.3.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/crypto v0.51.0
+	golang.org/x/crypto v0.52.0
 	mvdan.cc/gofumpt v0.10.0
 )
 
