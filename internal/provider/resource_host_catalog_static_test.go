@@ -11,10 +11,10 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -27,7 +27,7 @@ var (
 resource "%s" "foo" {
 	name        = "foo"
 	description = "bar"
-	scope_id    = boundary_scope.proj1.id 
+	scope_id    = boundary_scope.proj1.id
 	%s
 	depends_on  = [boundary_role.proj1_admin]
 }`
@@ -36,7 +36,7 @@ resource "%s" "foo" {
 resource "%s" "foo" {
 	name        = "foo"
 	description = "foo bar"
-	scope_id    = boundary_scope.proj1.id 
+	scope_id    = boundary_scope.proj1.id
 	%s
 	depends_on  = [boundary_role.proj1_admin]
 }`
@@ -54,9 +54,9 @@ func TestAccHostCatalogCreate(t *testing.T) {
 }
 
 func testAccHostCatalog(t *testing.T, static bool) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	resName := "boundary_host_catalog"
 	typeStr := `type = "static"`

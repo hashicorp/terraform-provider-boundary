@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 var accountPasswordRead = `
@@ -36,9 +36,9 @@ data "boundary_account" "acc_oidc" {
 }`
 
 func TestAccAccountReadPassword(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -63,9 +63,9 @@ func TestAccAccountReadPassword(t *testing.T) {
 }
 
 func TestAccAccountReadLdap(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -91,9 +91,9 @@ func TestAccAccountReadLdap(t *testing.T) {
 
 func TestAccAccountReadOidc(t *testing.T) {
 	tp := oidc.StartTestProvider(t)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	tpCert := strings.TrimSpace(tp.CACert())

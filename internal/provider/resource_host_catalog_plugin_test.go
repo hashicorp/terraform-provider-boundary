@@ -11,11 +11,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/hostcatalogs"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	_ "github.com/kr/pretty" // So I don't have to keep adding to/removing from go.mod :-)
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -58,9 +58,9 @@ var (
 // different. Thus expectedAttributesState also controls expectations for
 // secrets.
 func TestAccPluginHostCatalog(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	resName := "boundary_host_catalog_plugin.foo"
 	initialValuesStr := fmt.Sprintf(
@@ -257,9 +257,9 @@ func TestAccPluginHostCatalog(t *testing.T) {
 func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 	t.Skip("Skipping test until Boundary Terraform Provider can unit tests for Boundary Enterprise only features")
 
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	resName := "boundary_host_catalog_plugin.foo"
 	initialValuesStr := fmt.Sprintf(

@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/credentials"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -72,9 +72,9 @@ resource "boundary_credential_username_password_domain" "example" {
 }
 
 func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	res := usernamePasswordDomainCredResourceWithDomain(
 		usernamePasswordDomainCredName,
@@ -232,9 +232,9 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 }
 
 func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	res := usernamePasswordDomainCredResourceWithoutDomain(
 		usernamePasswordDomainCredName,
@@ -325,9 +325,9 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *tes
 }
 
 func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	res := usernamePasswordDomainCredResourceWithoutDomain(
 		usernamePasswordDomainCredName,
@@ -421,9 +421,9 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *
 // customization function by testing the diff equivalency of different
 // combinations of inputs.
 func TestResourceCredentialUsernamePasswordDomainCustomizeDiff(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	tests := []struct {
 		name            string

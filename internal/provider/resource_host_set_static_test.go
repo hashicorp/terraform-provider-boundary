@@ -11,10 +11,10 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccHostSetStatic(t *testing.T) {
@@ -29,7 +29,7 @@ func TestAccHostSetStatic(t *testing.T) {
 }
 
 func testAccHostSetStatic(t *testing.T, static bool) {
-	catalogBlock := ` 
+	catalogBlock := `
 	resource "%s" "foo" {
 		%s
 		scope_id    = boundary_scope.proj1.id
@@ -59,10 +59,9 @@ func testAccHostSetStatic(t *testing.T, static bool) {
 		address         = "10.0.0.2"
 	}`
 
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	//	org := iam.TestOrg(t, tc.IamRepo())
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	catalogName := "boundary_host_catalog"
 	hostName := "boundary_host"

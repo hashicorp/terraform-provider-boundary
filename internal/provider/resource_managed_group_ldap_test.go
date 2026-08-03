@@ -10,10 +10,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/managedgroups"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -35,13 +35,11 @@ resource "boundary_managed_group_ldap" "foo" {
 )
 
 func TestAccManagedGroupLdap(t *testing.T) {
-	wrapper := testWrapper(context.Background(), t, tcRecoveryKey)
-	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	createConfig := fmt.Sprintf(testAuthMethodLdap, testAuthMethodLdapDesc, testAuthMethodLdapCert)
-
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{

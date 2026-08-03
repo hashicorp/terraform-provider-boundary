@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -119,9 +119,9 @@ resource "boundary_credential_library_vault_ssh_certificate" "ext_co_example" {
 	vaultSshCertCredUsername)
 
 func TestAccCredentialLibraryVaultSshCertificate(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	vc := vault.NewTestVaultServer(t)
 	_, token := vc.CreateToken(t)

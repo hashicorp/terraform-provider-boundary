@@ -11,11 +11,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentiallibraries"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -138,9 +138,9 @@ resource "boundary_credential_library_vault" "ssh_private_key_mapping_override" 
 	vaultCredLibMethodGet)
 
 func TestAccCredentialLibraryVault(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	vc := vault.NewTestVaultServer(t)
 	_, token := vc.CreateToken(t)

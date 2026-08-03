@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -62,7 +62,7 @@ resource "boundary_account_password" "foo" {
 		scope_id    = boundary_scope.org1.id
 		depends_on = [boundary_role.org1_admin]
 	}
-	
+
 	resource "boundary_account_password" "foo" {
 		name           = "test"
 		description    = "%s"
@@ -73,9 +73,9 @@ resource "boundary_account_password" "foo" {
 )
 
 func TestAccAccount(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 

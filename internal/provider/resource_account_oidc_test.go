@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -52,9 +52,9 @@ resource "boundary_account_oidc" "foo" {
 
 func TestAccOidcAccount(t *testing.T) {
 	tp := oidc.StartTestProvider(t)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 

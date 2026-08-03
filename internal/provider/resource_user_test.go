@@ -11,10 +11,10 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/users"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -63,10 +63,10 @@ resource "boundary_user" "org1" {
 // NOTE: this test also tests out the direct token auth mechanism.
 
 func TestAccUser(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-	token := tc.Token().Token
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	token := cfg.BoundaryAuthToken
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -98,10 +98,10 @@ func TestAccUser(t *testing.T) {
 }
 
 func TestAccUserWithAccounts(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-	token := tc.Token().Token
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	token := cfg.BoundaryAuthToken
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -62,9 +62,9 @@ data "boundary_role" "role" {
 `, testRoleName, testRoleName)
 
 func TestAccRoleReadGlobal(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	dataSourceName := "data.boundary_role.role"
 
@@ -94,9 +94,9 @@ func TestAccRoleReadGlobal(t *testing.T) {
 }
 
 func TestAccRoleReadOrg(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	dataSourceName := "data.boundary_role.role"
 

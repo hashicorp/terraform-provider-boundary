@@ -8,10 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jimlambrt/gldap/testdirectory"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -111,7 +111,7 @@ resource "boundary_auth_method_ldap" "test-ldap" {
 	group_attr           = "group-attr-updated"
 	group_filter         = "group-filter-updated"
 	bind_dn              = "bind-dn-updated"
-	bind_password        = "bind-password-updated" 
+	bind_password        = "bind-password-updated"
 	use_token_groups     = false
 	state                = "inactive"
 	maximum_page_size = 100
@@ -129,9 +129,9 @@ func TestAccAuthMethodLdap(t *testing.T) {
 		t,
 		testdirectory.WithDefaults(t, &testdirectory.Defaults{AllowAnonymousBind: true}),
 	)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	tdCert := strings.TrimSpace(td.Cert())
 	createConfig := fmt.Sprintf(testAuthMethodLdap, testAuthMethodLdapDesc, tdCert)

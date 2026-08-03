@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ssh/testdata"
 )
 
@@ -43,9 +43,9 @@ resource "boundary_credential_ssh_private_key" "example" {
 }
 
 func TestAccCredentialSshPrivateKey(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	privKey := string(testdata.PEMBytes["rsa"])
 	privKeyUpdate := string(testdata.PEMEncryptedKeys[0].PEMBytes)

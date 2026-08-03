@@ -22,18 +22,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jimlambrt/gldap"
 	"github.com/jimlambrt/gldap/testdirectory"
+	"github.com/stretchr/testify/require"
 )
 
 var (
-	tcLoginName = "testuser"
-	tcPassword  = "passpass"
-	tcPAUM      = "ampw_0000000000"
+	tcLoginName = "admin"
+	tcPassword  = "password"
+	tcPAUM      = "ampw_1234567890"
 	tcConfig    = []controller.Option{
 		controller.WithDefaultPasswordAuthMethodId(tcPAUM),
 		controller.WithDefaultLoginName(tcLoginName),
 		controller.WithDefaultPassword(tcPassword),
 	}
-	tcRecoveryKey = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
 )
 
 func providerFactories(p **schema.Provider) map[string]func() (*schema.Provider, error) {
@@ -153,7 +153,14 @@ provider "boundary" {
 	return strings.Join(c, "\n")
 }
 
-func testConfigWithRecovery(url string, res ...string) string {
+func testConfigWithRecovery(t *testing.T, url string, res ...string) string {
+	t.Helper()
+	cfg, err := loadTestConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := requireRecoveryKey(t, cfg)
 	provider := fmt.Sprintf(`
 provider "boundary" {
 	addr             = "%s"
@@ -161,11 +168,11 @@ provider "boundary" {
 	kms "aead" {
 		purpose = ["recovery", "config"]
 		aead_type = "aes-gcm"
-		key = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
+		key = "%s"
 		key_id = "global_recovery"
 	}
 	DOC
-}`, url)
+}`, url, key)
 
 	c := []string{provider}
 	c = append(c, res...)
@@ -208,9 +215,9 @@ func TestProvider(t *testing.T) {
 func TestConfigWithLdapAuthMethod(t *testing.T) {
 	td := createDefaultLdap(t)
 	defer td.Stop()
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 	ldapLoginName := "alice"
 	ldapPassword := "password"
 
@@ -248,9 +255,9 @@ func TestConfigWithLdapAuthMethod(t *testing.T) {
 }
 
 func TestConfigWithDefaultAuthMethod(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -270,9 +277,9 @@ func TestConfigWithDefaultAuthMethod(t *testing.T) {
 }
 
 func TestConfigWithDeprecatedAuthMethod(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -292,9 +299,9 @@ func TestConfigWithDeprecatedAuthMethod(t *testing.T) {
 }
 
 func TestConfigWithoutAMPWCredentials(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -310,9 +317,9 @@ func TestConfigWithoutAMPWCredentials(t *testing.T) {
 }
 
 func TestConfigWithOIDCAuthMethod(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -330,12 +337,11 @@ func TestConfigWithOIDCAuthMethod(t *testing.T) {
 // Create OIDC auth method and set it as the primary auth method.
 // Attempt to authenticate with recovery to test checks for default auth method
 func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
-	tp := oidc.StartTestProvider(t)
-	wrapper := testWrapper(context.Background(), t, tcRecoveryKey)
-	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
+	tp := oidc.StartTestProvider(t)
 	tpCert := strings.TrimSpace(tp.CACert())
 	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
 	updateConfig := fmt.Sprintf(fooAuthMethodOidcUpdate, fooAuthMethodOidcDescUpdate, fooAuthMethodOidcCaCerts)
@@ -365,7 +371,7 @@ func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
 			},
 			{
 				// authenticate provider with recovery kms with unsupported OIDC primary auth method
-				Config: testConfigWithRecovery(url, fooOrg, updateConfig),
+				Config: testConfigWithRecovery(t, url, fooOrg, updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),

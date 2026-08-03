@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -59,9 +59,9 @@ data "boundary_group" "group" {
 }`, testGroupName, testGroupName)
 
 func TestAccGroupReadGlobal(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -86,9 +86,9 @@ func TestAccGroupReadGlobal(t *testing.T) {
 }
 
 func TestAccGroupReadOrg(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{

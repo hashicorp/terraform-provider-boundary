@@ -11,11 +11,11 @@ import (
 
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/boundary/api/scopes"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/cap/oidc"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -94,15 +94,15 @@ EOT
   prompts = ["consent", "select_account"]
 
   // we need to disable this validation, since the updated issuer isn't discoverable
-  disable_discovered_config_validation = true 
+  disable_discovered_config_validation = true
 }`
 )
 
 func TestAccAuthMethodOidc(t *testing.T) {
 	tp := oidc.StartTestProvider(t)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
 
 	tpCert := strings.TrimSpace(tp.CACert())
 	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
