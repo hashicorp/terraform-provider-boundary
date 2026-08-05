@@ -25,7 +25,7 @@ const (
 	testPluginHostCatalogDescriptionUpdate2 = "bar foo foo"
 
 	testPluginHostCatalogWorkerFilterUpdate  = "\"dev\" in \"/tags/type\""
-	testPluginHostCatalogWorkerFilterUpdate2 = "\"pki\" in \"/tags/type\""
+	testPluginHostCatalogWorkerFilterUpdate2 = "\"local\" in \"/tags/type\""
 )
 
 // expectedAttributesState is used here and in plugin host sets to control how
@@ -37,6 +37,8 @@ const (
 	expectedAttributesStatePreviouslySetNoChange
 	expectedAttributesStatePreviouslySetButChanged
 	expectedAttributesStatePreviouslySetNowEmpty
+	expectedAttributesStateAttrsNowEmpty
+	expectedAttributesStateAttrsRestoredSecretsChanged
 )
 
 var projPluginHostCatalogBase = `
@@ -257,8 +259,6 @@ func TestAccPluginHostCatalog(t *testing.T) {
 }
 
 func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
-	t.Skip("Skipping test until Boundary Terraform Provider can unit tests for Boundary Enterprise only features")
-
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	suffix := id.UniqueId()
