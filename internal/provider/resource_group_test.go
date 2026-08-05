@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/groups"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -120,6 +121,7 @@ func TestAccGroup(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -129,7 +131,7 @@ func TestAccGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfigWithRecovery(t, url, fooOrg, orgGroup),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), orgGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, fooGroupDescription),
@@ -139,7 +141,7 @@ func TestAccGroup(t *testing.T) {
 			importStep("boundary_group.org1"),
 			{
 				// test update
-				Config: testConfigWithRecovery(t, url, fooOrg, orgGroupUpdate),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), orgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, fooGroupDescriptionUpdate),
@@ -148,7 +150,7 @@ func TestAccGroup(t *testing.T) {
 			importStep("boundary_group.org1"),
 			{
 				// test update to project scope
-				Config: testConfigWithRecovery(t, url, fooOrg, firstProjectFoo, orgToProjectGroupUpdate),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), firstProjectFoo, orgToProjectGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.org1"),
 					resource.TestCheckResourceAttr("boundary_group.org1", DescriptionKey, "org1-test-to-proj"),
@@ -158,7 +160,7 @@ func TestAccGroup(t *testing.T) {
 			importStep("boundary_group.org1"),
 			{
 				// test create
-				Config: testConfigWithRecovery(t, url, fooOrg, firstProjectFoo, projGroup),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), firstProjectFoo, projGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", DescriptionKey, "desc-test-proj"),
@@ -169,7 +171,7 @@ func TestAccGroup(t *testing.T) {
 			importStep("boundary_group.proj1"),
 			{
 				// test update
-				Config: testConfigWithRecovery(t, url, fooOrg, firstProjectFoo, projGroupUpdate),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), firstProjectFoo, projGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", DescriptionKey, "desc-test-proj-up"),
@@ -179,7 +181,7 @@ func TestAccGroup(t *testing.T) {
 			importStep("boundary_group.proj1"),
 			{
 				// test name removal
-				Config: testConfigWithRecovery(t, url, fooOrg, firstProjectFoo, projNameRemoval),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), firstProjectFoo, projNameRemoval),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", NameKey, ""),
@@ -189,7 +191,7 @@ func TestAccGroup(t *testing.T) {
 			importStep("boundary_group.proj1"),
 			{
 				// test update to org scope
-				Config: testConfigWithRecovery(t, url, fooOrg, firstProjectFoo, projToOrgGroupUpdate),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), firstProjectFoo, projToOrgGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.proj1"),
 					resource.TestCheckResourceAttr("boundary_group.proj1", DescriptionKey, "desc-back"),
@@ -205,6 +207,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -214,7 +217,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, orgGroupWithMembers),
+				Config: testConfig(url, fooOrg(suffix), orgGroupWithMembers),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.with_members"),
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
@@ -225,7 +228,7 @@ func TestAccGroupWithMembers(t *testing.T) {
 			importStep("boundary_group.with_members"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, orgGroupWithMembersUpdate),
+				Config: testConfig(url, fooOrg(suffix), orgGroupWithMembersUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupResourceExists(provider, "boundary_group.with_members"),
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),

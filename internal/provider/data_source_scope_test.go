@@ -7,62 +7,68 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	orgName        = "test org scope"
-	projectName    = "test project scope"
-	notProjectName = "test project scope with wrong name"
-	scopeDesc      = "created to test the scope datasource"
+	scopeDesc = "created to test the scope datasource"
 )
 
-var scopeCreateAndRead = fmt.Sprintf(`
+func scopeCreateAndRead(suffix string) string {
+	orgName := "test org scope " + suffix
+	projectName := "test project scope " + suffix
+	return fmt.Sprintf(`
 resource "boundary_scope" "global" {
 	global_scope = true
-	name = "global"
-	description = "Global Scope"
-	scope_id = "global"
+	name         = "global"
+	description  = "Global Scope"
+	scope_id     = "global"
 }
 
 resource "boundary_scope" "org" {
-	scope_id = boundary_scope.global.id
-	name = "%s"
+	scope_id    = boundary_scope.global.id
+	name        = "%s"
 	description = "%s"
 }
 
 resource "boundary_scope" "project" {
-	depends_on = [boundary_role.org_admin]
-	scope_id = boundary_scope.org.id
-	name = "%s"
+	depends_on  = [boundary_role.org_admin]
+	scope_id    = boundary_scope.org.id
+	name        = "%s"
 	description = "%s"
 }
 
 resource "boundary_role" "org_admin" {
-	scope_id = "global"
+	scope_id        = "global"
 	grant_scope_ids = [boundary_scope.org.id]
-	grant_strings = ["ids=*;type=*;actions=*"]
-	principal_ids = ["u_auth"]
+	grant_strings   = ["ids=*;type=*;actions=*"]
+	principal_ids   = ["u_auth"]
 }
 
 data "boundary_scope" "org" {
 	depends_on = [boundary_scope.org]
-	scope_id = "global"
-	name = "%s"
+	scope_id   = "global"
+	name       = "%s"
 }
 
 data "boundary_scope" "project" {
 	depends_on = [boundary_scope.project]
-	scope_id = data.boundary_scope.org.id
-	name = "%s"
+	scope_id   = data.boundary_scope.org.id
+	name       = "%s"
 }`, orgName, scopeDesc, projectName, scopeDesc, orgName, projectName)
+}
 
 func TestAccScopeRead(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
+
+	orgName := "test org scope " + suffix
+	projectName := "test project scope " + suffix
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -71,7 +77,7 @@ func TestAccScopeRead(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create and read
-				Config: testConfig(url, scopeCreateAndRead),
+				Config: testConfig(url, scopeCreateAndRead(suffix)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org"),
 					resource.TestCheckResourceAttr("boundary_scope.org", "description", scopeDesc),

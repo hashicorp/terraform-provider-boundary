@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/storagebuckets"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -47,6 +48,7 @@ func TestAccStorageBucket(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	resName := "boundary_storage_bucket.foo"
 	workerFilter := "\"pki\" in \"/tags/type\""
@@ -150,7 +152,7 @@ func TestAccStorageBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, initialHcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, initialHcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
@@ -162,7 +164,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update1Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate),
@@ -172,7 +174,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
@@ -184,7 +186,7 @@ func TestAccStorageBucket(t *testing.T) {
 				// this runs the same HCL; mostly used in some manual checking
 				// to ensure update is still called even when nothing has
 				// changed (as we need for secrets)
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
@@ -194,7 +196,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update3Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
@@ -204,7 +206,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update4Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
@@ -214,7 +216,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update5Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),

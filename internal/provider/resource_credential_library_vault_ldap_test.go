@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/testing/vault"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -44,6 +45,7 @@ resource "boundary_credential_library_vault_ldap" "example" {
 func TestAccCredentialLibraryVaultLdap(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	vc := vault.NewTestVaultServer(t)
@@ -64,7 +66,7 @@ func TestAccCredentialLibraryVaultLdap(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultLdapCredLibResource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultLdapCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultLdapCredResc, NameKey, vaultLdapCredLibName),
 					resource.TestCheckResourceAttr(vaultLdapCredResc, DescriptionKey, vaultLdapCredLibDesc),
@@ -76,7 +78,7 @@ func TestAccCredentialLibraryVaultLdap(t *testing.T) {
 			importStep(vaultLdapCredResc),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultLdapCredLibResourceUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultLdapCredLibResourceUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultLdapCredResc, NameKey, vaultLdapCredLibName+vaultLdapCredLibStringUpdate),
 					resource.TestCheckResourceAttr(vaultLdapCredResc, DescriptionKey, vaultLdapCredLibDesc+vaultLdapCredLibStringUpdate),

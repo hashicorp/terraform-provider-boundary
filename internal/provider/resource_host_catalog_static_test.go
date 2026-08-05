@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostcatalogs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -56,6 +57,7 @@ func TestAccHostCatalogCreate(t *testing.T) {
 func testAccHostCatalog(t *testing.T, static bool) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	resName := "boundary_host_catalog"
@@ -74,7 +76,7 @@ func testAccHostCatalog(t *testing.T, static bool) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, hc),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, hc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
@@ -85,7 +87,7 @@ func testAccHostCatalog(t *testing.T, static bool) {
 			importStep(fooName),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, hcu),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, hcu),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostCatalogResourceExists(provider, fooName),
 					resource.TestCheckResourceAttr(fooName, DescriptionKey, fooHostCatalogDescriptionUpdate),

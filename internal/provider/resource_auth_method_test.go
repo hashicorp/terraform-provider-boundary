@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/authmethods"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -57,6 +58,7 @@ resource "boundary_auth_method" "foo" {
 func TestAccBaseAuthMethodPassword(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
@@ -66,7 +68,7 @@ func TestAccBaseAuthMethodPassword(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooBaseAuthMethod),
+				Config: testConfig(url, fooOrg(suffix), fooBaseAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooBaseAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
@@ -78,7 +80,7 @@ func TestAccBaseAuthMethodPassword(t *testing.T) {
 
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooBaseAuthMethodUpdate),
+				Config: testConfig(url, fooOrg(suffix), fooBaseAuthMethodUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooBaseAuthMethodDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
@@ -94,6 +96,7 @@ func TestAccBaseAuthMethodPassword(t *testing.T) {
 func TestAccBaseAuthMethodPasswordIsPrimary(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
@@ -103,7 +106,7 @@ func TestAccBaseAuthMethodPasswordIsPrimary(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooBaseAuthMethod),
+				Config: testConfig(url, fooOrg(suffix), fooBaseAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooBaseAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),
@@ -115,7 +118,7 @@ func TestAccBaseAuthMethodPasswordIsPrimary(t *testing.T) {
 			importStep("boundary_auth_method.foo"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooBaseAuthMethodIsPrimaryUpdate),
+				Config: testConfig(url, fooOrg(suffix), fooBaseAuthMethodIsPrimaryUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "description", fooBaseAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method.foo", "name", "test"),

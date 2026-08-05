@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentials"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -53,6 +54,7 @@ resource "boundary_credential_json" "example" {
 func TestAccCredentialJson(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	res := jsonCredResource(
@@ -74,7 +76,7 @@ func TestAccCredentialJson(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(jsonCredResc, NameKey, jsonCredName),
 					resource.TestCheckResourceAttr(jsonCredResc, DescriptionKey, jsonCredDesc),
@@ -87,7 +89,7 @@ func TestAccCredentialJson(t *testing.T) {
 			importStep(jsonCredResc, credentialJsonObjectKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(jsonCredResc, NameKey, jsonCredNameUpdate),
 					resource.TestCheckResourceAttr(jsonCredResc, DescriptionKey, jsonCredDescUpdate),
@@ -101,13 +103,13 @@ func TestAccCredentialJson(t *testing.T) {
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(jsonCredResc, credentialJsonObjectKey),
 			{
 				// update again but apply a preConfig to externally update resource
 				PreConfig: func() { jsonCredExternalUpdate(t, provider) },
-				Config:    testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:    testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(jsonCredResc, credentialJsonObjectKey),
 		},

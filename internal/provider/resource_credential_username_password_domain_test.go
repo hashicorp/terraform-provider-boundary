@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/credentials"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -74,6 +75,7 @@ resource "boundary_credential_username_password_domain" "example" {
 func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	res := usernamePasswordDomainCredResourceWithDomain(
@@ -113,7 +115,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -128,7 +130,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -144,13 +146,13 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 			{
 				// run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update again but apply a preConfig to externally update resource
 				PreConfig: func() { usernamePasswordDomainCredExternalUpdate(t, provider) },
-				Config:    testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:    testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 		},
@@ -162,7 +164,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -177,7 +179,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update from 3 distinct fields to username@domain.
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdateAt),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdateAt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -199,7 +201,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -214,7 +216,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update from 3 distinct fields to domain\username.
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdateSlash),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdateSlash),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -234,6 +236,7 @@ func TestAccCredentialUsernamePasswordDomain(t *testing.T) {
 func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	res := usernamePasswordDomainCredResourceWithoutDomain(
@@ -265,7 +268,7 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *tes
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -280,7 +283,7 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *tes
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -296,18 +299,18 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *tes
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update again but apply a preConfig to externally update resource
 				PreConfig: func() { usernamePasswordDomainCredExternalUpdate(t, provider) },
-				Config:    testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:    testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update from username@domain to use all 3 fields separately.
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdateSeparateFields),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdateSeparateFields),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -327,6 +330,7 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingAt(t *tes
 func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	res := usernamePasswordDomainCredResourceWithoutDomain(
@@ -358,7 +362,7 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -373,7 +377,7 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -389,18 +393,18 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update again but apply a preConfig to externally update resource
 				PreConfig: func() { usernamePasswordDomainCredExternalUpdate(t, provider) },
-				Config:    testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:    testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 			{
 				// update from domain\username to use all 3 fields separately.
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdateSeparateFields),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdateSeparateFields),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 					resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -423,6 +427,7 @@ func TestAccCredentialUsernamePasswordDomain_DomainInUsernameFieldUsingSlash(t *
 func TestResourceCredentialUsernamePasswordDomainCustomizeDiff(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	tests := []struct {
@@ -567,7 +572,7 @@ func TestResourceCredentialUsernamePasswordDomainCustomizeDiff(t *testing.T) {
 				Steps: []resource.TestStep{
 					{
 						// Create resource.
-						Config: testConfig(url, fooOrg, firstProjectFoo, tt.createResource),
+						Config: testConfig(url, fooOrg(suffix), firstProjectFoo, tt.createResource),
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, NameKey, usernamePasswordDomainCredName),
 							resource.TestCheckResourceAttr(usernamePasswordDomainCredResc, DescriptionKey, usernamePasswordDomainCredDesc),
@@ -583,7 +588,7 @@ func TestResourceCredentialUsernamePasswordDomainCustomizeDiff(t *testing.T) {
 					{
 						// Run a plan-only update on itself and verify no changes.
 						PlanOnly: true,
-						Config:   testConfig(url, fooOrg, firstProjectFoo, tt.createResource),
+						Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, tt.createResource),
 					},
 					importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey),
 				},
@@ -592,7 +597,7 @@ func TestResourceCredentialUsernamePasswordDomainCustomizeDiff(t *testing.T) {
 			for _, resUpdate := range tt.planOnlyUpdates {
 				tc.Steps = append(tc.Steps, resource.TestStep{
 					PlanOnly: true,
-					Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+					Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				}, importStep(usernamePasswordDomainCredResc, credentialUsernamePasswordDomainPasswordKey))
 			}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentiallibraries"
 	"github.com/hashicorp/boundary/testing/vault"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -140,6 +141,7 @@ resource "boundary_credential_library_vault" "ssh_private_key_mapping_override" 
 func TestAccCredentialLibraryVault(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	vc := vault.NewTestVaultServer(t)
@@ -160,7 +162,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredResc, NameKey, vaultCredLibName),
 					resource.TestCheckResourceAttr(vaultCredResc, DescriptionKey, vaultCredLibDesc),
@@ -175,7 +177,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredResc, NameKey, vaultCredLibName+vaultCredLibStringUpdate),
 					resource.TestCheckResourceAttr(vaultCredResc, DescriptionKey, vaultCredLibDesc+vaultCredLibStringUpdate),
@@ -190,7 +192,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 
 			{
 				// create typed credential library, note credential type is immutable so no need for update test
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultTypedCredLibResource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultTypedCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredTypedResc, NameKey, vaultCredLibName),
 					resource.TestCheckResourceAttr(vaultCredTypedResc, DescriptionKey, vaultCredLibDesc),
@@ -205,7 +207,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			importStep(vaultCredResc),
 
 			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibNameOverride),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
@@ -222,7 +224,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			importStep(vaultCredResc),
 
 			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibNameOverride),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
@@ -239,7 +241,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			importStep(vaultCredResc),
 
 			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceRemove),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultUsernamePasswordMappingOverrideCredLibResourceRemove),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, NameKey, vaultCredLibNameOverride),
 					resource.TestCheckResourceAttr(vaultCredUsernamePasswordResc, DescriptionKey, vaultCredLibDesc),
@@ -255,7 +257,7 @@ func TestAccCredentialLibraryVault(t *testing.T) {
 			importStep(vaultCredResc),
 
 			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultSshPrivateKeyMappingOverrideCredLibResource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, vaultCredLibResourceUpdate, vaultSshPrivateKeyMappingOverrideCredLibResource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, NameKey, vaultCredLibName),
 					resource.TestCheckResourceAttr(vaultCredSshPrivateKeyResc, DescriptionKey, vaultCredLibDesc),

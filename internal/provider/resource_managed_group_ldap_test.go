@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/managedgroups"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -38,6 +39,7 @@ func TestAccManagedGroupLdap(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	createConfig := fmt.Sprintf(testAuthMethodLdap, testAuthMethodLdapDesc, testAuthMethodLdapCert)
 
@@ -48,7 +50,7 @@ func TestAccManagedGroupLdap(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, createConfig, fooManagedGroupLdap),
+				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroupLdap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group_ldap.foo"),
 					resource.TestCheckResourceAttr("boundary_managed_group_ldap.foo", DescriptionKey, managedGroupDescription),
@@ -59,7 +61,7 @@ func TestAccManagedGroupLdap(t *testing.T) {
 			importStep("boundary_managed_group_ldap.foo"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, createConfig, fooManagedGroupLdapUpdate),
+				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroupLdapUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group_ldap.foo"),
 					resource.TestCheckResourceAttr("boundary_managed_group_ldap.foo", DescriptionKey, managedGroupDescription+managedGroupUpdate),

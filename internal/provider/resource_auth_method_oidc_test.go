@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/boundary/api/authmethods"
 	"github.com/hashicorp/boundary/api/scopes"
 	"github.com/hashicorp/cap/oidc"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -50,7 +51,7 @@ var (
 resource "boundary_auth_method_oidc" "foo" {
 	name        = "test"
 	description = "%s"
-	scope_id    = "global"
+	scope_id    = boundary_scope.org1.id
 	depends_on  = [boundary_role.org1_admin]
 
   issuer            = "%s"
@@ -74,7 +75,7 @@ EOT
 resource "boundary_auth_method_oidc" "foo" {
 	name                 = "test"
 	description          = "%s"
-	scope_id             = "global"
+	scope_id             = boundary_scope.org1.id
 	is_primary_for_scope = true
 	depends_on           = [boundary_role.org1_admin]
 
@@ -102,6 +103,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 	tp := oidc.StartTestProvider(t)
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	tpCert := strings.TrimSpace(tp.CACert())
@@ -115,7 +117,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, createConfig),
+				Config: testConfig(url, fooOrg(suffix), createConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
@@ -135,7 +137,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, updateConfig),
+				Config: testConfig(url, fooOrg(suffix), updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),

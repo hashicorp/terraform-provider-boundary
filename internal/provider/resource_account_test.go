@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/accounts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -63,6 +64,7 @@ resource "boundary_account" "foo" {
 func TestAccAccountBase(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
@@ -73,7 +75,7 @@ func TestAccAccountBase(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooAccount),
+				Config: testConfig(url, fooOrg(suffix), fooAccount),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDesc),
 					resource.TestCheckResourceAttr("boundary_account.foo", "name", "test"),
@@ -86,7 +88,7 @@ func TestAccAccountBase(t *testing.T) {
 			importStep("boundary_account.foo", "password"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooAccountUpdate),
+				Config: testConfig(url, fooOrg(suffix), fooAccountUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account.foo", "description", fooAccountDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account.foo", "name", "test"),

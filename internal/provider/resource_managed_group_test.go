@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/managedgroups"
 	"github.com/hashicorp/cap/oidc"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -51,6 +52,7 @@ func TestAccManagedGroup(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -59,7 +61,7 @@ func TestAccManagedGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, createConfig, fooManagedGroup),
+				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroup),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription),
@@ -70,7 +72,7 @@ func TestAccManagedGroup(t *testing.T) {
 			importStep("boundary_managed_group.foo"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, createConfig, fooManagedGroupUpdate),
+				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroupUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription+managedGroupUpdate),

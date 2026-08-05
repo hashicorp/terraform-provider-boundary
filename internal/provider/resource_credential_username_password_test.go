@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/credentials"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -48,6 +49,7 @@ resource "boundary_credential_username_password" "example" {
 func TestAccCredentialUsernamePassword(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	res := usernamePasswordCredResource(
@@ -71,7 +73,7 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, NameKey, usernamePasswordCredName),
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, DescriptionKey, usernamePasswordCredDesc),
@@ -85,7 +87,7 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, NameKey, usernamePasswordCredName),
 					resource.TestCheckResourceAttr(usernamePasswordCredResc, DescriptionKey, usernamePasswordCredDesc),
@@ -100,13 +102,13 @@ func TestAccCredentialUsernamePassword(t *testing.T) {
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
 			{
 				// update again but apply a preConfig to externally update resource
 				PreConfig: func() { usernamePasswordCredExternalUpdate(t, provider) },
-				Config:    testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:    testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(usernamePasswordCredResc, credentialUsernamePasswordPasswordKey),
 		},

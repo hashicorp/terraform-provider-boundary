@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/stretchr/testify/require"
@@ -75,6 +76,7 @@ resource "boundary_account_password" "foo" {
 func TestAccAccount(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
@@ -85,7 +87,7 @@ func TestAccAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooAccountPassword),
+				Config: testConfig(url, fooOrg(suffix), fooAccountPassword),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDesc),
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),
@@ -98,7 +100,7 @@ func TestAccAccount(t *testing.T) {
 			importStep("boundary_account_password.foo", "password"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooAccountPasswordUpdate),
+				Config: testConfig(url, fooOrg(suffix), fooAccountPasswordUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),
@@ -111,7 +113,7 @@ func TestAccAccount(t *testing.T) {
 			importStep("boundary_account_password.foo", "password"),
 			{
 				// update without passing type field
-				Config: testConfig(url, fooOrg, fooAccountPasswordWithoutTypeField),
+				Config: testConfig(url, fooOrg(suffix), fooAccountPasswordWithoutTypeField),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "description", fooAccountPasswordDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_password.foo", "name", "test"),

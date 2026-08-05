@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/roles"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -54,6 +55,7 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -63,7 +65,7 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Create with valid grant scopes should create role
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, orgRoleWithGrantScopes),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooUser, orgRoleWithGrantScopes),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scopes"),
@@ -77,7 +79,7 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 			{
 				// Update with invalid grant scopes should update role but return empty plan
 				// since grant scopes were not set correctly.
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, orgRoleWithInvalidGrantScopesUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooUser, orgRoleWithInvalidGrantScopesUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scopes"),
 					resource.TestCheckResourceAttr("boundary_role.with_grant_scopes", DescriptionKey, "with grant scopes update"),
@@ -87,7 +89,7 @@ func TestAccRoleWithGrantScopes(t *testing.T) {
 			},
 			{
 				// Update again without invalid principal should produce empty plan
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, orgRoleWithGrantScopesUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooUser, orgRoleWithGrantScopesUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grant_scopes"),
 					testAccCheckRoleResourceGrantScopesSet(provider, "boundary_role.with_grant_scopes", []string{"this", "children"}),

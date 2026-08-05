@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/aliases"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -60,6 +61,7 @@ resource "boundary_alias_target" "example" {
 func TestAccAliasTarget(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
+	suffix := id.UniqueId()
 	url := cfg.BoundaryAddr
 
 	res := targetAliasResource(targetAliasName, targetAliasDesc, targetAliasValue)
@@ -74,7 +76,7 @@ func TestAccAliasTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooBarTarget, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooBarTarget, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(targetAliasResc, NameKey, targetAliasName),
 					resource.TestCheckResourceAttr(targetAliasResc, DescriptionKey, targetAliasDesc),
@@ -86,7 +88,7 @@ func TestAccAliasTarget(t *testing.T) {
 			importStep(targetAliasResc),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooBarTarget, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooBarTarget, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(targetAliasResc, NameKey, targetAliasName+targetAliasUpdate),
 					resource.TestCheckResourceAttr(targetAliasResc, DescriptionKey, targetAliasDesc+targetAliasUpdate),
@@ -99,7 +101,7 @@ func TestAccAliasTarget(t *testing.T) {
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, fooBarTarget, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, fooBarTarget, resUpdate),
 			},
 			importStep(targetAliasResc),
 			{
@@ -109,7 +111,7 @@ func TestAccAliasTarget(t *testing.T) {
 				PreConfig:          func() { targetAliasExternalUpdate(t, provider) },
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Config:             testConfig(url, fooOrg, firstProjectFoo, fooBarTarget, resUpdate),
+				Config:             testConfig(url, fooOrg(suffix), firstProjectFoo, fooBarTarget, resUpdate),
 			},
 			importStep(targetAliasResc),
 		},

@@ -11,34 +11,39 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/scopes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/require"
 )
 
-const (
-	fooOrg = `
+// fooOrg returns HCL for a global scope wrapper and an org scope whose name is
+// unique per test via the provided suffix, preventing conflicts on the shared controller.
+func fooOrg(suffix string) string {
+	return fmt.Sprintf(`
 resource "boundary_scope" "global" {
 	global_scope = true
-	name = "global"
-	description = "Global Scope"
-	scope_id = "global"
+	name         = "global"
+	description  = "Global Scope"
+	scope_id     = "global"
 }
 
 resource "boundary_scope" "org1" {
-	name = "org1"
+	name     = "org1-%s"
 	scope_id = boundary_scope.global.id
 }
 
 resource "boundary_role" "org1_admin" {
-	scope_id = boundary_scope.global.id
+	scope_id        = boundary_scope.global.id
 	grant_scope_ids = [boundary_scope.org1.id]
-	grant_strings = ["ids=*;type=*;actions=*"]
-	principal_ids = ["u_auth"]
+	grant_strings   = ["ids=*;type=*;actions=*"]
+	principal_ids   = ["u_auth"]
 }
-`
+`, suffix)
+}
 
+const (
 	firstProjectFoo = `
 resource "boundary_scope" "proj1" {
 	name = "proj1"
@@ -91,6 +96,7 @@ func TestAccScopeCreation(t *testing.T) {
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -98,7 +104,7 @@ func TestAccScopeCreation(t *testing.T) {
 		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, firstProjectFoo, secondProject),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
@@ -110,7 +116,7 @@ func TestAccScopeCreation(t *testing.T) {
 			importStep("boundary_scope.proj1"),
 			// Updates the first project to have description bar
 			{
-				Config: testConfig(url, fooOrg, firstProjectBar, secondProject),
+				Config: testConfig(url, fooOrg(suffix), firstProjectBar, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
@@ -120,7 +126,7 @@ func TestAccScopeCreation(t *testing.T) {
 			importStep("boundary_scope.proj1"),
 			// Remove second project
 			{
-				Config: testConfig(url, fooOrg, firstProjectBar),
+				Config: testConfig(url, fooOrg(suffix), firstProjectBar),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					resource.TestCheckResourceAttr("boundary_scope.proj1", DescriptionKey, "bar"),
