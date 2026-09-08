@@ -25,6 +25,14 @@ resource "boundary_managed_group_ldap" "foo" {
 	group_names    = ["admin", "users"]
 }`, managedGroupName, managedGroupDescription)
 
+	fooManagedGroupLdapCaseInsensitive = fmt.Sprintf(`
+resource "boundary_managed_group_ldap" "foo" {
+	name           = "%s"
+	description    = "%s"
+	auth_method_id = boundary_auth_method_ldap.test-ldap.id
+	group_names    = ["ADMIN", "USERS"]
+}`, managedGroupName, managedGroupDescription)
+
 	fooManagedGroupLdapUpdate = fmt.Sprintf(`
 resource "boundary_managed_group_ldap" "foo" {
 	name           = "%s"
@@ -59,6 +67,11 @@ func TestAccManagedGroupLdap(t *testing.T) {
 				),
 			},
 			importStep("boundary_managed_group_ldap.foo"),
+			{
+				// group_names should ignore case-only diffs
+				PlanOnly: true,
+				Config:   testConfig(url, fooOrg, createConfig, fooManagedGroupLdapCaseInsensitive),
+			},
 			{
 				// test update
 				Config: testConfig(url, fooOrg, createConfig, fooManagedGroupLdapUpdate),
