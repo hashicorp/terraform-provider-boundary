@@ -9,9 +9,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/credentialstores"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -34,9 +35,10 @@ resource "boundary_credential_store_static" "example" {
 }
 
 func TestAccCredentialStoreStatic(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	res := staticCredStoreResource(staticCredStoreName,
 		staticCredStoreDesc)
@@ -51,7 +53,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(staticCredStoreResc, NameKey, staticCredStoreName),
 					resource.TestCheckResourceAttr(staticCredStoreResc, DescriptionKey, staticCredStoreDesc),
@@ -62,7 +64,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 			importStep(staticCredStoreResc),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(staticCredStoreResc, NameKey, staticCredStoreName+staticCredStoreUpdate),
 					resource.TestCheckResourceAttr(staticCredStoreResc, DescriptionKey, staticCredStoreDesc+staticCredStoreUpdate),
@@ -74,7 +76,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(staticCredStoreResc),
 			{
@@ -84,7 +86,7 @@ func TestAccCredentialStoreStatic(t *testing.T) {
 				PreConfig:          func() { staticCredentialStoreExternalUpdate(t, provider) },
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Config:             testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:             testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(staticCredStoreResc),
 		},

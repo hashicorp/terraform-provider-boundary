@@ -12,10 +12,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hosts"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccHost(t *testing.T) {
@@ -53,10 +54,10 @@ func testAccHost(t *testing.T, static bool) {
 		address         = "%s"
 	}`
 
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	//	org := iam.TestOrg(t, tc.IamRepo())
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	catalogName := "boundary_host_catalog"
 	hostName := "boundary_host"
@@ -78,7 +79,7 @@ func testAccHost(t *testing.T, static bool) {
 		Steps: []resource.TestStep{
 			{
 				// test project host create
-				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hostBlock),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, hcBlock, hostBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostAttributeSet(provider, fooHostName, "address", fooHostAddress),
 					testAccCheckHostResourceExists(provider, fooHostName),
@@ -90,7 +91,7 @@ func testAccHost(t *testing.T, static bool) {
 			importStep(fooHostName),
 			{
 				// test project host update
-				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hostUpdateBlock),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, hcBlock, hostUpdateBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostAttributeSet(provider, fooHostName, "address", fooHostAddressUpdate),
 					testAccCheckHostResourceExists(provider, fooHostName),

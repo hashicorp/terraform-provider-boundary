@@ -12,6 +12,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.head.repo.fork != 'true'
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Determine go version
@@ -40,6 +41,47 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go
+      - name: Determine boundary version
+        id: get-boundary-version
+        run: |
+          echo "Testing with boundary-enterprise $(cat .boundary-version)"
+          echo "boundary-version=$(cat .boundary-version)" >> "$GITHUB_OUTPUT"
+      - name: Download boundary-enterprise
+        run: |
+          VERSION="${{ steps.get-boundary-version.outputs.boundary-version }}"
+
+          release=$(curl -s "https://api.releases.hashicorp.com/v1/releases/boundary/${VERSION}?license_class=enterprise")
+          binary_url=$(echo "$release" | jq -r '.builds[] | select(.os == "linux" and .arch == "amd64") | .url')
+          shasums_url=$(echo "$release" | jq -r '.url_shasums')
+          shasums_sig_url=$(echo "$release" | jq -r '.url_shasums_signatures[0]')
+
+          # Download boundary, checksums, and checksum signature
+          echo "::group::Download files"
+          wget -q --server-response "$binary_url"
+          wget -q --server-response -O boundary_SHA256SUMS "$shasums_url"
+          wget -q --server-response -O boundary_SHA256SUMS.sig "$shasums_sig_url"
+          echo "::endgroup::"
+
+          # Verify signature against HashiCorp's public key
+          echo "::group::Verify signature"
+          export GNUPGHOME=./.gnupg
+          mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+          curl -s https://www.hashicorp.com/.well-known/pgp-key.txt | gpg --import
+          gpg --verify boundary_SHA256SUMS.sig boundary_SHA256SUMS
+          grep "boundary_${VERSION}_linux_amd64.zip" boundary_SHA256SUMS | shasum --algorithm 256 --check
+          echo "::endgroup::"
+
+          echo "::group::Extract boundary executable"
+          mkdir -p "$HOME/bin"
+          unzip "boundary_${VERSION}_linux_amd64.zip" -d "$HOME/bin"
+          echo "$HOME/bin" >> "${GITHUB_PATH}"
+          echo "::endgroup::"
+      - name: Verify boundary version
+        run: |
+          boundary version
       - name: Acceptance Tests
+        env:
+          BOUNDARY_ADDR: http://localhost:9200
+          BOUNDARY_LICENSE: ${{ secrets.BOUNDARY_LICENSE }}
         run: |
           make testacc

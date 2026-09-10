@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -48,9 +49,10 @@ resource "boundary_auth_method_password" "foo" {
 )
 
 func TestAccAuthMethodPassword(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -59,7 +61,7 @@ func TestAccAuthMethodPassword(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooAuthMethod),
+				Config: testConfig(url, fooOrg(suffix), fooAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
@@ -71,7 +73,7 @@ func TestAccAuthMethodPassword(t *testing.T) {
 			importStep("boundary_auth_method_password.foo"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooAuthMethodUpdate),
+				Config: testConfig(url, fooOrg(suffix), fooAuthMethodUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
@@ -86,9 +88,10 @@ func TestAccAuthMethodPassword(t *testing.T) {
 }
 
 func TestAccAuthMethodPasswordIsPrimary(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -97,7 +100,7 @@ func TestAccAuthMethodPasswordIsPrimary(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, fooAuthMethod),
+				Config: testConfig(url, fooOrg(suffix), fooAuthMethod),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),
@@ -109,7 +112,7 @@ func TestAccAuthMethodPasswordIsPrimary(t *testing.T) {
 			importStep("boundary_auth_method_password.foo"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, fooAuthMethodIsPrimaryUpdate),
+				Config: testConfig(url, fooOrg(suffix), fooAuthMethodIsPrimaryUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "description", fooAuthMethodDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_password.foo", "name", "test"),

@@ -11,10 +11,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/users"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -63,10 +64,11 @@ resource "boundary_user" "org1" {
 // NOTE: this test also tests out the direct token auth mechanism.
 
 func TestAccUser(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-	token := tc.Token().Token
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	token := cfg.BoundaryAuthToken
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -75,7 +77,7 @@ func TestAccUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfigWithToken(url, token, fooOrg, orgUser),
+				Config: testConfigWithToken(url, token, fooOrg(suffix), orgUser),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescription),
@@ -85,7 +87,7 @@ func TestAccUser(t *testing.T) {
 			importStep("boundary_user.org1"),
 			{
 				// test update description
-				Config: testConfigWithToken(url, token, fooOrg, orgUserUpdate),
+				Config: testConfigWithToken(url, token, fooOrg(suffix), orgUserUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					resource.TestCheckResourceAttr("boundary_user.org1", DescriptionKey, fooDescriptionUpdate),
@@ -98,10 +100,11 @@ func TestAccUser(t *testing.T) {
 }
 
 func TestAccUserWithAccounts(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-	token := tc.Token().Token
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	token := cfg.BoundaryAuthToken
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -110,7 +113,7 @@ func TestAccUserWithAccounts(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfigWithToken(url, token, fooOrg, fooAccount, orgUserWithAccts),
+				Config: testConfigWithToken(url, token, fooOrg(suffix), fooAccount, orgUserWithAccts),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),
@@ -123,7 +126,7 @@ func TestAccUserWithAccounts(t *testing.T) {
 			importStep("boundary_account.foo", "password"),
 			{
 				// test update description
-				Config: testConfigWithToken(url, token, fooOrg, fooAccount, orgUserWithAcctsUpdate),
+				Config: testConfigWithToken(url, token, fooOrg(suffix), fooAccount, orgUserWithAcctsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists(provider, "boundary_user.org1"),
 					testAccCheckAccountResourceExists(provider, "boundary_account.foo"),

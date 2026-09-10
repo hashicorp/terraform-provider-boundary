@@ -11,11 +11,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/hostcatalogs"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	_ "github.com/kr/pretty" // So I don't have to keep adding to/removing from go.mod :-)
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 	testPluginHostCatalogDescriptionUpdate2 = "bar foo foo"
 
 	testPluginHostCatalogWorkerFilterUpdate  = "\"dev\" in \"/tags/type\""
-	testPluginHostCatalogWorkerFilterUpdate2 = "\"pki\" in \"/tags/type\""
+	testPluginHostCatalogWorkerFilterUpdate2 = "\"local\" in \"/tags/type\""
 )
 
 // expectedAttributesState is used here and in plugin host sets to control how
@@ -36,6 +37,8 @@ const (
 	expectedAttributesStatePreviouslySetNoChange
 	expectedAttributesStatePreviouslySetButChanged
 	expectedAttributesStatePreviouslySetNowEmpty
+	expectedAttributesStateAttrsNowEmpty
+	expectedAttributesStateAttrsRestoredSecretsChanged
 )
 
 var projPluginHostCatalogBase = `
@@ -58,9 +61,10 @@ var (
 // different. Thus expectedAttributesState also controls expectations for
 // secrets.
 func TestAccPluginHostCatalog(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	resName := "boundary_host_catalog_plugin.foo"
 	initialValuesStr := fmt.Sprintf(
@@ -168,7 +172,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, initialHcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, initialHcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
@@ -180,7 +184,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update1Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
@@ -190,7 +194,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -202,7 +206,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 				// this runs the same HCL; mostly used in some manual checking
 				// to ensure update is still called even when nothing has
 				// changed (as we need for secrets)
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -212,7 +216,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update3Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -222,7 +226,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update4Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -232,7 +236,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update5Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -242,7 +246,7 @@ func TestAccPluginHostCatalog(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update6Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update6Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -255,11 +259,10 @@ func TestAccPluginHostCatalog(t *testing.T) {
 }
 
 func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
-	t.Skip("Skipping test until Boundary Terraform Provider can unit tests for Boundary Enterprise only features")
-
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	resName := "boundary_host_catalog_plugin.foo"
 	initialValuesStr := fmt.Sprintf(
@@ -377,7 +380,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, initialHcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, initialHcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
@@ -389,7 +392,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update1Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate),
@@ -400,7 +403,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -412,7 +415,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 				// this runs the same HCL; mostly used in some manual checking
 				// to ensure update is still called even when nothing has
 				// changed (as we need for secrets)
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -422,7 +425,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update3Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -433,7 +436,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update4Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -443,7 +446,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update5Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),
@@ -454,7 +457,7 @@ func TestAccPluginHostCatalogWithWorkerFilter(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update6Hcl),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, update6Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginHostCatalogResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testPluginHostCatalogDescriptionUpdate2),

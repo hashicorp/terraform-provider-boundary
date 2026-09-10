@@ -8,9 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -37,10 +38,11 @@ data "boundary_user" "admin" {
 // NOTE: this test also tests out the direct token auth mechanism.
 
 func TestAccUserDataSource_basicOrgUser(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-	token := tc.Token().Token
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	token := cfg.BoundaryAuthToken
+	suffix := id.UniqueId()
 
 	resourceName := "boundary_user.org1"
 	dataSourceName := "data.boundary_user.org1"
@@ -52,7 +54,7 @@ func TestAccUserDataSource_basicOrgUser(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfigWithToken(url, token, fooOrg, orgUserDataSource),
+				Config: testConfigWithToken(url, token, fooOrg(suffix), orgUserDataSource),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserResourceExists(provider, resourceName),
 					resource.TestCheckResourceAttr(dataSourceName, DescriptionKey, fooDescription),
@@ -64,10 +66,11 @@ func TestAccUserDataSource_basicOrgUser(t *testing.T) {
 }
 
 func TestAccUserDataSource_globalAdminUser(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
-	token := tc.Token().Token
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	token := cfg.BoundaryAuthToken
+	suffix := id.UniqueId()
 
 	dataSourceName := "data.boundary_user.admin"
 
@@ -76,11 +79,11 @@ func TestAccUserDataSource_globalAdminUser(t *testing.T) {
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfigWithToken(url, token, fooOrg, globalUserDataSource),
+				Config: testConfigWithToken(url, token, fooOrg(suffix), globalUserDataSource),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, NameKey, "admin"),
 					resource.TestCheckResourceAttr(dataSourceName, DescriptionKey, "Initial admin user within the \"global\" scope"),
-					resource.TestCheckResourceAttr(dataSourceName, LoginNameKey, "testuser"),
+					resource.TestCheckResourceAttr(dataSourceName, LoginNameKey, tcLoginName),
 					resource.TestMatchResourceAttr(dataSourceName, IDKey, regexache.MustCompile(`^u_.+`)),
 					resource.TestMatchResourceAttr(dataSourceName, PrimaryAccountIdKey, regexache.MustCompile(`^acctpw_.+`)),
 					resource.TestCheckResourceAttr(dataSourceName, "authorized_actions.#", "8"),

@@ -13,10 +13,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/storagebuckets"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -25,15 +26,15 @@ const (
 	testStorageBucketDescriptionUpdate2 = "bar foo foo"
 )
 
-var projStorageBucketBase = `
+var orgStorageBucketBase = `
 resource "boundary_storage_bucket" "foo" {
 	name        	= "foo"
-	scope_id    	= boundary_scope.proj1.id
+	scope_id    	= boundary_scope.org1.id
 	plugin_name 	= "loopback"
-	bucket_name   	= "testbucket123"
-    worker_filter 	= "\"pki\" in \"/tags/type\""
+	bucket_name   	= "default"
+	worker_filter 	= "\"dev\" in \"/tags/type\""
 %s
-	depends_on  	= [boundary_role.proj1_admin]
+	depends_on  	= [boundary_role.org1_admin]
 }`
 
 var (
@@ -42,14 +43,12 @@ var (
 )
 
 func TestAccStorageBucket(t *testing.T) {
-	t.Skip("Skipping test until Boundary Terraform Provider can unit tests for Boundary Enterprise only features")
-
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	resName := "boundary_storage_bucket.foo"
-	workerFilter := "\"pki\" in \"/tags/type\""
 	initialValuesStr := fmt.Sprintf(
 		`
 	description = "%s"
@@ -57,13 +56,11 @@ func TestAccStorageBucket(t *testing.T) {
 		foo = "bar"
 		zip = "zap"
 	})
-	workerFilter = "%s"
 	secrets_json = jsonencode({
 		hush = "puppies"
 	})
 	`,
 		testStorageBucketDescription,
-		workerFilter,
 	)
 
 	// Changed description and secrets
@@ -74,13 +71,11 @@ func TestAccStorageBucket(t *testing.T) {
 		foo = "bar"
 		zip = "zoop"
 	})
-	workerFilter = "%s"
 	secrets_json = jsonencode({
 		flush = "fluppies"
 	})
 	`,
 		testStorageBucketDescriptionUpdate,
-		workerFilter,
 	)
 
 	// Changed description, no secrets update
@@ -91,19 +86,18 @@ func TestAccStorageBucket(t *testing.T) {
 		foo = "bar"
 		zip = "zoop"
 	})
-	workerFilter = "%s"
 	secrets_json = jsonencode({
 		flush = "fluppies"
 	})
 	`,
 		testStorageBucketDescriptionUpdate2,
-		workerFilter,
 	)
 
-	// Same description, now explicitly unset secrets and blankify attrs
+	// Null only attributes_json; keep secrets (loopback plugin cannot clear secrets)
 	valuesStrUpdate3 := fmt.Sprintf(
 		`
 		description = "%s"
+		attributes_json = "null"
 		secrets_json = jsonencode({
 			flush = "fluppies"
 		})
@@ -111,7 +105,7 @@ func TestAccStorageBucket(t *testing.T) {
 		testStorageBucketDescriptionUpdate2,
 	)
 
-	// Set values again
+	// Re-add attributes_json and change secrets so HMAC changes
 	valuesStrUpdate4 := fmt.Sprintf(
 		`
 		description = "%s"
@@ -120,28 +114,17 @@ func TestAccStorageBucket(t *testing.T) {
 			zip = "zoop"
 		})
 		secrets_json = jsonencode({
-			flush = "fluppies"
+			flush = "fluppies2"
 		})
 		`,
 		testStorageBucketDescriptionUpdate2,
 	)
 
-	// Explicitly set both secrets and attributes to null
-	valuesStrUpdate5 := fmt.Sprintf(
-		`
-		description = "%s"
-		attributes_json = "null"
-		secrets_json = "null"
-		`,
-		testStorageBucketDescriptionUpdate2,
-	)
-
-	initialHcl := fmt.Sprintf(projStorageBucketBase, initialValuesStr)
-	update1Hcl := fmt.Sprintf(projStorageBucketBase, valuesStrUpdate1)
-	update2Hcl := fmt.Sprintf(projStorageBucketBase, valuesStrUpdate2)
-	update3Hcl := fmt.Sprintf(projStorageBucketBase, valuesStrUpdate3)
-	update4Hcl := fmt.Sprintf(projStorageBucketBase, valuesStrUpdate4)
-	update5Hcl := fmt.Sprintf(projStorageBucketBase, valuesStrUpdate5)
+	initialHcl := fmt.Sprintf(orgStorageBucketBase, initialValuesStr)
+	update1Hcl := fmt.Sprintf(orgStorageBucketBase, valuesStrUpdate1)
+	update2Hcl := fmt.Sprintf(orgStorageBucketBase, valuesStrUpdate2)
+	update3Hcl := fmt.Sprintf(orgStorageBucketBase, valuesStrUpdate3)
+	update4Hcl := fmt.Sprintf(orgStorageBucketBase, valuesStrUpdate4)
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -150,10 +133,9 @@ func TestAccStorageBucket(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, initialHcl),
+				Config: testConfig(url, fooOrg(suffix), initialHcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
-					testAccCheckScopeResourceExists(provider, "boundary_scope.proj1"),
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescription),
 				),
@@ -162,7 +144,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update1Hcl),
+				Config: testConfig(url, fooOrg(suffix), update1Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate),
@@ -172,7 +154,7 @@ func TestAccStorageBucket(t *testing.T) {
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
@@ -184,7 +166,7 @@ func TestAccStorageBucket(t *testing.T) {
 				// this runs the same HCL; mostly used in some manual checking
 				// to ensure update is still called even when nothing has
 				// changed (as we need for secrets)
-				Config: testConfig(url, fooOrg, firstProjectFoo, update2Hcl),
+				Config: testConfig(url, fooOrg(suffix), update2Hcl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
@@ -193,30 +175,20 @@ func TestAccStorageBucket(t *testing.T) {
 			},
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
-				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update3Hcl),
+				// test update: null attributes_json only — secrets unchanged (loopback cannot clear secrets)
+				Config: testConfig(url, fooOrg(suffix), update3Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNoChange),
+					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStateAttrsNowEmpty),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
 			{
-				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update4Hcl),
+				// test update: re-add attributes_json with changed secrets
+				Config: testConfig(url, fooOrg(suffix), update4Hcl),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslySetNowEmpty),
-					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			importStep(resName, SecretsJsonKey, internalHmacUsedForSecretsConfigHmacKey, internalForceUpdateKey, internalSecretsConfigHmacKey),
-			{
-				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, update5Hcl),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStatePreviouslyEmptyNowSet),
+					testAccCheckStorageBucketResourceExists(provider, resName, expectedAttributesStateAttrsRestoredSecretsChanged),
 					resource.TestCheckResourceAttr(resName, DescriptionKey, testStorageBucketDescriptionUpdate2),
 				),
 				ExpectNonEmptyPlan: true,
@@ -335,6 +307,51 @@ func testAccCheckStorageBucketResourceExists(testProvider *schema.Provider, name
 				return fmt.Errorf("expected empty new secrets hmac value, got %s", secretsHmac.(string))
 			}
 			currentStorageBucketSecretsHmacValue = ""
+			if currentStorageBucketAttributesValue == "" {
+				return errors.New("expected previous attributes value")
+			}
+			if attrs != nil {
+				return fmt.Errorf("expected empty new attributes value, got %s", attrs)
+			}
+			currentStorageBucketAttributesValue = ""
+
+		case expectedAttributesStateAttrsRestoredSecretsChanged:
+			// attrs go from empty back to set; secrets change
+			if currentStorageBucketSecretsHmacValue == "" {
+				return errors.New("expected previous secrets hmac value")
+			}
+			val := secretsHmac.(string)
+			if val == "" {
+				return errors.New("expected non-empty new secrets hmac value")
+			}
+			if val == currentStorageBucketSecretsHmacValue {
+				return errors.New("expected changed secrets hmac value")
+			}
+			currentStorageBucketSecretsHmacValue = val
+			if currentStorageBucketAttributesValue != "" {
+				return fmt.Errorf("expected no previous attributes value, got %s", currentStorageBucketAttributesValue)
+			}
+			if attrs == nil {
+				return errors.New("expected non-empty new attributes value")
+			}
+			attrsVal, err := json.Marshal(attrs)
+			if err != nil {
+				return fmt.Errorf("error marshaling attrs: %w", err)
+			}
+			currentStorageBucketAttributesValue = string(attrsVal)
+
+		case expectedAttributesStateAttrsNowEmpty:
+			// secrets unchanged (loopback plugin cannot clear secrets); only attrs cleared
+			if currentStorageBucketSecretsHmacValue == "" {
+				return errors.New("expected previous secrets hmac value")
+			}
+			val := secretsHmac.(string)
+			if val == "" {
+				return errors.New("expected non-empty secrets hmac value (secrets cannot be cleared)")
+			}
+			if val != currentStorageBucketSecretsHmacValue {
+				return errors.New("expected unchanged secrets hmac value")
+			}
 			if currentStorageBucketAttributesValue == "" {
 				return errors.New("expected previous attributes value")
 			}
