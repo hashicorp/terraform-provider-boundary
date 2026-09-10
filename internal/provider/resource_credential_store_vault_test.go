@@ -15,11 +15,12 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/credentialstores"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -102,9 +103,10 @@ func TestSetFromVaultCredentialStoreResponseMapReadsWorkerFilterFromAttributes(t
 }
 
 func TestAccCredentialStoreVault(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	vc := vault.NewTestVaultServer(t)
 	secret, token := vc.CreateToken(t)
@@ -135,7 +137,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredStoreResc, NameKey, vaultCredStoreName),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, DescriptionKey, vaultCredStoreDesc),
@@ -155,7 +157,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(vaultCredStoreResc, NameKey, vaultCredStoreName+vaultCredStoreUpdate),
 					resource.TestCheckResourceAttr(vaultCredStoreResc, DescriptionKey, vaultCredStoreDesc+vaultCredStoreUpdate),
@@ -176,7 +178,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 			{
 				// Run a plan only update and verify no changes
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:   testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 			{
@@ -186,7 +188,7 @@ func TestAccCredentialStoreVault(t *testing.T) {
 				PreConfig:          func() { externalUpdate(t, provider) },
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
-				Config:             testConfig(url, fooOrg, firstProjectFoo, resUpdate),
+				Config:             testConfig(url, fooOrg(suffix), firstProjectFoo, resUpdate),
 			},
 			importStep(vaultCredStoreResc, credentialStoreVaultTokenKey, credentialStoreVaultClientCertificateKeyKey),
 		},

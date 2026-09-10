@@ -17,23 +17,24 @@ import (
 	"github.com/hashicorp/cap/oidc"
 	wrapping "github.com/hashicorp/go-kms-wrapping/v2"
 	"github.com/hashicorp/go-kms-wrapping/v2/aead"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/jimlambrt/gldap"
 	"github.com/jimlambrt/gldap/testdirectory"
+	"github.com/stretchr/testify/require"
 )
 
 var (
-	tcLoginName = "testuser"
-	tcPassword  = "passpass"
-	tcPAUM      = "ampw_0000000000"
+	tcLoginName = "admin"
+	tcPassword  = "password"
+	tcPAUM      = "ampw_1234567890"
 	tcConfig    = []controller.Option{
 		controller.WithDefaultPasswordAuthMethodId(tcPAUM),
 		controller.WithDefaultLoginName(tcLoginName),
 		controller.WithDefaultPassword(tcPassword),
 	}
-	tcRecoveryKey = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
 )
 
 func providerFactories(p **schema.Provider) map[string]func() (*schema.Provider, error) {
@@ -145,15 +146,23 @@ provider "boundary" {
 func testConfigWithoutAMPWCredentials(url string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
-	addr  = "%s"
-}`, url)
+	addr           = "%s"
+	auth_method_id = "%s"
+}`, url, tcPAUM)
 
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
 }
 
-func testConfigWithRecovery(url string, res ...string) string {
+func testConfigWithRecovery(t *testing.T, url string, res ...string) string {
+	t.Helper()
+	cfg, err := loadTestConfig()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key := requireRecoveryKey(t, cfg)
 	provider := fmt.Sprintf(`
 provider "boundary" {
 	addr             = "%s"
@@ -161,24 +170,25 @@ provider "boundary" {
 	kms "aead" {
 		purpose = ["recovery", "config"]
 		aead_type = "aes-gcm"
-		key = "7xtkEoS5EXPbgynwd+dDLHopaCqK8cq0Rpep4eooaTs="
+		key = "%s"
 		key_id = "global_recovery"
 	}
 	DOC
-}`, url)
+}`, url, key)
 
 	c := []string{provider}
 	c = append(c, res...)
 	return strings.Join(c, "\n")
 }
 
-func testConfigWithLDAPAuthMethod(url string, loginName string, password string, res ...string) string {
+func testConfigWithLDAPAuthMethod(url string, scopeId string, loginName string, password string, res ...string) string {
 	provider := fmt.Sprintf(`
 provider "boundary" {
-	addr             = "%s"
+	addr                   = "%s"
+	scope_id               = "%s"
 	auth_method_login_name = "%s"
-	auth_method_password = "%s"
-}`, url, loginName, password)
+	auth_method_password   = "%s"
+}`, url, scopeId, loginName, password)
 
 	c := []string{provider}
 	c = append(c, res...)
@@ -208,49 +218,68 @@ func TestProvider(t *testing.T) {
 func TestConfigWithLdapAuthMethod(t *testing.T) {
 	td := createDefaultLdap(t)
 	defer td.Stop()
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 	ldapLoginName := "alice"
 	ldapPassword := "password"
 
 	createLdapAMConfig := fmt.Sprintf(testPrimaryAuthMethodLdap, td.Host(), td.Port(), testdirectory.DefaultUserDN, testdirectory.DefaultGroupDN)
 	createLdapAccountConfig := fmt.Sprintf(testProviderLdapAccountConfig, ldapLoginName)
 
+	// provider is set by providerFactories when resource.Test initialises.
+	// steps is declared as a var (slice = reference type) so step 1's Check can
+	// write the org scope ID into steps[1].Config before the framework reads it.
 	var provider *schema.Provider
+	var steps []resource.TestStep
+	steps = []resource.TestStep{
+		{
+			// Step 1: create LDAP auth method as primary for the org.
+			// Capture the org scope ID and write it into step 2's provider block.
+			Config: testConfig(url, fooOrg(suffix), createLdapAMConfig, createLdapAccountConfig),
+			Check: resource.ComposeTestCheckFunc(
+				resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapInsecureTlsField, "true"),
+				func(s *terraform.State) error {
+					rs, ok := s.RootModule().Resources["boundary_scope.org1"]
+					if !ok {
+						return fmt.Errorf("boundary_scope.org1 not found in state")
+					}
+					steps[1].Config = testConfigWithLDAPAuthMethod(url, rs.Primary.ID, ldapLoginName, ldapPassword, fooOrg(suffix), createLdapAMConfig, createLdapAccountConfig)
+					return nil
+				},
+			),
+		},
+		{
+			// Step 2: provider uses scope_id=org1 to auto-discover the LDAP primary AM.
+			// Config is written by step 1's Check above; placeholder avoids empty-step error.
+			Config: testConfig(url, fooOrg(suffix), createLdapAMConfig, createLdapAccountConfig),
+			Check: resource.ComposeTestCheckFunc(
+				func(s *terraform.State) error { return testProviderTokenExists(provider)(s) },
+			),
+		},
+		{
+			// Step 3: switch back to password auth and verify it still works after
+			// LDAP was primary for the org.
+			Config: testConfig(url, fooOrg(suffix)),
+			Check: resource.ComposeTestCheckFunc(
+				func(s *terraform.State) error { return testProviderTokenExists(provider)(s) },
+			),
+		},
+	}
+
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
 		CheckDestroy:      testAccCheckAuthMethodResourceDestroy(t, provider, ldapAuthMethodType),
-		Steps: []resource.TestStep{
-			{
-				// create ldap auth method
-				Config: testConfig(url, fooOrg, createLdapAMConfig, createLdapAccountConfig),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapInsecureTlsField, "true"),
-				),
-			},
-			{
-				// authenticate with LDAP auth method and ensure auth token exists
-				Config: testConfigWithLDAPAuthMethod(url, ldapLoginName, ldapPassword, fooOrg, createLdapAMConfig, createLdapAccountConfig),
-				Check: resource.ComposeTestCheckFunc(
-					testProviderTokenExists(provider),
-				),
-			},
-			{
-				// check if authentication with password auth method works after
-				Config: testConfig(url, fooOrg),
-				Check: resource.ComposeTestCheckFunc(
-					testProviderTokenExists(provider),
-				),
-			},
-		},
+		Steps:             steps,
 	})
 }
 
 func TestConfigWithDefaultAuthMethod(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -259,7 +288,7 @@ func TestConfigWithDefaultAuthMethod(t *testing.T) {
 		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfigWithDefaultAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
+				Config: testConfigWithDefaultAuthMethod(url, fooOrg(suffix), firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testProviderTokenExists(provider),
@@ -270,9 +299,10 @@ func TestConfigWithDefaultAuthMethod(t *testing.T) {
 }
 
 func TestConfigWithDeprecatedAuthMethod(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -281,7 +311,7 @@ func TestConfigWithDeprecatedAuthMethod(t *testing.T) {
 		CheckDestroy:      testAccCheckScopeResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfigWithDeprecatedAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
+				Config: testConfigWithDeprecatedAuthMethod(url, fooOrg(suffix), firstProjectFoo, secondProject),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScopeResourceExists(provider, "boundary_scope.org1"),
 					testProviderTokenExists(provider),
@@ -292,9 +322,10 @@ func TestConfigWithDeprecatedAuthMethod(t *testing.T) {
 }
 
 func TestConfigWithoutAMPWCredentials(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -302,7 +333,7 @@ func TestConfigWithoutAMPWCredentials(t *testing.T) {
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config:      testConfigWithoutAMPWCredentials(url, fooOrg, firstProjectFoo, secondProject),
+				Config:      testConfigWithoutAMPWCredentials(url, fooOrg(suffix), firstProjectFoo, secondProject),
 				ExpectError: regexp.MustCompile("auth method login name not set, please set auth_method_login_name on the provider"),
 			},
 		},
@@ -310,9 +341,10 @@ func TestConfigWithoutAMPWCredentials(t *testing.T) {
 }
 
 func TestConfigWithOIDCAuthMethod(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -320,7 +352,7 @@ func TestConfigWithOIDCAuthMethod(t *testing.T) {
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config:      testConfigWithOIDCAuthMethod(url, fooOrg, firstProjectFoo, secondProject),
+				Config:      testConfigWithOIDCAuthMethod(url, fooOrg(suffix), firstProjectFoo, secondProject),
 				ExpectError: regexp.MustCompile("OIDC auth method is currently not supported by Boundary Terraform Provider. only password auth method is supported at this time"),
 			},
 		},
@@ -330,12 +362,12 @@ func TestConfigWithOIDCAuthMethod(t *testing.T) {
 // Create OIDC auth method and set it as the primary auth method.
 // Attempt to authenticate with recovery to test checks for default auth method
 func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
-	tp := oidc.StartTestProvider(t)
-	wrapper := testWrapper(context.Background(), t, tcRecoveryKey)
-	tc := controller.NewTestController(t, append(tcConfig, controller.WithRecoveryKms(wrapper))...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
+	tp := oidc.StartTestProvider(t)
 	tpCert := strings.TrimSpace(tp.CACert())
 	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
 	updateConfig := fmt.Sprintf(fooAuthMethodOidcUpdate, fooAuthMethodOidcDescUpdate, fooAuthMethodOidcCaCerts)
@@ -347,7 +379,7 @@ func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create auth method
-				Config: testConfig(url, fooOrg, createConfig),
+				Config: testConfig(url, fooOrg(suffix), createConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
@@ -357,7 +389,7 @@ func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
 			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
 			{
 				// set auth method as primary auth method
-				Config: testConfig(url, fooOrg, updateConfig),
+				Config: testConfig(url, fooOrg(suffix), updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
@@ -365,7 +397,7 @@ func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
 			},
 			{
 				// authenticate provider with recovery kms with unsupported OIDC primary auth method
-				Config: testConfigWithRecovery(url, fooOrg, updateConfig),
+				Config: testConfigWithRecovery(t, url, fooOrg(suffix), updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),

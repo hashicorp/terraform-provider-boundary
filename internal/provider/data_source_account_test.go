@@ -8,10 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/cap/oidc"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 var accountPasswordRead = `
@@ -36,16 +38,17 @@ data "boundary_account" "acc_oidc" {
 }`
 
 func TestAccAccountReadPassword(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, fooAccountPassword, accountPasswordRead),
+				Config: testConfig(url, fooOrg(suffix), fooAccountPassword, accountPasswordRead),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountResourceExists(provider, "boundary_account_password.foo"),
 					resource.TestCheckResourceAttrSet("data.boundary_account.acc_password", IDKey),
@@ -54,7 +57,7 @@ func TestAccAccountReadPassword(t *testing.T) {
 					resource.TestCheckResourceAttr("data.boundary_account.acc_password", DescriptionKey, fooAccountPasswordDesc),
 					resource.TestCheckResourceAttr("data.boundary_account.acc_password", TypeKey, "password"),
 					resource.TestCheckResourceAttrSet("data.boundary_account.acc_password", "scope.0.id"),
-					resource.TestCheckResourceAttr("data.boundary_account.acc_password", "scope.0.name", "org1"),
+					resource.TestMatchResourceAttr("data.boundary_account.acc_password", "scope.0.name", regexache.MustCompile(`^org1-`)),
 					resource.TestCheckResourceAttr("data.boundary_account.acc_password", "scope.0.type", "org"),
 				),
 			},
@@ -63,16 +66,17 @@ func TestAccAccountReadPassword(t *testing.T) {
 }
 
 func TestAccAccountReadLdap(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, testAccountLdap, accountLdapRead),
+				Config: testConfig(url, fooOrg(suffix), testAccountLdap, accountLdapRead),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountResourceExists(provider, "boundary_account_ldap.foo"),
 					resource.TestCheckResourceAttrSet("data.boundary_account.acc_ldap", IDKey),
@@ -81,7 +85,7 @@ func TestAccAccountReadLdap(t *testing.T) {
 					resource.TestCheckResourceAttr("data.boundary_account.acc_ldap", DescriptionKey, testAccountLdapDesc),
 					resource.TestCheckResourceAttr("data.boundary_account.acc_ldap", TypeKey, "ldap"),
 					resource.TestCheckResourceAttrSet("data.boundary_account.acc_ldap", "scope.0.id"),
-					resource.TestCheckResourceAttr("data.boundary_account.acc_ldap", "scope.0.name", "org1"),
+					resource.TestMatchResourceAttr("data.boundary_account.acc_ldap", "scope.0.name", regexache.MustCompile(`^org1-`)),
 					resource.TestCheckResourceAttr("data.boundary_account.acc_ldap", "scope.0.type", "org"),
 				),
 			},
@@ -91,9 +95,10 @@ func TestAccAccountReadLdap(t *testing.T) {
 
 func TestAccAccountReadOidc(t *testing.T) {
 	tp := oidc.StartTestProvider(t)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	tpCert := strings.TrimSpace(tp.CACert())
@@ -103,7 +108,7 @@ func TestAccAccountReadOidc(t *testing.T) {
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, createConfig, accountOidcRead),
+				Config: testConfig(url, fooOrg(suffix), createConfig, accountOidcRead),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountResourceExists(provider, "boundary_account_oidc.foo"),
 					resource.TestCheckResourceAttrSet("data.boundary_account.acc_oidc", IDKey),
@@ -112,7 +117,7 @@ func TestAccAccountReadOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("data.boundary_account.acc_oidc", DescriptionKey, fooAccountOidcDesc),
 					resource.TestCheckResourceAttr("data.boundary_account.acc_oidc", TypeKey, "oidc"),
 					resource.TestCheckResourceAttrSet("data.boundary_account.acc_oidc", "scope.0.id"),
-					resource.TestCheckResourceAttr("data.boundary_account.acc_oidc", "scope.0.name", "org1"),
+					resource.TestMatchResourceAttr("data.boundary_account.acc_oidc", "scope.0.name", regexache.MustCompile(`^org1-`)),
 					resource.TestCheckResourceAttr("data.boundary_account.acc_oidc", "scope.0.type", "org"),
 				),
 			},

@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -87,21 +88,31 @@ resource "boundary_user" "alice" {
 	name        = "alice"
 	description = "test user resource"
 	account_ids = [boundary_account_ldap.test-ldap.id]
-	scope_id = boundary_scope.global.id
+	scope_id    = boundary_scope.org1.id
 }
 
 resource "boundary_role" "ldap_principal" {
-	scope_id = boundary_scope.global.id
+	scope_id        = boundary_scope.org1.id
+	grant_scope_ids = ["this", "children"]
+	grant_strings   = ["ids=*;type=*;actions=*"]
+	principal_ids   = [boundary_user.alice.id]
+	depends_on      = [boundary_role.org1_admin]
+}
+
+resource "boundary_role" "ldap_global_reader" {
+	scope_id        = boundary_scope.global.id
 	grant_scope_ids = ["this"]
-	grant_strings = ["ids=*;type=*;actions=*"]
-	principal_ids = [boundary_user.alice.id]
+	grant_strings   = ["ids=*;type=*;actions=*"]
+	principal_ids   = [boundary_user.alice.id]
+	depends_on      = [boundary_role.org1_admin]
 }`
 )
 
 func TestAccLdapAccount(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 
@@ -111,7 +122,7 @@ func TestAccLdapAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, testAccountLdap),
+				Config: testConfig(url, fooOrg(suffix), testAccountLdap),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDesc),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapName),
@@ -123,7 +134,7 @@ func TestAccLdapAccount(t *testing.T) {
 			importStep("boundary_account_ldap.foo", "ldap"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, testAccountLdapUpdate),
+				Config: testConfig(url, fooOrg(suffix), testAccountLdapUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapNameUpdate),
@@ -135,7 +146,7 @@ func TestAccLdapAccount(t *testing.T) {
 			importStep("boundary_account_ldap.foo", "ldap"),
 			{
 				// update without passing type field
-				Config: testConfig(url, fooOrg, testAccountLdapWithoutTypeField),
+				Config: testConfig(url, fooOrg(suffix), testAccountLdapWithoutTypeField),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "description", testAccountLdapDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_ldap.foo", "name", testAccountLdapNameUpdate),

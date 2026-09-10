@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/ssh/testdata"
 )
 
@@ -43,9 +44,10 @@ resource "boundary_credential_ssh_private_key" "example" {
 }
 
 func TestAccCredentialSshPrivateKey(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	privKey := string(testdata.PEMBytes["rsa"])
 	privKeyUpdate := string(testdata.PEMEncryptedKeys[0].PEMBytes)
@@ -75,7 +77,7 @@ func TestAccCredentialSshPrivateKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, firstProjectFoo, staticStore, res),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, staticStore, res),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, NameKey, sshPrivateKeyCredName),
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, DescriptionKey, sshPrivateKeyCredDesc),
@@ -90,7 +92,7 @@ func TestAccCredentialSshPrivateKey(t *testing.T) {
 			importStep(sshPrivateKeyCredResc, credentialSshPrivateKeyPrivateKeyKey, credentialSshPrivateKeyPassphraseKey),
 			{
 				// update
-				Config: testConfig(url, fooOrg, firstProjectFoo, staticStore, resUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, staticStore, resUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, NameKey, sshPrivateKeyCredName+sshPrivateKeyUpdate),
 					resource.TestCheckResourceAttr(sshPrivateKeyCredResc, DescriptionKey, sshPrivateKeyCredDesc+sshPrivateKeyUpdate),

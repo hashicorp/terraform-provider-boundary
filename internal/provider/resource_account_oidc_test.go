@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/cap/oidc"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -52,9 +53,10 @@ resource "boundary_account_oidc" "foo" {
 
 func TestAccOidcAccount(t *testing.T) {
 	tp := oidc.StartTestProvider(t)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 
@@ -68,7 +70,7 @@ func TestAccOidcAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, createConfig),
+				Config: testConfig(url, fooOrg(suffix), createConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_oidc.foo", "description", fooAccountOidcDesc),
 					resource.TestCheckResourceAttr("boundary_account_oidc.foo", "name", "test"),
@@ -80,7 +82,7 @@ func TestAccOidcAccount(t *testing.T) {
 			importStep("boundary_account_oidc.foo", "oidc"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, updateConfig),
+				Config: testConfig(url, fooOrg(suffix), updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_account_oidc.foo", "description", fooAccountOidcDescUpdate),
 					resource.TestCheckResourceAttr("boundary_account_oidc.foo", "name", "test"),
