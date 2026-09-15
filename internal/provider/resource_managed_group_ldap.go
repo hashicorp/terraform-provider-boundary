@@ -53,12 +53,12 @@ func resourceManagedGroupLdap() *schema.Resource {
 			managedGroupLdapGroupNamesKey: {
 				Description: "The list of groups that make up the managed group.",
 				Type:        schema.TypeList,
+				Required:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-				},
-				Required: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.EqualFold(old, new)
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return strings.EqualFold(old, new)
+					},
 				},
 			},
 		},
