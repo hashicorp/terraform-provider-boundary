@@ -12,11 +12,12 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/targets"
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/boundary/testing/vault"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -220,10 +221,10 @@ resource "boundary_target" "foo" {
 )
 
 func TestAccTarget(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	vc := vault.NewTestVaultServer(t)
 	_, token := vc.CreateToken(t)
@@ -243,7 +244,7 @@ func TestAccTarget(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTarget),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescription),
@@ -260,7 +261,7 @@ func TestAccTarget(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
@@ -276,7 +277,7 @@ func TestAccTarget(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test unset hosts and cred sources
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdateUnsetHostAndCredSources),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, fooBarCredLibs, fooBarHostSet, fooTargetUpdateUnsetHostAndCredSources),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
@@ -292,7 +293,7 @@ func TestAccTarget(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test updating state file when the target is created, but fails on associating an invalid injected credential source to a tcp target type
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooTargetPartialSuccess),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, fooBarCredLibs, fooTargetPartialSuccess),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, ""),
@@ -308,7 +309,7 @@ func TestAccTarget(t *testing.T) {
 			importStep("boundary_target.foo", targetInjectedAppCredentialSourceIdsKey),
 			{
 				// test resolving invalid injected credential source error without raising duplicate name error, due to state file not being in sync.
-				Config: testConfig(url, fooOrg, firstProjectFoo, credStoreRes, fooBarCredLibs, fooTargetUpdateUnsetHostAndCredSources),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, credStoreRes, fooBarCredLibs, fooTargetUpdateUnsetHostAndCredSources),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", DescriptionKey, fooTargetDescriptionUpdate),
@@ -328,10 +329,10 @@ func TestAccTarget(t *testing.T) {
 }
 
 func TestAccTargetWithAddress(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -341,7 +342,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetWithIPAddress),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooTargetWithIPAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
@@ -355,7 +356,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetWithDNSAddress),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooTargetWithDNSAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
@@ -369,7 +370,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test update to unset address
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetUnsetAddress),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooTargetUnsetAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
@@ -383,7 +384,7 @@ func TestAccTargetWithAddress(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test set host source
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooBarHostSet, fooTargetSetHostSource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooBarHostSet, fooTargetSetHostSource),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
@@ -399,10 +400,10 @@ func TestAccTargetWithAddress(t *testing.T) {
 }
 
 func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -412,7 +413,7 @@ func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooTargetWithIPAddress),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooTargetWithIPAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
@@ -426,7 +427,7 @@ func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
 			importStep("boundary_target.foo"),
 			{
 				// test set host source
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooBarHostSet, fooTargetSetHostSource),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooBarHostSet, fooTargetSetHostSource),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetResourceExists(provider, "boundary_target.foo"),
 					resource.TestCheckResourceAttr("boundary_target.foo", NameKey, "test"),
@@ -442,6 +443,7 @@ func TestAccTargetWithAddress_MoveToHostSourceDirectly(t *testing.T) {
 }
 
 func TestAccTargetWithAddress_HostSourceAndAddressConflict(t *testing.T) {
+	suffix := id.UniqueId()
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:        true,
@@ -450,7 +452,7 @@ func TestAccTargetWithAddress_HostSourceAndAddressConflict(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create target with address and host source
-				Config:      testConfig("not_required", fooOrg, firstProjectFoo, fooBarHostSet, fooTargetWithAddressAndHostSource),
+				Config:      testConfig("not_required", fooOrg(suffix), firstProjectFoo, fooBarHostSet, fooTargetWithAddressAndHostSource),
 				ExpectError: regexp.MustCompile(`"address": conflicts with host_source_ids`),
 			},
 		},

@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/boundary/api/hostsets"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -53,9 +53,10 @@ func TestAccHostSetPlugin(t *testing.T) {
 		%s
 	}`
 
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 	fooSetName := "boundary_host_set_plugin.foo"
 
 	attrBlock1 := `attributes_json = jsonencode({
@@ -91,7 +92,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsBlock),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, catalogBlock, hsBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
@@ -104,7 +105,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate1Block),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, catalogBlock, hsUpdate1Block),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetButChanged),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
@@ -117,7 +118,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate2Block),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, catalogBlock, hsUpdate2Block),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetNoChange),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
@@ -130,7 +131,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate3Block),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, catalogBlock, hsUpdate3Block),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
@@ -143,7 +144,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate4Block),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, catalogBlock, hsUpdate4Block),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslyEmptyNowSet),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),
@@ -156,7 +157,7 @@ func TestAccHostSetPlugin(t *testing.T) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, catalogBlock, hsUpdate5Block),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, catalogBlock, hsUpdate5Block),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetPluginResourceExists(provider, fooSetName, expectedAttributesStatePreviouslySetNowEmpty),
 					resource.TestCheckResourceAttr(fooSetName, NameKey, "test"),

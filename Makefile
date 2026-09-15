@@ -30,7 +30,7 @@ test:
 
 # Run acceptance tests
 testacc:
-	TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m
+	./test.sh
 
 dev:
 	GOOS=${GOOS} GOARCH=${GOARCH} ./scripts/plugins.sh

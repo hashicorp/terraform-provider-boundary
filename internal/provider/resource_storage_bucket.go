@@ -226,6 +226,18 @@ func setFromStorageBucketResponseMap(d *schema.ResourceData, raw map[string]inte
 		}
 	}
 
+	if v, ok := raw[storageBucketNameKey]; ok {
+		if err := d.Set(storageBucketNameKey, v); err != nil {
+			return err
+		}
+	}
+
+	if v, ok := raw[WorkerFilterKey]; ok {
+		if err := d.Set(WorkerFilterKey, v); err != nil {
+			return err
+		}
+	}
+
 	d.SetId(raw[IDKey].(string))
 
 	if err := d.Set(internalForceUpdateKey, strconv.FormatInt(rand.Int63(), 10)); err != nil {
