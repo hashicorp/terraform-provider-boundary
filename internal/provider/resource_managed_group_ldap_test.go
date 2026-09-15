@@ -70,7 +70,7 @@ func TestAccManagedGroupLdap(t *testing.T) {
 			{
 				// group_names should ignore case-only diffs
 				PlanOnly: true,
-				Config:   testConfig(url, fooOrg, createConfig, fooManagedGroupLdapCaseInsensitive),
+				Config:   testConfig(url, fooOrg(suffix), createConfig, fooManagedGroupLdapCaseInsensitive),
 			},
 			{
 				// test update
