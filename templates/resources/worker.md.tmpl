@@ -15,9 +15,29 @@ description: |-
 
 {{tffile "examples/resources/boundary_worker/controller_led.tf"}}
 
+Use controller-led registration when Terraform can deliver a generated activation
+token to the worker. Omit `worker_generated_auth_token`.
+
 ### Worker-led worker
 
 {{tffile "examples/resources/boundary_worker/worker_led.tf"}}
+
+Use worker-led registration when the worker generates the authorization request.
+Set `worker_generated_auth_token` to the generated token.
+
+### No managed worker resource
+
+Without a `boundary_worker` resource, Terraform does not manage a worker.
+
+### Both registration methods
+
+Configure separate `boundary_worker` resources when your deployment requires
+both registration methods.
+
+{{tffile "examples/resources/boundary_worker/both.tf"}}
+
+Refer to the Boundary documentation to [register workers](https://developer.hashicorp.com/boundary/docs/workers/registration)
+for registration details.
 
 {{ .SchemaMarkdown | trimspace }}
 
