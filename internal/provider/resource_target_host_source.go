@@ -18,14 +18,15 @@ import (
 const (
 	targetHostSourceTargetIdKey = "target_id"
 	targetHostSourceIdKey       = "host_source_id"
+	targetHostSourceDescription = "Attaches a host source to an existing Boundary target. " +
+		"Use this resource instead of the `host_source_ids` field on `boundary_target` " +
+		"when the target and its host sources are managed in separate Terraform configurations. " +
+		"Do not set `host_source_ids` on `boundary_target` when using this resource for the same target."
 )
 
 func resourceTargetHostSource() *schema.Resource {
 	return &schema.Resource{
-		Description: "Attaches a host source to an existing Boundary target. " +
-			"Use this resource instead of the `host_source_ids` field on `boundary_target` " +
-			"when the target and its host sources are managed in separate Terraform configurations. " +
-			"Do not set `host_source_ids` on `boundary_target` when using this resource for the same target.",
+		Description: targetHostSourceDescription,
 
 		CreateContext: resourceTargetHostSourceCreate,
 		ReadContext:   resourceTargetHostSourceRead,
