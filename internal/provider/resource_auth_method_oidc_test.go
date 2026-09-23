@@ -69,6 +69,7 @@ EOT
 	account_claim_maps = ["oid=sub"]
 	claims_scopes = ["profile"]
 	prompts = ["select_account"]
+	provider_type = "azure"
 }`
 
 	fooAuthMethodOidcUpdate = `
@@ -124,6 +125,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, tp.Addr()),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "0"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcProviderTypeKey, "azure"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{tpCert}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcSigningAlgorithmsKey, []string{"ES256"}),
@@ -144,6 +146,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test-update.com"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id_update"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "-1"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcProviderTypeKey, ""),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcPromptsKey, []string{"consent", "select_account"}),

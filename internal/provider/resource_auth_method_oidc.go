@@ -30,6 +30,7 @@ const (
 	authmethodOidcAccountClaimMapsKey                  = "account_claim_maps"
 	authmethodOidcClaimsScopesKey                      = "claims_scopes"
 	authmethodOidcPromptsKey                           = "prompts"
+	authmethodOidcProviderTypeKey                      = "provider_type"
 
 	// computed-only parameters
 	authmethodOidcCallbackUrlKey      = "callback_url"
@@ -157,6 +158,12 @@ func resourceAuthMethodOidc() *schema.Resource {
 				},
 				Optional: true,
 			},
+			authmethodOidcProviderTypeKey: {
+				Description: "The provider type that identifies the provider associated with the auth method. When set, it enables provider specific behavior during authentication. " +
+					"When unset, no provider specific behavior is applied. Please note the value passed is case-sensitive. The valid values are: `azure`.",
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 
 			// OIDC specific immutable and computed parameters
 			authmethodOidcClientSecretHmacKey: {
@@ -253,6 +260,14 @@ func setFromOidcAuthMethodResponseMap(d *schema.ResourceData, raw map[string]int
 		if val, ok := attrs[authmethodOidcPromptsKey]; ok {
 			d.Set(authmethodOidcPromptsKey, val.([]interface{}))
 		}
+
+		if val, ok := attrs[authmethodOidcProviderTypeKey]; ok {
+			d.Set(authmethodOidcProviderTypeKey, val.(string))
+		} else {
+			// provider_type is omitted from the response when unset, so an absent key
+			// means "no provider type". Reset it to the zero value.
+			d.Set(authmethodOidcProviderTypeKey, "")
+		}
 	}
 
 	d.SetId(raw["id"].(string))
@@ -341,6 +356,10 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 			promptList = append(promptList, p.(string))
 		}
 		opts = append(opts, authmethods.WithOidcAuthMethodPrompts(promptList))
+	}
+
+	if providerType, ok := d.GetOk(authmethodOidcProviderTypeKey); ok {
+		opts = append(opts, authmethods.WithOidcAuthMethodProviderType(providerType.(string)))
 	}
 
 	nameVal, ok := d.GetOk(NameKey)
@@ -565,6 +584,15 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 				promptsList = append(promptsList, prompt.(string))
 			}
 			opts = append(opts, authmethods.WithOidcAuthMethodPrompts(promptsList))
+		}
+	}
+	if d.HasChange(authmethodOidcProviderTypeKey) {
+		if providerType, ok := d.GetOk(authmethodOidcProviderTypeKey); ok {
+			opts = append(opts, authmethods.WithOidcAuthMethodProviderType(providerType.(string)))
+		} else {
+			// We need to reset provider_type when removed from configuration
+			// omitting the option would leave the existing value unchanged.
+			opts = append(opts, authmethods.DefaultOidcAuthMethodProviderType())
 		}
 	}
 
