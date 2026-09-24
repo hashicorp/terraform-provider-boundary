@@ -131,6 +131,7 @@ func New() *schema.Provider {
 			"boundary_scope":                                    resourceScope(),
 			"boundary_storage_bucket":                           resourceStorageBucket(),
 			"boundary_target":                                   resourceTarget(),
+			"boundary_target_host_source":                       resourceTargetHostSource(),
 			"boundary_user":                                     resourceUser(),
 			"boundary_worker":                                   resourceWorker(),
 		},
