@@ -1,12 +1,12 @@
 module github.com/hashicorp/terraform-provider-boundary
 
-go 1.26.4
+go 1.26.5
 
 require (
 	github.com/YakDriver/regexache v0.25.0
-	github.com/hashicorp/boundary v0.18.1-0.20260708165146-a1e2c87b8a14
-	github.com/hashicorp/boundary/api v0.0.62
-	github.com/hashicorp/boundary/sdk v0.0.60
+	github.com/hashicorp/boundary v0.18.1-0.20260922135637-edfad8971a54
+	github.com/hashicorp/boundary/api v0.0.63-0.20260922135637-edfad8971a54
+	github.com/hashicorp/boundary/sdk v0.0.61-0.20260922135637-edfad8971a54
 	github.com/hashicorp/cap v0.13.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
