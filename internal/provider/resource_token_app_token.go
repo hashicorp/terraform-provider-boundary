@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 
 	"github.com/hashicorp/boundary/api"
@@ -76,11 +77,12 @@ func resourceAppToken() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 3*365*24*60*60),
 			},
 			AppTokenTimeToStaleSecondsKey: {
-				Description:  "The app token must be used within this many seconds, reset each time the token is used. Set to 0 for no timeout. Defaults to no timeout.",
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntAtLeast(0),
+				Description: "The app token must be used within this many seconds, reset each time the token is used. Set to 0 for no timeout. Defaults to no timeout.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				ForceNew:    true,
+				// Upper bound is the uint32 max, matching the API/server field width; values above it would overflow on conversion.
+				ValidateFunc: validation.IntBetween(0, math.MaxUint32),
 			},
 			AppTokenPermissionsKey: {
 				Description: "The app token permissions.",
