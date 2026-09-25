@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/boundary/api/apptokens"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -71,12 +72,15 @@ func resourceAppToken() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
+				// Between 1 second and 3 years (in seconds).
+				ValidateFunc: validation.IntBetween(1, 3*365*24*60*60),
 			},
 			AppTokenTimeToStaleSecondsKey: {
-				Description: "The app token must be used within this many seconds, reset each time the token is used. Set to 0 for no timeout. Defaults to no timeout.",
-				Type:        schema.TypeInt,
-				Optional:    true,
-				ForceNew:    true,
+				Description:  "The app token must be used within this many seconds, reset each time the token is used. Set to 0 for no timeout. Defaults to no timeout.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			AppTokenPermissionsKey: {
 				Description: "The app token permissions.",
@@ -304,7 +308,7 @@ func resourceAppTokenRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	atrr, err := atClient.Read(ctx, d.Id())
 	if err != nil {
-		if apiErr := api.AsServerError(err); apiErr.Response().StatusCode() == http.StatusNotFound {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
 			d.SetId("")
 			return nil
 		}
@@ -314,7 +318,6 @@ func resourceAppTokenRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.Errorf("app token nil after read")
 	}
 
-	
 	if err := setFromAppTokenResponseMap(d, atrr.GetResponse().Map); err != nil {
 		return diag.FromErr(err)
 	}
