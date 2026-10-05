@@ -82,8 +82,8 @@ func resourceAppToken() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				ForceNew:    true,
-				// Upper bound is the uint32 max, matching the API/server field width; values above it would overflow on conversion.
-				ValidateFunc: validation.IntBetween(0, math.MaxUint32),
+				// Upper bound is either the API's uint32 max or the platform's int max, whichever comes first; values above this would overflow on conversion.
+				ValidateFunc: validation.IntBetween(0, min(math.MaxUint32, math.MaxInt)),
 			},
 			AppTokenPermissionsKey: {
 				Description: "The app token permissions.",
