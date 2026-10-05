@@ -21,6 +21,7 @@ const (
 	AppTokenTimeToStaleSecondsKey        = "time_to_stale_seconds"
 	AppTokenPermissionsKey               = "permissions"
 	AppTokenPermissionGrantsKey          = "grants"
+	AppTokenPermissionLabelKey           = "label"
 	AppTokenPermissionGrantScopesKey     = "grant_scopes"
 	AppTokenPermissionDeletedScopesKey   = "deleted_scopes"
 	AppTokenDeletedScopeScopeIdKey       = "scope_id"
@@ -91,14 +92,18 @@ func resourceAppToken() *schema.Resource {
 				ForceNew:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// TODO: Label is omitted here because it appears that the AppTokenPermissions struct in app_token_permission.gen.go omits it, despite it being
-						// TODO: In the rfc. If that's wrong add it here
 						AppTokenPermissionGrantsKey: {
 							Description: "The grants for this permission.",
 							Type:        schema.TypeList,
 							Required:    true,
 							ForceNew:    true,
 							Elem:        &schema.Schema{Type: schema.TypeString},
+						},
+						AppTokenPermissionLabelKey: {
+							Description: "The label for this permission",
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    true,
 						},
 						AppTokenPermissionGrantScopesKey: {
 							Description: "The grant scopes for this permission.",
@@ -240,7 +245,13 @@ func resourceAppTokenCreate(ctx context.Context, d *schema.ResourceData, meta an
 			grantScopes = append(grantScopes, gs.(string))
 		}
 
+		var label string
+		if permMap[AppTokenPermissionLabelKey] != nil {
+			label = permMap[AppTokenPermissionLabelKey].(string)
+		}
+
 		permissions = append(permissions, &apptokens.AppTokenPermission{
+			Label:       label,
 			Grants:      grants,
 			GrantScopes: grantScopes,
 		})
