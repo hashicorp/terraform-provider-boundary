@@ -216,9 +216,6 @@ func resourceAppTokenCreate(ctx context.Context, d *schema.ResourceData, meta an
 		return diag.Errorf("no scope ID provided")
 	}
 
-	// TODO: I couldnt find anything in the rfc about this, but TTL doesnt seem to have a special
-	// zero value like timeToStale? If it does, replace this with
-	// the pattern used for TimeToStale thats below.
 	var timeToLive int
 	if ttlVal, ok := d.GetOk(AppTokenTimeToLiveSecondsKey); ok {
 		timeToLive = ttlVal.(int)
