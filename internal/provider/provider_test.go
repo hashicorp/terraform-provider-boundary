@@ -12,7 +12,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
 	"github.com/hashicorp/cap/ldap"
 	"github.com/hashicorp/cap/oidc"
 	wrapping "github.com/hashicorp/go-kms-wrapping/v2"
@@ -30,11 +29,6 @@ var (
 	tcLoginName = "admin"
 	tcPassword  = "password"
 	tcPAUM      = "ampw_1234567890"
-	tcConfig    = []controller.Option{
-		controller.WithDefaultPasswordAuthMethodId(tcPAUM),
-		controller.WithDefaultLoginName(tcLoginName),
-		controller.WithDefaultPassword(tcPassword),
-	}
 )
 
 func providerFactories(p **schema.Provider) map[string]func() (*schema.Provider, error) {
