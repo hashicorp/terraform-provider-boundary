@@ -356,6 +356,7 @@ func TestConfigWithOIDCAuthMethod(t *testing.T) {
 // Create OIDC auth method and set it as the primary auth method.
 // Attempt to authenticate with recovery to test checks for default auth method
 func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
+	t.Skip("Unskip when we update boundary")
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr

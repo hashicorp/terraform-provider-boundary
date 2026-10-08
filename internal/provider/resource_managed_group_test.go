@@ -45,6 +45,7 @@ resource "boundary_managed_group" "foo" {
 )
 
 func TestAccManagedGroup(t *testing.T) {
+	t.Skip("Unskip when we update boundary")
 	tp := oidc.StartTestProvider(t)
 	tpCert := strings.TrimSpace(tp.CACert())
 	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
