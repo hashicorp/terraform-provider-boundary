@@ -18,11 +18,13 @@ import (
 )
 
 const (
+	fooAppTokenName = "test-appt"
 	fooAppTokenDesc = "test app token"
 )
 
 var fooAppToken = fmt.Sprintf(`
 resource "boundary_app_token" "foo" {
+    name                  = "%s"
     description           = "%s"
     scope_id              = boundary_scope.org1.id
     time_to_live_seconds  = 3600
@@ -33,7 +35,7 @@ resource "boundary_app_token" "foo" {
         grant_scopes = ["this"]
     }
     depends_on = [boundary_role.org1_admin]
-}`, fooAppTokenDesc)
+}`, fooAppTokenName, fooAppTokenDesc)
 
 func TestAccAppToken(t *testing.T) {
 	tc := controller.NewTestController(t, tcConfig...)
@@ -48,6 +50,7 @@ func TestAccAppToken(t *testing.T) {
 			{
 				Config: testConfig(url, fooOrg("appt"), fooAppToken),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_app_token.foo", "name", fooAppTokenName),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "description", fooAppTokenDesc),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "time_to_live_seconds", "3600"),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "time_to_stale_seconds", "600"),
