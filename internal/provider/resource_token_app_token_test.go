@@ -46,7 +46,7 @@ func TestAccAppToken(t *testing.T) {
 		CheckDestroy:      testAccCheckAppTokenResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, fooAppToken),
+				Config: testConfig(url, fooOrg("appt"), fooAppToken),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "description", fooAppTokenDesc),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "time_to_live_seconds", "3600"),
