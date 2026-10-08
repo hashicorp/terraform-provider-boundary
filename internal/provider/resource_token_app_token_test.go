@@ -28,8 +28,8 @@ resource "boundary_app_token" "foo" {
     time_to_live_seconds  = 3600
     time_to_stale_seconds = 600
     permissions {
-        label        = "read targets perm"
-        grants       = ["ids=*;type=target;actions=list,read"]
+        label        = "read groups perm"
+        grants       = ["ids=*;type=group;actions=list,read"]
         grant_scopes = ["this"]
     }
     depends_on = [boundary_role.org1_admin]
@@ -51,8 +51,8 @@ func TestAccAppToken(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "description", fooAppTokenDesc),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "time_to_live_seconds", "3600"),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "time_to_stale_seconds", "600"),
-					resource.TestCheckResourceAttr("boundary_app_token.foo", "permissions.0.label", "read targets perm"),
-					resource.TestCheckResourceAttr("boundary_app_token.foo", "permissions.0.grants.0", "ids=*;type=target;actions=list,read"),
+					resource.TestCheckResourceAttr("boundary_app_token.foo", "permissions.0.label", "read groups perm"),
+					resource.TestCheckResourceAttr("boundary_app_token.foo", "permissions.0.grants.0", "ids=*;type=group;actions=list,read"),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "permissions.0.grant_scopes.0", "this"),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "permissions.0.deleted_scopes.#", "0"),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "status", "active"),
