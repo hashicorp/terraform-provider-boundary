@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/managedgroups"
@@ -56,6 +57,9 @@ func resourceManagedGroupLdap() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				Required: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.EqualFold(old, new)
+				},
 			},
 		},
 	}

@@ -220,6 +220,9 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := aClient.Delete(ctx, d.Id())
 	if err != nil {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
+			return nil
+		}
 		return diag.Errorf("error deleting account: %v", err)
 	}
 

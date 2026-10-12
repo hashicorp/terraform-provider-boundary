@@ -40,3 +40,15 @@ resource "boundary_auth_method_oidc" "oidc_with_multiple_prompts" {
   prompts            = ["consent", "select_account"]
   type               = "oidc"
 }
+
+resource "boundary_auth_method_oidc" "oidc_with_azure_provider_type" {
+  api_url_prefix     = "https://XO-XO-XO-XO-XOXOXO.boundary.hashicorp.cloud:9200"
+  client_id          = "eieio"
+  client_secret      = "hvo_secret_XO"
+  description        = "My Boundary OIDC Auth Method For Azure Entra ID"
+  issuer             = "https://sts.windows.net/TENANT_ID/"
+  scope_id           = "global"
+  signing_algorithms = ["RS256"]
+  provider_type      = "azure"
+  type               = "oidc"
+}

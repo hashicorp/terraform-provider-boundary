@@ -7,19 +7,23 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
 	testRoleName = "my_role"
 )
 
-var roleReadGlobal = fmt.Sprintf(`
+func roleReadGlobal(suffix string) string {
+	name := testRoleName + "-" + suffix
+	return fmt.Sprintf(`
 resource "boundary_user" "user" {
-  name     = "my_user"
-  scope_id    = "global"
+  name     = "my_user-%s"
+  scope_id = "global"
 }
 
 resource "boundary_role" "role" {
@@ -36,7 +40,8 @@ data "boundary_role" "role" {
   depends_on = [ boundary_role.role ]
   name       = "%s"
 }
-`, testRoleName, testRoleName)
+`, suffix, name, name)
+}
 
 var roleReadOrg = fmt.Sprintf(`
 resource "boundary_user" "user" {
@@ -62,9 +67,10 @@ data "boundary_role" "role" {
 `, testRoleName, testRoleName)
 
 func TestAccRoleReadGlobal(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	dataSourceName := "data.boundary_role.role"
 
@@ -73,11 +79,11 @@ func TestAccRoleReadGlobal(t *testing.T) {
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, roleReadGlobal),
+				Config: testConfig(url, roleReadGlobal(suffix)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, IDKey),
 					resource.TestCheckResourceAttrSet(dataSourceName, ScopeIdKey),
-					resource.TestCheckResourceAttr(dataSourceName, NameKey, testRoleName),
+					resource.TestMatchResourceAttr(dataSourceName, NameKey, regexache.MustCompile(`^`+testRoleName)),
 					resource.TestCheckResourceAttrSet(dataSourceName, DescriptionKey),
 					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", roleGrantStringsKey), "1"),
 					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.0", roleGrantStringsKey), "ids=*;type=*;actions=read"),
@@ -94,9 +100,10 @@ func TestAccRoleReadGlobal(t *testing.T) {
 }
 
 func TestAccRoleReadOrg(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	dataSourceName := "data.boundary_role.role"
 
@@ -105,7 +112,7 @@ func TestAccRoleReadOrg(t *testing.T) {
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, roleReadOrg),
+				Config: testConfig(url, fooOrg(suffix), roleReadOrg),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, IDKey),
 					resource.TestCheckResourceAttrSet(dataSourceName, ScopeIdKey),
@@ -115,7 +122,7 @@ func TestAccRoleReadOrg(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.0", roleGrantStringsKey), "ids=*;type=*;actions=read"),
 					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", roleGrantScopeIdsKey), "1"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "scope.0.id"),
-					resource.TestCheckResourceAttr(dataSourceName, "scope.0.name", "org1"),
+					resource.TestMatchResourceAttr(dataSourceName, "scope.0.name", regexache.MustCompile(`^org1-`)),
 					resource.TestCheckResourceAttr(dataSourceName, "scope.0.type", "org"),
 					resource.TestCheckResourceAttr(dataSourceName, fmt.Sprintf("%s.#", rolePrincipalIdsKey), "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, fmt.Sprintf("%s.0", rolePrincipalIdsKey), "boundary_user.user", "id"),

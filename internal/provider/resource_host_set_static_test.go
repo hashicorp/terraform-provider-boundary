@@ -11,10 +11,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/hostsets"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAccHostSetStatic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccHostSetStatic(t *testing.T) {
 }
 
 func testAccHostSetStatic(t *testing.T, static bool) {
-	catalogBlock := ` 
+	catalogBlock := `
 	resource "%s" "foo" {
 		%s
 		scope_id    = boundary_scope.proj1.id
@@ -59,10 +60,10 @@ func testAccHostSetStatic(t *testing.T, static bool) {
 		address         = "10.0.0.2"
 	}`
 
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	//	org := iam.TestOrg(t, tc.IamRepo())
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	catalogName := "boundary_host_catalog"
 	hostName := "boundary_host"
@@ -90,7 +91,7 @@ func testAccHostSetStatic(t *testing.T, static bool) {
 		Steps: []resource.TestStep{
 			{
 				// test project hostset create
-				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hBlock, hsBlock),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, hcBlock, hBlock, hsBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetStaticResourceExists(provider, fooSetName),
 					testAccCheckHostSetStaticHostIDsSet(provider, fooSetName, []string{fooHostName}),
@@ -101,7 +102,7 @@ func testAccHostSetStatic(t *testing.T, static bool) {
 			importStep(fooSetName),
 			{
 				// test project hostset update
-				Config: testConfig(url, fooOrg, firstProjectFoo, hcBlock, hBlock, h2Block, hsUpdateBlock),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, hcBlock, hBlock, h2Block, hsUpdateBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostSetStaticResourceExists(provider, fooSetName),
 					testAccCheckHostSetStaticHostIDsSet(provider, fooSetName, []string{fooHostName, barHostName}),

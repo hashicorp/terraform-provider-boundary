@@ -8,10 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/jimlambrt/gldap/testdirectory"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -79,9 +80,10 @@ EOT
 resource "boundary_auth_method_ldap" "test-ldap" {
 	name        		 = "test"
 	description 		 = "test auth method ldap"
-	scope_id    		 = "global"
+	scope_id    		 = boundary_scope.org1.id
 	is_primary_for_scope = true
-  	urls         	  	 = ["ldap://%s:%d"]
+	depends_on           = [boundary_role.org1_admin]
+	urls         	  	 = ["ldap://%s:%d"]
 	user_dn           	 = "%s"
 	group_dn          	 = "%s"
 	discover_dn 	  	 = true
@@ -111,7 +113,7 @@ resource "boundary_auth_method_ldap" "test-ldap" {
 	group_attr           = "group-attr-updated"
 	group_filter         = "group-filter-updated"
 	bind_dn              = "bind-dn-updated"
-	bind_password        = "bind-password-updated" 
+	bind_password        = "bind-password-updated"
 	use_token_groups     = false
 	state                = "inactive"
 	maximum_page_size = 100
@@ -129,9 +131,10 @@ func TestAccAuthMethodLdap(t *testing.T) {
 		t,
 		testdirectory.WithDefaults(t, &testdirectory.Defaults{AllowAnonymousBind: true}),
 	)
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	tdCert := strings.TrimSpace(td.Cert())
 	createConfig := fmt.Sprintf(testAuthMethodLdap, testAuthMethodLdapDesc, tdCert)
@@ -144,7 +147,7 @@ func TestAccAuthMethodLdap(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create
-				Config: testConfig(url, fooOrg, createConfig),
+				Config: testConfig(url, fooOrg(suffix), createConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", "description", testAuthMethodLdapDesc),
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", "name", "test"),
@@ -173,7 +176,7 @@ func TestAccAuthMethodLdap(t *testing.T) {
 			importStep("boundary_auth_method_ldap.test-ldap", "is_primary_for_scope", "bind_password", "client_certificate_key"),
 			{
 				// update
-				Config: testConfig(url, fooOrg, updateConfig),
+				Config: testConfig(url, fooOrg(suffix), updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", authMethodLdapStateField, "inactive"),
 					resource.TestCheckResourceAttr("boundary_auth_method_ldap.test-ldap", "description", testAuthMethodLdapDescUpdate),

@@ -7,16 +7,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/stretchr/testify/require"
 )
 
 const (
 	testAuthMethodName = "test_auth_method"
 )
 
-var authMethodReadGlobal = fmt.Sprintf(`
+func authMethodReadGlobal(suffix string) string {
+	name := testAuthMethodName + "-" + suffix
+	return fmt.Sprintf(`
 resource "boundary_auth_method" "auth_method" {
 	name 		= "%s"
 	description = "test"
@@ -28,7 +32,8 @@ resource "boundary_auth_method" "auth_method" {
 data "boundary_auth_method" "auth_method" {
 	depends_on = [ boundary_auth_method.auth_method ]
 	name 	   = "%s"
-}`, testAuthMethodName, testAuthMethodName)
+}`, name, name)
+}
 
 var authMethodReadOrg = fmt.Sprintf(`
 resource "boundary_auth_method" "auth_method" {
@@ -46,20 +51,21 @@ data "boundary_auth_method" "auth_method" {
 }`, testAuthMethodName, testAuthMethodName)
 
 func TestAccAuthMethodReadGlobal(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, authMethodReadGlobal),
+				Config: testConfig(url, fooOrg(suffix), authMethodReadGlobal(suffix)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", IDKey),
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", ScopeIdKey),
-					resource.TestCheckResourceAttr("data.boundary_auth_method.auth_method", NameKey, testAuthMethodName),
+					resource.TestMatchResourceAttr("data.boundary_auth_method.auth_method", NameKey, regexache.MustCompile(`^`+testAuthMethodName)),
 					resource.TestCheckResourceAttr("data.boundary_auth_method.auth_method", TypeKey, "password"),
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", DescriptionKey),
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", "scope.0.id"),
@@ -72,16 +78,17 @@ func TestAccAuthMethodReadGlobal(t *testing.T) {
 }
 
 func TestAccAuthMethodReadOrg(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: providerFactories(&provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg, authMethodReadOrg),
+				Config: testConfig(url, fooOrg(suffix), authMethodReadOrg),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", IDKey),
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", ScopeIdKey),
@@ -89,7 +96,7 @@ func TestAccAuthMethodReadOrg(t *testing.T) {
 					resource.TestCheckResourceAttr("data.boundary_auth_method.auth_method", TypeKey, "password"),
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", DescriptionKey),
 					resource.TestCheckResourceAttrSet("data.boundary_auth_method.auth_method", "scope.0.id"),
-					resource.TestCheckResourceAttr("data.boundary_auth_method.auth_method", "scope.0.name", "org1"),
+					resource.TestMatchResourceAttr("data.boundary_auth_method.auth_method", "scope.0.name", regexache.MustCompile(`^org1-`)),
 					resource.TestCheckResourceAttr("data.boundary_auth_method.auth_method", "scope.0.type", "org"),
 				),
 			},

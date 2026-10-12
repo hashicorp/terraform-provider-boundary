@@ -14,10 +14,11 @@ import (
 
 	"github.com/hashicorp/boundary/api"
 	"github.com/hashicorp/boundary/api/roles"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -188,9 +189,10 @@ resource "boundary_role" "with_grants" {
 )
 
 func TestAccRoleToOrgToProject(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -199,7 +201,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test org role create
-				Config: testConfig(url, fooOrg, orgRole),
+				Config: testConfig(url, fooOrg(suffix), orgRole),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -209,7 +211,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 			importStep("boundary_role.foo"),
 			{
 				// test org role update
-				Config: testConfig(url, fooOrg, orgRoleUpdate),
+				Config: testConfig(url, fooOrg(suffix), orgRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -219,7 +221,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 			importStep("boundary_role.foo"),
 			{
 				// test org to project role create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRole),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRole),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -229,7 +231,7 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 			importStep("boundary_role.foo"),
 			{
 				// test project role update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.foo"),
 					resource.TestCheckResourceAttr("boundary_role.foo", "name", "test"),
@@ -242,9 +244,10 @@ func TestAccRoleToOrgToProject(t *testing.T) {
 }
 
 func TestAccRoleWithGrants(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -255,7 +258,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 			{
 				// Create should return error due to invalid grant, however the role will still
 				// be created and should be set in state.
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithInvalidGrants),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithInvalidGrants),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants"),
@@ -265,7 +268,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 			},
 			{
 				// Create again with valid grants should succeed
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrants),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithGrants),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
 					testAccCheckRoleResourceGrantsSet(provider, "boundary_role.with_grants", []string{readonlyGrant}),
@@ -277,7 +280,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 			{
 				// Update should return error due to invalid grant, however the role will still
 				// be updated and should be set in state.
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithInvalidGrantsUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithInvalidGrantsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
 					resource.TestCheckResourceAttr("boundary_role.with_grants", "name", "with_grants_update"),
@@ -287,7 +290,7 @@ func TestAccRoleWithGrants(t *testing.T) {
 			},
 			{
 				// Update should now succeed
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGrantsUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithGrantsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_grants"),
 					testAccCheckRoleResourceGrantsSet(provider, "boundary_role.with_grants", []string{readonlyGrant, readonlyGrantUpdate}),
@@ -301,9 +304,10 @@ func TestAccRoleWithGrants(t *testing.T) {
 }
 
 func TestAccRoleWithPrincipals(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -314,7 +318,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 			{
 				// Create with invalid principal should create role but return empty plan
 				// since principal was not set correctly.
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithInvalidPrincipal),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithInvalidPrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
 					resource.TestCheckResourceAttr("boundary_role.with_principal", DescriptionKey, "with principal"),
@@ -324,7 +328,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 			},
 			{
 				// Create again without invalid principal should produce empty plan
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, projRoleWithPrincipal),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooUser, projRoleWithPrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
 					testAccCheckRoleResourcePrincipalsSet(provider, "boundary_role.with_principal", []string{"boundary_user.foo"}),
@@ -338,7 +342,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 			{
 				// Update with invalid principal should update role but return empty plan
 				// since principal was not set correctly.
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, projRoleWithInvalidPrincipalUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooUser, projRoleWithInvalidPrincipalUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
 					resource.TestCheckResourceAttr("boundary_role.with_principal", DescriptionKey, "with principal update"),
@@ -348,7 +352,7 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 			},
 			{
 				// Update again without invalid principal should produce empty plan
-				Config: testConfig(url, fooOrg, firstProjectFoo, fooUser, barUser, projRoleWithPrincipalUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, fooUser, barUser, projRoleWithPrincipalUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_principal"),
 					testAccCheckUserResourceExists(provider, "boundary_user.foo"),
@@ -364,9 +368,10 @@ func TestAccRoleWithPrincipals(t *testing.T) {
 }
 
 func TestAccRoleWithGroups(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	t.Cleanup(tc.Shutdown)
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	url := cfg.BoundaryAddr
+	suffix := id.UniqueId()
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -375,7 +380,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// test create
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGroups),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithGroups),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_groups"),
 					testAccCheckRoleResourceGroupsSet(provider, "boundary_role.with_groups", []string{"boundary_group.foo"}),
@@ -388,7 +393,7 @@ func TestAccRoleWithGroups(t *testing.T) {
 			importStep("boundary_role.with_groups"),
 			{
 				// test update
-				Config: testConfig(url, fooOrg, firstProjectFoo, projRoleWithGroupsUpdate),
+				Config: testConfig(url, fooOrg(suffix), firstProjectFoo, projRoleWithGroupsUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleResourceExists(provider, "boundary_role.with_groups"),
 					testAccCheckGroupResourceExists(provider, "boundary_group.foo"),
