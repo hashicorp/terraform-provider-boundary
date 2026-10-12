@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/boundary/api/roles"
+	"github.com/hashicorp/boundary-sdk/api/roles"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

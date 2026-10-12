@@ -9,8 +9,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/hostsets"
+	"github.com/hashicorp/boundary-sdk/api"
+	"github.com/hashicorp/boundary-sdk/api/hostsets"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-secure-stdlib/parseutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"

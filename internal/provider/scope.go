@@ -3,7 +3,7 @@
 
 package provider
 
-import "github.com/hashicorp/boundary/api/scopes"
+import "github.com/hashicorp/boundary-sdk/api/scopes"
 
 func flattenScopeInfo(scope *scopes.ScopeInfo) []interface{} {
 	if scope == nil {
