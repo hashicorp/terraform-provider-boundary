@@ -142,6 +142,7 @@ func New() *schema.Provider {
 			"boundary_scope":       dataSourceScope(),
 			"boundary_user":        dataSourceUser(),
 			"boundary_role":        dataSourceRole(),
+			"boundary_target":      dataSourceTarget(),
 		},
 	}
 
