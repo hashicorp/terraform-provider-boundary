@@ -9,9 +9,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/apptokens"
-	"github.com/hashicorp/boundary/testing/controller"
+	"github.com/hashicorp/boundary-sdk/api"
+	"github.com/hashicorp/boundary-sdk/api/apptokens"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
