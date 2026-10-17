@@ -11,9 +11,11 @@ import (
 
 	"github.com/hashicorp/boundary-sdk/api"
 	"github.com/hashicorp/boundary-sdk/api/apptokens"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -37,9 +39,10 @@ resource "boundary_app_token" "foo" {
 }`, fooAppTokenName, fooAppTokenDesc)
 
 func TestAccAppToken(t *testing.T) {
-	tc := controller.NewTestController(t, tcConfig...)
-	defer tc.Shutdown()
-	url := tc.ApiAddrs()[0]
+	cfg, err := loadTestConfig()
+	require.NoError(t, err)
+	suffix := id.UniqueId()
+	url := cfg.BoundaryAddr
 
 	var provider *schema.Provider
 	resource.Test(t, resource.TestCase{
@@ -47,7 +50,7 @@ func TestAccAppToken(t *testing.T) {
 		CheckDestroy:      testAccCheckAppTokenResourceDestroy(t, provider),
 		Steps: []resource.TestStep{
 			{
-				Config: testConfig(url, fooOrg("appt"), fooAppToken),
+				Config: testConfig(url, fooOrg(suffix), fooAppToken),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "name", fooAppTokenName),
 					resource.TestCheckResourceAttr("boundary_app_token.foo", "description", fooAppTokenDesc),
