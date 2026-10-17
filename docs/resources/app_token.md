@@ -44,6 +44,10 @@ Required:
 - `grant_scopes` (List of String) The grant scopes for this permission.
 - `grants` (List of String) The grants for this permission.
 
+Optional:
+
+- `label` (String) The label for this permission
+
 Read-Only:
 
 - `deleted_scopes` (List of Object) Scopes that were directly granted to this permission but have since been deleted. Populated by the server; read-only. (see [below for nested schema](#nestedatt--permissions--deleted_scopes))
