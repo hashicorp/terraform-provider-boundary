@@ -279,6 +279,9 @@ func resourceAppTokenCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	atcr, err := atClient.Create(ctx, scopeId, opts...)
 	if err != nil {
+		if apiErr := api.AsServerError(err); apiErr != nil {
+			return diag.Errorf("error creating app token: status %d: %s", apiErr.Response().StatusCode(), apiErr.Error())
+		}
 		return diag.Errorf("error creating app token: %v", err)
 	}
 	if atcr == nil {
