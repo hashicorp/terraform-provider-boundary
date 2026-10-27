@@ -76,6 +76,17 @@ func resourceAppToken() *schema.Resource {
 				ForceNew:    true,
 				// Between 1 second and 3 years (in seconds).
 				ValidateFunc: validation.IntBetween(1, 3*365*24*60*60),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress diff if the resource was imported (old state is 0).
+					//
+					// Boundary's Read API does not return time_to_live_seconds (only expiration_time),
+					// so an imported resource has time_to_live_seconds set to its zero value (0) in state.
+					// Suppressing this diff prevents ForceNew from destroying and recreating the token on next plan/apply.
+					if d.Id() != "" && old == "0" {
+						return true
+					}
+					return false
+				},
 			},
 			AppTokenTimeToStaleSecondsKey: {
 				Description: "The app token must be used within this many seconds, reset each time the token is used. Set to 0 for no timeout. Defaults to no timeout.",
