@@ -23,7 +23,8 @@ const (
 	fooAppTokenDesc = "test app token"
 )
 
-var fooAppToken = fmt.Sprintf(`
+var (
+	fooAppToken = fmt.Sprintf(`
 resource "boundary_app_token" "foo" {
     name                  = "%s"
     description           = "%s"
@@ -37,6 +38,22 @@ resource "boundary_app_token" "foo" {
     }
     depends_on = [boundary_role.org1_admin]
 }`, fooAppTokenName, fooAppTokenDesc)
+
+	fooAppTokenUpdatedTTL = fmt.Sprintf(`
+resource "boundary_app_token" "foo" {
+    name                  = "%s"
+    description           = "%s"
+    scope_id              = boundary_scope.org1.id
+    time_to_live_seconds  = 600
+    time_to_stale_seconds = 600
+    permissions {
+        label        = "read groups perm"
+        grants       = ["ids=*;type=group;actions=list,read"]
+        grant_scopes = ["this"]
+    }
+    depends_on = [boundary_role.org1_admin]
+}`, fooAppTokenName, fooAppTokenDesc)
+)
 
 func TestAccAppToken(t *testing.T) {
 	cfg, err := loadTestConfig()
@@ -68,17 +85,14 @@ func TestAccAppToken(t *testing.T) {
 					testAccCheckAppTokenResourceExists(provider, "boundary_app_token.foo"),
 				),
 			},
-			// Import step: verify state matches, ignoring only "token" (create-only secret).
+			importStep("boundary_app_token.foo", "token"),
 			{
-				ResourceName:            "boundary_app_token.foo",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token"},
-				ImportStatePersist:      true, // Retains imported state for the next step
-			},
-			{
-				Config:   testConfig(url, fooOrg(suffix), fooAppToken),
-				PlanOnly: true, // Verifies plan against original config has no diff / no replacement
+				// Update TTL to 600 (verifies ForceNew replacement)
+				Config: testConfig(url, fooOrg(suffix), fooAppTokenUpdatedTTL),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("boundary_app_token.foo", "time_to_live_seconds", "600"),
+					testAccCheckAppTokenResourceExists(provider, "boundary_app_token.foo"),
+				),
 			},
 		},
 	})
