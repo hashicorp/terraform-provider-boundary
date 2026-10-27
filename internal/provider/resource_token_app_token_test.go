@@ -68,12 +68,12 @@ func TestAccAppToken(t *testing.T) {
 					testAccCheckAppTokenResourceExists(provider, "boundary_app_token.foo"),
 				),
 			},
-			// import step - ignore TTL because it's required for Create, but not returned on Read
+			// Import step: verify state matches, ignoring only "token" (create-only secret).
 			{
 				ResourceName:            "boundary_app_token.foo",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"token", "time_to_live_seconds"},
+				ImportStateVerifyIgnore: []string{"token"},
 				ImportStatePersist:      true, // Retains imported state for the next step
 			},
 			{
