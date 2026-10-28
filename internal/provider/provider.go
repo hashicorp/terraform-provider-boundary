@@ -43,7 +43,7 @@ func New() *schema.Provider {
 			"token": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: `The Boundary token to use, as a string or path on disk containing just the string. If set, the token read here will be used in place of authenticating with the auth method specified in "auth_method_id", although the recovery KMS mechanism will still override this. Can also be set with the BOUNDARY_TOKEN environment variable.`,
+				Description: `The Boundary token to use, as a string or path on disk containing just the string. If set, the token read here will be used in place of authenticating with the auth method specified in "auth_method_id", although the recovery KMS mechanism will still override this. Can also be set with the BOUNDARY_TOKEN environment variable. We recommend using an app token for authentication, however auth tokens can be used as well.`,
 			},
 			"recovery_kms_hcl": {
 				Type:        schema.TypeString,
@@ -132,6 +132,7 @@ func New() *schema.Provider {
 			"boundary_storage_bucket":                           resourceStorageBucket(),
 			"boundary_target":                                   resourceTarget(),
 			"boundary_target_host_source":                       resourceTargetHostSource(),
+			"boundary_app_token":                                resourceAppToken(),
 			"boundary_user":                                     resourceUser(),
 			"boundary_worker":                                   resourceWorker(),
 		},
