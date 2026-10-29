@@ -31,6 +31,7 @@ const (
 	authmethodOidcClaimsScopesKey                      = "claims_scopes"
 	authmethodOidcPromptsKey                           = "prompts"
 	authmethodOidcProviderTypeKey                      = "provider_type"
+	authmethodOidcAllowInsecureIssuerKey               = "allow_insecure_issuer"
 
 	// computed-only parameters
 	authmethodOidcCallbackUrlKey      = "callback_url"
@@ -164,6 +165,14 @@ func resourceAuthMethodOidc() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			authmethodOidcAllowInsecureIssuerKey: {
+				Description: "Allows a plaintext `http://` issuer URL. Required when creating an auth method with, or updating it to, an `http://` issuer. " +
+					"This value is only sent with the request and is not stored or returned by Boundary, so it is not populated on import. " +
+					"Defaults to `false`. Not recommended for production.",
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 
 			// OIDC specific immutable and computed parameters
 			authmethodOidcClientSecretHmacKey: {
@@ -291,6 +300,9 @@ func resourceAuthMethodOidcCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
 		opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
+	}
+	if allow, ok := d.GetOk(authmethodOidcAllowInsecureIssuerKey); ok && allow.(bool) {
+		opts = append(opts, authmethods.WithOidcAuthMethodAllowInsecureIssuer(true))
 	}
 	if clientId, ok := d.GetOk(authmethodOidcClientIdKey); ok {
 		opts = append(opts, authmethods.WithOidcAuthMethodClientId(clientId.(string)))
@@ -505,6 +517,10 @@ func resourceAuthMethodOidcUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange(authmethodOidcIssuerKey) {
 		if issuer, ok := d.GetOk(authmethodOidcIssuerKey); ok {
 			opts = append(opts, authmethods.WithOidcAuthMethodIssuer(issuer.(string)))
+			// allow_insecure_issuer is request-only, so it must be sent alongside every issuer change.
+			if allow, ok := d.GetOk(authmethodOidcAllowInsecureIssuerKey); ok && allow.(bool) {
+				opts = append(opts, authmethods.WithOidcAuthMethodAllowInsecureIssuer(true))
+			}
 		}
 	}
 	if d.HasChange(authmethodOidcClientIdKey) {

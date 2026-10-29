@@ -52,3 +52,15 @@ resource "boundary_auth_method_oidc" "oidc_with_azure_provider_type" {
   provider_type      = "azure"
   type               = "oidc"
 }
+
+resource "boundary_auth_method_oidc" "oidc_with_insecure_issuer" {
+  api_url_prefix        = "http://localhost:9200"
+  client_id             = "eieio"
+  client_secret         = "hvo_secret_XO"
+  description           = "My Boundary OIDC Auth Method With An HTTP Issuer (Development Only)"
+  issuer                = "http://localhost:8200/v1/identity/oidc/provider/my-provider"
+  scope_id              = "global"
+  signing_algorithms    = ["RS256"]
+  allow_insecure_issuer = true
+  type                  = "oidc"
+}

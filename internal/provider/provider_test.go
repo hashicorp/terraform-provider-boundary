@@ -380,7 +380,7 @@ func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, tp.Addr()),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcAllowInsecureIssuerKey),
 			{
 				// set auth method as primary auth method
 				Config: testConfig(url, fooOrg(suffix), updateConfig),
@@ -397,7 +397,7 @@ func TestRecoveryWithOIDCDefaultAuthMethod(t *testing.T) {
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", true),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcMaxAgeKey),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcMaxAgeKey, authmethodOidcAllowInsecureIssuerKey),
 		},
 	})
 }
