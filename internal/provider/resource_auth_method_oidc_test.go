@@ -101,7 +101,6 @@ EOT
 )
 
 func TestAccAuthMethodOidc(t *testing.T) {
-	t.Skip("Unskip when we update boundary")
 	tp := oidc.StartTestProvider(t)
 	cfg, err := loadTestConfig()
 	require.NoError(t, err)
