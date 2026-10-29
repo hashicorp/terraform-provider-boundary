@@ -80,7 +80,7 @@ resource "boundary_auth_method_oidc" "foo" {
 	is_primary_for_scope = true
 	depends_on           = [boundary_role.org1_admin]
 
-  issuer            = "https://test-update.com"
+  issuer            = "http://test-update.com"
   client_id         = "foo_id_update"
   client_secret     = "foo_secret_update"
   api_url_prefix    = "http://localhost:9200"
@@ -94,6 +94,7 @@ EOT
   account_claim_maps = ["oid=sub"]
 	claims_scopes = ["profile"]
   prompts = ["consent", "select_account"]
+  allow_insecure_issuer = true
 
   // we need to disable this validation, since the updated issuer isn't discoverable
   disable_discovered_config_validation = true
@@ -136,17 +137,18 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccIsPrimaryForScope(provider, "boundary_auth_method_oidc.foo", false),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope"),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcAllowInsecureIssuerKey),
 			{
 				// update
 				Config: testConfig(url, fooOrg(suffix), updateConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "description", fooAuthMethodOidcDescUpdate),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", "name", "test"),
-					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "https://test-update.com"),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcIssuerKey, "http://test-update.com"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcClientIdKey, "foo_id_update"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcMaxAgeKey, "-1"),
 					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcProviderTypeKey, ""),
+					resource.TestCheckResourceAttr("boundary_auth_method_oidc.foo", authmethodOidcAllowInsecureIssuerKey, "true"),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcIdpCaCertsKey, []string{fooAuthMethodOidcCaCerts}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcAllowedAudiencesKey, []string{"foo_aud_update"}),
 					testAccCheckAuthMethodAttrAryValueSet(provider, "boundary_auth_method_oidc.foo", authmethodOidcPromptsKey, []string{"consent", "select_account"}),
@@ -155,7 +157,7 @@ func TestAccAuthMethodOidc(t *testing.T) {
 					testAccCheckAuthMethodResourceExists(provider, "boundary_auth_method_oidc.foo"),
 				),
 			},
-			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcMaxAgeKey),
+			importStep("boundary_auth_method_oidc.foo", "client_secret", "is_primary_for_scope", authmethodOidcMaxAgeKey, authmethodOidcAllowInsecureIssuerKey),
 		},
 	})
 }
