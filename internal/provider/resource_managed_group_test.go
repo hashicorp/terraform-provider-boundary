@@ -37,10 +37,20 @@ resource "boundary_managed_group" "foo" {
 
 	fooManagedGroupUpdate = fmt.Sprintf(`
 resource "boundary_managed_group" "foo" {
-	name           = "%s"
-	description    = "%s"
-	auth_method_id = boundary_auth_method_oidc.foo.id
-	filter         = "name == \"bar\""
+	name                             = "%s"
+	description                      = "%s"
+	auth_method_id                   = boundary_auth_method_oidc.foo.id
+	filter                           = "name == \"bar\""
+	disable_strict_filter_evaluation = true
+}`, managedGroupName+managedGroupUpdate, managedGroupDescription+managedGroupUpdate)
+
+	fooManagedGroupUpdateDisableStrictFilter = fmt.Sprintf(`
+resource "boundary_managed_group" "foo" {
+	name                             = "%s"
+	description                      = "%s"
+	auth_method_id                   = boundary_auth_method_oidc.foo.id
+	filter                           = "name == \"bar\""
+	disable_strict_filter_evaluation = false
 }`, managedGroupName+managedGroupUpdate, managedGroupDescription+managedGroupUpdate)
 )
 
@@ -67,6 +77,7 @@ func TestAccManagedGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription),
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName),
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "foo"`),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "false"),
 				),
 			},
 			importStep("boundary_managed_group.foo"),
@@ -78,8 +89,19 @@ func TestAccManagedGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription+managedGroupUpdate),
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName+managedGroupUpdate),
 					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "bar"`),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "true"),
 				),
 			},
+			importStep("boundary_managed_group.foo"),
+			{
+				// test update with strict filter evaluation re-enabled
+				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroupUpdateDisableStrictFilter),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "false"),
+				),
+			},
+			importStep("boundary_managed_group.foo"),
 		},
 	})
 }
