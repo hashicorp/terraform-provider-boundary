@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	managedGroupFilterKey = "filter"
+	managedGroupFilterKey                   = "filter"
+	managedDisableStrictFilterEvaluationKey = "disable_strict_filter_evaluation"
 )
 
 func resourceManagedGroup() *schema.Resource {
@@ -56,6 +57,12 @@ func resourceManagedGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			managedDisableStrictFilterEvaluationKey: {
+				Description: "Boolean that determines whether Strict Filter is on or off",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -75,6 +82,12 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 		attrs := attrsVal.(map[string]interface{})
 		if v, ok := attrs[managedGroupFilterKey]; ok {
 			if err := d.Set(managedGroupFilterKey, v); err != nil {
+				return err
+			}
+
+		}
+		if v, ok := attrs[managedDisableStrictFilterEvaluationKey]; ok {
+			if err := d.Set(managedDisableStrictFilterEvaluationKey, v); err != nil {
 				return err
 			}
 		}
@@ -113,6 +126,12 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	if ok {
 		str := v.(string)
 		opts = append(opts, managedgroups.WithOidcManagedGroupFilter(str))
+	}
+
+	strictFilterConfig := d.GetRawConfig().GetAttr(managedDisableStrictFilterEvaluationKey)
+	if !strictFilterConfig.IsNull() {
+		strictFilterVal := d.Get(managedDisableStrictFilterEvaluationKey).(bool)
+		opts = append(opts, managedgroups.WithOidcManagedGroupDisableStrictFilterEvaluation(strictFilterVal))
 	}
 
 	grp, err := grpClient.Create(ctx, authMethodId, opts...)
@@ -187,6 +206,14 @@ func resourceManagedGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 			filterStr := f.(string)
 			filter = &filterStr
 			opts = append(opts, managedgroups.WithOidcManagedGroupFilter(filterStr))
+		}
+	}
+
+	if d.HasChange(managedDisableStrictFilterEvaluationKey) {
+		strictFilterConfig := d.GetRawConfig().GetAttr(managedDisableStrictFilterEvaluationKey)
+		if !strictFilterConfig.IsNull() {
+			strictFilterVal := d.Get(managedDisableStrictFilterEvaluationKey).(bool)
+			opts = append(opts, managedgroups.WithOidcManagedGroupDisableStrictFilterEvaluation(strictFilterVal))
 		}
 	}
 
