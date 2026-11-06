@@ -7,7 +7,7 @@ require (
 	github.com/hashicorp/boundary v0.18.1-0.20260708165146-a1e2c87b8a14
 	github.com/hashicorp/boundary/api v0.0.62
 	github.com/hashicorp/boundary/sdk v0.0.60
-	github.com/hashicorp/cap v0.13.0
+	github.com/hashicorp/cap v0.15.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.22
@@ -67,8 +67,7 @@ require (
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/glebarez/sqlite v1.11.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-ldap/ldap/v3 v3.4.12 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
