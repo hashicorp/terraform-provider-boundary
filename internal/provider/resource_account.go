@@ -7,8 +7,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/accounts"
+	"github.com/hashicorp/boundary-sdk/api"
+	"github.com/hashicorp/boundary-sdk/api/accounts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -220,6 +220,9 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := aClient.Delete(ctx, d.Id())
 	if err != nil {
+		if apiErr := api.AsServerError(err); apiErr != nil && apiErr.Response().StatusCode() == http.StatusNotFound {
+			return nil
+		}
 		return diag.Errorf("error deleting account: %v", err)
 	}
 

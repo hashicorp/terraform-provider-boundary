@@ -7,8 +7,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hashicorp/boundary/api"
-	"github.com/hashicorp/boundary/api/hostcatalogs"
+	"github.com/hashicorp/boundary-sdk/api"
+	"github.com/hashicorp/boundary-sdk/api/hostcatalogs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
