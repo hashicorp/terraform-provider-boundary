@@ -6,7 +6,7 @@ require (
 	github.com/YakDriver/regexache v0.25.0
 	github.com/hashicorp/boundary-sdk/api v0.1.2
 	github.com/hashicorp/boundary-sdk/sdk v0.1.2
-	github.com/hashicorp/cap v0.14.0
+	github.com/hashicorp/cap v0.15.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
 	github.com/hashicorp/go-kms-wrapping/v2 v2.0.26
@@ -58,8 +58,7 @@ require (
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.5 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-ldap/ldap/v3 v3.4.12 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
