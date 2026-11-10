@@ -4,8 +4,8 @@ go 1.26.10
 
 require (
 	github.com/YakDriver/regexache v0.25.0
-	github.com/hashicorp/boundary-sdk/api v0.1.2
-	github.com/hashicorp/boundary-sdk/sdk v0.1.2
+	github.com/hashicorp/boundary-sdk/api v0.1.3
+	github.com/hashicorp/boundary-sdk/sdk v0.1.3
 	github.com/hashicorp/cap v0.15.0
 	github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744
 	github.com/hashicorp/go-cty v1.5.0
@@ -22,7 +22,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ory/dockertest/v3 v3.12.0
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.58.1-0.20261009181718-2f1f834330b2
 	mvdan.cc/gofumpt v0.12.0
 )
 
