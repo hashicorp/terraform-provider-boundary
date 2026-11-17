@@ -58,7 +58,7 @@ func resourceManagedGroup() *schema.Resource {
 				Required:    true,
 			},
 			managedDisableStrictFilterEvaluationKey: {
-				Description: "Boolean that determines whether Strict Filter is on or off",
+				Description: "Disables strict filter evaluation when true. False enables strict evaluation. When omitted, Boundary determines the value on creation and the existing value is preserved on updates.",
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
@@ -84,7 +84,6 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 			if err := d.Set(managedGroupFilterKey, v); err != nil {
 				return err
 			}
-
 		}
 		if v, ok := attrs[managedDisableStrictFilterEvaluationKey]; ok {
 			if err := d.Set(managedDisableStrictFilterEvaluationKey, v); err != nil {
