@@ -1,6 +1,6 @@
 module github.com/hashicorp/boundary/plugins/kms/mains/ibmkp
 
-go 1.26.10
+go 1.26.11
 
 require (
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.8
