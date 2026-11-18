@@ -123,10 +123,10 @@ github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/hashicorp/boundary-sdk/api v0.1.5 h1:E4T+CqipcsfEIsMzYAC6ZJ9EG40qK43wJ6P6sSwO3hw=
-github.com/hashicorp/boundary-sdk/api v0.1.5/go.mod h1:JOqbm6HICJCV5s8rR/CVoUus/JWSM+7Cea5CgTB7paQ=
-github.com/hashicorp/boundary-sdk/sdk v0.1.5 h1:WSvGGAdnfcjo8lpQlFpTkTZHowzk/dDmqh7+Lyr6Wo0=
-github.com/hashicorp/boundary-sdk/sdk v0.1.5/go.mod h1:GfNE+Q1HEO5taZ+0JlNnET3ubRzUpF9kLxBYG2i9JNc=
+github.com/hashicorp/boundary-sdk/api v0.1.6 h1:UFANZXBmm2P6ZHO9y0UXXrW6E/uDS5XkEU0mZzsrHrQ=
+github.com/hashicorp/boundary-sdk/api v0.1.6/go.mod h1:XEi3EftvEatCiPwJJI7Z00nHTcxjREXGbWKB4lJ2+Ic=
+github.com/hashicorp/boundary-sdk/sdk v0.1.6 h1:zI7cbGAM8/qVxynGnQ2HyDJOBQUu7OajJWzqevo1m5U=
+github.com/hashicorp/boundary-sdk/sdk v0.1.6/go.mod h1:GfNE+Q1HEO5taZ+0JlNnET3ubRzUpF9kLxBYG2i9JNc=
 github.com/hashicorp/cap v0.15.0 h1:AvraJIQWPEbxm3m1mKtHEomWjMA22tKMG6jP/In9mG0=
 github.com/hashicorp/cap v0.15.0/go.mod h1:A+JiPqMWvppCWmehtcQHRN8iTcbI10qeJ0lavQt2dnw=
 github.com/hashicorp/cap/ldap v0.0.0-20240206183135-ed8f24513744 h1:6cU01ORaCUxRXRS0YYnmm4tMfAvFRjamhjgMrgmoWZs=
