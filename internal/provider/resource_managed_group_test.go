@@ -35,26 +35,17 @@ resource "boundary_managed_group" "foo" {
 	filter         = "name == \"foo\""
 }`, managedGroupName, managedGroupDescription)
 
-	fooManagedGroupUpdate = fmt.Sprintf(`
+	fooManagedGroupUpdate = `
 resource "boundary_managed_group" "foo" {
 	name           = "%s"
 	description    = "%s"
 	auth_method_id = boundary_auth_method_oidc.foo.id
 	filter         = "name == \"bar\""
-}`, managedGroupName+managedGroupUpdate, managedGroupDescription+managedGroupUpdate)
-
-	fooManagedGroupStrictFilter = fmt.Sprintf(`
-resource "boundary_managed_group" "foo" {
-	name                             = "%s"
-	description                      = "%s"
-	auth_method_id                   = boundary_auth_method_oidc.foo.id
-	filter                           = "name == \"foo\""
-	disable_strict_filter_evaluation = %%t
-}`, managedGroupName, managedGroupDescription)
+	%s
+}`
 )
 
 func TestAccManagedGroup(t *testing.T) {
-	t.Skip("Unskip when we update boundary")
 	tp := oidc.StartTestProvider(t)
 	tpCert := strings.TrimSpace(tp.CACert())
 	createConfig := fmt.Sprintf(fooAuthMethodOidc, fooAuthMethodOidcDesc, tp.Addr(), tpCert)
@@ -63,57 +54,59 @@ func TestAccManagedGroup(t *testing.T) {
 	require.NoError(t, err)
 	url := cfg.BoundaryAddr
 	suffix := id.UniqueId()
+	updateName := managedGroupName + managedGroupUpdate
+	updateDescription := managedGroupDescription + managedGroupUpdate
 
 	var provider *schema.Provider
-	resource.Test(t, resource.TestCase{
-		ProviderFactories: providerFactories(&provider),
-		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider, baseManagedGroupType),
-		Steps: []resource.TestStep{
-			{
-				// test create
-				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroup),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "foo"`),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "false"),
-				),
-			},
-			importStep("boundary_managed_group.foo"),
-			{
-				// disable strict evaluation
-				Config: testConfig(url, fooOrg(suffix), createConfig, fmt.Sprintf(fooManagedGroupStrictFilter, true)),
-				Check: resource.TestCheckResourceAttr(
-					"boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "true",
-				),
-			},
-			importStep("boundary_managed_group.foo"),
-			{
-				// removing the setting must not plan a reset
-				Config:   testConfig(url, fooOrg(suffix), createConfig, fooManagedGroup),
-				PlanOnly: true,
-			},
-			{
-				// test update with the setting omitted, preserving legacy behavior
-				Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroupUpdate),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription+managedGroupUpdate),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName+managedGroupUpdate),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "bar"`),
-					resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "true"),
-				),
-			},
-			{
-				// re-enable strict evaluation with explicit false
-				Config: testConfig(url, fooOrg(suffix), createConfig, fmt.Sprintf(fooManagedGroupStrictFilter, false)),
-				Check: resource.TestCheckResourceAttr(
-					"boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "false",
-				),
-			},
-			importStep("boundary_managed_group.foo"),
+	factories := providerFactories(&provider)
+	steps := []resource.TestStep{
+		{
+			// test create
+			Config: testConfig(url, fooOrg(suffix), createConfig, fooManagedGroup),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, managedGroupDescription),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, managedGroupName),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "foo"`),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "false"),
+			),
 		},
+		importStep("boundary_managed_group.foo"),
+		{
+			// Explicit true disables strict filter evaluation.
+			Config: testConfig(url, fooOrg(suffix), createConfig, fmt.Sprintf(fooManagedGroupUpdate, updateName, updateDescription, managedDisableStrictFilterEvaluationKey+" = true")),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "true"),
+			),
+		},
+		importStep("boundary_managed_group.foo"),
+		{
+			// Omitting the setting preserves the existing true value while another field changes.
+			Config: testConfig(url, fooOrg(suffix), createConfig, fmt.Sprintf(fooManagedGroupUpdate, updateName, updateDescription+"_omitted", "")),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", DescriptionKey, updateDescription+"_omitted"),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", NameKey, updateName),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", managedGroupFilterKey, `name == "bar"`),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "true"),
+			),
+		},
+		{
+			// Explicit false re-enables strict filter evaluation.
+			Config: testConfig(url, fooOrg(suffix), createConfig, fmt.Sprintf(fooManagedGroupUpdate, updateName, updateDescription, managedDisableStrictFilterEvaluationKey+" = false")),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckManagedGroupResourceExists(provider, "boundary_managed_group.foo"),
+				resource.TestCheckResourceAttr("boundary_managed_group.foo", managedDisableStrictFilterEvaluationKey, "false"),
+			),
+		},
+		importStep("boundary_managed_group.foo"),
+	}
+
+	resource.Test(t, resource.TestCase{
+		ProviderFactories: factories,
+		CheckDestroy:      testAccCheckManagedGroupResourceDestroy(t, provider, baseManagedGroupType),
+		Steps:             steps,
 	})
 }
 

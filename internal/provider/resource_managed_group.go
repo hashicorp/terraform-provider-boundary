@@ -127,10 +127,9 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		opts = append(opts, managedgroups.WithOidcManagedGroupFilter(str))
 	}
 
-	strictFilterConfig := d.GetRawConfig().GetAttr(managedDisableStrictFilterEvaluationKey)
-	if !strictFilterConfig.IsNull() {
-		strictFilterVal := d.Get(managedDisableStrictFilterEvaluationKey).(bool)
-		opts = append(opts, managedgroups.WithOidcManagedGroupDisableStrictFilterEvaluation(strictFilterVal))
+	// On create, explicit false can use Boundary's default of false.
+	if v, ok := d.GetOk(managedDisableStrictFilterEvaluationKey); ok {
+		opts = append(opts, managedgroups.WithOidcManagedGroupDisableStrictFilterEvaluation(v.(bool)))
 	}
 
 	grp, err := grpClient.Create(ctx, authMethodId, opts...)
