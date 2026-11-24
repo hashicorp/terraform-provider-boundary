@@ -4,7 +4,7 @@ go 1.26.11
 
 require (
 	github.com/hashicorp/go-kms-wrapping/plugin/v2 v2.0.9
-	github.com/hashicorp/go-kms-wrapping/wrappers/transit/v2 v2.0.13
+	github.com/hashicorp/go-kms-wrapping/wrappers/transit/v2 v2.0.14
 )
 
 require (
