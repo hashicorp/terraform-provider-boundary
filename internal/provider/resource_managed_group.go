@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/boundary-sdk/api"
@@ -14,7 +15,8 @@ import (
 )
 
 const (
-	managedGroupFilterKey = "filter"
+	managedGroupFilterKey                   = "filter"
+	managedDisableStrictFilterEvaluationKey = "disable_strict_filter_evaluation"
 )
 
 func resourceManagedGroup() *schema.Resource {
@@ -25,6 +27,7 @@ func resourceManagedGroup() *schema.Resource {
 		ReadContext:   resourceManagedGroupRead,
 		UpdateContext: resourceManagedGroupUpdate,
 		DeleteContext: resourceManagedGroupDelete,
+		CustomizeDiff: resourceManagedGroupCustomizeDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -56,6 +59,12 @@ func resourceManagedGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 			},
+			managedDisableStrictFilterEvaluationKey: {
+				Description: "Disables strict evaluation of the filter expression for this managed group. Defaults to false on create, and the existing value is kept if this is removed from configuration.",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -75,6 +84,11 @@ func setFromManagedGroupResponseMap(d *schema.ResourceData, raw map[string]inter
 		attrs := attrsVal.(map[string]interface{})
 		if v, ok := attrs[managedGroupFilterKey]; ok {
 			if err := d.Set(managedGroupFilterKey, v); err != nil {
+				return err
+			}
+		}
+		if v, ok := attrs[managedDisableStrictFilterEvaluationKey]; ok {
+			if err := d.Set(managedDisableStrictFilterEvaluationKey, v); err != nil {
 				return err
 			}
 		}
@@ -113,6 +127,12 @@ func resourceManagedGroupCreate(ctx context.Context, d *schema.ResourceData, met
 	if ok {
 		str := v.(string)
 		opts = append(opts, managedgroups.WithOidcManagedGroupFilter(str))
+	}
+
+	strictFilterVal, ok := d.GetOk(managedDisableStrictFilterEvaluationKey)
+	if ok {
+		strictFilterBool := strictFilterVal.(bool)
+		opts = append(opts, managedgroups.WithOidcManagedGroupDisableStrictFilterEvaluation(strictFilterBool))
 	}
 
 	grp, err := grpClient.Create(ctx, authMethodId, opts...)
@@ -190,6 +210,13 @@ func resourceManagedGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
+	if d.HasChange(managedDisableStrictFilterEvaluationKey) {
+		opts = append(opts, managedgroups.DefaultOidcManagedGroupDisableStrictFilterEvaluation())
+		if strictFilterVal, ok := d.GetOk(managedDisableStrictFilterEvaluationKey); ok {
+			opts = append(opts, managedgroups.WithOidcManagedGroupDisableStrictFilterEvaluation(strictFilterVal.(bool)))
+		}
+	}
+
 	if len(opts) > 0 {
 		opts = append(opts, managedgroups.WithAutomaticVersioning(true))
 		_, err := grpClient.Update(ctx, d.Id(), 0, opts...)
@@ -224,6 +251,20 @@ func resourceManagedGroupDelete(ctx context.Context, d *schema.ResourceData, met
 	_, err := grpClient.Delete(ctx, d.Id())
 	if err != nil {
 		return diag.Errorf("error calling delete managed group: %s", err.Error())
+	}
+
+	return nil
+}
+
+func resourceManagedGroupCustomizeDiff(_ context.Context, rd *schema.ResourceDiff, _ interface{}) error {
+	// The managed group filter for legacy groups defaults to true to keep backward compatibility.
+	// New groups need to show in the state change that the default is false.
+	if rd.Id() != "" || rd.NewValueKnown(managedDisableStrictFilterEvaluationKey) {
+		return nil
+	}
+
+	if err := rd.SetNew(managedDisableStrictFilterEvaluationKey, false); err != nil {
+		return fmt.Errorf("failed to set default %s: %w", managedDisableStrictFilterEvaluationKey, err)
 	}
 
 	return nil
